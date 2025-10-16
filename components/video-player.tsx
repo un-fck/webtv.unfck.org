@@ -2,16 +2,23 @@
 
 import { useEffect, useRef } from 'react';
 
+interface KalturaPlayer {
+  currentTime: number;
+  play: () => void;
+  loadMedia: (mediaInfo: { entryId: string }) => Promise<void>;
+  destroy: () => void;
+}
+
 interface VideoPlayerProps {
   kalturaId: string;
   partnerId: number;
   uiConfId: number;
-  onPlayerReady?: (player: any) => void;
+  onPlayerReady?: (player: KalturaPlayer) => void;
 }
 
 export function VideoPlayer({ kalturaId, partnerId, uiConfId, onPlayerReady }: VideoPlayerProps) {
   const playerContainerRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<KalturaPlayer | null>(null);
 
   useEffect(() => {
     // Load Kaltura Player script
@@ -22,7 +29,8 @@ export function VideoPlayer({ kalturaId, partnerId, uiConfId, onPlayerReady }: V
     script.onload = () => {
       // Wait for KalturaPlayer to be available
       const checkPlayer = setInterval(() => {
-        if (typeof (window as any).KalturaPlayer !== 'undefined') {
+        const windowWithKaltura = window as Window & { KalturaPlayer?: { setup: (config: unknown) => KalturaPlayer } };
+        if (typeof windowWithKaltura.KalturaPlayer !== 'undefined') {
           clearInterval(checkPlayer);
           initializePlayer();
         }
@@ -33,7 +41,9 @@ export function VideoPlayer({ kalturaId, partnerId, uiConfId, onPlayerReady }: V
 
     const initializePlayer = () => {
       try {
-        const KalturaPlayer = (window as any).KalturaPlayer;
+        const windowWithKaltura = window as Window & { KalturaPlayer?: { setup: (config: unknown) => KalturaPlayer } };
+        const KalturaPlayerGlobal = windowWithKaltura.KalturaPlayer;
+        if (!KalturaPlayerGlobal) return;
         
         const config = {
           targetId: 'kaltura-player-container',
@@ -49,7 +59,7 @@ export function VideoPlayer({ kalturaId, partnerId, uiConfId, onPlayerReady }: V
           },
         };
 
-        const player = KalturaPlayer.setup(config);
+        const player = KalturaPlayerGlobal.setup(config);
         
         const mediaInfo = {
           entryId: kalturaId,

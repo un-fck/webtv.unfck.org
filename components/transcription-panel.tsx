@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface TranscriptionPanelProps {
   kalturaId: string;
-  player?: any;
+  player?: {
+    currentTime: number;
+    play: () => void;
+  };
 }
 
 interface Word {
@@ -90,7 +93,51 @@ export function TranscriptionPanel({ kalturaId, player }: TranscriptionPanelProp
     }
   };
 
-  const formatParagraphs = (paragraphsData: Paragraph[]): SpeakerSegment[] => {
+  // Helper to insert paragraph breaks within a speaker's words
+  const insertParagraphBreaks = useCallback((words: Word[], originalParagraphs: Paragraph[]): Paragraph[] => {
+    if (words.length === 0) return [];
+
+    // Create a set of paragraph boundary timestamps
+    const paragraphBoundaries = new Set(
+      originalParagraphs.map(p => p.start / 1000)
+    );
+
+    const paragraphs: Paragraph[] = [];
+    let currentParagraphWords: Word[] = [];
+    let currentParagraphStart = words[0].start;
+
+    words.forEach((word, index) => {
+      currentParagraphWords.push(word);
+
+      // Check if next word starts a new paragraph
+      const nextWord = words[index + 1];
+      if (nextWord && paragraphBoundaries.has(nextWord.start)) {
+        // End current paragraph
+        paragraphs.push({
+          text: currentParagraphWords.map(w => w.text).join(' '),
+          start: currentParagraphStart,
+          end: word.end,
+          words: currentParagraphWords,
+        });
+        currentParagraphWords = [];
+        currentParagraphStart = nextWord.start;
+      }
+    });
+
+    // Add final paragraph
+    if (currentParagraphWords.length > 0) {
+      paragraphs.push({
+        text: currentParagraphWords.map(w => w.text).join(' '),
+        start: currentParagraphStart,
+        end: currentParagraphWords[currentParagraphWords.length - 1].end,
+        words: currentParagraphWords,
+      });
+    }
+
+    return paragraphs;
+  }, []);
+
+  const formatParagraphs = useCallback((paragraphsData: Paragraph[]): SpeakerSegment[] => {
     // Flatten all words from paragraphs and convert timestamps
     const allWords = paragraphsData.flatMap(para => 
       para.words.map(word => ({
@@ -137,51 +184,7 @@ export function TranscriptionPanel({ kalturaId, player }: TranscriptionPanelProp
     }
 
     return segments;
-  };
-
-  // Helper to insert paragraph breaks within a speaker's words
-  const insertParagraphBreaks = (words: Word[], originalParagraphs: Paragraph[]): Paragraph[] => {
-    if (words.length === 0) return [];
-
-    // Create a set of paragraph boundary timestamps
-    const paragraphBoundaries = new Set(
-      originalParagraphs.map(p => p.start / 1000)
-    );
-
-    const paragraphs: Paragraph[] = [];
-    let currentParagraphWords: Word[] = [];
-    let currentParagraphStart = words[0].start;
-
-    words.forEach((word, index) => {
-      currentParagraphWords.push(word);
-
-      // Check if next word starts a new paragraph
-      const nextWord = words[index + 1];
-      if (nextWord && paragraphBoundaries.has(nextWord.start)) {
-        // End current paragraph
-        paragraphs.push({
-          text: currentParagraphWords.map(w => w.text).join(' '),
-          start: currentParagraphStart,
-          end: word.end,
-          words: currentParagraphWords,
-        });
-        currentParagraphWords = [];
-        currentParagraphStart = nextWord.start;
-      }
-    });
-
-    // Add final paragraph
-    if (currentParagraphWords.length > 0) {
-      paragraphs.push({
-        text: currentParagraphWords.map(w => w.text).join(' '),
-        start: currentParagraphStart,
-        end: currentParagraphWords[currentParagraphWords.length - 1].end,
-        words: currentParagraphWords,
-      });
-    }
-
-    return paragraphs;
-  };
+  }, [insertParagraphBreaks]);
 
   const handleTranscribe = async (force = false) => {
     setLoading(true);
@@ -270,7 +273,7 @@ export function TranscriptionPanel({ kalturaId, player }: TranscriptionPanelProp
     };
 
     checkCache();
-  }, [kalturaId]);
+  }, [kalturaId, formatParagraphs]);
 
   // Listen to player time updates with high frequency polling
   useEffect(() => {
@@ -503,7 +506,7 @@ export function TranscriptionPanel({ kalturaId, player }: TranscriptionPanelProp
       
       {!segments && !loading && !error && !checking && (
         <p className="text-muted-foreground text-sm">
-          Click "Generate Transcript" to create a text transcript of this video using AI.
+          Click &quot;Generate Transcript&quot; to create a text transcript of this video using AI.
         </p>
       )}
     </div>

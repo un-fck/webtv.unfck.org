@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
       if (listResponse.ok) {
         const listData = await listResponse.json();
-        const existing = listData.transcripts?.find((t: any) => 
+        const existing = listData.transcripts?.find((t: { audio_url: string; status: string; id: string }) => 
           t.audio_url === downloadUrl && t.status === 'completed'
         );
 

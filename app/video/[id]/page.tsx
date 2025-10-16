@@ -1,7 +1,6 @@
 import { getScheduleVideos } from '@/lib/un-api';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { VideoPageClient } from '@/components/video-page-client';
 
 function extractKalturaId(assetId: string): string | null {

@@ -13,7 +13,7 @@ interface VideoPageClientProps {
 }
 
 export function VideoPageClient({ kalturaId, video }: VideoPageClientProps) {
-  const [player, setPlayer] = useState<any>(null);
+  const [player, setPlayer] = useState<{ currentTime: number; play: () => void }>();
 
   return (
     <div className="flex gap-6 items-start">

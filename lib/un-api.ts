@@ -294,8 +294,8 @@ export async function getScheduleVideos(days: number = 7): Promise<Video[]> {
       const listData = await listResponse.json();
       const transcribedUrls = new Set(
         listData.transcripts
-          ?.filter((t: any) => t.status === 'completed')
-          .map((t: any) => t.audio_url)
+          ?.filter((t: { status: string; audio_url: string }) => t.status === 'completed')
+          .map((t: { status: string; audio_url: string }) => t.audio_url)
       );
 
       // Get download URLs for all videos in parallel
