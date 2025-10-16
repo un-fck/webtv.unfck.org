@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Redis from 'ioredis';
-
-const redis = new Redis(process.env.REDIS_URL!);
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,54 +8,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Kaltura ID is required' }, { status: 400 });
     }
 
-    // If force is true, delete the cache
-    if (force) {
-      console.log('Force retranscribe: deleting cache for', kalturaId);
-      await redis.del(`transcript:${kalturaId}`);
-    }
-
-    // Check if we already have a cached transcript for this video (unless force is true)
-    if (!force) {
-      const cachedStr = await redis.get(`transcript:${kalturaId}`);
-      const cached = cachedStr ? JSON.parse(cachedStr) as { transcription_id: string; created_at: string } : null;
-      
-      if (cached?.transcription_id) {
-        try {
-          const getResponse = await fetch(
-            `https://api.elevenlabs.io/v1/speech-to-text/transcripts/${cached.transcription_id}`,
-            {
-              headers: {
-                'xi-api-key': process.env.ELEVENLABS_API_KEY!,
-              },
-            }
-          );
-
-          if (getResponse.ok) {
-            const transcription = await getResponse.json();
-            return NextResponse.json({
-              text: transcription.text,
-              words: transcription.words,
-              language: transcription.language_code,
-              cached: true,
-            });
-          }
-        } catch (error) {
-          console.log('Failed to fetch cached transcript, will regenerate:', error);
-        }
-      }
-    }
-
-    // If checkOnly is true, don't generate a new transcript
-    if (checkOnly) {
-      return NextResponse.json({ cached: false, text: null });
-    }
-
-    // Get video metadata and download URL from Kaltura API
+    // Get video download URL from Kaltura
     const apiResponse = await fetch('https://cdnapisec.kaltura.com/api_v3/service/multirequest', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         '1': {
           service: 'session',
@@ -69,9 +22,7 @@ export async function POST(request: NextRequest) {
           service: 'baseEntry',
           action: 'list',
           ks: '{1:result:ks}',
-          filter: {
-            redirectFromEntryId: kalturaId,
-          },
+          filter: { redirectFromEntryId: kalturaId },
           responseProfile: {
             type: 1,
             fields: 'id,downloadUrl,duration',
@@ -90,75 +41,94 @@ export async function POST(request: NextRequest) {
     }
 
     const apiData = await apiResponse.json();
-    
-    // Extract download URL from the response
     const downloadUrl = apiData[1]?.objects?.[0]?.downloadUrl;
     
     if (!downloadUrl) {
-      return NextResponse.json({ error: 'No download URL found for this video' }, { status: 404 });
+      return NextResponse.json({ error: 'No download URL found' }, { status: 404 });
     }
 
-    // Use cloud_storage_url instead of uploading the file directly
-    // This lets ElevenLabs fetch the video directly from Kaltura
-    console.log('Using cloud storage URL for transcription:', downloadUrl);
-    
-    // Prepare form data for ElevenLabs API
-    const formData = new FormData();
-    formData.append('model_id', 'scribe_v1_experimental');
-    formData.append('cloud_storage_url', downloadUrl);
-    formData.append('diarize', 'true');
-    formData.append('timestamps_granularity', 'word');
-    
-    console.log('Sending transcription request to ElevenLabs...');
-    const transcriptionResponse = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+    // Check AssemblyAI for existing transcript (unless force=true)
+    if (!force) {
+      const listResponse = await fetch('https://api.assemblyai.com/v2/transcript?limit=100', {
+        headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
+      });
+
+      if (listResponse.ok) {
+        const listData = await listResponse.json();
+        const existing = listData.transcripts?.find((t: any) => 
+          t.audio_url === downloadUrl && t.status === 'completed'
+        );
+
+        if (existing) {
+          const detailResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${existing.id}`, {
+            headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
+          });
+          
+          if (detailResponse.ok) {
+            const detail = await detailResponse.json();
+            return NextResponse.json({
+              text: detail.text,
+              words: detail.words || [],
+              language: detail.language_code,
+              cached: true,
+            });
+          }
+        }
+      }
+    }
+
+    // If checkOnly, return early
+    if (checkOnly) {
+      return NextResponse.json({ cached: false, text: null });
+    }
+
+    // Submit new transcript to AssemblyAI
+    const submitResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
       method: 'POST',
       headers: {
-        'xi-api-key': process.env.ELEVENLABS_API_KEY!,
+        'Authorization': process.env.ASSEMBLYAI_API_KEY!,
+        'Content-Type': 'application/json',
       },
-      body: formData,
+      body: JSON.stringify({
+        audio_url: downloadUrl,
+        speaker_labels: true,
+      }),
     });
-    
-    console.log('ElevenLabs response status:', transcriptionResponse.status);
-    
-    if (!transcriptionResponse.ok) {
-      const error = await transcriptionResponse.text();
-      console.error('ElevenLabs error:', error);
-      return NextResponse.json({ error: `Transcription failed: ${error}` }, { status: 500 });
+
+    if (!submitResponse.ok) {
+      const error = await submitResponse.text();
+      return NextResponse.json({ error: `Failed to submit: ${error}` }, { status: 500 });
     }
-    
-    const transcription = await transcriptionResponse.json();
-    console.log('Transcription response keys:', Object.keys(transcription));
-    console.log('Transcription response:', JSON.stringify(transcription).substring(0, 500));
-    
-    // Debug: Check word structure
-    if (transcription.words && transcription.words.length > 0) {
-      console.log('First word sample:', JSON.stringify(transcription.words[0]));
-      console.log('Total words:', transcription.words.length);
-    }
-    
-    // Store the transcription_id in Redis for future use
-    if (transcription.transcription_id) {
-      console.log('Storing transcription_id in Redis:', transcription.transcription_id);
-      try {
-        await redis.set(
-          `transcript:${kalturaId}`,
-          JSON.stringify({
-            transcription_id: transcription.transcription_id,
-            created_at: new Date().toISOString(),
-          })
-        );
-        console.log('Successfully stored in Redis');
-      } catch (redisError) {
-        console.error('Failed to store in Redis:', redisError);
+
+    const submitData = await submitResponse.json();
+    const transcriptId = submitData.id;
+
+    // Poll until completed
+    let transcript;
+    while (true) {
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Poll every 3 seconds
+      
+      const pollResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
+        headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
+      });
+
+      if (!pollResponse.ok) {
+        return NextResponse.json({ error: 'Failed to poll status' }, { status: 500 });
       }
-    } else {
-      console.log('No transcription_id in response, cannot cache');
+
+      transcript = await pollResponse.json();
+
+      if (transcript.status === 'completed') {
+        break;
+      } else if (transcript.status === 'error') {
+        return NextResponse.json({ error: transcript.error }, { status: 500 });
+      }
     }
-    
+
     return NextResponse.json({
-      text: transcription.text,
-      words: transcription.words,
-      language: transcription.language_code,
+      text: transcript.text,
+      words: transcript.words || [],
+      language: transcript.language_code,
       cached: false,
     });
     

@@ -1,6 +1,40 @@
-import Redis from 'ioredis';
+// Helper to get Kaltura download URL for a given ID
+async function getKalturaDownloadUrl(kalturaId: string): Promise<string | null> {
+  try {
+    const apiResponse = await fetch('https://cdnapisec.kaltura.com/api_v3/service/multirequest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        '1': {
+          service: 'session',
+          action: 'startWidgetSession',
+          widgetId: '_2503451',
+        },
+        '2': {
+          service: 'baseEntry',
+          action: 'list',
+          ks: '{1:result:ks}',
+          filter: { redirectFromEntryId: kalturaId },
+          responseProfile: {
+            type: 1,
+            fields: 'id,downloadUrl,duration',
+          },
+        },
+        apiVersion: '3.3.0',
+        format: 1,
+        ks: '',
+        clientTag: 'html5:v3.17.30',
+        partnerId: 2503451,
+      }),
+    });
 
-const redis = new Redis(process.env.REDIS_URL!);
+    if (!apiResponse.ok) return null;
+    const apiData = await apiResponse.json();
+    return apiData[1]?.objects?.[0]?.downloadUrl || null;
+  } catch {
+    return null;
+  }
+}
 
 function extractKalturaId(assetId: string): string | null {
   // Handle formats like k1a/k1a7f1gn3l → 1_a7f1gn3l
@@ -243,21 +277,38 @@ export async function getScheduleVideos(days: number = 7): Promise<Video[]> {
     new Map(allVideos.map(v => [v.id, v])).values()
   );
   
-  // Check Redis for transcripts
-  await Promise.all(
-    uniqueVideos.map(async (video) => {
-      const kalturaId = extractKalturaId(video.id);
-      if (kalturaId) {
-        try {
-          const cached = await redis.get(`transcript:${kalturaId}`);
-          video.hasTranscript = !!cached;
-        } catch (err) {
-          console.log('Redis check failed for', kalturaId, err);
-          video.hasTranscript = false;
-        }
-      }
-    })
-  );
+  // Check AssemblyAI for transcripts
+  try {
+    // Fetch AssemblyAI transcript list
+    const listResponse = await fetch('https://api.assemblyai.com/v2/transcript?limit=100', {
+      headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
+      next: { revalidate: 300 }, // Cache for 5 minutes
+    });
+
+    if (listResponse.ok) {
+      const listData = await listResponse.json();
+      const transcribedUrls = new Set(
+        listData.transcripts
+          ?.filter((t: any) => t.status === 'completed')
+          .map((t: any) => t.audio_url)
+      );
+
+      // Get download URLs for all videos in parallel
+      await Promise.all(
+        uniqueVideos.map(async (video) => {
+          const kalturaId = extractKalturaId(video.id);
+          if (kalturaId) {
+            const downloadUrl = await getKalturaDownloadUrl(kalturaId);
+            video.hasTranscript = downloadUrl ? transcribedUrls.has(downloadUrl) : false;
+          } else {
+            video.hasTranscript = false;
+          }
+        })
+      );
+    }
+  } catch (err) {
+    console.log('Failed to check AssemblyAI transcripts:', err);
+  }
   
   // Sort by date descending (newest first)
   return uniqueVideos.sort((a, b) => b.date.localeCompare(a.date));

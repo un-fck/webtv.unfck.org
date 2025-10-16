@@ -9,9 +9,9 @@ interface TranscriptionPanelProps {
 
 interface Word {
   text: string;
-  speaker_id?: string | null;
-  start?: number | null;
-  end?: number | null;
+  speaker?: string | null; // AssemblyAI uses "speaker" (e.g., "A", "B", "C")
+  start?: number | null; // Milliseconds
+  end?: number | null; // Milliseconds
 }
 
 interface SpeakerSegment {
@@ -46,8 +46,8 @@ export function TranscriptionPanel({ kalturaId, player }: TranscriptionPanelProp
   };
 
   const cleanSpeakerId = (speakerId: string): string => {
-    // Remove "speaker_" prefix and capitalize
-    return speakerId.replace(/^speaker_/i, '');
+    // AssemblyAI uses single letters (A, B, C), just return as-is
+    return speakerId.toUpperCase();
   };
 
   const getSpeakerColor = (speakerId: string): string => {
@@ -84,52 +84,47 @@ export function TranscriptionPanel({ kalturaId, player }: TranscriptionPanelProp
   };
 
   const formatTranscript = (words: Word[]): SpeakerSegment[] => {
-    console.log('Formatting transcript, total words:', words.length);
-    if (words.length > 0) {
-      console.log('First word sample:', words[0]);
-      console.log('First word start:', words[0].start, 'speaker_id:', words[0].speaker_id);
-    }
-    
     const segments: SpeakerSegment[] = [];
     let currentSpeaker: string | null = null;
     let currentWords: Word[] = [];
     let currentTimestamp: number | null = null;
 
-    words.forEach((word, index) => {
-      const speaker = word.speaker_id || 'Unknown';
+    words.forEach((word) => {
+      // Convert milliseconds to seconds for timestamps
+      const wordWithSeconds = {
+        ...word,
+        start: word.start !== null && word.start !== undefined ? word.start / 1000 : null,
+        end: word.end !== null && word.end !== undefined ? word.end / 1000 : null,
+      };
+      
+      const speaker = word.speaker || 'Unknown';
       
       if (speaker !== currentSpeaker) {
         if (currentWords.length > 0) {
           segments.push({ 
             speaker: currentSpeaker || 'Unknown', 
-            text: currentWords.map(w => w.text).join('').trim(),
+            text: currentWords.map(w => w.text).join(' ').trim(),
             timestamp: currentTimestamp,
             words: currentWords
           });
-          console.log(`Segment ${segments.length}: speaker=${currentSpeaker}, timestamp=${currentTimestamp}`);
         }
         currentSpeaker = speaker;
-        currentWords = [word];
-        currentTimestamp = word.start !== undefined && word.start !== null ? word.start : null;
-        if (index === 0) {
-          console.log('First segment timestamp set to:', currentTimestamp);
-        }
+        currentWords = [wordWithSeconds];
+        currentTimestamp = wordWithSeconds.start;
       } else {
-        currentWords.push(word);
+        currentWords.push(wordWithSeconds);
       }
     });
 
     if (currentWords.length > 0) {
       segments.push({ 
         speaker: currentSpeaker || 'Unknown', 
-        text: currentWords.map(w => w.text).join('').trim(),
+        text: currentWords.map(w => w.text).join(' ').trim(),
         timestamp: currentTimestamp,
         words: currentWords
       });
-      console.log(`Final segment: speaker=${currentSpeaker}, timestamp=${currentTimestamp}`);
     }
 
-    console.log('Total segments created:', segments.length);
     return segments;
   };
 
@@ -407,7 +402,7 @@ export function TranscriptionPanel({ kalturaId, player }: TranscriptionPanelProp
                                 textUnderlineOffset: '3px',
                               }}
                             >
-                              {word.text}
+                              {word.text}{' '}
                             </span>
                           );
                         })}

@@ -9,7 +9,7 @@ This app displays videos from [UN Web TV](https://webtv.un.org/en/schedule) in a
 ### Current Features
 
 - **Embedded Video Pages**: Click any video to watch directly in the app with Kaltura player
-- **AI-Powered Transcription**: Generate text transcripts of any video using ElevenLabs API with speaker diarization
+- **AI-Powered Transcription**: Generate text transcripts of any video using AssemblyAI with speaker diarization
 - **Enhanced Metadata Extraction**: Automatically extracts structured data from video titles
 - **Real-time Status Tracking**: Color-coded badges showing if events are 🔴 Live, Scheduled, or Finished
 - **Smart Sorting**: Sorts by status first (Live → Scheduled → Finished), then by date/time
@@ -61,7 +61,7 @@ npm install
 Create a `.env.local` file in the project root with your API key:
 
 ```bash
-ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+ASSEMBLYAI_API_KEY=your_assemblyai_api_key_here
 ```
 
 Run the development server:
@@ -88,5 +88,5 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 - **Styling**: Tailwind CSS v4
 - **Table**: TanStack Table v8 (headless, sortable, filterable)
 - **UI Components**: shadcn/ui base
-- **Transcription**: ElevenLabs API for speech-to-text with speaker diarization
+- **Transcription**: AssemblyAI for speech-to-text with speaker diarization (stateless, no database needed)
 - **Video Player**: Kaltura embedded player
