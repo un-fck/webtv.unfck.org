@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, Fragment } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   useReactTable,
@@ -406,8 +406,8 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           <table className="w-full text-sm">
             <thead className="bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
-                <>
-                  <tr key={headerGroup.id}>
+                <Fragment key={headerGroup.id}>
+                  <tr>
                     {headerGroup.headers.map((header) => (
                       <th
                         key={header.id}
@@ -425,7 +425,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                       </th>
                     ))}
                   </tr>
-                  <tr key={`${headerGroup.id}-filter`} className="border-t">
+                  <tr className="border-t">
                     {headerGroup.headers.map((header) => {
                       const FilterComponent = header.column.columnDef.meta?.filterComponent;
                       const filterOptions = header.column.columnDef.meta?.filterOptions;
@@ -442,7 +442,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                       );
                     })}
                   </tr>
-                </>
+                </Fragment>
               ))}
             </thead>
             <tbody>
