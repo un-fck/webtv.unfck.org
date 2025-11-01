@@ -36,14 +36,14 @@ function extractKalturaId(assetId: string): string | null {
 }
 
 export async function generateStaticParams() {
-  const videos = await getScheduleVideos(14);
+  const videos = await getScheduleVideos(90);
   return videos.map(video => ({ id: encodeURIComponent(video.id) }));
 }
 
 export default async function VideoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const decodedId = decodeURIComponent(id);
-  const videos = await getScheduleVideos(14);
+  const videos = await getScheduleVideos(90);
   const video = videos.find(v => v.id === decodedId);
 
   if (!video) {

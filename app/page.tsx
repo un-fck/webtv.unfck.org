@@ -4,7 +4,7 @@ import { VideoTable } from '@/components/video-table';
 import Image from 'next/image';
 
 export default async function Home() {
-    const videos = await getScheduleVideos(14); // Fetch last 14 days
+    const videos = await getScheduleVideos(90); // Fetch last 90 days
 
     return (
         <main className="min-h-screen bg-background px-4 sm:px-6">
@@ -22,7 +22,7 @@ export default async function Home() {
                         UN Web TV 2.0
                     </h1>
                     <p className="text-muted-foreground">
-                        {videos.length} videos from the past 14 days
+                        {videos.length} videos from the past 90 days
                     </p>
                 </header>
 
