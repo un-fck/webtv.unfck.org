@@ -332,3 +332,93 @@ export async function getScheduleVideos(days: number = 7): Promise<Video[]> {
   return uniqueVideos.sort((a, b) => b.date.localeCompare(a.date));
 }
 
+export interface VideoMetadata {
+  summary: string | null;
+  description: string | null;
+  categories: string[];
+  relatedDocuments: Array<{ title: string; url: string }>;
+  geographicSubject: string[];
+  subjectTopical: string[];
+  corporateName: string[];
+  speakerAffiliation: string[];
+}
+
+export async function getVideoMetadata(assetId: string): Promise<VideoMetadata> {
+  try {
+    const response = await fetch(`https://webtv.un.org/en/asset/${assetId}`, {
+      next: { revalidate: 3600 } // 1 hour cache
+    });
+    
+    if (!response.ok) {
+      return createEmptyMetadata();
+    }
+    
+    const html = await response.text();
+    
+    return {
+      summary: extractSummary(html),
+      description: extractDescription(html),
+      categories: extractCategories(html),
+      relatedDocuments: extractRelatedDocuments(html),
+      geographicSubject: extractFieldItems(html, 'Geographic Subject'),
+      subjectTopical: extractFieldItems(html, 'Subject Topical'),
+      corporateName: extractFieldItems(html, 'Corporate Name'),
+      speakerAffiliation: extractFieldItems(html, 'Speaker Affiliation'),
+    };
+  } catch {
+    return createEmptyMetadata();
+  }
+}
+
+function createEmptyMetadata(): VideoMetadata {
+  return {
+    summary: null,
+    description: null,
+    categories: [],
+    relatedDocuments: [],
+    geographicSubject: [],
+    subjectTopical: [],
+    corporateName: [],
+    speakerAffiliation: [],
+  };
+}
+
+function extractSummary(html: string): string | null {
+  const match = html.match(/<div class="h4 field__label">Summary<\/div>[\s\S]*?<div class="smt-content"[^>]*>([\s\S]*?)<\/div>/);
+  if (!match) return null;
+  return extractTextContent(match[1]);
+}
+
+function extractDescription(html: string): string | null {
+  const match = html.match(/<div class="h4 field__label">Description<\/div>[\s\S]*?<div class="smt-content"[^>]*>([\s\S]*?)<\/div>/);
+  if (!match) return null;
+  return extractTextContent(match[1]);
+}
+
+function extractCategories(html: string): string[] {
+  const match = html.match(/<div class="small text-muted field__label">Categories<\/div>[\s\S]*?<div class="field__item">([\s\S]*?)<\/div>/);
+  if (!match) return [];
+  
+  // Extract just the link text, not the "/" separators
+  const links = [...match[1].matchAll(/<a[^>]*>([^<]+)<\/a>/g)];
+  return links.map(([, text]) => extractTextContent(text));
+}
+
+function extractRelatedDocuments(html: string): Array<{ title: string; url: string }> {
+  const match = html.match(/<div class="h4 field__label">Related Sites and Documents<\/div>([\s\S]*?)(?=<div\s+class="(?:block|pb-3|border-|col-)|$)/);
+  if (!match) return [];
+  
+  const links = [...match[1].matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)];
+  return links.map(([, url, title]) => ({ title: extractTextContent(title), url }));
+}
+
+function extractFieldItems(html: string, fieldLabel: string): string[] {
+  const pattern = new RegExp(`<div class="small text-muted field__label">${fieldLabel}<\\/div>([\\s\\S]*?)(?=<\\/div>\\s*<\\/div>\\s*<div class="(?:pb-3|block)|$)`, 'i');
+  const match = html.match(pattern);
+  if (!match) return [];
+  
+  // Extract text from <a> tags
+  const links = [...match[1].matchAll(/<a[^>]*>([^<]+)<\/a>/g)];
+  return links.map(([, text]) => extractTextContent(text));
+}
+

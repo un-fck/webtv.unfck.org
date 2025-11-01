@@ -1,4 +1,4 @@
-import { getScheduleVideos } from '@/lib/un-api';
+import { getScheduleVideos, getVideoMetadata } from '@/lib/un-api';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { VideoPageClient } from '@/components/video-page-client';
@@ -76,10 +76,12 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
     );
   }
 
+  const metadata = await getVideoMetadata(video.id);
+
   return (
     <main className="min-h-screen bg-background px-4 sm:px-6">
       <div className="max-w-5xl mx-auto py-8">
-        <VideoPageClient kalturaId={kalturaId} video={video} />
+        <VideoPageClient kalturaId={kalturaId} video={video} metadata={metadata} />
       </div>
     </main>
   );
