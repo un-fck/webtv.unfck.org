@@ -29,6 +29,7 @@ async function getKalturaDownloadUrl(kalturaId: string): Promise<string | null> 
         clientTag: 'html5:v3.17.30',
         partnerId: 2503451,
       }),
+      next: { revalidate: 86400 }, // Cache for 24 hours
     });
 
     if (!apiResponse.ok) return null;
@@ -200,8 +201,12 @@ function extractMetadataFromTitle(title: string, category?: string) {
 }
 
 async function fetchVideosForDate(date: string): Promise<Video[]> {
+  const today = formatDate(new Date());
+  const yesterday = formatDate(new Date(Date.now() - 86400000));
+  const revalidate = date >= today ? 300 : date === yesterday ? 3600 : 86400;
+  
   const response = await fetch(`https://webtv.un.org/en/schedule/${date}`, {
-    next: { revalidate: 300 }
+    next: { revalidate }
   });
   
   const html = await response.text();
