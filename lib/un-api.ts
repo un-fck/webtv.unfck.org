@@ -298,37 +298,61 @@ export async function getScheduleVideos(days: number = 7): Promise<Video[]> {
     new Map(allVideos.map(v => [v.id, v])).values()
   );
   
-  // Check AssemblyAI for transcripts
+  // Check Turso for transcripts
   try {
-    // Fetch AssemblyAI transcript list
-    const listResponse = await fetch('https://api.assemblyai.com/v2/transcript?limit=100', {
-      headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
-      next: { revalidate: 300 }, // Cache for 5 minutes
-    });
+    const { getAllTranscriptedEntries } = await import('@/lib/turso');
+    const transcriptedEntryIds = await getAllTranscriptedEntries();
+    const transcriptedSet = new Set(transcriptedEntryIds);
 
-    if (listResponse.ok) {
-      const listData = await listResponse.json();
-      const transcribedUrls = new Set(
-        listData.transcripts
-          ?.filter((t: { status: string; audio_url: string }) => t.status === 'completed')
-          .map((t: { status: string; audio_url: string }) => t.audio_url)
-      );
+    // Map entry IDs back to video IDs
+    await Promise.all(
+      uniqueVideos.map(async (video) => {
+        const kalturaId = extractKalturaId(video.id);
+        if (kalturaId) {
+          // Need to resolve to entry ID
+          try {
+            const apiResponse = await fetch('https://cdnapisec.kaltura.com/api_v3/service/multirequest', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                '1': {
+                  service: 'session',
+                  action: 'startWidgetSession',
+                  widgetId: '_2503451',
+                },
+                '2': {
+                  service: 'baseEntry',
+                  action: 'list',
+                  ks: '{1:result:ks}',
+                  filter: { redirectFromEntryId: kalturaId },
+                  responseProfile: { type: 1, fields: 'id' },
+                },
+                apiVersion: '3.3.0',
+                format: 1,
+                ks: '',
+                clientTag: 'html5:v3.17.30',
+                partnerId: 2503451,
+              }),
+              next: { revalidate: 3600 },
+            });
 
-      // Get download URLs for all videos in parallel
-      await Promise.all(
-        uniqueVideos.map(async (video) => {
-          const kalturaId = extractKalturaId(video.id);
-          if (kalturaId) {
-            const downloadUrl = await getKalturaDownloadUrl(kalturaId);
-            video.hasTranscript = downloadUrl ? transcribedUrls.has(downloadUrl) : false;
-          } else {
+            if (apiResponse.ok) {
+              const apiData = await apiResponse.json();
+              const entryId = apiData[1]?.objects?.[0]?.id;
+              video.hasTranscript = entryId ? transcriptedSet.has(entryId) : false;
+            } else {
+              video.hasTranscript = false;
+            }
+          } catch {
             video.hasTranscript = false;
           }
-        })
-      );
-    }
+        } else {
+          video.hasTranscript = false;
+        }
+      })
+    );
   } catch (err) {
-    console.log('Failed to check AssemblyAI transcripts:', err);
+    console.log('Failed to check transcripts from Turso:', err);
   }
   
   // Sort by date descending (newest first)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTranscriptId, setTranscriptId } from '@/lib/transcript-cache';
+import { getTranscript, saveTranscript, deleteTranscriptsForEntry } from '@/lib/turso';
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,40 +65,31 @@ export async function POST(request: NextRequest) {
     // Check if this is a live stream entry
     const isLiveStream = apiData[1]?.objects?.[0]?.objectType === 'KalturaLiveStreamEntry';
 
-    // Check cache for existing transcript (unless force=true)
+    // Check Turso for existing transcript (unless force=true)
     if (!force) {
-      const cachedTranscriptId = await getTranscriptId(entryId, isSegmentRequest ? startTime : undefined, isSegmentRequest ? endTime : undefined);
+      const cached = await getTranscript(
+        entryId, 
+        isSegmentRequest ? startTime : undefined, 
+        isSegmentRequest ? endTime : undefined
+      );
       
-      if (cachedTranscriptId) {
-        const detailResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${cachedTranscriptId}`, {
-          headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
-        });
+      if (cached && cached.status === 'completed') {
+        console.log('✓ Using cached transcript:', cached.transcript_id);
         
-        if (detailResponse.ok) {
-          const detail = await detailResponse.json();
-          
-          if (detail.status === 'completed') {
-            // Fetch paragraphs
-            const paragraphsResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${cachedTranscriptId}/paragraphs`, {
-              headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
-            });
-            const paragraphsData = paragraphsResponse.ok ? await paragraphsResponse.json() : null;
-            
-            console.log('✓ Using cached transcript:', cachedTranscriptId);
-            
-            return NextResponse.json({
-              text: detail.text,
-              words: detail.words || [],
-              paragraphs: paragraphsData?.paragraphs || null,
-              language: detail.language_code,
-              cached: true,
-              transcriptId: cachedTranscriptId,
-              segmentStart: isSegmentRequest ? startTime : undefined,
-              segmentEnd: isSegmentRequest ? endTime : undefined,
-            });
-          }
-        }
+        return NextResponse.json({
+          text: cached.content.paragraphs.map(p => p.text).join('\n\n'),
+          words: cached.content.paragraphs.flatMap(p => p.words),
+          paragraphs: cached.content.paragraphs,
+          language: cached.language_code,
+          cached: true,
+          transcriptId: cached.transcript_id,
+          segmentStart: isSegmentRequest ? startTime : undefined,
+          segmentEnd: isSegmentRequest ? endTime : undefined,
+        });
       }
+    } else {
+      // Delete existing transcripts when force=true
+      await deleteTranscriptsForEntry(entryId);
     }
 
     // If checkOnly, return early
@@ -165,8 +156,17 @@ export async function POST(request: NextRequest) {
     const transcriptId = submitData.id;
     console.log('✓ Submitted transcript:', transcriptId);
 
-    // Cache the transcript ID for future lookups
-    await setTranscriptId(entryId, transcriptId, isSegmentRequest ? startTime : undefined, isSegmentRequest ? endTime : undefined);
+    // Save initial transcript record to Turso
+    await saveTranscript(
+      entryId,
+      transcriptId,
+      isSegmentRequest ? startTime : null,
+      isSegmentRequest ? endTime : null,
+      audioUrl,
+      'processing',
+      null,
+      { paragraphs: [] }
+    );
 
     // Return transcript ID immediately for client-side polling
     return NextResponse.json({

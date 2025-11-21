@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getTursoClient, saveTranscript } from '@/lib/turso';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,6 +27,28 @@ export async function POST(request: NextRequest) {
       });
 
       const paragraphsData = paragraphsResponse.ok ? await paragraphsResponse.json() : null;
+
+      // Get existing record from Turso to retrieve entry_id and audio_url
+      const client = await getTursoClient();
+      const result = await client.execute({
+        sql: 'SELECT entry_id, audio_url, start_time, end_time FROM transcripts WHERE transcript_id = ?',
+        args: [transcriptId]
+      });
+
+      if (result.rows.length > 0) {
+        const row = result.rows[0];
+        // Update Turso with completed transcript
+        await saveTranscript(
+          row.entry_id as string,
+          transcriptId,
+          row.start_time as number | null,
+          row.end_time as number | null,
+          row.audio_url as string,
+          'completed',
+          transcript.language_code,
+          { paragraphs: paragraphsData?.paragraphs || [] }
+        );
+      }
 
       return NextResponse.json({
         status: 'completed',

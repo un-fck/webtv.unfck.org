@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getScheduleVideos, getVideoMetadata } from '@/lib/un-api';
-import { getTranscriptId } from '@/lib/transcript-cache';
+import { getTranscript } from '@/lib/turso';
 import { getSpeakerMapping, SpeakerInfo } from '@/lib/speakers';
 import { getCountryName } from '@/lib/country-lookup';
 
@@ -115,10 +115,10 @@ export async function GET(
       return response;
     }
 
-    // Check for cached transcript
-    const cachedTranscriptId = await getTranscriptId(entryId);
+    // Check Turso for transcript
+    const transcript = await getTranscript(entryId);
     
-    if (!cachedTranscriptId) {
+    if (!transcript) {
       const response = NextResponse.json({
         video,
         metadata,
@@ -129,31 +129,13 @@ export async function GET(
       return response;
     }
 
-    // Fetch transcript from AssemblyAI
-    const detailResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${cachedTranscriptId}`, {
-      headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
-    });
-    
-    if (!detailResponse.ok) {
-      const response = NextResponse.json({
-        video,
-        metadata,
-        transcript: null,
-        error: 'Failed to fetch transcript'
-      });
-      response.headers.set('Content-Type', 'application/json; charset=utf-8');
-      return response;
-    }
-
-    const detail = await detailResponse.json();
-    
-    if (detail.status !== 'completed') {
+    if (transcript.status !== 'completed') {
       const response = NextResponse.json({
         video,
         metadata,
         transcript: {
-          status: detail.status,
-          transcriptId: cachedTranscriptId
+          status: transcript.status,
+          transcriptId: transcript.transcript_id
         },
         message: 'Transcript not completed'
       });
@@ -161,16 +143,10 @@ export async function GET(
       return response;
     }
 
-    // Fetch paragraphs
-    const paragraphsResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${cachedTranscriptId}/paragraphs`, {
-      headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
-    });
-    
-    const paragraphsData = paragraphsResponse.ok ? await paragraphsResponse.json() : null;
-    const paragraphs = paragraphsData?.paragraphs || [];
+    const paragraphs = transcript.content.paragraphs;
 
     // Get speaker mappings
-    const speakerMappings = await getSpeakerMapping(cachedTranscriptId) || {};
+    const speakerMappings = await getSpeakerMapping(transcript.transcript_id) || {};
 
     // Load country names for affiliations
     const countryNames = new Map<string, string>();
@@ -242,8 +218,8 @@ export async function GET(
         related_documents: metadata.relatedDocuments,
       },
       transcript: {
-        transcript_id: cachedTranscriptId,
-        language: detail.language_code,
+        transcript_id: transcript.transcript_id,
+        language: transcript.language_code,
         paragraphs: transcriptParagraphs,
       },
     });
