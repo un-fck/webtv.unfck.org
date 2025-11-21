@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { VideoPageClient } from '@/components/video-page-client';
 
+export const dynamic = 'force-dynamic';
+
 function extractKalturaId(assetId: string): string | null {
   // Try different patterns to extract Kaltura entry ID
   

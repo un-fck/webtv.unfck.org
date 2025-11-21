@@ -3,6 +3,8 @@ import { getScheduleVideos } from '@/lib/un-api';
 import { VideoTable } from '@/components/video-table';
 import Image from 'next/image';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
     const videos = await getScheduleVideos(90); // Fetch last 90 days
 
