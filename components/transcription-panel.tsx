@@ -513,7 +513,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const filename = `${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, '_')}_${video.date}.rtf`;
+    const filename = `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, '_')}.rtf`;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
@@ -529,6 +529,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
     // Define columns
     worksheet.columns = [
       { header: 'Date', key: 'date', width: 12 },
+      { header: 'Source Type', key: 'source_type', width: 12 },
       { header: 'Title', key: 'title', width: 40 },
       { header: 'URL', key: 'url', width: 35 },
       { header: 'Paragraph Number', key: 'paragraph_number', width: 15 },
@@ -562,6 +563,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
         
         const row = worksheet.addRow({
           date: video.date,
+          source_type: 'WebTV',
           title: video.cleanTitle,
           url: video.url,
           paragraph_number: paragraphNumber++,
@@ -584,7 +586,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const filename = `${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, '_')}_${video.date}.xlsx`;
+    const filename = `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, '_')}.xlsx`;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
