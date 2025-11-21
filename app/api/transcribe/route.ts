@@ -73,6 +73,8 @@ export async function POST(request: NextRequest) {
         isSegmentRequest ? endTime : undefined
       );
       
+      console.log('Turso check for entryId:', entryId, 'cached:', cached ? `found (${cached.status}, ${cached.content.paragraphs.length} paragraphs)` : 'not found');
+      
       if (cached && cached.status === 'completed') {
         console.log('✓ Using cached transcript:', cached.transcript_id);
         
@@ -154,7 +156,7 @@ export async function POST(request: NextRequest) {
 
     const submitData = await submitResponse.json();
     const transcriptId = submitData.id;
-    console.log('✓ Submitted transcript:', transcriptId);
+    console.log('✓ Submitted transcript:', transcriptId, 'for entryId:', entryId);
 
     // Save initial transcript record to Turso
     await saveTranscript(
@@ -167,6 +169,7 @@ export async function POST(request: NextRequest) {
       null,
       { paragraphs: [] }
     );
+    console.log('✓ Saved initial record to Turso');
 
     // Return transcript ID immediately for client-side polling
     return NextResponse.json({

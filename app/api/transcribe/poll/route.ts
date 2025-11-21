@@ -37,6 +37,11 @@ export async function POST(request: NextRequest) {
 
       if (result.rows.length > 0) {
         const row = result.rows[0];
+        console.log('Saving completed transcript to Turso:', {
+          transcriptId,
+          entryId: row.entry_id,
+          paragraphCount: paragraphsData?.paragraphs?.length || 0
+        });
         // Update Turso with completed transcript
         await saveTranscript(
           row.entry_id as string,
@@ -48,6 +53,9 @@ export async function POST(request: NextRequest) {
           transcript.language_code,
           { paragraphs: paragraphsData?.paragraphs || [] }
         );
+        console.log('✓ Saved to Turso successfully');
+      } else {
+        console.error('No transcript record found in Turso for transcriptId:', transcriptId);
       }
 
       return NextResponse.json({
