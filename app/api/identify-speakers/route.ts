@@ -79,9 +79,43 @@ IDENTIFICATION RULES:
 - If identity cannot be determined, return all null values
 - Only use information literally in the text (no world knowledge)
 - Fix transcription errors: "UN80 Initiative" (not "UNAT", "UNA", "UNAT Initiative", etc.)
+- The co-chairs of the UN80 / MIR IAHWG are called "Carolyn Schwalger" and "Brian Wallace", their affiliation is "IAHWG", and their function is "Co-Chair"
 
 COMMON ABBREVIATIONS
 - Informal Ad hoc Working Group (on UN80 initiative / mandate implementation review / ...) -> IAHWG (just "IAHWG", NOT "IAHWG on ...")
+- common member state groups (use only the short form in your response, not the part in brackets):
+  - G77 + China (Group of 77 + China)
+  - NAM (Non-Aligned Movement)
+  - WEOG (Western European and Others Group)
+  - GRULAC (Latin American and Caribbean Group)
+  - Africa Group
+  - Asia-Pacific Group
+  - EEG (Eastern European Group)
+  - LDCs (Least Developed Countries)
+  - SIDS (Small Island Developing States)
+  - LLDCs (Landlocked Developing Countries)
+  - AOSIS (Alliance of Small Island States)
+  - Arab Group
+  - OIC (Organisation of Islamic Cooperation)
+  - ACP (African, Caribbean and Pacific States)
+  - EU (European Union)
+  - JUSCANZ
+  - CANZ
+  - Nordic Group
+  - LMG (Like-Minded Group)
+  - LGBTI Core Group
+  - Friends of R2P
+  - Friends of the SDGs
+  - Friends of Mediation
+  - Friends of UNAOC (UN Alliance of Civilizations)
+  - G24 (Intergovernmental Group of 24)
+  - BRICS
+  - G20
+  - OECD-DAC
+  - Umbrella Group
+  - BASIC (Brazil, South Africa, India, China)
+  - LMDC (Like-Minded Developing Countries)
+  - EIG (Environmental Integrity Group)
 
 SCHEMA DEFINITIONS:
 
