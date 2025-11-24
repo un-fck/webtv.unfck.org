@@ -48,6 +48,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
   const [checking, setChecking] = useState(true);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState<number>(-1);
+  const [showCopied, setShowCopied] = useState(false);
   const [activeParagraphIndex, setActiveParagraphIndex] = useState<number>(-1);
   const [activeWordIndex, setActiveWordIndex] = useState<number>(-1);
   const [speakerMappings, setSpeakerMappings] = useState<SpeakerMapping>({});
@@ -485,9 +486,14 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
     }
   };
 
-  const handleRetranscribe = async () => {
-    setCached(false);
-    await handleTranscribe(true);
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+    }
   };
 
   const downloadDocx = () => {
@@ -772,13 +778,19 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
           )}
           {segments && (
             <>
-              <button
-                onClick={handleRetranscribe}
-                disabled={loading}
-                className="px-2.5 py-1 text-xs border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Retranscribe
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleShare}
+                  className="px-2.5 py-1 text-xs border border-border rounded hover:bg-muted"
+                >
+                  Share
+                </button>
+                {showCopied && (
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-8 bg-foreground text-background text-xs px-2 py-1 rounded whitespace-nowrap">
+                    Copied link to clipboard!
+                  </div>
+                )}
+              </div>
               <div className="relative" ref={downloadButtonRef}>
                 <button
                   onClick={() => setShowDownloadMenu(!showDownloadMenu)}
@@ -847,11 +859,6 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
       
       {segments && (
         <div className="space-y-3">
-          {cached && (
-            <div className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-              <span>✓</span> Loaded from cache
-            </div>
-          )}
           {segments.map((segment, segmentIndex) => {
             const isSegmentActive = segmentIndex === activeSegmentIndex;
             const firstParagraphIndex = segment.paragraphIndices?.[0] ?? 0;

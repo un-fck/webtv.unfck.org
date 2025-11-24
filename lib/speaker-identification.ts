@@ -3,8 +3,6 @@ import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { setSpeakerMapping, SpeakerInfo } from './speakers';
 import { saveTranscript, getTursoClient } from './turso';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
 import './load-env';
 
 const ParagraphSpeakerMapping = z.object({
@@ -120,6 +118,13 @@ function createOpenAIClient() {
 
 function normalizeText(text: string): string {
   return text.replace(/[^a-z0-9]/gi, '').toLowerCase();
+}
+
+function speakersEqual(a: SpeakerInfo, b: SpeakerInfo): boolean {
+  return a.name === b.name &&
+         a.function === b.function &&
+         a.affiliation === b.affiliation &&
+         a.group === b.group;
 }
 
 async function resegmentParagraph(
@@ -479,20 +484,6 @@ ${transcriptParts.join('\n\n')}`,
   if (toResegment.length > 0) {
     console.log(`  → Found ${toResegment.length} paragraph(s) with mixed speakers: [${toResegment.join(', ')}]`);
     
-    // Write before-resegmentation file
-    if (transcriptId) {
-      const beforeFile = join(process.cwd(), `${transcriptId}_before.json`);
-      writeFileSync(beforeFile, JSON.stringify({
-        paragraphs: paragraphs.map((p, i) => ({
-          index: i,
-          text: p.text,
-          speaker: finalMapping[i.toString()],
-          flagged: toResegment.includes(i),
-        })),
-      }, null, 2));
-      console.log(`  → Wrote before file: ${beforeFile}`);
-    }
-    
     const CONTEXT_SIZE = 3; // Number of paragraphs before and after
     
     const resegmentTasks = toResegment.map(async (idx) => {
@@ -565,19 +556,6 @@ ${transcriptParts.join('\n\n')}`,
     finalParagraphs = newParagraphs;
     finalMapping = newMapping;
     console.log(`  ✓ Rebuilt transcript: ${paragraphs.length} → ${finalParagraphs.length} paragraphs`);
-    
-    // Write after-resegmentation file
-    if (transcriptId) {
-      const afterFile = join(process.cwd(), `${transcriptId}_after.json`);
-      writeFileSync(afterFile, JSON.stringify({
-        paragraphs: finalParagraphs.map((p, i) => ({
-          index: i,
-          text: p.text,
-          speaker: finalMapping[i.toString()],
-        })),
-      }, null, 2));
-      console.log(`  → Wrote after file: ${afterFile}`);
-    }
   }
 
   // Filter out off-record paragraphs
@@ -606,6 +584,47 @@ ${transcriptParts.join('\n\n')}`,
     finalParagraphs = filteredParagraphs;
     finalMapping = filteredMapping;
     console.log(`  ✓ Kept ${finalParagraphs.length} on-record paragraphs`);
+  }
+
+  // Group consecutive same-speaker paragraphs
+  if (finalParagraphs.length > 0) {
+    const groupedParagraphs: ParagraphInput[] = [];
+    const groupedMapping: SpeakerMapping = {};
+    
+    let currentGroup = { ...finalParagraphs[0] };
+    let currentSpeaker = finalMapping['0'];
+    
+    for (let i = 1; i < finalParagraphs.length; i++) {
+      const para = finalParagraphs[i];
+      const speaker = finalMapping[i.toString()];
+      
+      if (speakersEqual(currentSpeaker, speaker)) {
+        // Merge with current group
+        currentGroup = {
+          text: currentGroup.text + '\n\n' + para.text,
+          start: currentGroup.start,
+          end: para.end,
+          words: [...currentGroup.words, ...para.words],
+        };
+      } else {
+        // Save current group and start new
+        groupedParagraphs.push(currentGroup);
+        groupedMapping[groupedParagraphs.length - 1] = currentSpeaker;
+        currentGroup = { ...para };
+        currentSpeaker = speaker;
+      }
+    }
+    
+    // Don't forget the last group
+    groupedParagraphs.push(currentGroup);
+    groupedMapping[groupedParagraphs.length - 1] = currentSpeaker;
+    
+    if (groupedParagraphs.length < finalParagraphs.length) {
+      console.log(`  ✓ Grouped consecutive same-speaker paragraphs: ${finalParagraphs.length} → ${groupedParagraphs.length} paragraphs`);
+    }
+    
+    finalParagraphs = groupedParagraphs;
+    finalMapping = groupedMapping;
   }
 
   // Save to database

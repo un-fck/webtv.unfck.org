@@ -118,12 +118,6 @@ export async function GET(
           group: info?.group || null,
           function: info?.function || null,
         },
-        words: para.words.map(word => ({
-          text: word.text,
-          start: word.start / 1000,
-          end: word.end / 1000,
-          confidence: word.confidence,
-        })),
       };
     });
 
