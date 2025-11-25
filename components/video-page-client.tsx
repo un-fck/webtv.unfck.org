@@ -57,7 +57,21 @@ export function VideoPageClient({ kalturaId, video, metadata }: VideoPageClientP
               {video.body && (video.category || video.duration) && <span>•</span>}
               {video.category && <span>{video.category}</span>}
               {video.category && video.duration && <span>•</span>}
-              <span>{video.duration}</span>
+              {video.duration && (
+                <span>
+                  {(() => {
+                    const seconds = parseInt(video.duration);
+                    if (isNaN(seconds)) return video.duration;
+                    const hours = Math.floor(seconds / 3600);
+                    const minutes = Math.floor((seconds % 3600) / 60);
+                    const secs = seconds % 60;
+                    if (hours > 0) {
+                      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    }
+                    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+                  })()}
+                </span>
+              )}
             </div>
             <a
               href={video.url}

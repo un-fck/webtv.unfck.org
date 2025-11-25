@@ -310,17 +310,15 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
       
       const data = await response.json();
       
-      // Handle response data
-      if (!data.statements || data.statements.length === 0) {
-        throw new Error('Invalid transcript format');
-      }
-      
-      setStatements(data.statements);
-      setCached(data.cached || false);
-      
-      // Load topics
-      if (data.topics) {
-        setTopics(data.topics);
+      // If we got statements directly (cached), use them
+      if (data.statements && data.statements.length > 0) {
+        setStatements(data.statements);
+        setCached(data.cached || false);
+        
+        // Load topics
+        if (data.topics) {
+          setTopics(data.topics);
+        }
       }
         
       // Load speaker mappings if cached
@@ -867,12 +865,12 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
       </div>
       
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
           {error}
         </div>
       )}
       
-      {checking && (
+      {checking && !loading && (
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
           <span>Checking for existing transcript...</span>
@@ -880,7 +878,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
       )}
       
       {loading && (
-        <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
           <span>Generating transcript... This may take several minutes for long videos.</span>
         </div>

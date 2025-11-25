@@ -28,33 +28,56 @@ export async function POST(request: NextRequest) {
 
       const paragraphsData = paragraphsResponse.ok ? await paragraphsResponse.json() : null;
 
-      // Get existing record from Turso to retrieve entry_id and audio_url
+      // Get existing record from Turso to check status and retrieve metadata
       const client = await getTursoClient();
       const result = await client.execute({
-        sql: 'SELECT entry_id, audio_url, start_time, end_time FROM transcripts WHERE transcript_id = ?',
+        sql: 'SELECT entry_id, audio_url, start_time, end_time, status FROM transcripts WHERE transcript_id = ?',
         args: [transcriptId]
       });
 
       if (result.rows.length > 0) {
         const row = result.rows[0];
-        console.log('Saving completed transcript to Turso:', {
-          transcriptId,
-          entryId: row.entry_id,
-          paragraphCount: paragraphsData?.paragraphs?.length || 0
-        });
-        // Update Turso with completed transcript
-        // Initially save with empty statements - speaker identification will populate it later
-        await saveTranscript(
-          row.entry_id as string,
-          transcriptId,
-          row.start_time as number | null,
-          row.end_time as number | null,
-          row.audio_url as string,
-          'completed',
-          transcript.language_code,
-          { statements: [], topics: {} }
-        );
-        console.log('✓ Saved to Turso successfully');
+        
+        // Only save if not already saved as completed
+        if (row.status !== 'completed') {
+          console.log('Saving completed transcript to Turso:', {
+            transcriptId,
+            entryId: row.entry_id,
+            paragraphCount: paragraphsData?.paragraphs?.length || 0
+          });
+          
+          // Update Turso with completed transcript
+          // Initially save with empty statements - speaker identification will populate it later
+          await saveTranscript(
+            row.entry_id as string,
+            transcriptId,
+            row.start_time as number | null,
+            row.end_time as number | null,
+            row.audio_url as string,
+            'completed',
+            transcript.language_code,
+            { statements: [], topics: {} }
+          );
+          console.log('✓ Saved to Turso successfully');
+          
+          // Trigger speaker identification
+          console.log('Triggering speaker identification for:', transcriptId);
+          try {
+            const identifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/identify-speakers`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ transcriptId }),
+            });
+            
+            if (identifyResponse.ok) {
+              console.log('✓ Speaker identification triggered');
+            } else {
+              console.error('Failed to trigger speaker identification');
+            }
+          } catch (err) {
+            console.error('Error triggering speaker identification:', err);
+          }
+        }
       } else {
         console.error('No transcript record found in Turso for transcriptId:', transcriptId);
       }
