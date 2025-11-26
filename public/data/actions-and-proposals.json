@@ -1,0 +1,259 @@
+{
+  "sg_actions": {
+    "enhance_mandate_visibility_and_design": [
+      {
+        "slug": "74a",
+        "text": "Accelerate the creation of comprehensive registries of existing mandate texts issued by all mandating bodies"
+      },
+      {
+        "slug": "74b",
+        "text": "Improve Secretariat support for Member States during mandate creation, based on priorities established by Member States"
+      },
+      {
+        "slug": "74c",
+        "text": "Strengthen support by United Nations entities to coordinate and promote greater visibility across the work of mandating bodies"
+      },
+      {
+        "slug": "74d",
+        "text": "Develop tools using artificial intelligence to assist with mandate drafting, including by producing summarized information to enable Member States' decision-making, flagging potential complementarities or duplications in draft texts or meeting agendas across mandating bodies"
+      },
+      {
+        "slug": "74e",
+        "text": "For new mandates, complement estimates of regular budget expenditures prepared by the Secretary-General (in accordance with rule 153 of the rules of procedure of the General Assembly) with additional information on related programmatic activities across the United Nations system and across all sources of funding"
+      }
+    ],
+    "improve_reporting": [
+      {
+        "slug": "74f",
+        "text": "Provide shorter reports and reduce maximum word counts"
+      },
+      {
+        "slug": "74g",
+        "text": "Combine reports covering similar issues and contexts wherever feasible"
+      },
+      {
+        "slug": "74h",
+        "text": "Introduce different report formats based on needs and content type; first reports could be longer, followed by shorter updates, visual dashboards, in-person briefings or other formats"
+      },
+      {
+        "slug": "74i",
+        "text": "Publish download statistics for all reports to inform further discussions on reporting practices"
+      }
+    ],
+    "improve_mandate_delivery_management": [
+      {
+        "slug": "74j",
+        "text": "Strengthen internal strategic oversight of the United Nations system division of labour at all levels to ensure effective, efficient programmatic and operational support. This builds on the 2018 reform commitments and efforts to strengthen resident coordinator system leadership"
+      },
+      {
+        "slug": "74k",
+        "text": "Ensure that United Nations entities review mandate citations in their programmes and budgets so that entities cite only those mandates for which they have demonstrable comparative advantages"
+      },
+      {
+        "slug": "74l",
+        "text": "Make better use of system-wide coordination platforms (e.g. Inter-Agency Standing Committee, United Nations Sustainable Development Group and United Nations System Chief Executives Board for Coordination) to avoid duplication and ensure the strategic use of resources across the United Nations system"
+      },
+      {
+        "slug": "74m",
+        "text": "Fully apply all commitments by the United Nations system through the funding compact and strengthen dialogue to this end"
+      }
+    ],
+    "establish_effective_review_mechanisms": [
+      {
+        "slug": "74n",
+        "text": "Increase the use of existing mechanisms to identify opportunities to consolidate and streamline work, including recommendations by the Secretary-General to terminate specific outputs (in accordance with staff rule 105.6 of ST/SGB/2018/3)"
+      },
+      {
+        "slug": "74o",
+        "text": "Strengthen and harmonize management for results mechanisms across the United Nations system, including how results are measured and communicated"
+      }
+    ]
+  },
+  "ms_proposals": {
+    "effective_mandate_design": [
+      {
+        "slug": "77a",
+        "text": "Reduce the length of mandate texts wherever possible in order to ensure that mandates are implemented effectively and with greater impact (in line with the recommendations in paragraph 45 of General Assembly resolution 77/335)"
+      },
+      {
+        "slug": "77b",
+        "text": "Frame mandates that allow the Secretary-General appropriate flexibility to assign tasks based on comparative advantages and resources across the United Nations system"
+      },
+      {
+        "slug": "77c",
+        "text": "Refrain from mandating new tasks that are not backed by corresponding resources or an explicit reduction in other mandated tasks"
+      }
+    ],
+    "improve_mandate_delivery": [
+      {
+        "slug": "78a",
+        "text": "Prioritize and streamline requests in mandates for reports or meetings"
+      },
+      {
+        "slug": "78b",
+        "text": "Fully apply all commitments by Member States through the funding compact and strengthen dialogue to this end"
+      },
+      {
+        "slug": "78c",
+        "text": "Allow United Nations system entities greater flexibility to redeploy resources quickly with reasonable justification, including to protect essential country-level delivery from funding cuts"
+      },
+      {
+        "slug": "78d",
+        "text": "Consider implementing relevant forthcoming recommendations from the UN80 Initiative workstream on structural changes and programme realignment"
+      }
+    ],
+    "support_mandate_review": [
+      {
+        "slug": "79a",
+        "text": "Systematize and reinforce efforts under way to strengthen mandate review mechanisms and ensure that these efforts are in place across mandating bodies"
+      },
+      {
+        "slug": "79b",
+        "text": "Include expiry clauses in new resolutions (as recommended in General Assembly resolution 77/335)"
+      },
+      {
+        "slug": "79c",
+        "text": "Introduce processes to facilitate more collective reviews of mandates that address specific issues, learning from existing practices (e.g. General Assembly revitalization) and similar processes (e.g. the quadrennial comprehensive policy review)"
+      },
+      {
+        "slug": "79d",
+        "text": "Streamline how mandates are discussed, including by revising intergovernmental bodies' programmes of work, consolidating agenda items of individual bodies and aligning work across the General Assembly, the Economic and Social Council and the Security Council"
+      }
+    ]
+  },
+  "other_topics": {
+    "structural_reforms": [
+      {
+        "slug": "entity-mergers",
+        "label": "Entity Mergers and Structural Consolidation",
+        "description": "Assessing potential mergers, consolidations, and sunsetting of UN entities (e.g., UNDP–UNOPS, UNFPA–UN Women) to reduce duplication and improve impact, subject to intergovernmental decisions and rigorous cost–benefit analyses"
+      },
+      {
+        "slug": "envoy-system",
+        "label": "Special Envoys and Senior Posts Review",
+        "description": "Evaluating the system of special envoys and senior posts to reduce fragmentation and top-heaviness, clarify roles, and safeguard mission effectiveness"
+      },
+      {
+        "slug": "staffing-diversity",
+        "label": "Staffing Diversity and Geographic Balance",
+        "description": "Ensuring reforms uphold gender parity, equitable geographical representation, and fair staffing outcomes, including avoiding disproportionate cuts to junior posts"
+      },
+      {
+        "slug": "function-relocation",
+        "label": "Function Relocation and Cost Savings",
+        "description": "Exploration of moving back-office functions from higher- to lower-cost duty stations to balance cost, operational effectiveness, and proximity needs"
+      },
+      {
+        "slug": "decentralization",
+        "label": "UN Decentralization to Field Operations",
+        "description": "Exploring relocation of agency operations to lower-cost, field-based hubs to enhance cost-effectiveness, subject to agency boards and member state processes"
+      }
+    ],
+    "pillar_specific_reforms": [
+      {
+        "slug": "human-rights",
+        "label": "Human Rights Architecture",
+        "description": "Proposals to establish and streamline human rights coordination (e.g., a Human Rights Group, special procedures, treaty body processes) while safeguarding mandates and ensuring intergovernmental oversight"
+      },
+      {
+        "slug": "humanitarian-compact",
+        "label": "Humanitarian Compact and Operational Efficiency",
+        "description": "Improving humanitarian operations through joint supply chain pilots, shared data efforts, and aligned planning instruments to deliver faster, more coordinated responses"
+      },
+      {
+        "slug": "peace-operations",
+        "label": "Peace Operations Realignment",
+        "description": "Redistributing civilian mandates to appropriate UN entities, co-locating advisory capacities with regional commissions, and strengthening prevention, peacebuilding, and peace support"
+      },
+      {
+        "slug": "peacebuilding",
+        "label": "Peacebuilding Integration",
+        "description": "Integrating peacebuilding and peacekeeping, including a unified Peace Building and Peace Support Office and potential centers of excellence, to reduce silos and strengthen prevention"
+      },
+      {
+        "slug": "women-peace-security",
+        "label": "Women, Peace and Security",
+        "description": "Advancing and integrating the WPS agenda across UN peace and security work and ensuring gender equality efforts are strengthened, coordinated and protected in reforms"
+      },
+      {
+        "slug": "rule-of-law",
+        "label": "Rule of Law Coordination",
+        "description": "Aligning and streamlining UN rule-of-law assistance across entities to reduce fragmentation, clarify roles, and deliver more efficient, impact-oriented support"
+      }
+    ],
+    "operational_delivery": [
+      {
+        "slug": "regional-reset",
+        "label": "Regional Reset and Integrated Platforms",
+        "description": "Redesigning regional capacities and integrated platforms to improve coherence and delivery across pillars, with clear scope, costs, and impacts—especially for Africa and vulnerable regions"
+      },
+      {
+        "slug": "country-teams",
+        "label": "UN Country Team Reconfiguration and RC System",
+        "description": "Adjusting UN country team configurations and strengthening the Resident Coordinator system to enhance on-the-ground impact while respecting national ownership and host government priorities"
+      },
+      {
+        "slug": "field-impact",
+        "label": "Field-Level Impact and Coherence",
+        "description": "Refocusing reforms to improve delivery and coordination on the ground, empowering Resident/Humanitarian Coordinators, harmonizing country-level mechanisms, and reducing duplication in complex operational settings"
+      },
+      {
+        "slug": "integrated-delivery",
+        "label": "Integrated Delivery Across Pillars",
+        "description": "Shift from fragmented and parallel efforts to an integrated, complementary approach across the peace, development and humanitarian pillars, managing interdependencies holistically"
+      }
+    ],
+    "thematic_priorities": [
+      {
+        "slug": "development-pillar",
+        "label": "Development Pillar Priority",
+        "description": "Ensuring the development pillar remains central to UN80 reforms, with tailored support to developing countries and stronger delivery on the SDGs at country and regional levels"
+      },
+      {
+        "slug": "sdg-delivery",
+        "label": "SDG Delivery Reform",
+        "description": "Strengthening the UN development system to deliver the Sustainable Development Goals by improving coherence, effectiveness and impact while safeguarding the development pillar and country-level support"
+      },
+      {
+        "slug": "ldcs-sids",
+        "label": "Support for LDCs, LLDCs and SIDS",
+        "description": "Prioritizing tailored development support, expertise and strong field presence for countries in special situations, ensuring equity and avoiding reduced capacity in vulnerable regions"
+      },
+      {
+        "slug": "africa-priority",
+        "label": "Africa Prioritization",
+        "description": "Protecting and advancing mandates that prioritize Africa and deepening UN–African Union cooperation, recognizing the continent's specific needs and Security Council focus"
+      },
+      {
+        "slug": "three-pillars",
+        "label": "Three Pillars Balance",
+        "description": "Safeguarding the balance among peace and security, development, and human rights so reforms enhance all pillars without encroachment"
+      }
+    ],
+    "technology_and_services": [
+      {
+        "slug": "data-commons",
+        "label": "Data Commons and Joint Knowledge Hubs",
+        "description": "Developing system-wide data standards and joint knowledge hubs to share expertise, enable cross-pillar solutions, and support evidence-based decision-making"
+      },
+      {
+        "slug": "technology-modernization",
+        "label": "Technology and Data Modernization",
+        "description": "Creating a UN System Data Commons and a technology accelerator platform, consolidating IT and leveraging digital tools and AI to reduce duplication, modernize operations and improve delivery"
+      },
+      {
+        "slug": "shared-services",
+        "label": "Shared Services and Procurement Reform",
+        "description": "Scaling shared services, simplifying planning, and integrating supply chains to improve efficiency and reduce costs"
+      }
+    ],
+    "specific_entities": [
+      {
+        "slug": "unaids",
+        "label": "UNAIDS Future/Transition",
+        "description": "Debate over the proposed early sunset of UNAIDS and transfer of its functions, with concerns about jeopardizing national HIV responses and global health goals"
+      }
+    ]
+  }
+}
+

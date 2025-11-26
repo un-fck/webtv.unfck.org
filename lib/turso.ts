@@ -88,6 +88,7 @@ interface TranscriptContent {
         start: number;
         end: number;
         topic_keys?: string[];
+        un80_topic_keys?: string[];
         words: Array<{
           text: string;
           start: number;
@@ -114,6 +115,11 @@ interface TranscriptContent {
     }>;
   }>;
   topics?: Record<string, {
+    key: string;
+    label: string;
+    description: string;
+  }>;
+  un80_topics?: Record<string, {
     key: string;
     label: string;
     description: string;

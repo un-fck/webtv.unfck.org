@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getScheduleVideos } from '@/lib/un-api';
 import { VideoTimeline } from '@/components/video-timeline';
 import Image from 'next/image';
+import Link from 'next/link';
 import { scheduleLookbackDays } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export default async function Home() {
 
     return (
         <main className="min-h-screen bg-background px-4 sm:px-6">
-            <div className="max-w-[1400px] mx-auto py-8">
+            <div className="max-w-4xl mx-auto py-8">
                 <Image
                     src="/images/UN Logo_Horizontal_English/Colour/UN Logo_Horizontal_Colour_English.svg"
                     alt="UN Logo"
@@ -25,13 +26,21 @@ export default async function Home() {
                     className="h-10 w-auto mb-8"
                 />
 
-                <header className="mb-12 text-center">
+                <header className="mb-12">
                     <h1 className="text-4xl font-light tracking-wide text-gray-800">
                         UN80 Transcripts
                     </h1>
+                    <div className="mt-4">
+                        <Link 
+                            href="/topics"
+                            className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                            View Actions & Proposals →
+                        </Link>
+                    </div>
                 </header>
 
-                <Suspense fallback={<div className="text-center text-gray-500">Loading...</div>}>
+                <Suspense fallback={<div className="text-gray-500">Loading...</div>}>
                     <VideoTimeline videos={videos} />
                 </Suspense>
             </div>

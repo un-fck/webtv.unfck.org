@@ -89,6 +89,7 @@ export async function GET(
     }
 
     const topics = transcript.content.topics || {};
+    const un80Topics = transcript.content.un80_topics || {};
 
     const transcriptData = transcript.content.statements.map((stmt, index: number) => {
       const info = speakerMappings[index.toString()];
@@ -104,6 +105,11 @@ export async function GET(
               key,
               label: topics[key]?.label || key,
               description: topics[key]?.description || '',
+            })) || [],
+            un80_topics: sent.un80_topic_keys?.map(key => ({
+              key,
+              label: un80Topics[key]?.label || un80Topics[key]?.key || key,
+              description: un80Topics[key]?.description || '',
             })) || [],
           })),
         })),
@@ -144,6 +150,11 @@ export async function GET(
         language: transcript.language_code,
         data: transcriptData,
         topics: Object.values(topics).map(t => ({
+          key: t.key,
+          label: t.label,
+          description: t.description,
+        })),
+        un80_topics: Object.values(un80Topics).map(t => ({
           key: t.key,
           label: t.label,
           description: t.description,
