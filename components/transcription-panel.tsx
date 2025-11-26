@@ -995,47 +995,6 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
                   >
                     [{formatTime(segment.timestamp)}]
                   </button>
-                  {/* Topic indicators in header */}
-                  {segment.statementIndices.length > 0 && statements && (() => {
-                    const segmentTopics = new Set<string>();
-                    segment.statementIndices.forEach(idx => {
-                      const stmt = statements[idx];
-                      if (stmt) {
-                        stmt.paragraphs.forEach(para => {
-                          para.sentences.forEach(sent => {
-                            sent.topic_keys?.forEach(key => segmentTopics.add(key));
-                          });
-                        });
-                      }
-                    });
-                    
-                    if (segmentTopics.size > 0) {
-                      const allTopicKeys = Object.keys(topics);
-                      return (
-                        <div className="flex gap-1 ml-1">
-                          {Array.from(segmentTopics).map(key => {
-                            const topic = topics[key];
-                            if (!topic) return null;
-                            const color = getTopicColor(key, allTopicKeys);
-                            return (
-                              <div
-                                key={key}
-                                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold shadow-sm"
-                                style={{ 
-                                  backgroundColor: color,
-                                  color: '#ffffff'
-                                }}
-                                title={`${topic.label}: ${topic.description}`}
-                              >
-                                {key.charAt(0).toUpperCase()}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
                 </div>
                 <div className={`p-4 rounded-lg transition-all duration-200 ${
                   isSegmentActive 

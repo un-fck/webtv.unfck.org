@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTranscript, saveTranscript, deleteTranscriptsForEntry } from '@/lib/turso';
+import { getKalturaAudioUrl, submitTranscription } from '@/lib/transcription';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,61 +13,7 @@ export async function POST(request: NextRequest) {
     const isSegmentRequest = startTime !== undefined && endTime !== undefined;
 
     // Get audio download URL from Kaltura
-    const apiResponse = await fetch('https://cdnapisec.kaltura.com/api_v3/service/multirequest', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        '1': {
-          service: 'session',
-          action: 'startWidgetSession',
-          widgetId: '_2503451',
-        },
-        '2': {
-          service: 'baseEntry',
-          action: 'list',
-          ks: '{1:result:ks}',
-          filter: { redirectFromEntryId: kalturaId },
-          responseProfile: { type: 1, fields: 'id,duration' },
-        },
-        '3': {
-          service: 'flavorAsset',
-          action: 'list',
-          ks: '{1:result:ks}',
-          filter: { entryIdEqual: '{2:result:objects:0:id}' },
-        },
-        apiVersion: '3.3.0',
-        format: 1,
-        ks: '',
-        clientTag: 'html5:v3.17.30',
-        partnerId: 2503451,
-      }),
-    });
-
-    if (!apiResponse.ok) {
-      return NextResponse.json({ error: 'Failed to query Kaltura API' }, { status: 500 });
-    }
-
-    const apiData = await apiResponse.json();
-    const entryId = apiData[1]?.objects?.[0]?.id;
-    
-    if (!entryId) {
-      return NextResponse.json({ error: 'No entry found' }, { status: 404 });
-    }
-
-    // Find English audio track
-    const flavors = apiData[2]?.objects || [];
-    const englishCandidates = flavors.filter((f: { language?: string; tags?: string }) => 
-      f.language?.toLowerCase() === 'english' && f.tags?.includes('audio_only')
-    );
-    const preferredFlavor = englishCandidates.find((f: { status?: number; isDefault?: boolean }) => f.status === 2 && f.isDefault)
-      || englishCandidates.find((f: { status?: number }) => f.status === 2)
-      || englishCandidates[0];
-    const flavorParamId = preferredFlavor?.flavorParamsId || 100; // Fallback to 100
-    
-    const baseDownloadUrl = `https://cdnapisec.kaltura.com/p/2503451/sp/0/playManifest/entryId/${entryId}/format/download/protocol/https/flavorParamIds/${flavorParamId}`;
-    
-    // Check if this is a live stream entry
-    const isLiveStream = apiData[1]?.objects?.[0]?.objectType === 'KalturaLiveStreamEntry';
+    const { entryId, audioUrl: baseDownloadUrl, flavorParamId, isLiveStream } = await getKalturaAudioUrl(kalturaId);
 
     // Check Turso for existing transcript (unless force=true)
     if (!force) {
@@ -154,40 +101,13 @@ export async function POST(request: NextRequest) {
       console.log('HLS uploaded to AssemblyAI:', audioUrl);
     }
     
-    const submitBody = {
-      audio_url: audioUrl,
-      speaker_labels: true,
-      keyterms_prompt: [
-        'UN80',
-        'Carolyn Schwalger',
-        'Brian Wallace',
-        'Guy Ryder',
-      ],
-    };
-    
     console.log('Submitting to AssemblyAI:', { 
       isSegment: isSegmentRequest, 
       isLiveStream,
       audioUrl
     });
 
-    const submitResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
-      method: 'POST',
-      headers: {
-        'Authorization': process.env.ASSEMBLYAI_API_KEY!,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(submitBody),
-    });
-
-    if (!submitResponse.ok) {
-      const error = await submitResponse.text();
-      console.error('AssemblyAI submit error:', error);
-      return NextResponse.json({ error: `Failed to submit: ${error}` }, { status: 500 });
-    }
-
-    const submitData = await submitResponse.json();
-    const transcriptId = submitData.id;
+    const transcriptId = await submitTranscription(audioUrl);
     console.log('✓ Submitted transcript:', transcriptId, 'for entryId:', entryId);
 
     // Save initial transcript record to Turso

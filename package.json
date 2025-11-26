@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "reidentify": "tsx scripts/reidentify.ts",
+    "retranscribe": "tsx scripts/retranscribe.ts",
     "sync-videos": "tsx scripts/sync-videos.ts"
   },
   "dependencies": {
