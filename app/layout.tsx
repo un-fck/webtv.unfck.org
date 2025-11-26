@@ -10,7 +10,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-    title: "UN Web TV Transcribed",
+    title: "UN80 Statements",
     description: "Browse UN Web TV videos with transcripts of all speeches",
 };
 
