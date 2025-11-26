@@ -37,8 +37,11 @@ export async function GET() {
 
     for (const video of un80Videos) {
       try {
-        // Fetch transcript for this video
-        const response = await fetch(`http://localhost:3000/json/${encodeURIComponent(video.id)}`);
+        // Fetch transcript for this video (use relative URL for server-side fetch)
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/json/${encodeURIComponent(video.id)}`);
         if (!response.ok) continue;
         
         const data = await response.json();
