@@ -49,7 +49,7 @@ export async function GET() {
         
         if (!transcript || !transcript.data) continue;
 
-        // Extract un80_topics definitions
+        // Extract un80_topics definitions from transcript level
         const un80TopicsDict = transcript.un80_topics || [];
         const topicsById: Record<string, { key: string; label: string; description: string }> = {};
         for (const topic of un80TopicsDict) {
@@ -62,16 +62,17 @@ export async function GET() {
           
           for (const paragraph of statement.paragraphs) {
             for (const sentence of paragraph.sentences) {
+              // Read un80_topics (already transformed by /json endpoint)
               const un80Topics = sentence.un80_topics || [];
               
-              for (const topicRef of un80Topics) {
-                const topicKey = topicRef.key;
+              for (const topic of un80Topics) {
+                const topicKey = topic.key;
                 
                 if (!topicsMap.has(topicKey)) {
                   topicsMap.set(topicKey, {
                     key: topicKey,
-                    label: topicRef.label || topicKey,
-                    description: topicRef.description || '',
+                    label: topic.label || topicKey,
+                    description: topic.description || '',
                     sentences: []
                   });
                 }
