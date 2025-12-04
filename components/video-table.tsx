@@ -95,16 +95,34 @@ function DateFilter({ column, options = [] }: { column: Column<Video, unknown>; 
   );
 }
 
+function CheckboxFilter({ column }: { column: Column<Video, unknown> }) {
+  const filterValue = column.getFilterValue() as boolean | undefined;
+  
+  return (
+    <input
+      type="checkbox"
+      checked={filterValue === true}
+      onChange={(e) => column.setFilterValue(e.target.checked ? true : undefined)}
+      onClick={(e) => e.stopPropagation()}
+      className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+      title="Show only videos with transcript"
+    />
+  );
+}
+
 export function VideoTable({ videos }: { videos: Video[] }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
+    { id: 'status', value: 'hide_scheduled' } // Hide scheduled by default
+  ]);
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'status', desc: false }, // Live first, then scheduled, then finished
+    { id: 'status', desc: false }, // Live first, then finished
     { id: 'scheduledTime', desc: true }
   ]);
   const [globalFilter, setGlobalFilter] = useState(searchParams.get('q') || '');
+  const [showScheduled, setShowScheduled] = useState(false);
 
   // Sync URL to globalFilter (when URL changes via back/forward)
   useEffect(() => {
@@ -130,6 +148,11 @@ export function VideoTable({ videos }: { videos: Video[] }) {
   // Extract unique values for dropdowns
   const uniqueBodies = useMemo(() => 
     Array.from(new Set(videos.map(v => v.body).filter(Boolean) as string[])).sort(),
+    [videos]
+  );
+  
+  const uniqueCategories = useMemo(() => 
+    Array.from(new Set(videos.map(v => v.category).filter(Boolean) as string[])).sort(),
     [videos]
   );
 
@@ -247,46 +270,47 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           filterOptions: uniqueDates,
         },
       }),
-      columnHelper.accessor('status', {
-        header: 'Status',
+      columnHelper.accessor('duration', {
+        header: 'Duration',
         cell: (info) => {
-          const status = info.getValue();
-          const styles = {
-            finished: 'bg-gray-100 text-gray-700 border-gray-300',
-            live: 'bg-red-50 text-red-700 border-red-300 font-semibold',
-            scheduled: 'bg-blue-50 text-blue-700 border-blue-300',
-          };
-          const labels = {
-            finished: 'Finished',
-            live: '🔴 Live',
-            scheduled: 'Scheduled',
-          };
-          return (
-            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs border ${styles[status]}`}>
-              {labels[status]}
-            </span>
-          );
+          const duration = info.getValue();
+          const isLive = info.row.original.status === 'live';
+          if (isLive) {
+            return <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />;
+          }
+          if (!duration || duration === '00:00:00') return <span className="text-gray-300">—</span>;
+          // Strip leading zeros from HH:MM:SS
+          return <span className="tabular-nums">{duration.replace(/^0+:?/, '').replace(/^0/, '')}</span>;
         },
-        size: 100,
+        size: 70,
+        meta: {
+          align: 'right',
+        },
+      }),
+      columnHelper.accessor('status', {
+        header: () => null,
+        cell: () => null,
+        size: 0,
         sortingFn: (rowA, rowB) => {
-          // Custom sorting: live -> scheduled -> finished
-          const order = { live: 0, scheduled: 1, finished: 2 };
+          const order = { live: 0, finished: 1, scheduled: 2 };
           return order[rowA.original.status] - order[rowB.original.status];
         },
         enableColumnFilter: true,
-        meta: {
-          filterComponent: SelectFilter,
-          filterOptions: ['live', 'scheduled', 'finished'],
+        filterFn: (row, _columnId, filterValue) => {
+          if (filterValue === 'hide_scheduled') return row.original.status !== 'scheduled';
+          return true;
         },
+        enableHiding: true,
       }),
       columnHelper.accessor('cleanTitle', {
         header: 'Title',
         cell: (info) => {
           const encodedId = encodeURIComponent(info.row.original.id);
+          const isScheduled = info.row.original.status === 'scheduled';
           return (
             <a
               href={`/video/${encodedId}`}
-              className="text-primary hover:underline"
+              className={`hover:underline ${isScheduled ? 'text-muted-foreground' : 'text-primary'}`}
             >
               {info.getValue()}
             </a>
@@ -308,8 +332,18 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           filterOptions: uniqueBodies,
         },
       }),
+      columnHelper.accessor('category', {
+        header: 'Category',
+        cell: (info) => info.getValue() || '—',
+        size: 140,
+        enableColumnFilter: true,
+        meta: {
+          filterComponent: SelectFilter,
+          filterOptions: uniqueCategories,
+        },
+      }),
       columnHelper.accessor('hasTranscript', {
-        header: 'Transcript',
+        header: 'Transcribed',
         cell: (info) => {
           const hasTranscript = info.getValue();
           return hasTranscript ? (
@@ -318,20 +352,18 @@ export function VideoTable({ videos }: { videos: Video[] }) {
             <span className="text-gray-300 text-sm">—</span>
           );
         },
-        size: 80,
+        size: 100,
         enableColumnFilter: true,
         filterFn: (row, columnId, filterValue) => {
-          if (filterValue === 'Yes') return row.getValue(columnId) === true;
-          if (filterValue === 'No') return row.getValue(columnId) === false;
+          if (filterValue === true) return row.getValue(columnId) === true;
           return true;
         },
         meta: {
-          filterComponent: SelectFilter,
-          filterOptions: ['Yes', 'No'],
+          filterComponent: CheckboxFilter,
         },
       }),
     ],
-    [uniqueBodies, uniqueDates]
+    [uniqueBodies, uniqueCategories, uniqueDates]
   );
 
   const table = useReactTable({
@@ -341,6 +373,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
       columnFilters,
       sorting,
       globalFilter,
+      columnVisibility: { status: false },
     },
     onColumnFiltersChange: setColumnFilters,
     onSortingChange: setSorting,
@@ -356,37 +389,63 @@ export function VideoTable({ videos }: { videos: Video[] }) {
     },
   });
 
-  const hasFilters = globalFilter || columnFilters.length > 0;
+  // Exclude internal filters (status for scheduled) from "hasFilters" display
+  const userFilters = columnFilters.filter(f => f.id !== 'status');
+  const hasFilters = globalFilter || userFilters.length > 0;
+  
+  // Toggle showing scheduled videos - also update sorting
+  const toggleScheduled = () => {
+    const newValue = !showScheduled;
+    setShowScheduled(newValue);
+    if (newValue) {
+      // Show scheduled: remove status filter and sort by time only (scheduled in future = first)
+      setColumnFilters(prev => prev.filter(f => f.id !== 'status'));
+      setSorting([{ id: 'scheduledTime', desc: true }]);
+    } else {
+      // Hide scheduled: add filter back and sort live first
+      setColumnFilters(prev => [...prev.filter(f => f.id !== 'status'), { id: 'status', value: 'hide_scheduled' }]);
+      setSorting([{ id: 'status', desc: false }, { id: 'scheduledTime', desc: true }]);
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 items-center">
+      <div className="flex flex-wrap gap-4 items-center">
         <input
           type="text"
           placeholder="Search all columns..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
         />
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showScheduled}
+            onChange={toggleScheduled}
+            className="w-4 h-4 rounded border-gray-300"
+          />
+          <span className="text-muted-foreground">Show scheduled</span>
+        </label>
         {hasFilters && (
           <button
             onClick={() => {
               setGlobalFilter('');
-              setColumnFilters([]);
+              setColumnFilters(showScheduled ? [] : [{ id: 'status', value: 'hide_scheduled' }]);
             }}
             className="px-4 py-2 text-sm border rounded-lg hover:bg-muted"
           >
-            Clear All Filters
+            Clear Filters
           </button>
         )}
-        <div className="text-sm text-muted-foreground whitespace-nowrap">
+        <div className="text-sm text-muted-foreground whitespace-nowrap ml-auto">
           {table.getFilteredRowModel().rows.length} of {videos.length} videos
         </div>
       </div>
       
-      {columnFilters.length > 0 && (
+      {userFilters.length > 0 && (
         <div className="flex flex-wrap gap-2 text-xs">
-          {columnFilters.map((filter) => (
+          {userFilters.map((filter) => (
             <div key={filter.id} className="bg-muted px-3 py-1 rounded-full flex items-center gap-2">
               <span className="font-medium">{filter.id}:</span>
               <span>{String(filter.value)}</span>
@@ -446,15 +505,21 @@ export function VideoTable({ videos }: { videos: Video[] }) {
               ))}
             </thead>
             <tbody>
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b hover:bg-muted/50">
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {table.getRowModel().rows.map((row) => {
+                const isScheduled = row.original.status === 'scheduled';
+                return (
+                  <tr key={row.id} className={`border-b hover:bg-muted/50 ${isScheduled ? 'opacity-50' : ''}`}>
+                    {row.getVisibleCells().map((cell) => {
+                      const align = cell.column.columnDef.meta?.align;
+                      return (
+                        <td key={cell.id} className={`px-4 py-3 ${align === 'right' ? 'text-right' : ''}`}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
