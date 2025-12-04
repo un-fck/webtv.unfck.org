@@ -28,7 +28,6 @@ function StageProgress({ currentStage, errorMessage, onRetry }: { currentStage: 
       {STAGES.map((stage, idx) => {
         const isDone = currentStage === 'completed' || idx < currentIndex;
         const isActive = idx === currentIndex && currentStage !== 'completed' && currentStage !== 'error';
-        const isPending = idx > currentIndex;
         const isError = currentStage === 'error' && idx === currentIndex;
         
         return (
@@ -380,7 +379,6 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
     let pollCount = 0;
     const maxTranscriptionPolls = 200; // ~10 min for AssemblyAI
     
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       await new Promise(resolve => setTimeout(resolve, 3000));
       pollCount++;
@@ -509,7 +507,6 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
     
     // Get all topic labels for column headers
     const topicList = Object.values(topics);
-    const topicKeys = topicList.map(t => `topic_${t.key}`);
     
     // Define base columns
     const baseColumns = [
@@ -652,6 +649,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
     };
 
     checkCache();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kalturaId, loadCountryNames]);
 
   // Listen to player time updates with high frequency polling

@@ -315,7 +315,7 @@ ${contextParts.join('\n\n')}`,
   return topicsRecord;
 }
 
-async function tagParagraphsWithTopics(
+async function _tagParagraphsWithTopics(
   paragraphs: ParagraphInput[],
   topics: Record<string, { key: string; description: string; color: string }>,
   speakerMapping: SpeakerMapping,
@@ -772,7 +772,6 @@ If you determine the CURRENT paragraph should be split, copy the exact text from
 export async function identifySpeakers(
   paragraphs: ParagraphInput[],
   transcriptId?: string,
-  entryId?: string,
 ) {
   if (!paragraphs?.length) {
     throw new Error('No paragraphs provided');

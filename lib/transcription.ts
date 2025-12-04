@@ -1,6 +1,6 @@
 import { 
   saveTranscript, deleteTranscriptsForEntry, getTranscriptById,
-  updateTranscriptStatus, updateTranscriptContent, tryAcquirePipelineLock, releasePipelineLock,
+  updateTranscriptStatus, tryAcquirePipelineLock, releasePipelineLock,
   type TranscriptStatus, type TranscriptContent, type RawParagraph
 } from './turso';
 import { identifySpeakers } from './speaker-identification';
@@ -194,7 +194,7 @@ export async function pollTranscription(transcriptId: string): Promise<PollResul
   return { stage: 'transcribing' };
 }
 
-async function runPipeline(transcriptId: string, entryId: string) {
+async function runPipeline(transcriptId: string, _entryId: string) {
   try {
     await updateTranscriptStatus(transcriptId, 'identifying_speakers');
     
@@ -205,7 +205,7 @@ async function runPipeline(transcriptId: string, entryId: string) {
     }
 
     // Run speaker identification (this also does topic analysis internally and saves to DB)
-    await identifySpeakers(transcript.content.raw_paragraphs, transcriptId, entryId);
+    await identifySpeakers(transcript.content.raw_paragraphs, transcriptId);
     
     // Mark as completed
     await updateTranscriptStatus(transcriptId, 'completed');

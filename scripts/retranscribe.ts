@@ -39,17 +39,17 @@ async function pollUntilComplete(transcriptId: string, entryId: string): Promise
   const pollInterval = 5000; // 5 seconds
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const status = await pollTranscription(transcriptId);
+    const result = await pollTranscription(transcriptId);
     
-    if (status === 'completed') {
+    if (result.stage === 'completed') {
       console.log(`  ✓ Completed ${entryId}`);
       return;
-    } else if (status === 'error') {
-      throw new Error(`Transcription failed for ${entryId}`);
+    } else if (result.stage === 'error') {
+      throw new Error(`Transcription failed for ${entryId}: ${result.error_message}`);
     }
     
     if (attempt % 6 === 0) { // Every 30s
-      console.log(`  ⏳ Still processing ${entryId}... (${attempt * 5}s)`);
+      console.log(`  ⏳ Still processing ${entryId} (${result.stage})... (${attempt * 5}s)`);
     }
     
     await new Promise(resolve => setTimeout(resolve, pollInterval));

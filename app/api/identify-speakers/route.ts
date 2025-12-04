@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       }
 
       await updateTranscriptStatus(transcriptId, 'identifying_speakers');
-      const mapping = await identifySpeakers(paragraphs, transcriptId, transcript.entry_id);
+      const mapping = await identifySpeakers(paragraphs, transcriptId);
       await updateTranscriptStatus(transcriptId, 'completed');
       await releasePipelineLock(transcriptId);
 
