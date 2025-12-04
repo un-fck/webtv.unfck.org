@@ -2,7 +2,7 @@ import { AzureOpenAI } from 'openai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { setSpeakerMapping, SpeakerInfo } from './speakers';
-import { saveTranscript, getTursoClient } from './turso';
+import { getTranscriptById, updateTranscriptContent, updateTranscriptStatus } from './turso';
 import './load-env';
 // @ts-expect-error - no types available for sbd
 import sbd from 'sbd';
@@ -1062,47 +1062,47 @@ ${transcriptParts.join('\n\n')}`,
   // Build statements with sentences
   const statementsWithSentences = buildStatementsWithSentences(finalParagraphs);
   
+  // Save statements immediately after speaker identification (before topic analysis)
+  if (transcriptId) {
+    console.log(`  → Saving speaker identification results...`);
+    const transcript = await getTranscriptById(transcriptId);
+    if (transcript) {
+      await updateTranscriptContent(transcriptId, {
+        raw_paragraphs: transcript.content.raw_paragraphs,
+        statements: statementsWithSentences,
+        topics: {},
+      });
+      await setSpeakerMapping(transcriptId, finalMapping);
+      console.log(`  ✓ Saved statements and speaker mappings`);
+    }
+  }
+  
   // Define and tag topics
   let topics: Record<string, { key: string; label: string; description: string }> = {};
   let taggedStatements = statementsWithSentences;
   
-  if (statementsWithSentences.length > 0) {
+  if (statementsWithSentences.length > 0 && transcriptId) {
+    await updateTranscriptStatus(transcriptId, 'analyzing_topics');
+    console.log(`  → Analyzing topics...`);
+    
     try {
       topics = await defineTopics(finalParagraphs, finalMapping, client);
       taggedStatements = await tagSentencesWithTopics(statementsWithSentences, topics, finalMapping, client);
-    } catch (error) {
-      console.warn(`  ⚠ Failed to analyze topics:`, error instanceof Error ? error.message : error);
-    }
-  }
-
-  // Save to database
-  if (transcriptId && entryId) {
-    console.log(`  → Saving to database...`);
-    const dbClient = await getTursoClient();
-    const existing = await dbClient.execute({
-      sql: 'SELECT start_time, end_time, audio_url, language_code FROM transcripts WHERE transcript_id = ?',
-      args: [transcriptId],
-    });
-
-    if (existing.rows.length > 0) {
-      const row = existing.rows[0];
-      await saveTranscript(
-        entryId,
-        transcriptId,
-        row.start_time as number | null,
-        row.end_time as number | null,
-        row.audio_url as string,
-        'completed',
-        row.language_code as string | null,
-        { 
+      
+      // Save final result with topics
+      const transcript = await getTranscriptById(transcriptId);
+      if (transcript) {
+        await updateTranscriptContent(transcriptId, {
+          raw_paragraphs: transcript.content.raw_paragraphs,
           statements: taggedStatements,
           topics,
-        }
-      );
+        });
+        console.log(`  ✓ Saved topics`);
+      }
+    } catch (error) {
+      console.warn(`  ⚠ Failed to analyze topics:`, error instanceof Error ? error.message : error);
+      // Keep the statements without topics - don't fail completely
     }
-
-    await setSpeakerMapping(transcriptId, finalMapping);
-    console.log(`  ✓ Saved transcript and speaker mappings`);
   }
 
   return finalMapping;

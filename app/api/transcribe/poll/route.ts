@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTursoClient } from '@/lib/turso';
 import { pollTranscription } from '@/lib/transcription';
+import { getSpeakerMapping } from '@/lib/speakers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,32 +10,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Transcript ID required' }, { status: 400 });
     }
 
-    const status = await pollTranscription(transcriptId);
+    const result = await pollTranscription(transcriptId);
 
-    if (status === 'completed') {
-      const client = await getTursoClient();
-      const result = await client.execute({
-        sql: 'SELECT content FROM transcripts WHERE transcript_id = ?',
-        args: [transcriptId]
-      });
-
-      if (result.rows.length > 0) {
-        const content = typeof result.rows[0].content === 'string' 
-          ? JSON.parse(result.rows[0].content as string) 
-          : result.rows[0].content;
-        
-        return NextResponse.json({
-          status: 'completed',
-          statements: content.statements,
-          topics: content.topics || {},
-          transcriptId,
-        });
-      }
-    } else if (status === 'error') {
-      return NextResponse.json({ status: 'error' });
+    // If completed or has statements, include speaker mappings
+    let speakerMappings = {};
+    if (result.statements && result.statements.length > 0) {
+      speakerMappings = await getSpeakerMapping(transcriptId) || {};
     }
-    
-    return NextResponse.json({ status: 'processing', transcriptId });
+
+    return NextResponse.json({
+      ...result,
+      speakerMappings,
+    });
     
   } catch (error) {
     console.error('Poll error:', error);
@@ -45,4 +31,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

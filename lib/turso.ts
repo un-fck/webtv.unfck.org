@@ -1,6 +1,8 @@
 import { createClient } from '@libsql/client/web';
 import '@/lib/load-env';
 
+export type TranscriptStatus = 'transcribing' | 'transcribed' | 'identifying_speakers' | 'analyzing_topics' | 'completed' | 'error';
+
 const REQUIRED_VARS = ['TURSO_DB', 'TURSO_TOKEN'] as const;
 
 REQUIRED_VARS.forEach((key) => {
@@ -72,6 +74,13 @@ async function ensureInitialized() {
   await client.execute(`
     CREATE INDEX IF NOT EXISTS idx_videos_last_seen ON videos(last_seen)
   `);
+  // Add pipeline_lock column if it doesn't exist
+  try {
+    await client.execute(`ALTER TABLE transcripts ADD COLUMN pipeline_lock TEXT`);
+  } catch { /* column already exists */ }
+  try {
+    await client.execute(`ALTER TABLE transcripts ADD COLUMN error_message TEXT`);
+  } catch { /* column already exists */ }
   initialized = true;
 }
 
@@ -80,7 +89,15 @@ export async function getTursoClient() {
   return client;
 }
 
-interface TranscriptContent {
+export interface RawParagraph {
+  text: string;
+  start: number;
+  end: number;
+  words: Array<{ text: string; start: number; end: number; confidence: number; speaker?: string }>;
+}
+
+export interface TranscriptContent {
+  raw_paragraphs?: RawParagraph[];
   statements: Array<{
     paragraphs: Array<{
       sentences: Array<{
@@ -88,36 +105,17 @@ interface TranscriptContent {
         start: number;
         end: number;
         topic_keys?: string[];
-        words: Array<{
-          text: string;
-          start: number;
-          end: number;
-          confidence: number;
-        }>;
+        words: Array<{ text: string; start: number; end: number; confidence: number }>;
       }>;
       start: number;
       end: number;
-      words: Array<{
-        text: string;
-        start: number;
-        end: number;
-        confidence: number;
-      }>;
+      words: Array<{ text: string; start: number; end: number; confidence: number }>;
     }>;
     start: number;
     end: number;
-    words: Array<{
-      text: string;
-      start: number;
-      end: number;
-      confidence: number;
-    }>;
+    words: Array<{ text: string; start: number; end: number; confidence: number }>;
   }>;
-  topics?: Record<string, {
-    key: string;
-    label: string;
-    description: string;
-  }>;
+  topics?: Record<string, { key: string; label: string; description: string }>;
 }
 
 export interface Transcript {
@@ -126,9 +124,11 @@ export interface Transcript {
   start_time: number | null;
   end_time: number | null;
   audio_url: string;
-  status: string;
+  status: TranscriptStatus;
   language_code: string | null;
   content: TranscriptContent;
+  pipeline_lock: string | null;
+  error_message: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -136,32 +136,23 @@ export interface Transcript {
 export async function getTranscript(
   entryId: string, 
   startTime?: number, 
-  endTime?: number
+  endTime?: number,
+  completedOnly = true
 ): Promise<Transcript | null> {
   await ensureInitialized();
   
   let query: string;
   const args: (string | number)[] = [entryId];
+  const statusFilter = completedOnly ? "AND status = 'completed'" : "";
   
   if (startTime !== undefined && endTime !== undefined) {
-    query = `
-      SELECT * FROM transcripts 
-      WHERE entry_id = ? AND start_time = ? AND end_time = ? AND status = 'completed'
-      ORDER BY updated_at DESC
-      LIMIT 1
-    `;
+    query = `SELECT * FROM transcripts WHERE entry_id = ? AND start_time = ? AND end_time = ? ${statusFilter} ORDER BY updated_at DESC LIMIT 1`;
     args.push(startTime, endTime);
   } else {
-    query = `
-      SELECT * FROM transcripts 
-      WHERE entry_id = ? AND start_time IS NULL AND end_time IS NULL AND status = 'completed'
-      ORDER BY updated_at DESC
-      LIMIT 1
-    `;
+    query = `SELECT * FROM transcripts WHERE entry_id = ? AND start_time IS NULL AND end_time IS NULL ${statusFilter} ORDER BY updated_at DESC LIMIT 1`;
   }
   
   const result = await client.execute({ sql: query, args });
-  
   if (result.rows.length === 0) return null;
   
   const row = result.rows[0];
@@ -171,9 +162,11 @@ export async function getTranscript(
     start_time: row.start_time as number | null,
     end_time: row.end_time as number | null,
     audio_url: row.audio_url as string,
-    status: row.status as string,
+    status: row.status as TranscriptStatus,
     language_code: row.language_code as string | null,
     content: JSON.parse(row.content as string),
+    pipeline_lock: row.pipeline_lock as string | null,
+    error_message: row.error_message as string | null,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
   };
@@ -193,12 +186,35 @@ export async function getAllTranscriptsForEntry(entryId: string): Promise<Transc
     start_time: row.start_time as number | null,
     end_time: row.end_time as number | null,
     audio_url: row.audio_url as string,
-    status: row.status as string,
+    status: row.status as TranscriptStatus,
     language_code: row.language_code as string | null,
     content: JSON.parse(row.content as string),
+    pipeline_lock: row.pipeline_lock as string | null,
+    error_message: row.error_message as string | null,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
   }));
+}
+
+export async function getTranscriptById(transcriptId: string): Promise<Transcript | null> {
+  await ensureInitialized();
+  const result = await client.execute({ sql: 'SELECT * FROM transcripts WHERE transcript_id = ?', args: [transcriptId] });
+  if (result.rows.length === 0) return null;
+  const row = result.rows[0];
+  return {
+    entry_id: row.entry_id as string,
+    transcript_id: row.transcript_id as string,
+    start_time: row.start_time as number | null,
+    end_time: row.end_time as number | null,
+    audio_url: row.audio_url as string,
+    status: row.status as TranscriptStatus,
+    language_code: row.language_code as string | null,
+    content: JSON.parse(row.content as string),
+    pipeline_lock: row.pipeline_lock as string | null,
+    error_message: row.error_message as string | null,
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+  };
 }
 
 export async function saveTranscript(
@@ -207,39 +223,57 @@ export async function saveTranscript(
   startTime: number | null,
   endTime: number | null,
   audioUrl: string,
-  status: string,
+  status: TranscriptStatus,
   languageCode: string | null,
   content: TranscriptContent
 ): Promise<void> {
   await ensureInitialized();
-  
   const now = new Date().toISOString();
-  
   await client.execute({
-    sql: `
-      INSERT INTO transcripts (
-        entry_id, transcript_id, start_time, end_time, 
-        audio_url, status, language_code, content, 
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(transcript_id) DO UPDATE SET
-        status = excluded.status,
-        language_code = excluded.language_code,
-        content = excluded.content,
-        updated_at = excluded.updated_at
-    `,
-    args: [
-      entryId, 
-      transcriptId, 
-      startTime, 
-      endTime, 
-      audioUrl, 
-      status, 
-      languageCode, 
-      JSON.stringify(content), 
-      now, 
-      now
-    ]
+    sql: `INSERT INTO transcripts (entry_id, transcript_id, start_time, end_time, audio_url, status, language_code, content, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(transcript_id) DO UPDATE SET status = excluded.status, language_code = excluded.language_code, content = excluded.content, updated_at = excluded.updated_at`,
+    args: [entryId, transcriptId, startTime, endTime, audioUrl, status, languageCode, JSON.stringify(content), now, now]
+  });
+}
+
+export async function updateTranscriptStatus(transcriptId: string, status: TranscriptStatus, errorMessage?: string): Promise<void> {
+  await ensureInitialized();
+  const now = new Date().toISOString();
+  await client.execute({
+    sql: 'UPDATE transcripts SET status = ?, error_message = ?, updated_at = ? WHERE transcript_id = ?',
+    args: [status, errorMessage ?? null, now, transcriptId]
+  });
+}
+
+export async function updateTranscriptContent(transcriptId: string, content: TranscriptContent): Promise<void> {
+  await ensureInitialized();
+  await client.execute({
+    sql: 'UPDATE transcripts SET content = ?, updated_at = ? WHERE transcript_id = ?',
+    args: [JSON.stringify(content), new Date().toISOString(), transcriptId]
+  });
+}
+
+const PIPELINE_LOCK_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
+export async function tryAcquirePipelineLock(transcriptId: string): Promise<boolean> {
+  await ensureInitialized();
+  const now = new Date().toISOString();
+  const cutoff = new Date(Date.now() - PIPELINE_LOCK_TIMEOUT_MS).toISOString();
+  
+  // Try to acquire lock only if no lock or lock is stale
+  const result = await client.execute({
+    sql: `UPDATE transcripts SET pipeline_lock = ?, updated_at = ? WHERE transcript_id = ? AND (pipeline_lock IS NULL OR pipeline_lock < ?)`,
+    args: [now, now, transcriptId, cutoff]
+  });
+  return result.rowsAffected > 0;
+}
+
+export async function releasePipelineLock(transcriptId: string): Promise<void> {
+  await ensureInitialized();
+  await client.execute({
+    sql: 'UPDATE transcripts SET pipeline_lock = NULL, updated_at = ? WHERE transcript_id = ?',
+    args: [new Date().toISOString(), transcriptId]
   });
 }
 

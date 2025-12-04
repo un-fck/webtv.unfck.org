@@ -1,23 +1,84 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { SpeakerMapping } from '@/lib/speakers';
 import type { Video, VideoMetadata } from '@/lib/un-api';
 import { getCountryName } from '@/lib/country-lookup';
-import { ChevronDown, FoldVertical, UnfoldVertical } from 'lucide-react';
+import { ChevronDown, FoldVertical, UnfoldVertical, Check, RotateCcw } from 'lucide-react';
 import ExcelJS from 'exceljs';
 
+type Stage = 'idle' | 'transcribing' | 'transcribed' | 'identifying_speakers' | 'analyzing_topics' | 'completed' | 'error';
+
+const STAGES: { key: Stage; label: string }[] = [
+  { key: 'transcribing', label: 'Transcribing audio' },
+  { key: 'identifying_speakers', label: 'Identifying speakers' },
+  { key: 'analyzing_topics', label: 'Analyzing topics' },
+];
+
+function getStageIndex(stage: Stage): number {
+  if (stage === 'transcribed') return 0; // Just finished transcribing
+  return STAGES.findIndex(s => s.key === stage);
+}
+
+function StageProgress({ currentStage, errorMessage, onRetry }: { currentStage: Stage; errorMessage?: string; onRetry?: () => void }) {
+  const currentIndex = currentStage === 'completed' ? STAGES.length : getStageIndex(currentStage);
+  
+  return (
+    <div className="space-y-2 mb-4">
+      {STAGES.map((stage, idx) => {
+        const isDone = currentStage === 'completed' || idx < currentIndex;
+        const isActive = idx === currentIndex && currentStage !== 'completed' && currentStage !== 'error';
+        const isPending = idx > currentIndex;
+        const isError = currentStage === 'error' && idx === currentIndex;
+        
+        return (
+          <div key={stage.key} className="flex items-center gap-2 text-sm">
+            {isDone ? (
+              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                <Check className="w-3 h-3 text-white" />
+              </div>
+            ) : isActive ? (
+              <div className="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              </div>
+            ) : isError ? (
+              <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
+                <span className="text-white text-xs">!</span>
+              </div>
+            ) : (
+              <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />
+            )}
+            <span className={`${isDone ? 'text-foreground' : isActive ? 'text-foreground font-medium' : isError ? 'text-red-600' : 'text-muted-foreground'}`}>
+              {stage.label}
+              {isActive && <span className="ml-2 text-muted-foreground">...</span>}
+            </span>
+          </div>
+        );
+      })}
+      {currentStage === 'error' && errorMessage && (
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700 flex items-center justify-between">
+          <span>{errorMessage}</span>
+          {onRetry && (
+            <button onClick={onRetry} className="flex items-center gap-1 px-2 py-1 bg-red-100 hover:bg-red-200 rounded text-xs">
+              <RotateCcw className="w-3 h-3" /> Retry
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface RawParagraph {
+  text: string;
+  start: number;
+  end: number;
+  words: Array<{ text: string; start: number; end: number; speaker?: string }>;
+}
+
 const TOPIC_COLOR_PALETTE = [
-  '#5b8dc9', // blue
-  '#5eb87d', // green
-  '#9b7ac9', // purple
-  '#e67c5a', // coral
-  '#4db8d4', // cyan
-  '#d4a834', // gold
-  '#7aad6f', // sage
-  '#d46ba3', // pink
-  '#5aa7d4', // sky blue
-  '#c98d4d', // orange
+  '#5b8dc9', '#5eb87d', '#9b7ac9', '#e67c5a', '#4db8d4',
+  '#d4a834', '#7aad6f', '#d46ba3', '#5aa7d4', '#c98d4d',
 ];
 
 function getTopicColor(topicKey: string, allTopicKeys: string[]): string {
@@ -68,19 +129,19 @@ interface Statement {
 
 export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPanelProps) {
   const [segments, setSegments] = useState<SpeakerSegment[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [, setCached] = useState(false);
+  const [stage, setStage] = useState<Stage>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState<number>(-1);
   const [showCopied, setShowCopied] = useState(false);
   const [speakerMappings, setSpeakerMappings] = useState<SpeakerMapping>({});
-  const [identifyingSpeakers, setIdentifyingSpeakers] = useState(false);
   const [countryNames, setCountryNames] = useState<Map<string, string>>(new Map());
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [topics, setTopics] = useState<Record<string, { key: string; label: string; description: string }>>({});
   const [statements, setStatements] = useState<Statement[] | null>(null);
+  const [rawParagraphs, setRawParagraphs] = useState<RawParagraph[] | null>(null);
+  const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [topicCollapsed, setTopicCollapsed] = useState<boolean>(true);
   const [activeStatementIndex, setActiveStatementIndex] = useState<number>(-1);
@@ -89,6 +150,8 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
   const [activeWordIndex, setActiveWordIndex] = useState<number>(-1);
   const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const downloadButtonRef = useRef<HTMLDivElement>(null);
+  
+  const isLoading = stage !== 'idle' && stage !== 'completed' && stage !== 'error';
 
   // Filter segments by selected topic
 
@@ -269,34 +332,10 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
   }, [statements, speakerMappings, groupStatementsBySpeaker]);
 
   const handleTranscribe = async (force = false) => {
-    setLoading(true);
-    setError(null);
+    setStage('transcribing');
+    setErrorMessage(null);
     
     try {
-      // For finished videos, check if we have a complete transcript
-      if (!force) {
-        const segmentsResponse = await fetch('/api/transcribe/segments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            kalturaId,
-            currentTime: 0,
-            totalDuration: 0, // Will be calculated from video
-            isComplete: true,
-          }),
-        });
-
-        if (segmentsResponse.ok) {
-          const segmentData = await segmentsResponse.json();
-          
-          // If partial transcripts exist but no complete one, force retranscription
-          if (segmentData.needsFullRetranscription) {
-            console.log('Partial transcripts found, retranscribing completely');
-            force = true;
-          }
-        }
-      }
-
       const response = await fetch('/api/transcribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -309,102 +348,97 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
       }
       
       const data = await response.json();
+      setTranscriptId(data.transcriptId);
       
-      // If we got statements directly (cached), use them
+      // If we got statements directly (cached/completed), use them
       if (data.statements && data.statements.length > 0) {
         setStatements(data.statements);
-        setCached(data.cached || false);
-        
-        // Load topics
-        if (data.topics) {
-          setTopics(data.topics);
+        if (data.topics) setTopics(data.topics);
+        if (data.speakerMappings) {
+          setSpeakerMappings(data.speakerMappings);
+          await loadCountryNames(data.speakerMappings);
         }
+        setStage('completed');
+        return;
       }
-        
-      // Load speaker mappings if cached
-      if (data.cached && data.transcriptId) {
-        try {
-          const speakerResponse = await fetch('/api/get-speaker-mapping', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcriptId: data.transcriptId }),
-          });
-          if (speakerResponse.ok) {
-            const speakerData = await speakerResponse.json();
-            if (speakerData.mapping) {
-              setSpeakerMappings(speakerData.mapping);
-              await loadCountryNames(speakerData.mapping);
-            }
-          }
-        } catch (err) {
-          console.log('Failed to load speaker mappings:', err);
-        }
-      } else if (data.transcriptId) {
-        console.log('Polling for transcript:', data.transcriptId);
-        
-        let pollCount = 0;
-        const maxPolls = 200; // Max ~10 minutes (3s * 200)
-        
-        while (pollCount < maxPolls) {
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          pollCount++;
-          
-          const pollResponse = await fetch('/api/transcribe/poll', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcriptId: data.transcriptId }),
-          });
-          
-          if (!pollResponse.ok) {
-            throw new Error('Failed to poll transcript status');
-          }
-          
-          const pollData = await pollResponse.json();
-          
-          if (pollData.status === 'completed' && pollData.statements) {
-            console.log('Transcription completed');
-            setStatements(pollData.statements);
-            setCached(false);
-            
-            if (pollData.topics) {
-              setTopics(pollData.topics);
-            }
-            
-            // Load speaker mappings
-            if (pollData.transcriptId) {
-              try {
-                const speakerResponse = await fetch('/api/get-speaker-mapping', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ transcriptId: pollData.transcriptId }),
-                });
-                if (speakerResponse.ok) {
-                  const speakerData = await speakerResponse.json();
-                  if (speakerData.mapping) {
-                    setSpeakerMappings(speakerData.mapping);
-                    await loadCountryNames(speakerData.mapping);
-                  }
-                }
-              } catch (err) {
-                console.log('Failed to load speaker mappings:', err);
-              }
-            }
-            break;
-          } else if (pollData.status === 'error') {
-            throw new Error(pollData.error || 'Transcription failed');
-          }
-          
-          // Still processing, continue polling
-        }
-        
-        if (pollCount >= maxPolls) {
-          throw new Error('Transcription timeout');
-        }
+      
+      // Set initial stage and raw paragraphs if available
+      if (data.stage) setStage(data.stage);
+      if (data.raw_paragraphs) setRawParagraphs(data.raw_paragraphs);
+      
+      // Start polling
+      if (data.transcriptId) {
+        await pollForCompletion(data.transcriptId);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to transcribe');
-    } finally {
-      setLoading(false);
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to transcribe');
+      setStage('error');
+    }
+  };
+  
+  const pollForCompletion = async (tid: string) => {
+    let pollCount = 0;
+    const maxTranscriptionPolls = 200; // ~10 min for AssemblyAI
+    
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      pollCount++;
+      
+      const pollResponse = await fetch('/api/transcribe/poll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcriptId: tid }),
+      });
+      
+      if (!pollResponse.ok) throw new Error('Failed to poll transcript status');
+      
+      const data = await pollResponse.json();
+      
+      // Update stage
+      if (data.stage) setStage(data.stage);
+      
+      // Update raw paragraphs as soon as available
+      if (data.raw_paragraphs && !rawParagraphs) {
+        setRawParagraphs(data.raw_paragraphs);
+      }
+      
+      // Update statements when available (even before topics)
+      if (data.statements?.length > 0) {
+        setStatements(data.statements);
+        if (data.speakerMappings && Object.keys(data.speakerMappings).length > 0) {
+          setSpeakerMappings(data.speakerMappings);
+          await loadCountryNames(data.speakerMappings);
+        }
+      }
+      
+      // Update topics when available
+      if (data.topics && Object.keys(data.topics).length > 0) {
+        setTopics(data.topics);
+      }
+      
+      // Check for completion or error
+      if (data.stage === 'completed') {
+        break;
+      } else if (data.stage === 'error') {
+        throw new Error(data.error_message || 'Pipeline failed');
+      } else if (data.stage === 'transcribing' && pollCount >= maxTranscriptionPolls) {
+        throw new Error('Transcription timeout - audio processing took too long');
+      }
+    }
+  };
+  
+  const handleRetry = () => {
+    if (transcriptId) {
+      // Retry from where we left off
+      setStage('transcribing');
+      setErrorMessage(null);
+      pollForCompletion(transcriptId).catch(err => {
+        setErrorMessage(err instanceof Error ? err.message : 'Retry failed');
+        setStage('error');
+      });
+    } else {
+      handleTranscribe(true);
     }
   };
 
@@ -586,39 +620,31 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
         if (response.ok) {
           const data = await response.json();
           
-          // Load cached transcript
-          if (data.cached && data.statements && data.statements.length > 0) {
-            setStatements(data.statements);
-            setCached(true);
-            
-            // Load topics
-            if (data.topics) {
-              setTopics(data.topics);
-            }
-          }
+          // Store transcript ID for potential retry
+          if (data.transcriptId) setTranscriptId(data.transcriptId);
           
-          // Load speaker mappings if available
-          if (data.transcriptId) {
-            try {
-              const speakerResponse = await fetch('/api/get-speaker-mapping', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ transcriptId: data.transcriptId }),
+          // Load cached transcript if completed
+          if (data.statements && data.statements.length > 0) {
+            setStatements(data.statements);
+            if (data.topics) setTopics(data.topics);
+            if (data.speakerMappings) {
+              setSpeakerMappings(data.speakerMappings);
+              await loadCountryNames(data.speakerMappings);
+            }
+            setStage('completed');
+          } else if (data.raw_paragraphs) {
+            // Have raw data but pipeline not complete - show intermediate and poll
+            setRawParagraphs(data.raw_paragraphs);
+            if (data.stage) setStage(data.stage);
+            if (data.transcriptId) {
+              pollForCompletion(data.transcriptId).catch(err => {
+                setErrorMessage(err instanceof Error ? err.message : 'Pipeline failed');
+                setStage('error');
               });
-              if (speakerResponse.ok) {
-                const speakerData = await speakerResponse.json();
-                if (speakerData.mapping) {
-                  setSpeakerMappings(speakerData.mapping);
-                  await loadCountryNames(speakerData.mapping);
-                }
-              }
-            } catch (err) {
-              console.log('Failed to load speaker mappings:', err);
             }
           }
         }
       } catch (err) {
-        // Silent fail on cache check
         console.log('Cache check failed:', err);
       } finally {
         setChecking(false);
@@ -801,16 +827,15 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Transcript</h2>
         <div className="flex gap-2">
-          {!segments && !checking && (
+          {!segments && !rawParagraphs && !checking && stage === 'idle' && (
             <button
               onClick={() => handleTranscribe()}
-              disabled={loading}
-              className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded hover:opacity-90"
             >
-              {loading ? 'Transcribing...' : 'Generate'}
+              Generate
             </button>
           )}
-          {segments && (
+          {(segments || rawParagraphs) && (
             <>
               <div className="relative">
                 <button
@@ -864,31 +889,19 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
         </div>
       </div>
       
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
-          {error}
-        </div>
-      )}
-      
-      {checking && !loading && (
+      {checking && stage === 'idle' && (
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
           <span>Checking for existing transcript...</span>
         </div>
       )}
       
-      {loading && (
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          <span>Generating transcript... This may take several minutes for long videos.</span>
-        </div>
+      {isLoading && (
+        <StageProgress currentStage={stage} />
       )}
       
-      {identifyingSpeakers && (
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          <span>Identifying speakers...</span>
-        </div>
+      {stage === 'error' && (
+        <StageProgress currentStage={stage} errorMessage={errorMessage || undefined} onRetry={handleRetry} />
       )}
       
       {segments && Object.keys(topics).length > 0 && (() => {
@@ -1119,9 +1132,48 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
         </div>
       )}
       
-      {!segments && !loading && !error && !checking && (
+      {/* Show raw paragraphs while waiting for speaker identification */}
+      {!segments && rawParagraphs && rawParagraphs.length > 0 && (
+        <div className="space-y-3">
+          {rawParagraphs.map((para, idx) => {
+            // Group consecutive paragraphs by speaker
+            const speaker = para.words[0]?.speaker || 'A';
+            const prevSpeaker = idx > 0 ? (rawParagraphs[idx - 1].words[0]?.speaker || 'A') : null;
+            const showHeader = speaker !== prevSpeaker;
+            
+            return (
+              <div key={idx}>
+                {showHeader && (
+                  <div className="text-sm font-semibold tracking-wide text-foreground mb-2 pt-3">
+                    Speaker {speaker}
+                    <button
+                      onClick={() => seekToTimestamp(para.start / 1000)}
+                      className="ml-2 text-xs text-muted-foreground hover:text-primary hover:underline"
+                    >
+                      [{formatTime(para.start / 1000)}]
+                    </button>
+                  </div>
+                )}
+                <div className="p-4 rounded-lg bg-muted/50 text-sm leading-relaxed">
+                  {para.words.map((word, wIdx) => (
+                    <span
+                      key={wIdx}
+                      onClick={() => seekToTimestamp(word.start / 1000)}
+                      className="cursor-pointer hover:opacity-70"
+                    >
+                      {word.text}{' '}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      
+      {!segments && !rawParagraphs && stage === 'idle' && !checking && (
         <p className="text-muted-foreground text-sm">
-          Click &quot;Generate Transcript&quot; to create a text transcript of this video using AI.
+          Click &quot;Generate&quot; to create a text transcript of this video using AI.
         </p>
       )}
     </div>

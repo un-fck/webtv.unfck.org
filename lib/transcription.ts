@@ -1,4 +1,19 @@
-import { saveTranscript, deleteTranscriptsForEntry, getTursoClient } from './turso';
+import { 
+  saveTranscript, deleteTranscriptsForEntry, getTranscriptById,
+  updateTranscriptStatus, updateTranscriptContent, tryAcquirePipelineLock, releasePipelineLock,
+  type TranscriptStatus, type TranscriptContent, type RawParagraph
+} from './turso';
+import { identifySpeakers } from './speaker-identification';
+
+export { type TranscriptStatus } from './turso';
+
+export interface PollResult {
+  stage: TranscriptStatus;
+  raw_paragraphs?: RawParagraph[];
+  statements?: TranscriptContent['statements'];
+  topics?: TranscriptContent['topics'];
+  error_message?: string;
+}
 
 export async function getKalturaAudioUrl(kalturaId: string) {
   const apiResponse = await fetch('https://cdnapisec.kaltura.com/api_v3/service/multirequest', {
@@ -73,67 +88,133 @@ export async function submitTranscription(audioUrl: string) {
   return data.id as string;
 }
 
-export async function pollTranscription(transcriptId: string): Promise<'completed' | 'processing' | 'error'> {
+async function fetchAssemblyAIParagraphs(transcriptId: string): Promise<RawParagraph[]> {
+  const response = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}/paragraphs`, {
+    headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
+  });
+  if (!response.ok) throw new Error('Failed to fetch paragraphs from AssemblyAI');
+  const data = await response.json();
+  return data.paragraphs;
+}
+
+export async function pollTranscription(transcriptId: string): Promise<PollResult> {
+  // First check our database status
+  const transcript = await getTranscriptById(transcriptId);
+  if (!transcript) throw new Error('Transcript not found');
+
+  // If already completed, return the data
+  if (transcript.status === 'completed') {
+    return {
+      stage: 'completed',
+      raw_paragraphs: transcript.content.raw_paragraphs,
+      statements: transcript.content.statements,
+      topics: transcript.content.topics,
+    };
+  }
+
+  // If error, return error with available data
+  if (transcript.status === 'error') {
+    return {
+      stage: 'error',
+      error_message: transcript.error_message || 'Unknown error',
+      raw_paragraphs: transcript.content.raw_paragraphs,
+      statements: transcript.content.statements,
+      topics: transcript.content.topics,
+    };
+  }
+
+  // If in a later stage, return current progress
+  if (transcript.status === 'identifying_speakers' || transcript.status === 'analyzing_topics') {
+    return {
+      stage: transcript.status,
+      raw_paragraphs: transcript.content.raw_paragraphs,
+      statements: transcript.content.statements,
+      topics: transcript.content.topics,
+    };
+  }
+
+  // If transcribed but pipeline not running, check if we should start it
+  if (transcript.status === 'transcribed') {
+    // Try to acquire lock and start pipeline
+    const acquired = await tryAcquirePipelineLock(transcriptId);
+    if (acquired) {
+      // Start pipeline in background (don't await)
+      runPipeline(transcriptId, transcript.entry_id).catch(err => {
+        console.error('Pipeline error:', err);
+        updateTranscriptStatus(transcriptId, 'error', err instanceof Error ? err.message : 'Pipeline failed');
+        releasePipelineLock(transcriptId);
+      });
+    }
+    return {
+      stage: 'identifying_speakers',
+      raw_paragraphs: transcript.content.raw_paragraphs,
+    };
+  }
+
+  // Still transcribing - check AssemblyAI
   const pollResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
     headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
   });
+  if (!pollResponse.ok) throw new Error('Failed to poll AssemblyAI');
 
-  if (!pollResponse.ok) throw new Error('Failed to poll status');
+  const assemblyData = await pollResponse.json();
 
-  const transcript = await pollResponse.json();
-
-  if (transcript.status === 'completed') {
-    const client = await getTursoClient();
-    const result = await client.execute({
-      sql: 'SELECT entry_id, audio_url, start_time, end_time, status FROM transcripts WHERE transcript_id = ?',
-      args: [transcriptId]
-    });
-
-    if (result.rows.length > 0) {
-      const row = result.rows[0];
-      
-      if (row.status !== 'completed') {
-        await saveTranscript(
-          row.entry_id as string,
-          transcriptId,
-          row.start_time as number | null,
-          row.end_time as number | null,
-          row.audio_url as string,
-          'completed',
-          transcript.language_code,
-          { statements: [], topics: {} }
-        );
-        
-        // Trigger speaker identification
-        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/identify-speakers`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ transcriptId }),
-        }).catch(() => {});
-      }
-    }
-
-    // Check if speaker identification has completed
-    const tursoResult = await client.execute({
-      sql: 'SELECT content FROM transcripts WHERE transcript_id = ?',
-      args: [transcriptId]
-    });
-
-    if (tursoResult.rows.length > 0) {
-      const content = typeof tursoResult.rows[0].content === 'string' 
-        ? JSON.parse(tursoResult.rows[0].content as string) 
-        : tursoResult.rows[0].content;
-      
-      if (content.statements && content.statements.length > 0) {
-        return 'completed';
-      }
-    }
+  if (assemblyData.status === 'completed') {
+    // Fetch paragraphs and save to DB
+    const rawParagraphs = await fetchAssemblyAIParagraphs(transcriptId);
+    const content: TranscriptContent = { raw_paragraphs: rawParagraphs, statements: [], topics: {} };
     
-    return 'processing'; // Speaker identification still running
-  } else if (transcript.status === 'error') {
-    return 'error';
-  } else {
-    return 'processing';
+    await saveTranscript(
+      transcript.entry_id,
+      transcriptId,
+      transcript.start_time,
+      transcript.end_time,
+      transcript.audio_url,
+      'transcribed',
+      assemblyData.language_code,
+      content
+    );
+
+    // Try to start the pipeline
+    const acquired = await tryAcquirePipelineLock(transcriptId);
+    if (acquired) {
+      runPipeline(transcriptId, transcript.entry_id).catch(err => {
+        console.error('Pipeline error:', err);
+        updateTranscriptStatus(transcriptId, 'error', err instanceof Error ? err.message : 'Pipeline failed');
+        releasePipelineLock(transcriptId);
+      });
+    }
+
+    return { stage: 'identifying_speakers', raw_paragraphs: rawParagraphs };
+  } else if (assemblyData.status === 'error') {
+    await updateTranscriptStatus(transcriptId, 'error', assemblyData.error || 'AssemblyAI transcription failed');
+    return { stage: 'error', error_message: assemblyData.error };
+  }
+
+  return { stage: 'transcribing' };
+}
+
+async function runPipeline(transcriptId: string, entryId: string) {
+  try {
+    await updateTranscriptStatus(transcriptId, 'identifying_speakers');
+    
+    // Fetch paragraphs from our stored data
+    const transcript = await getTranscriptById(transcriptId);
+    if (!transcript?.content.raw_paragraphs) {
+      throw new Error('No raw paragraphs available');
+    }
+
+    // Run speaker identification (this also does topic analysis internally and saves to DB)
+    await identifySpeakers(transcript.content.raw_paragraphs, transcriptId, entryId);
+    
+    // Mark as completed
+    await updateTranscriptStatus(transcriptId, 'completed');
+    await releasePipelineLock(transcriptId);
+  } catch (err) {
+    console.error('Pipeline failed:', err);
+    await updateTranscriptStatus(transcriptId, 'error', err instanceof Error ? err.message : 'Pipeline failed');
+    await releasePipelineLock(transcriptId);
+    throw err;
   }
 }
 
@@ -146,17 +227,7 @@ export async function transcribeEntry(kalturaId: string, force = true) {
   
   const transcriptId = await submitTranscription(audioUrl);
   
-  await saveTranscript(
-    entryId,
-    transcriptId,
-    null,
-    null,
-    audioUrl,
-    'processing',
-    null,
-    { statements: [], topics: {} }
-  );
+  await saveTranscript(entryId, transcriptId, null, null, audioUrl, 'transcribing', null, { statements: [], topics: {} });
   
   return { entryId, transcriptId };
 }
-

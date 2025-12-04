@@ -1,69 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { identifySpeakers } from '@/lib/speaker-identification';
-import { getTursoClient, getTranscript } from '@/lib/turso';
+import { getTranscriptById, updateTranscriptStatus, tryAcquirePipelineLock, releasePipelineLock } from '@/lib/turso';
 
 export async function POST(request: NextRequest) {
   try {
-    const { paragraphs, transcriptId, entryId } = await request.json();
+    const { transcriptId } = await request.json();
     
-    // If only transcriptId provided, fetch paragraphs from AssemblyAI
-    let paragraphsData = paragraphs;
-    let entryIdValue = entryId;
+    if (!transcriptId) {
+      return NextResponse.json({ error: 'transcriptId required' }, { status: 400 });
+    }
+
+    // Get transcript with raw paragraphs
+    const transcript = await getTranscriptById(transcriptId);
+    if (!transcript) {
+      return NextResponse.json({ error: 'Transcript not found' }, { status: 404 });
+    }
     
-    if (!paragraphsData && transcriptId) {
-      console.log('Fetching paragraphs from AssemblyAI for transcriptId:', transcriptId);
+    // Try to acquire lock
+    const acquired = await tryAcquirePipelineLock(transcriptId);
+    if (!acquired) {
+      return NextResponse.json({ error: 'Pipeline already running' }, { status: 409 });
+    }
+
+    try {
+      // Use stored raw paragraphs or fetch from AssemblyAI
+      let paragraphs = transcript.content.raw_paragraphs;
       
-      // Get entry_id from Turso if not provided
-      if (!entryIdValue) {
-        const client = await getTursoClient();
-        const result = await client.execute({
-          sql: 'SELECT entry_id FROM transcripts WHERE transcript_id = ?',
-          args: [transcriptId]
+      if (!paragraphs || paragraphs.length === 0) {
+        const response = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}/paragraphs`, {
+          headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
         });
-        if (result.rows.length > 0) {
-          entryIdValue = result.rows[0].entry_id as string;
+        if (!response.ok) {
+          throw new Error('Failed to fetch paragraphs from AssemblyAI');
         }
+        const data = await response.json();
+        paragraphs = data.paragraphs;
       }
       
-      // Fetch from AssemblyAI
-      const paragraphsResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}/paragraphs`, {
-        headers: { 'Authorization': process.env.ASSEMBLYAI_API_KEY! },
+      if (!paragraphs || paragraphs.length === 0) {
+        throw new Error('No paragraphs available');
+      }
+
+      await updateTranscriptStatus(transcriptId, 'identifying_speakers');
+      const mapping = await identifySpeakers(paragraphs, transcriptId, transcript.entry_id);
+      await updateTranscriptStatus(transcriptId, 'completed');
+      await releasePipelineLock(transcriptId);
+
+      // Return the updated transcript
+      const updated = await getTranscriptById(transcriptId);
+      return NextResponse.json({ 
+        mapping,
+        statements: updated?.content.statements || [],
+        topics: updated?.content.topics || {}
       });
-      
-      if (!paragraphsResponse.ok) {
-        return NextResponse.json({ error: 'Failed to fetch paragraphs from AssemblyAI' }, { status: 500 });
-      }
-      
-      const data = await paragraphsResponse.json();
-      paragraphsData = data.paragraphs;
+    } catch (error) {
+      await updateTranscriptStatus(transcriptId, 'error', error instanceof Error ? error.message : 'Pipeline failed');
+      await releasePipelineLock(transcriptId);
+      throw error;
     }
-    
-    if (!paragraphsData || paragraphsData.length === 0) {
-      return NextResponse.json({ error: 'No paragraphs available' }, { status: 400 });
-    }
-
-    // Run speaker identification (this saves to Turso)
-    const mapping = await identifySpeakers(paragraphsData, transcriptId, entryIdValue);
-
-    // Fetch the updated transcript from Turso to get statements and topics
-    if (transcriptId && entryIdValue) {
-      const updatedTranscript = await getTranscript(entryIdValue);
-      if (updatedTranscript) {
-        return NextResponse.json({ 
-          mapping,
-          statements: updatedTranscript.content.statements,
-          topics: updatedTranscript.content.topics || {}
-        });
-      }
-    }
-
-    // Fallback if we can't fetch the updated transcript
-    return NextResponse.json({ 
-      mapping,
-      statements: [],
-      topics: {}
-    });
-    
   } catch (error) {
     console.error('Speaker identification error:', error);
     return NextResponse.json(
@@ -72,4 +66,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
