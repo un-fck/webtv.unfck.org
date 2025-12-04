@@ -19,67 +19,74 @@ export function VideoPageClient({ kalturaId, video, metadata }: VideoPageClientP
   const isLive = video.status === 'live';
 
   return (
-    <div className="flex gap-6 h-full overflow-hidden">
-      <div className="w-1/2 h-full overflow-y-auto">
-        <div className="pt-8 pb-8 pr-4">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6 hover:opacity-80">
-            <Image
-              src="/images/UN Logo_Horizontal_English/Colour/UN Logo_Horizontal_Colour_English.svg"
-              alt="UN Logo"
-              width={150}
-              height={30}
-              className="h-8 w-auto"
-            />
-          </Link>
-
-          <div className="mb-4">
-            <Link href="/" className="text-primary hover:underline text-sm">
-              ← Back to Schedule
+    <div className="flex flex-col lg:flex-row lg:gap-6 h-full overflow-y-auto lg:overflow-hidden">
+      {/* Video & metadata column - scrollable on desktop, contains sticky video on mobile */}
+      <div className="w-full lg:w-1/2 lg:h-full lg:overflow-y-auto">
+        {/* Sticky video container on mobile */}
+        <div className="sticky top-0 z-10 bg-background lg:relative lg:top-auto">
+          <div className="pt-4 lg:pt-8">
+            <Link href="/" className="inline-flex items-center gap-2 mb-4 lg:mb-6 hover:opacity-80">
+              <Image
+                src="/images/UN Logo_Horizontal_English/Colour/UN Logo_Horizontal_Colour_English.svg"
+                alt="UN Logo"
+                width={150}
+                height={30}
+                className="h-6 lg:h-8 w-auto"
+              />
             </Link>
-          </div>
-          
-          <div className="mb-3">
-            <h1 className="text-xl font-semibold mb-2">{video.cleanTitle}</h1>
-            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-2">
-              {video.date && (
-                <>
-                  <span>{new Date(video.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                  {video.scheduledTime && <span>•</span>}
-                </>
-              )}
-              {video.scheduledTime && (
-                <>
-                  <span>{new Date(video.scheduledTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}</span>
-                  {(video.body || video.category || video.duration) && <span>•</span>}
-                </>
-              )}
-              {video.body && <span>{video.body}</span>}
-              {video.body && (video.category || video.duration) && <span>•</span>}
-              {video.category && <span>{video.category}</span>}
-              {video.category && video.duration && <span>•</span>}
-              {video.duration && <span>{video.duration}</span>}
-            </div>
-            <a
-              href={video.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline text-xs"
-            >
-              View on UN Web TV →
-            </a>
-          </div>
-          
-          <div className="aspect-video bg-black rounded-lg overflow-hidden mb-6" id="video-player">
-            <VideoPlayer
-              kalturaId={kalturaId}
-              partnerId={2503451}
-              uiConfId={49754663}
-              onPlayerReady={setPlayer}
-            />
-          </div>
 
-          {/* Metadata section */}
-          <div className="space-y-4 text-sm pb-8">
+            <div className="mb-4">
+              <Link href="/" className="text-primary hover:underline text-sm">
+                ← Back to Schedule
+              </Link>
+            </div>
+            
+            <div className="mb-3">
+              <h1 className="text-lg lg:text-xl font-semibold mb-2">{video.cleanTitle}</h1>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-2">
+                {video.date && (
+                  <>
+                    <span>{new Date(video.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    {video.scheduledTime && <span>•</span>}
+                  </>
+                )}
+                {video.scheduledTime && (
+                  <>
+                    <span>{new Date(video.scheduledTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}</span>
+                    {(video.body || video.category || video.duration) && <span>•</span>}
+                  </>
+                )}
+                {video.body && <span>{video.body}</span>}
+                {video.body && (video.category || video.duration) && <span>•</span>}
+                {video.category && <span>{video.category}</span>}
+                {video.category && video.duration && <span>•</span>}
+                {video.duration && <span>{video.duration}</span>}
+              </div>
+            </div>
+            
+            <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4 lg:mb-6" id="video-player">
+              <VideoPlayer
+                kalturaId={kalturaId}
+                partnerId={2503451}
+                uiConfId={49754663}
+                onPlayerReady={setPlayer}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Metadata section */}
+        <div className="lg:pr-4">
+          <a
+            href={video.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline text-xs"
+          >
+            View on UN Web TV →
+          </a>
+          
+          <div className="space-y-4 text-sm py-6">
             {metadata.summary && (
               <div>
                 <h3 className="font-semibold mb-1">Summary</h3>
@@ -152,16 +159,16 @@ export function VideoPageClient({ kalturaId, video, metadata }: VideoPageClientP
         </div>
       </div>
 
-      <div className="w-1/2 h-full overflow-y-auto">
-        <div className="pt-8 pb-8 pl-4">
-        {isLive ? (
-          <LiveTranscription player={player} isLive={isLive} kalturaId={kalturaId} />
-        ) : (
-          <TranscriptionPanel kalturaId={kalturaId} player={player} video={video} metadata={metadata} />
-        )}
+      {/* Transcript column */}
+      <div className="w-full lg:w-1/2 lg:h-full lg:overflow-y-auto">
+        <div className="lg:pl-4 pt-4 lg:pt-8 pb-8">
+          {isLive ? (
+            <LiveTranscription player={player} isLive={isLive} kalturaId={kalturaId} />
+          ) : (
+            <TranscriptionPanel kalturaId={kalturaId} player={player} video={video} metadata={metadata} />
+          )}
         </div>
       </div>
     </div>
   );
 }
-

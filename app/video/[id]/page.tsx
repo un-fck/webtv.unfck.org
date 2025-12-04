@@ -45,7 +45,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
   const metadata = await getVideoMetadata(video.id);
 
   return (
-    <main className="h-screen bg-background px-4 sm:px-6 overflow-hidden">
+    <main className="min-h-screen lg:h-screen bg-background lg:overflow-hidden px-4 sm:px-6">
       <div className="max-w-5xl mx-auto h-full">
         <VideoPageClient kalturaId={kalturaId} video={video} metadata={metadata} />
       </div>
