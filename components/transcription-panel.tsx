@@ -770,8 +770,8 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
   }, [currentTime, segments, statements]);
 
   // Auto-scroll to active paragraph
-  // Only scroll if paragraph changed and is roughly within current view
   const lastScrolledKey = useRef<string | null>(null);
+  const lastTimeRef = useRef<number>(0);
   
   useEffect(() => {
     if (activeStatementIndex < 0 || activeParagraphIndex < 0) return;
@@ -784,28 +784,30 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
     const element = document.querySelector<HTMLElement>(`[data-paragraph-key="${key}"]`);
     if (!element) return;
     
-    // Find the scroll container (the transcript panel)
     const scrollContainer = element.closest('.overflow-y-auto');
     if (!scrollContainer) return;
     
     const containerRect = scrollContainer.getBoundingClientRect();
     const elementRect = element.getBoundingClientRect();
-    
-    // Calculate positions relative to the container
     const elementTopInContainer = elementRect.top - containerRect.top + scrollContainer.scrollTop;
     const containerHeight = scrollContainer.clientHeight;
     
-    // Only scroll if element is roughly within view (within 1.5 container heights)
+    // Detect if user jumped (time changed by > 5 seconds in one update)
+    const timeDelta = Math.abs(currentTime - lastTimeRef.current);
+    const isJump = timeDelta > 5;
+    lastTimeRef.current = currentTime;
+    
+    // For jumps: always scroll. For normal playback: only if roughly in view
     const relativeTop = elementRect.top - containerRect.top;
     const isRoughlyInView = relativeTop > -containerHeight * 1.5 && relativeTop < containerHeight * 2.5;
     
-    if (isRoughlyInView) {
+    if (isJump || isRoughlyInView) {
       const offset = containerHeight / 3;
       const targetScroll = elementTopInContainer - offset;
-      scrollContainer.scrollTo({ top: targetScroll, behavior: 'smooth' });
+      scrollContainer.scrollTo({ top: targetScroll, behavior: isJump ? 'instant' : 'smooth' });
       lastScrolledKey.current = key;
     }
-  }, [activeStatementIndex, activeParagraphIndex]);
+  }, [activeStatementIndex, activeParagraphIndex, currentTime]);
 
 
   // Handle click outside dropdown
