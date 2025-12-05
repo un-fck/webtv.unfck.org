@@ -116,6 +116,17 @@ export interface TranscriptContent {
     words: Array<{ text: string; start: number; end: number; confidence: number }>;
   }>;
   topics?: Record<string, { key: string; label: string; description: string }>;
+  propositions?: Array<{
+    key: string;
+    title: string;
+    statement: string;
+    positions: Array<{
+      stance: 'support' | 'oppose' | 'conditional' | 'neutral';
+      stakeholders: string[];
+      summary: string;
+      evidence: Array<{ stakeholder: string; quote: string; statementIndex: number }>;
+    }>;
+  }>;
 }
 
 export interface Transcript {

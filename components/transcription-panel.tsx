@@ -4,10 +4,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { SpeakerMapping } from '@/lib/speakers';
 import type { Video, VideoMetadata } from '@/lib/un-api';
 import { getCountryName } from '@/lib/country-lookup';
-import { ChevronDown, FoldVertical, UnfoldVertical, Check, RotateCcw } from 'lucide-react';
+import { ChevronDown, FoldVertical, UnfoldVertical, Check, RotateCcw, FileText, BarChart3 } from 'lucide-react';
 import ExcelJS from 'exceljs';
+import type { Proposition } from '@/lib/speaker-identification';
 
 type Stage = 'idle' | 'transcribing' | 'transcribed' | 'identifying_speakers' | 'analyzing_topics' | 'completed' | 'error';
+type ViewMode = 'transcript' | 'analysis';
 
 const STAGES: { key: Stage; label: string }[] = [
   { key: 'transcribing', label: 'Transcribing audio' },
@@ -126,6 +128,205 @@ interface Statement {
   words: Word[]; // All words for the statement
 }
 
+// Stance colors
+const STANCE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  support: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+  oppose: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
+  conditional: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  neutral: { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200' },
+};
+
+const STANCE_LABELS: Record<string, string> = {
+  support: 'Support',
+  oppose: 'Oppose',
+  conditional: 'Conditional',
+  neutral: 'Neutral',
+};
+
+interface AnalysisViewProps {
+  propositions: Proposition[];
+  statements: Statement[] | null;
+  speakerMappings: SpeakerMapping;
+  countryNames: Map<string, string>;
+  onJumpToTimestamp: (ms: number) => void;
+}
+
+function AnalysisView({ propositions, statements, speakerMappings, countryNames, onJumpToTimestamp }: AnalysisViewProps) {
+  const [expandedProps, setExpandedProps] = useState<Set<string>>(new Set());
+  const [expandedPositions, setExpandedPositions] = useState<Set<string>>(new Set());
+  
+  const toggleProp = (key: string) => {
+    setExpandedProps(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+  
+  const togglePosition = (key: string) => {
+    setExpandedPositions(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+  
+  const formatTime = (ms: number): string => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  // Get statement data - LLM paragraph index = statement index
+  const getStatementData = (statementIndex: number): { text: string; start: number; statementIndex: number } | null => {
+    if (!statements || statementIndex >= statements.length) return null;
+    const stmt = statements[statementIndex];
+    const text = stmt.paragraphs.flatMap(p => p.sentences.map(s => s.text)).join(' ');
+    return { text, start: stmt.start, statementIndex };
+  };
+  
+  // Reuse speaker rendering logic from transcript view
+  const renderSpeakerInfo = (statementIndex: number) => {
+    const info = speakerMappings[statementIndex.toString()];
+    if (!info || (!info.affiliation && !info.group && !info.function && !info.name)) {
+      return <span className="text-sm font-medium">Speaker {statementIndex + 1}</span>;
+    }
+    return (
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {info.affiliation && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+            {countryNames.get(info.affiliation) || info.affiliation}
+          </span>
+        )}
+        {info.group && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+            {info.group}
+          </span>
+        )}
+        {info.function && info.function.toLowerCase() !== 'representative' && (
+          <span className="text-sm font-medium text-muted-foreground">{info.function}</span>
+        )}
+        {info.name && (
+          <span className="text-sm font-semibold">{info.name}</span>
+        )}
+      </div>
+    );
+  };
+  
+  return (
+    <div className="space-y-4">
+      {propositions.map(prop => {
+        const isExpanded = expandedProps.has(prop.key);
+        
+        return (
+          <div key={prop.key} className="border rounded-lg overflow-hidden">
+            {/* Proposition header */}
+            <button
+              onClick={() => toggleProp(prop.key)}
+              className="w-full px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="font-medium text-sm">{prop.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">{prop.statement}</p>
+                </div>
+                <ChevronDown className={`w-4 h-4 mt-1 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+              </div>
+              {/* Position summary badges */}
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {prop.positions.map(pos => (
+                  <span
+                    key={pos.stance}
+                    className={`text-xs px-2 py-0.5 rounded-full ${STANCE_COLORS[pos.stance].bg} ${STANCE_COLORS[pos.stance].text}`}
+                  >
+                    {STANCE_LABELS[pos.stance]}: {pos.stakeholders.length}
+                  </span>
+                ))}
+              </div>
+            </button>
+            
+            {/* Expanded content */}
+            {isExpanded && (
+              <div className="divide-y">
+                {prop.positions.map(pos => {
+                  const posKey = `${prop.key}-${pos.stance}`;
+                  const isPosExpanded = expandedPositions.has(posKey);
+                  const colors = STANCE_COLORS[pos.stance];
+                  
+                  return (
+                    <div key={pos.stance} className={`${colors.bg}`}>
+                      <div className="px-4 py-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-xs font-medium uppercase ${colors.text}`}>
+                            {STANCE_LABELS[pos.stance]}
+                          </span>
+                        </div>
+                        <div className="text-sm font-medium mb-1">
+                          {pos.stakeholders.join(', ')}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{pos.summary}</p>
+                        
+                        {/* View evidence button */}
+                        {pos.evidence && pos.evidence.length > 0 && (
+                          <button
+                            onClick={() => togglePosition(posKey)}
+                            className="text-xs text-primary hover:underline mt-2"
+                          >
+                            {isPosExpanded ? 'Hide quotes' : `View quotes (${pos.evidence.length})`}
+                          </button>
+                        )}
+                        
+                        {/* Evidence quotes */}
+                        {isPosExpanded && pos.evidence && (
+                          <div className="mt-3 space-y-3">
+                            {pos.evidence.map((ev, idx) => {
+                              const stmtData = getStatementData(ev.statementIndex);
+                              if (!stmtData) return null;
+                              
+                              return (
+                                <div key={idx} className="space-y-1.5">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <div className="text-sm font-semibold">
+                                      {renderSpeakerInfo(ev.statementIndex)}
+                                    </div>
+                                    <button
+                                      onClick={() => onJumpToTimestamp(stmtData.start)}
+                                      className="text-xs text-muted-foreground hover:text-primary hover:underline cursor-pointer transition-colors"
+                                      title="Jump to this timestamp"
+                                    >
+                                      [{formatTime(stmtData.start)}]
+                                    </button>
+                                  </div>
+                                  <div 
+                                    className="p-3 rounded-lg bg-background/50 border border-border/50 cursor-pointer hover:bg-background/80 transition-colors"
+                                    onClick={() => onJumpToTimestamp(stmtData.start)}
+                                    title="Click to jump to video"
+                                  >
+                                    <p className="text-sm leading-relaxed italic text-foreground">
+                                      &ldquo;{ev.quote}&rdquo;
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPanelProps) {
   const [segments, setSegments] = useState<SpeakerSegment[] | null>(null);
   const [stage, setStage] = useState<Stage>('idle');
@@ -143,6 +344,8 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [topicCollapsed, setTopicCollapsed] = useState<boolean>(true);
+  const [propositions, setPropositions] = useState<Proposition[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>('transcript');
   const [activeStatementIndex, setActiveStatementIndex] = useState<number>(-1);
   const [activeParagraphIndex, setActiveParagraphIndex] = useState<number>(-1);
   const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(-1);
@@ -353,6 +556,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
       if (data.statements && data.statements.length > 0) {
         setStatements(data.statements);
         if (data.topics) setTopics(data.topics);
+        if (data.propositions) setPropositions(data.propositions);
         if (data.speakerMappings) {
           setSpeakerMappings(data.speakerMappings);
           await loadCountryNames(data.speakerMappings);
@@ -410,9 +614,12 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
         }
       }
       
-      // Update topics when available
+      // Update topics and propositions when available
       if (data.topics && Object.keys(data.topics).length > 0) {
         setTopics(data.topics);
+      }
+      if (data.propositions && data.propositions.length > 0) {
+        setPropositions(data.propositions);
       }
       
       // Check for completion or error
@@ -624,6 +831,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
           if (data.statements && data.statements.length > 0) {
             setStatements(data.statements);
             if (data.topics) setTopics(data.topics);
+            if (data.propositions) setPropositions(data.propositions);
             if (data.speakerMappings) {
               setSpeakerMappings(data.speakerMappings);
               await loadCountryNames(data.speakerMappings);
@@ -904,7 +1112,49 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
         <StageProgress currentStage={stage} errorMessage={errorMessage || undefined} onRetry={handleRetry} />
       )}
       
-      {segments && Object.keys(topics).length > 0 && (() => {
+      {/* View toggle - only show when we have data */}
+      {segments && (propositions.length > 0 || Object.keys(topics).length > 0) && (
+        <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit mb-4">
+          <button
+            onClick={() => setViewMode('transcript')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors ${
+              viewMode === 'transcript'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            Transcript
+          </button>
+          <button
+            onClick={() => setViewMode('analysis')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors ${
+              viewMode === 'analysis'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            disabled={propositions.length === 0}
+            title={propositions.length === 0 ? 'No propositions analyzed yet' : undefined}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Analysis
+          </button>
+        </div>
+      )}
+      
+      {/* Analysis View */}
+      {viewMode === 'analysis' && propositions.length > 0 && (
+        <AnalysisView 
+          propositions={propositions} 
+          statements={statements}
+          speakerMappings={speakerMappings}
+          countryNames={countryNames}
+          onJumpToTimestamp={(ms) => seekToTimestamp(ms / 1000)}
+        />
+      )}
+      
+      {/* Transcript View */}
+      {viewMode === 'transcript' && segments && Object.keys(topics).length > 0 && (() => {
         // Collect all used topics from statements
         const usedTopicKeys = new Set<string>();
         if (statements) {
@@ -986,7 +1236,7 @@ export function TranscriptionPanel({ kalturaId, player, video }: TranscriptionPa
         );
       })()}
 
-      {segments && (
+      {viewMode === 'transcript' && segments && (
         <div className="space-y-3">
           {segments.map((segment, segmentIndex) => {
             const isSegmentActive = segmentIndex === activeSegmentIndex;

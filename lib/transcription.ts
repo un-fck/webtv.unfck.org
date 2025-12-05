@@ -12,6 +12,7 @@ export interface PollResult {
   raw_paragraphs?: RawParagraph[];
   statements?: TranscriptContent['statements'];
   topics?: TranscriptContent['topics'];
+  propositions?: TranscriptContent['propositions'];
   error_message?: string;
 }
 
@@ -109,6 +110,7 @@ export async function pollTranscription(transcriptId: string): Promise<PollResul
       raw_paragraphs: transcript.content.raw_paragraphs,
       statements: transcript.content.statements,
       topics: transcript.content.topics,
+      propositions: transcript.content.propositions,
     };
   }
 
@@ -120,6 +122,7 @@ export async function pollTranscription(transcriptId: string): Promise<PollResul
       raw_paragraphs: transcript.content.raw_paragraphs,
       statements: transcript.content.statements,
       topics: transcript.content.topics,
+      propositions: transcript.content.propositions,
     };
   }
 
@@ -130,6 +133,7 @@ export async function pollTranscription(transcriptId: string): Promise<PollResul
       raw_paragraphs: transcript.content.raw_paragraphs,
       statements: transcript.content.statements,
       topics: transcript.content.topics,
+      propositions: transcript.content.propositions,
     };
   }
 

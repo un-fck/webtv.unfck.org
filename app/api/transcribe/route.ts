@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
           cached: true,
           transcriptId: cached.transcript_id,
           topics: cached.content.topics || {},
+          propositions: cached.content.propositions || [],
           speakerMappings: speakerMappings || {},
         });
       }
