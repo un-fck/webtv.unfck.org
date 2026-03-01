@@ -18,6 +18,8 @@ export const UsageStages = {
   analyzingTopics: 'analyzing_topics',
   taggingSentences: 'tagging_sentences',
   analyzingPropositions: 'analyzing_propositions',
+  matchingTrackedItems: 'matching_tracked_items',
+  analyzingSentiment: 'analyzing_sentiment',
 } as const;
 
 export const UsageOperations = {
@@ -27,6 +29,9 @@ export const UsageOperations = {
   openaiTagParagraphTopics: 'openai_tag_paragraph_topics',
   openaiTagSentenceTopics: 'openai_tag_sentence_topics',
   openaiAnalyzePropositions: 'openai_analyze_propositions',
+  openaiMatchTrackedItems: 'openai_match_tracked_items',
+  openaiAnalyzeSentiment: 'openai_analyze_sentiment',
+  openaiSuggestTrackedItems: 'openai_suggest_tracked_items',
   assemblySubmit: 'assembly_submit_transcription',
   assemblyPoll: 'assembly_poll_transcription',
   assemblyFetchParagraphs: 'assembly_fetch_paragraphs',

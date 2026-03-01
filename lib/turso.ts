@@ -1,7 +1,7 @@
 import { createClient } from '@libsql/client/web';
 import '@/lib/load-env';
 
-export type TranscriptStatus = 'transcribing' | 'transcribed' | 'identifying_speakers' | 'analyzing_topics' | 'completed' | 'error';
+export type TranscriptStatus = 'transcribing' | 'transcribed' | 'identifying_speakers' | 'analyzing_topics' | 'analyzing_sentiment' | 'completed' | 'error';
 export type ProcessingUsageProvider = 'openai' | 'assemblyai';
 export type ProcessingUsageStatus = 'success' | 'error';
 
@@ -113,6 +113,70 @@ async function ensureInitialized() {
   await client.execute(`
     CREATE INDEX IF NOT EXISTS idx_usage_created_at ON processing_usage_events(created_at)
   `);
+  // Undercurrents: cross-meeting sentiment tracking tables
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS tracked_items (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL,
+      reference_text TEXT,
+      reference_document TEXT,
+      matching_keywords TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_tracked_items_slug ON tracked_items(slug)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_tracked_items_type ON tracked_items(type)`);
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS sentiment_observations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tracked_item_id TEXT NOT NULL,
+      transcript_id TEXT NOT NULL,
+      entry_id TEXT NOT NULL,
+      meeting_date TEXT NOT NULL,
+      speaker_name TEXT,
+      speaker_affiliation TEXT,
+      speaker_group TEXT,
+      speaker_function TEXT,
+      stance TEXT,
+      sentiment_urgency REAL,
+      sentiment_enthusiasm REAL,
+      sentiment_frustration REAL,
+      sentiment_concern REAL,
+      sentiment_confidence REAL,
+      sentiment_flexibility REAL,
+      sentiment_formality REAL,
+      sentiment_overall REAL,
+      summary TEXT NOT NULL,
+      key_quote TEXT,
+      quote_statement_index INTEGER,
+      relevance_score REAL NOT NULL,
+      analyzed_statement_count INTEGER,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_sentobs_tracked_item ON sentiment_observations(tracked_item_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_sentobs_transcript ON sentiment_observations(transcript_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_sentobs_date ON sentiment_observations(meeting_date)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_sentobs_affiliation ON sentiment_observations(speaker_affiliation)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_sentobs_item_date ON sentiment_observations(tracked_item_id, meeting_date)`);
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS tracked_item_matches (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tracked_item_id TEXT NOT NULL,
+      transcript_id TEXT NOT NULL,
+      matched_topic_key TEXT,
+      match_method TEXT NOT NULL,
+      match_confidence REAL NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(tracked_item_id, transcript_id)
+    )
+  `);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_tim_tracked_item ON tracked_item_matches(tracked_item_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_tim_transcript ON tracked_item_matches(transcript_id)`);
   // Add pipeline_lock column if it doesn't exist
   try {
     await client.execute(`ALTER TABLE transcripts ADD COLUMN pipeline_lock TEXT`);
@@ -690,6 +754,38 @@ export async function updateVideoEntryId(assetId: string, entryId: string): Prom
     sql: 'UPDATE videos SET entry_id = ?, updated_at = ? WHERE asset_id = ?',
     args: [entryId, new Date().toISOString(), assetId],
   });
+}
+
+export async function getVideoByEntryId(entryId: string): Promise<VideoRecord | null> {
+  await ensureInitialized();
+
+  const result = await client.execute({
+    sql: 'SELECT * FROM videos WHERE entry_id = ? LIMIT 1',
+    args: [entryId],
+  });
+
+  if (result.rows.length === 0) return null;
+
+  const row = result.rows[0];
+  return {
+    asset_id: row.asset_id as string,
+    entry_id: row.entry_id as string | null,
+    title: row.title as string,
+    clean_title: row.clean_title as string | null,
+    date: row.date as string,
+    scheduled_time: row.scheduled_time as string | null,
+    duration: row.duration as number | null,
+    url: row.url as string,
+    body: row.body as string | null,
+    category: row.category as string | null,
+    event_code: row.event_code as string | null,
+    event_type: row.event_type as string | null,
+    session_number: row.session_number as string | null,
+    part_number: row.part_number as string | null,
+    last_seen: row.last_seen as string,
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+  };
 }
 
 export const db = client;

@@ -2,8 +2,9 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { setSpeakerMapping, SpeakerInfo } from './speakers';
-import { getTranscriptById, updateTranscriptContent, updateTranscriptStatus } from './turso';
+import { getTranscriptById, updateTranscriptContent, updateTranscriptStatus, getVideoByEntryId } from './turso';
 import { trackOpenAIChatCompletion, UsageOperations, UsageStages } from './usage-tracking';
+import { runSentimentAnalysis } from './sentiment-analysis';
 import './load-env';
 // @ts-expect-error - no types available for sbd
 import sbd from 'sbd';
@@ -1332,7 +1333,27 @@ ${transcriptParts.join('\n\n')}`,
         });
         console.log(`  ✓ Saved topics and propositions`);
       }
-      
+
+      // Undercurrents: cross-meeting sentiment analysis
+      try {
+        await updateTranscriptStatus(transcriptId, 'analyzing_sentiment');
+        const freshTranscript = await getTranscriptById(transcriptId);
+        if (freshTranscript) {
+          const video = await getVideoByEntryId(freshTranscript.entry_id);
+          const meetingDate = video?.date ?? new Date().toISOString().split('T')[0];
+          await runSentimentAnalysis(
+            transcriptId,
+            freshTranscript.entry_id,
+            meetingDate,
+            freshTranscript.content,
+            finalMapping,
+            client,
+          );
+        }
+      } catch (sentimentError) {
+        console.warn(`  ⚠ Sentiment analysis failed (non-fatal):`, sentimentError instanceof Error ? sentimentError.message : sentimentError);
+      }
+
       // Mark as completed
       await updateTranscriptStatus(transcriptId, 'completed');
     } catch (error) {

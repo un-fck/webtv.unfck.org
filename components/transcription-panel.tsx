@@ -8,13 +8,14 @@ import { ChevronDown, FoldVertical, UnfoldVertical, Check, RotateCcw, FileText, 
 import ExcelJS from 'exceljs';
 import type { Proposition } from '@/lib/speaker-identification';
 
-type Stage = 'idle' | 'transcribing' | 'transcribed' | 'identifying_speakers' | 'analyzing_topics' | 'completed' | 'error';
+type Stage = 'idle' | 'transcribing' | 'transcribed' | 'identifying_speakers' | 'analyzing_topics' | 'analyzing_sentiment' | 'completed' | 'error';
 type ViewMode = 'transcript' | 'analysis';
 
 const STAGES: { key: Stage; label: string }[] = [
   { key: 'transcribing', label: 'Transcribing audio' },
   { key: 'identifying_speakers', label: 'Identifying speakers' },
   { key: 'analyzing_topics', label: 'Analyzing topics' },
+  { key: 'analyzing_sentiment', label: 'Analyzing sentiment' },
 ];
 
 function getStageIndex(stage: Stage): number {
@@ -236,7 +237,7 @@ function AnalysisView({ propositions, statements, speakerMappings, countryNames,
                 <ChevronDown className={`w-4 h-4 mt-1 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
               </div>
               {/* Position summary badges */}
-              <div className="flex gap-2 mt-2 flex-wrap">
+              <div className="flex gap-2 mt-2 flex-wrap items-center">
                 {prop.positions.map(pos => (
                   <span
                     key={pos.stance}
@@ -245,6 +246,13 @@ function AnalysisView({ propositions, statements, speakerMappings, countryNames,
                     {STANCE_LABELS[pos.stance]}: {pos.stakeholders.length}
                   </span>
                 ))}
+                <a
+                  href={`/tracker?track=proposal&title=${encodeURIComponent(prop.title)}&description=${encodeURIComponent(prop.statement)}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[10px] text-muted-foreground hover:text-primary ml-auto"
+                >
+                  Track this &rarr;
+                </a>
               </div>
             </button>
             
