@@ -1,5 +1,7 @@
 analysis/video-metadata.json
 /transcription-comparisons
+/eval/results
+/eval/corpus-data
 .claude/
 
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.

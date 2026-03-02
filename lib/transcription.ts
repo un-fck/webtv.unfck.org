@@ -17,7 +17,7 @@ export interface PollResult {
   error_message?: string;
 }
 
-export async function getKalturaAudioUrl(kalturaId: string) {
+async function fetchKalturaFlavors(kalturaId: string) {
   const apiResponse = await fetch('https://cdnapisec.kaltura.com/api_v3/service/multirequest', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -51,19 +51,57 @@ export async function getKalturaAudioUrl(kalturaId: string) {
   if (!entryId) throw new Error('No entry found');
 
   const flavors = apiData[2]?.objects || [];
-  const englishCandidates = flavors.filter((f: { language?: string; tags?: string }) => 
-    f.language?.toLowerCase() === 'english' && f.tags?.includes('audio_only')
+  const isLiveStream = apiData[1]?.objects?.[0]?.objectType === 'KalturaLiveStreamEntry';
+
+  return { entryId, flavors, isLiveStream };
+}
+
+function buildAudioUrl(entryId: string, flavorParamId: number) {
+  return `https://cdnapisec.kaltura.com/p/2503451/sp/0/playManifest/entryId/${entryId}/format/download/protocol/https/flavorParamIds/${flavorParamId}`;
+}
+
+export async function getKalturaAudioUrl(kalturaId: string, language = 'english') {
+  const { entryId, flavors, isLiveStream } = await fetchKalturaFlavors(kalturaId);
+
+  const candidates = flavors.filter((f: { language?: string; tags?: string }) =>
+    f.language?.toLowerCase() === language.toLowerCase() && f.tags?.includes('audio_only')
   );
-  const preferredFlavor = englishCandidates.find((f: { status?: number; isDefault?: boolean }) => f.status === 2 && f.isDefault)
-    || englishCandidates.find((f: { status?: number }) => f.status === 2)
-    || englishCandidates[0];
+  const preferredFlavor = candidates.find((f: { status?: number; isDefault?: boolean }) => f.status === 2 && f.isDefault)
+    || candidates.find((f: { status?: number }) => f.status === 2)
+    || candidates[0];
   const flavorParamId = preferredFlavor?.flavorParamsId || 100;
-  
+
   return {
     entryId,
-    audioUrl: `https://cdnapisec.kaltura.com/p/2503451/sp/0/playManifest/entryId/${entryId}/format/download/protocol/https/flavorParamIds/${flavorParamId}`,
+    audioUrl: buildAudioUrl(entryId, flavorParamId),
     flavorParamId,
-    isLiveStream: apiData[1]?.objects?.[0]?.objectType === 'KalturaLiveStreamEntry',
+    isLiveStream,
+  };
+}
+
+export async function getAvailableAudioLanguages(kalturaId: string) {
+  const { entryId, flavors } = await fetchKalturaFlavors(kalturaId);
+
+  const audioFlavors = flavors.filter((f: { tags?: string; status?: number }) =>
+    f.tags?.includes('audio_only') && f.status === 2
+  );
+
+  const languages = [...new Set(
+    audioFlavors
+      .map((f: { language?: string }) => f.language?.toLowerCase())
+      .filter(Boolean) as string[]
+  )];
+
+  return {
+    entryId,
+    languages: languages.map(lang => {
+      const flavor = audioFlavors.find((f: { language?: string }) => f.language?.toLowerCase() === lang);
+      return {
+        language: lang,
+        flavorParamId: flavor?.flavorParamsId as number,
+        audioUrl: buildAudioUrl(entryId, flavor?.flavorParamsId as number),
+      };
+    }),
   };
 }
 
