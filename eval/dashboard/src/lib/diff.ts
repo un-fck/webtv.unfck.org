@@ -4,14 +4,39 @@
  */
 
 export interface DiffToken {
-  type: 'equal' | 'insert' | 'delete';
+  type: 'equal' | 'insert' | 'delete' | 'substitute';
   text: string;
+  /** For substitute tokens: the old (reference) text */
+  oldText?: string;
+  /** True if the difference is only punctuation (letters are identical) */
+  punctOnly?: boolean;
 }
 
 export interface AlignedRow {
   left: DiffToken[];
   right: DiffToken[];
   type: 'equal' | 'changed' | 'added' | 'removed';
+}
+
+/** Normalize Unicode for cleaner diffs */
+function normalizeText(text: string): string {
+  return text
+    // Curly quotes → straight
+    .replace(/[\u2018\u2019\u201A\u2039\u203A]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u00AB\u00BB]/g, '"')
+    // Em/en dashes → hyphen
+    .replace(/[\u2013\u2014\u2015]/g, '-')
+    // Non-breaking space, thin space, etc → regular space
+    .replace(/[\u00A0\u2009\u200A\u202F]/g, ' ')
+    // Ellipsis character → three dots
+    .replace(/\u2026/g, '...')
+    // Zero-width chars
+    .replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
+}
+
+/** Strip all non-alphanumeric characters for punctuation comparison */
+function lettersOnly(text: string): string {
+  return text.replace(/[^a-zA-Z0-9\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF\u4E00-\u9FFF]/g, '').toLowerCase();
 }
 
 /** Split text into sentences for alignment */
@@ -62,8 +87,8 @@ function similarity(a: string, b: string): number {
   return 1 - levenshtein(a, b) / maxLen;
 }
 
-/** Word-level diff between two strings, returning tokens for one side */
-function charDiff(ref: string, hyp: string): DiffToken[] {
+/** Word-level diff between two strings, with substitution and punctuation detection */
+function wordDiff(ref: string, hyp: string): DiffToken[] {
   const refWords = ref.split(/(\s+)/);
   const hypWords = hyp.split(/(\s+)/);
 
@@ -102,107 +127,170 @@ function charDiff(ref: string, hyp: string): DiffToken[] {
   }
   ops.reverse();
 
+  // Merge consecutive same-type tokens
   const merged: DiffToken[] = [];
   for (const op of ops) {
     const last = merged[merged.length - 1];
     if (last && last.type === op.type) last.text += op.text;
     else merged.push({ ...op });
   }
-  return merged;
+
+  // Convert adjacent delete+insert pairs into substitute tokens with punctuation detection
+  const result: DiffToken[] = [];
+  for (let k = 0; k < merged.length; k++) {
+    const cur = merged[k];
+    const next = merged[k + 1];
+    if (cur.type === 'delete' && next?.type === 'insert') {
+      const punctOnly = lettersOnly(cur.text) === lettersOnly(next.text);
+      result.push({
+        type: 'substitute',
+        text: next.text,
+        oldText: cur.text,
+        punctOnly,
+      });
+      k++; // skip the insert
+    } else {
+      result.push(cur);
+    }
+  }
+  return result;
 }
 
 const MATCH_THRESHOLD = 0.4;
 
-/**
- * Align sentences from reference and hypothesis, producing side-by-side rows.
- */
-export function alignedDiff(reference: string, hypothesis: string): AlignedRow[] {
-  const refSents = splitSentences(reference);
-  const hypSents = splitSentences(hypothesis);
-  const rows: AlignedRow[] = [];
-  const usedHyp = new Set<number>();
-  const matchMap = new Map<number, number>(); // ri -> hi
-
-  // Find best matches greedily
+/** Match hyp sentences to ref sentences greedily, returning ri→hi map */
+function greedyMatch(refSents: string[], hypSents: string[]): Map<number, number> {
+  const used = new Set<number>();
+  const map = new Map<number, number>();
   for (let ri = 0; ri < refSents.length; ri++) {
     let bestHi = -1;
     let bestSim = MATCH_THRESHOLD;
     for (let hi = 0; hi < hypSents.length; hi++) {
-      if (usedHyp.has(hi)) continue;
+      if (used.has(hi)) continue;
       const sim = similarity(refSents[ri].toLowerCase(), hypSents[hi].toLowerCase());
       if (sim > bestSim) { bestSim = sim; bestHi = hi; }
     }
-    if (bestHi >= 0) {
-      matchMap.set(ri, bestHi);
-      usedHyp.add(bestHi);
+    if (bestHi >= 0) { map.set(ri, bestHi); used.add(bestHi); }
+  }
+  return map;
+}
+
+/** Compute diff tokens for a hyp sentence against a ref sentence. */
+function diffPair(refText: string, hypText: string): DiffToken[] {
+  if (refText === hypText) return [{ type: 'equal', text: hypText }];
+  return wordDiff(refText, hypText);
+}
+
+export interface AlignedRow3 {
+  ref: string;          // plain ground truth text
+  colA: DiffToken[];    // provider A tokens (diff-highlighted vs ref)
+  colB: DiffToken[];    // provider B tokens (diff-highlighted vs ref)
+}
+
+/** Pair up two lists of orphan sentences by similarity, returning merged rows */
+function pairOrphans(aSents: string[], bSents: string[]): AlignedRow3[] {
+  const rows: AlignedRow3[] = [];
+  const usedB = new Set<number>();
+
+  for (const aText of aSents) {
+    let bestBi = -1;
+    let bestSim = MATCH_THRESHOLD;
+    for (let bi = 0; bi < bSents.length; bi++) {
+      if (usedB.has(bi)) continue;
+      const sim = similarity(aText.toLowerCase(), bSents[bi].toLowerCase());
+      if (sim > bestSim) { bestSim = sim; bestBi = bi; }
+    }
+    if (bestBi >= 0) {
+      usedB.add(bestBi);
+      rows.push({
+        ref: '',
+        colA: [{ type: 'insert', text: aText }],
+        colB: [{ type: 'insert', text: bSents[bestBi] }],
+      });
+    } else {
+      rows.push({ ref: '', colA: [{ type: 'insert', text: aText }], colB: [] });
     }
   }
+  for (let bi = 0; bi < bSents.length; bi++) {
+    if (!usedB.has(bi)) {
+      rows.push({ ref: '', colA: [], colB: [{ type: 'insert', text: bSents[bi] }] });
+    }
+  }
+  return rows;
+}
 
-  // Walk through in order, interleaving unmatched sentences
-  let nextHi = 0;
+/**
+ * 3-column alignment: ground truth as anchor, two providers matched independently.
+ * Each row has: GT sentence | provider A diff | provider B diff.
+ * Unmatched A/B sentences that are similar to each other share a row.
+ */
+export function alignedDiff3(reference: string, hypA: string, hypB: string): AlignedRow3[] {
+  // Normalize Unicode before all processing
+  const normRef = normalizeText(reference);
+  const normA = normalizeText(hypA);
+  const normB = normalizeText(hypB);
+
+  const refSents = splitSentences(normRef);
+  const aSents = splitSentences(normA);
+  const bSents = splitSentences(normB);
+
+  const matchA = greedyMatch(refSents, aSents);
+  const matchB = greedyMatch(refSents, bSents);
+  const matchedA = new Set(matchA.values());
+  const matchedB = new Set(matchB.values());
+
+  const rows: AlignedRow3[] = [];
+  let nextAi = 0;
+  let nextBi = 0;
 
   for (let ri = 0; ri < refSents.length; ri++) {
-    const hi = matchMap.get(ri);
+    const ai = matchA.get(ri);
+    const bi = matchB.get(ri);
 
-    if (hi !== undefined) {
-      // Emit unmatched hyp sentences that come before this match
-      while (nextHi < hi) {
-        if (!usedHyp.has(nextHi) || !matchMap.has(ri)) {
-          // This hyp sentence wasn't matched to anything
-          if (!Array.from(matchMap.values()).includes(nextHi)) {
-            rows.push({
-              left: [],
-              right: [{ type: 'insert', text: hypSents[nextHi] }],
-              type: 'added',
-            });
-          }
-        }
-        nextHi++;
+    // Collect unmatched A sentences before this match
+    const pendingA: string[] = [];
+    if (ai !== undefined) {
+      while (nextAi < ai) {
+        if (!matchedA.has(nextAi)) pendingA.push(aSents[nextAi]);
+        nextAi++;
       }
-
-      // Emit aligned pair
-      const refText = refSents[ri];
-      const hypText = hypSents[hi];
-      if (refText === hypText) {
-        rows.push({
-          left: [{ type: 'equal', text: refText }],
-          right: [{ type: 'equal', text: hypText }],
-          type: 'equal',
-        });
-      } else {
-        const tokens = charDiff(refText, hypText);
-        rows.push({
-          left: tokens.filter(t => t.type !== 'insert').map(t => ({
-            type: t.type === 'delete' ? 'delete' as const : 'equal' as const,
-            text: t.text,
-          })),
-          right: tokens.filter(t => t.type !== 'delete').map(t => ({
-            type: t.type === 'insert' ? 'insert' as const : 'equal' as const,
-            text: t.text,
-          })),
-          type: 'changed',
-        });
-      }
-      nextHi = hi + 1;
-    } else {
-      // Unmatched reference sentence
-      rows.push({
-        left: [{ type: 'delete', text: refSents[ri] }],
-        right: [],
-        type: 'removed',
-      });
+      nextAi = ai + 1;
     }
+
+    // Collect unmatched B sentences before this match
+    const pendingB: string[] = [];
+    if (bi !== undefined) {
+      while (nextBi < bi) {
+        if (!matchedB.has(nextBi)) pendingB.push(bSents[nextBi]);
+        nextBi++;
+      }
+      nextBi = bi + 1;
+    }
+
+    // Pair up similar orphans from A and B, then emit
+    if (pendingA.length > 0 || pendingB.length > 0) {
+      rows.push(...pairOrphans(pendingA, pendingB));
+    }
+
+    // Emit the ref row with matched provider diffs
+    rows.push({
+      ref: refSents[ri],
+      colA: ai !== undefined ? diffPair(refSents[ri], aSents[ai]) : [],
+      colB: bi !== undefined ? diffPair(refSents[ri], bSents[bi]) : [],
+    });
   }
 
-  // Remaining unmatched hypothesis sentences
-  for (let h = nextHi; h < hypSents.length; h++) {
-    if (!usedHyp.has(h)) {
-      rows.push({
-        left: [],
-        right: [{ type: 'insert', text: hypSents[h] }],
-        type: 'added',
-      });
-    }
+  // Remaining unmatched sentences after last ref
+  const tailA: string[] = [];
+  for (let i = nextAi; i < aSents.length; i++) {
+    if (!matchedA.has(i)) tailA.push(aSents[i]);
+  }
+  const tailB: string[] = [];
+  for (let i = nextBi; i < bSents.length; i++) {
+    if (!matchedB.has(i)) tailB.push(bSents[i]);
+  }
+  if (tailA.length > 0 || tailB.length > 0) {
+    rows.push(...pairOrphans(tailA, tailB));
   }
 
   return rows;

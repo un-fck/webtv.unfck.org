@@ -1,19 +1,15 @@
 import { useState, useEffect } from 'react';
-import type { DashboardData, MetricKey } from './types';
-import { LANGUAGE_NAMES, PROVIDER_LABELS, PROVIDER_COLORS } from './types';
+import type { DashboardData } from './types';
 import { Leaderboard } from './components/Leaderboard';
-import { LanguageChart } from './components/LanguageChart';
 import { DiffView } from './components/DiffView';
 import './index.css';
 
-type Tab = 'overview' | 'languages' | 'transcriptions';
+type Tab = 'overview' | 'transcriptions';
 
 function App() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/data.json')
@@ -45,64 +41,17 @@ function App() {
         <button className={`tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>
           Overview
         </button>
-        <button className={`tab ${tab === 'languages' ? 'active' : ''}`} onClick={() => setTab('languages')}>
-          By Language
-        </button>
         <button className={`tab ${tab === 'transcriptions' ? 'active' : ''}`} onClick={() => setTab('transcriptions')}>
           Transcriptions & Diff
         </button>
       </div>
-
-      {/* Filters (shown for overview and language tabs) */}
-      {tab !== 'transcriptions' && (
-        <div className="filters">
-          <span className="filter-label">Language</span>
-          <div className="filter-group">
-            <button
-              className={`chip ${selectedLanguage === null ? 'active' : ''}`}
-              onClick={() => setSelectedLanguage(null)}
-            >
-              All
-            </button>
-            {languages.map(lang => (
-              <button
-                key={lang}
-                className={`chip ${selectedLanguage === lang ? 'active' : ''}`}
-                onClick={() => setSelectedLanguage(lang)}
-              >
-                {LANGUAGE_NAMES[lang] || lang}
-              </button>
-            ))}
-          </div>
-
-          <span className="filter-label" style={{ marginLeft: '1rem' }}>Provider</span>
-          <div className="filter-group">
-            <button
-              className={`chip ${selectedProvider === null ? 'active' : ''}`}
-              onClick={() => setSelectedProvider(null)}
-            >
-              All
-            </button>
-            {providers.map(p => (
-              <button
-                key={p}
-                className={`chip ${selectedProvider === p ? 'active' : ''}`}
-                onClick={() => setSelectedProvider(p)}
-                style={selectedProvider === p ? { background: PROVIDER_COLORS[p], borderColor: PROVIDER_COLORS[p] } : {}}
-              >
-                {PROVIDER_LABELS[p] || p}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Metric explainer - shown on overview tab */}
       {tab === 'overview' && (
         <div className="card" style={{ marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.7' }}>
           <details>
             <summary style={{ cursor: 'pointer', fontWeight: 600, color: 'var(--text)', marginBottom: '0.5rem' }}>
-              About the metrics (lower is better)
+              About the metrics
             </summary>
             <p style={{ marginBottom: '0.5rem' }}>
               <strong>WER (Word Error Rate)</strong> measures the proportion of words that differ between the
@@ -127,23 +76,7 @@ function App() {
       )}
 
       {/* Tab content */}
-      {tab === 'overview' && (
-        <Leaderboard
-          results={data.results}
-          selectedLanguage={selectedLanguage}
-          selectedProvider={selectedProvider}
-        />
-      )}
-
-      {tab === 'languages' && (
-        <LanguageChart
-          results={selectedProvider
-            ? data.results.filter(r => r.provider === selectedProvider)
-            : data.results}
-          metric={(selectedLanguage ? 'normalizedCer' : 'normalizedWer') as MetricKey}
-        />
-      )}
-
+      {tab === 'overview' && <Leaderboard results={data.results} />}
       {tab === 'transcriptions' && <DiffView data={data} />}
 
       {/* Footer */}

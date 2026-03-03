@@ -18,11 +18,12 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-from huggingface_hub import HfApi, create_repo
+from huggingface_hub import CommitOperationAdd, HfApi, create_repo
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -204,30 +205,30 @@ Transcripts: [United Nations Official Document System](https://documents.un.org)
 """
 
 
-def load_audio(filename: str | None) -> dict | None:
-    if not filename:
-        return None
-    local = AUDIO_DIR / Path(filename).name
-    if not local.exists():
-        print(f"  WARNING: audio file not found: {local}")
-        return None
-    return {"path": Path(filename).name, "bytes": local.read_bytes()}
+def commit_with_retry(api: HfApi, operations: list, commit_message: str, retries: int = 5) -> None:
+    """Create a commit with exponential backoff on transient errors."""
+    for attempt in range(retries):
+        try:
+            api.create_commit(
+                repo_id=HF_REPO,
+                repo_type="dataset",
+                operations=operations,
+                commit_message=commit_message,
+            )
+            return
+        except Exception as e:
+            if attempt < retries - 1 and ("503" in str(e) or "502" in str(e) or "429" in str(e)):
+                wait = 2 ** (attempt + 1)
+                print(f"\n    Retry {attempt+1}/{retries} after {wait}s: {e}")
+                time.sleep(wait)
+            else:
+                raise
 
 
 def build_and_push_session(row: dict, idx: int, total: int, api: HfApi | None) -> None:
     symbol = row["symbol"]
     symbol_safe = symbol.replace("/", "_")
     print(f"  [{idx+1}/{total}] {symbol}")
-
-    cols: dict = {
-        "symbol": [row["symbol"]],
-        "webtv_url": [row["webtv_url"]],
-        "duration_ms": [row["duration_ms"]],
-        "num_speakers": [row["num_speakers"]],
-        "audio_floor": [load_audio(row.get("floor_file_name"))],
-        **{f"audio_{lang}": [load_audio(row.get(f"{lang}_file_name"))] for lang in LANGS},
-        **{f"pv_{lang}": [row.get(f"pv_{lang}")] for lang in LANGS},
-    }
 
     audio_summary = f"floor={'✓' if row.get('floor_file_name') else '✗'} " + \
         " ".join(f"{l}={'✓' if row.get(f'{l}_file_name') else '✗'}" for l in LANGS)
@@ -236,20 +237,50 @@ def build_and_push_session(row: dict, idx: int, total: int, api: HfApi | None) -
     if DRY_RUN:
         return
 
+    # Collect audio files and their repo paths
+    operations: list[CommitOperationAdd] = []
+    audio_paths: dict[str, dict | None] = {}
+
+    for track, meta_key in [("floor", "floor_file_name")] + [(l, f"{l}_file_name") for l in LANGS]:
+        col = "audio_floor" if track == "floor" else f"audio_{track}"
+        filename = row.get(meta_key)
+        if not filename:
+            audio_paths[col] = None
+            continue
+        local = AUDIO_DIR / Path(filename).name
+        if not local.exists():
+            print(f"  WARNING: audio file not found: {local}")
+            audio_paths[col] = None
+            continue
+        hf_audio_path = f"data/sessions/audio/{symbol_safe}_{track}.mp3"
+        # Path in Parquet is relative to the Parquet file's directory (data/sessions/)
+        hf_path = f"audio/{symbol_safe}_{track}.mp3"
+        operations.append(CommitOperationAdd(path_in_repo=hf_audio_path, path_or_fileobj=str(local)))
+        audio_paths[col] = {"path": hf_path, "bytes": None}
+
+    # Build Parquet with path references
+    cols: dict = {
+        "symbol": [row["symbol"]],
+        "webtv_url": [row["webtv_url"]],
+        "duration_ms": [row["duration_ms"]],
+        "num_speakers": [row["num_speakers"]],
+        **{k: [v] for k, v in audio_paths.items()},
+        **{f"pv_{lang}": [row.get(f"pv_{lang}")] for lang in LANGS},
+    }
+
     table = pa.table(cols, schema=SCHEMA)
     parquet_path = CORPUS_DIR / f"sessions-{symbol_safe}.parquet"
     pq.write_table(table, parquet_path)
-    size_mb = parquet_path.stat().st_size / 1024 / 1024
-    print(f"    Parquet: {size_mb:.1f} MB", end="")
+    operations.append(CommitOperationAdd(
+        path_in_repo=f"data/sessions/{parquet_path.name}",
+        path_or_fileobj=str(parquet_path),
+    ))
+
+    size_mb = sum(op.path_or_fileobj.stat().st_size if isinstance(op.path_or_fileobj, Path) else Path(op.path_or_fileobj).stat().st_size for op in operations) / 1024 / 1024
+    print(f"    {len(operations)} files, {size_mb:.0f} MB total", end="", flush=True)
 
     if api:
-        api.upload_file(
-            path_or_fileobj=str(parquet_path),
-            path_in_repo=f"data/sessions/{parquet_path.name}",
-            repo_id=HF_REPO,
-            repo_type="dataset",
-            commit_message=f"Add session {symbol}",
-        )
+        commit_with_retry(api, operations, f"Add session {symbol}")
         print(" → uploaded")
     else:
         print(" (no HF_TOKEN)")

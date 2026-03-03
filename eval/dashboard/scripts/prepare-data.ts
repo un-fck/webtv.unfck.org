@@ -55,8 +55,7 @@ function main() {
       if (file.endsWith('.txt') && !file.includes('speakers')) {
         const lang = file.replace('.txt', '');
         const text = fs.readFileSync(path.join(symDir, file), 'utf-8');
-        // Truncate to 5000 chars for dashboard to keep bundle small
-        groundTruth[symbol][lang] = text.length > 5000 ? text.slice(0, 5000) + '\n[...truncated]' : text;
+        groundTruth[symbol][lang] = text;
       }
     }
   }
@@ -78,16 +77,14 @@ function main() {
       const text = fs.readFileSync(path.join(symDir, file), 'utf-8');
       // Extract just the text content (strip speaker labels for comparison)
       const plainText = text.replace(/^\[\d+\] Speaker \w+ \([^)]+\)\n/gm, '');
-      transcriptions[symbol][lang][provider] = plainText.length > 5000
-        ? plainText.slice(0, 5000) + '\n[...truncated]'
-        : plainText;
+      transcriptions[symbol][lang][provider] = plainText;
     }
   }
 
   // Build session metadata map
-  const sessionMeta: Record<string, { notes: string }> = {};
+  const sessionMeta: Record<string, { notes: string; assetId: string }> = {};
   for (const s of sessions) {
-    sessionMeta[s.symbol] = { notes: s.notes || '' };
+    sessionMeta[s.symbol] = { notes: s.notes || '', assetId: s.assetId || '' };
   }
 
   const data = {

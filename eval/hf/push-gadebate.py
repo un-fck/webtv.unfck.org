@@ -42,7 +42,6 @@ TARGET_SESSIONS = set(int(s) for s in SESSIONS_ARG.replace("--sessions=", "").sp
 
 S3_BASE = "https://s3.amazonaws.com/downloads.unmultimedia.org/radio/library/ltd/mp3/ga"
 
-# HF audio feature: struct<path: string, bytes: binary>
 AUDIO_TYPE = pa.struct([pa.field("path", pa.string()), pa.field("bytes", pa.large_binary())])
 
 SCHEMA = pa.schema([
@@ -66,15 +65,28 @@ LANG_CODES = ["FL", "EN", "FR", "ES", "AR", "ZH", "RU"]
 SESSION_YEAR = {70: 2015, 71: 2016, 72: 2017, 73: 2018, 76: 2021, 77: 2022, 78: 2023, 79: 2024, 80: 2025}
 
 
-def fetch_audio(session: int, year: int, iso: str, lang: str) -> dict | None:
-    """Fetch audio bytes directly from S3. Returns HF audio struct or None."""
+def fetch_and_upload_audio(session: int, year: int, iso: str, lang: str, api: HfApi | None) -> dict | None:
+    """Fetch audio from S3, upload to HF as a separate file, return audio struct."""
     url = f"{S3_BASE}/{year}/{session}_{iso}_{lang}.mp3"
     try:
         r = requests.get(url, timeout=60, stream=False)
-        if r.status_code == 200:
-            filename = f"{session}_{iso}_{lang}.mp3"
-            return {"path": filename, "bytes": r.content}
-        return None
+        if r.status_code != 200:
+            return None
+        filename = f"{session}_{iso}_{lang}.mp3"
+        hf_upload_path = f"data/gadebate/audio/{filename}"
+        if api:
+            local = CORPUS_DIR / filename
+            local.write_bytes(r.content)
+            api.upload_file(
+                path_or_fileobj=str(local),
+                path_in_repo=hf_upload_path,
+                repo_id=HF_REPO,
+                repo_type="dataset",
+                commit_message=f"Audio: {filename}",
+            )
+            local.unlink()
+        # Path relative to Parquet location (data/gadebate/)
+        return {"path": f"audio/{filename}", "bytes": None}
     except Exception as e:
         print(f"    WARN: {url}: {e}")
         return None
@@ -103,27 +115,6 @@ def fetch_orig_pdf_text(row: dict) -> str | None:
         return None
 
 
-SHARD_MAX_BYTES = 400 * 1024 * 1024  # 400 MB per shard → stays under HF 500 MB viewer limit
-
-
-def upload_shard(parquet_path: Path, session: int, shard_idx: int, api: HfApi | None) -> None:
-    size_mb = parquet_path.stat().st_size / 1024 / 1024
-    print(f"\n  Shard {shard_idx}: {parquet_path.name} ({size_mb:.0f} MB)", end=" ", flush=True)
-    if api is None:
-        print("(no HF_TOKEN — skipping upload)")
-    else:
-        hf_path = f"data/gadebate/{parquet_path.name}"
-        api.upload_file(
-            path_or_fileobj=str(parquet_path),
-            path_in_repo=hf_path,
-            repo_id=HF_REPO,
-            repo_type="dataset",
-            commit_message=f"GA General Debate session {session} shard {shard_idx}: {parquet_path.name}",
-        )
-        print("→ uploaded")
-    parquet_path.unlink()
-
-
 def build_and_push_session(session: int, rows: list[dict], api: HfApi | None) -> None:
     year = SESSION_YEAR.get(session, session + 1945)
     print(f"\n=== Session {session} ({year}): {len(rows)} speeches ===")
@@ -138,8 +129,7 @@ def build_and_push_session(session: int, rows: list[dict], api: HfApi | None) ->
         print("  Dry run — skipping Parquet write.")
         return
 
-    shard_idx = 1
-    parquet_path = CORPUS_DIR / f"gadebate-{session}-part{shard_idx:03d}.parquet"
+    parquet_path = CORPUS_DIR / f"gadebate-{session}.parquet"
     writer = pq.ParquetWriter(parquet_path, SCHEMA)
 
     try:
@@ -156,10 +146,10 @@ def build_and_push_session(session: int, rows: list[dict], api: HfApi | None) ->
                 "speech_date": [row.get("speech_date")],
             }
 
-            # Fetch floor + 6 UN language tracks
+            # Fetch floor + 6 UN language tracks, upload each as separate file
             for lang in LANG_CODES:
                 col = "audio_floor" if lang == "FL" else f"audio_{lang.lower()}"
-                row_cols[col] = [fetch_audio(session, year, iso, lang)]
+                row_cols[col] = [fetch_and_upload_audio(session, year, iso, lang, api)]
                 print(".", end="", flush=True)
 
             # Fetch original-language PDF text (only when non-UN-language speech)
@@ -170,19 +160,24 @@ def build_and_push_session(session: int, rows: list[dict], api: HfApi | None) ->
 
             writer.write_table(pa.table(row_cols, schema=SCHEMA))
             print(" ✓")
-
-            # Roll over to new shard if file exceeds limit
-            if parquet_path.stat().st_size >= SHARD_MAX_BYTES and i < len(rows) - 1:
-                writer.close()
-                upload_shard(parquet_path, session, shard_idx, api)
-                shard_idx += 1
-                parquet_path = CORPUS_DIR / f"gadebate-{session}-part{shard_idx:03d}.parquet"
-                writer = pq.ParquetWriter(parquet_path, SCHEMA)
     finally:
         writer.close()
 
-    # Upload final shard
-    upload_shard(parquet_path, session, shard_idx, api)
+    # Upload the Parquet (now just metadata + paths, very small)
+    size_mb = parquet_path.stat().st_size / 1024 / 1024
+    print(f"\n  Parquet: {parquet_path.name} ({size_mb:.1f} MB)", end=" ", flush=True)
+    if api:
+        api.upload_file(
+            path_or_fileobj=str(parquet_path),
+            path_in_repo=f"data/gadebate/{parquet_path.name}",
+            repo_id=HF_REPO,
+            repo_type="dataset",
+            commit_message=f"GA General Debate session {session}",
+        )
+        print("→ uploaded")
+    else:
+        print("(no HF_TOKEN)")
+    parquet_path.unlink()
 
 
 README = """---

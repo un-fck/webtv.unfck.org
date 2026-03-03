@@ -18,7 +18,7 @@ export interface Result {
 
 export interface DashboardData {
   results: Result[];
-  sessions: Record<string, { notes: string }>;
+  sessions: Record<string, { notes: string; assetId?: string }>;
   groundTruth: Record<string, Record<string, string>>;
   transcriptions: Record<string, Record<string, Record<string, string>>>;
   generatedAt: string;
@@ -47,6 +47,8 @@ export const PROVIDER_COLORS: Record<string, string> = {
   'azure-openai': '#059669',
   elevenlabs: '#D97706',
   'azure-speech': '#DC2626',
+  'google-chirp': '#4285F4',
+  gemini: '#886FBF',
 };
 
 export const PROVIDER_LABELS: Record<string, string> = {
@@ -54,4 +56,6 @@ export const PROVIDER_LABELS: Record<string, string> = {
   'azure-openai': 'Azure OpenAI',
   elevenlabs: 'ElevenLabs',
   'azure-speech': 'Azure Speech',
+  'google-chirp': 'Google Chirp 3',
+  gemini: 'Gemini 3 Flash',
 };

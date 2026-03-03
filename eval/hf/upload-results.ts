@@ -38,14 +38,14 @@ tags:
 - united-nations
 - evaluation
 - benchmark
-pretty_name: UN ASR Transcription Benchmark Results
+pretty_name: UN Transcription Benchmark Results
 size_categories:
 - n<1K
 ---
 
-# UN ASR Transcription Benchmark Results
+# UN Transcription Benchmark Results
 
-Evaluation results for automatic speech recognition (ASR) systems on UN Security Council and General Assembly meeting recordings, assessed against official UN verbatim records.
+Evaluation results for speech-to-text systems on UN Security Council and General Assembly meeting recordings, assessed against official UN verbatim records.
 
 See [united-nations/transcription-corpus](https://huggingface.co/datasets/united-nations/transcription-corpus) for the underlying audio and ground truth data.
 
@@ -56,7 +56,7 @@ See [united-nations/transcription-corpus](https://huggingface.co/datasets/united
 - **CER**: Character Error Rate (same reference, no normalization)
 - **normalized_cer**: CER after normalization
 
-**Note**: WER of 20–40% is expected for high-quality ASR on these recordings due to the editing gap between live speech and published verbatim records. For Chinese, use CER as the primary metric (Chinese text has no word boundaries).
+**Note**: WER of 20–40% is expected for high-quality transcription on these recordings due to the editing gap between live speech and published verbatim records. For Chinese, use CER as the primary metric (Chinese text has no word boundaries).
 
 ## Providers Evaluated
 
@@ -66,6 +66,8 @@ See [united-nations/transcription-corpus](https://huggingface.co/datasets/united
 | \`azure-openai\` | Azure OpenAI gpt-4o-transcribe-diarize | ~$0.06/hr |
 | \`elevenlabs\` | ElevenLabs Scribe v2 | ~$0.40/hr |
 | \`azure-speech\` | Azure Cognitive Services Speech Batch Transcription | ~$0.36/hr |
+| \`gemini\` | Gemini 3 Flash (structured diarization via prompt) | ~$0.01/hr |
+| \`google-chirp\` | Google Cloud Chirp 3 (Speech V2 API) | ~$0.016/min |
 
 ## Schema
 
@@ -74,7 +76,7 @@ See [united-nations/transcription-corpus](https://huggingface.co/datasets/united
 | symbol | string | UN document symbol, e.g. \`S/PV.10100\` |
 | assetId | string | UN Web TV asset ID |
 | language | string | ISO 639-1 code |
-| provider | string | ASR provider name |
+| provider | string | Transcription provider name |
 | wer | float | Word Error Rate (0–1) |
 | normalized_wer | float | Normalized WER (0–1) |
 | cer | float | Character Error Rate (0–1) |

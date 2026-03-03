@@ -220,13 +220,13 @@ Each session has up to 7 audio tracks:
 - \`audio_floor\` — original floor audio (uninterpreted, multilingual mix of whatever languages delegates spoke)
 - \`audio_en/fr/es/ar/zh/ru\` — simultaneous interpretation into each UN official language
 
-The floor track is the richest source: it contains original speech in whatever language each delegate used. Interpretation tracks are useful for evaluating ASR on interpreted speech.
+The floor track is the richest source: it contains original speech in whatever language each delegate used. Interpretation tracks are useful for evaluating speech-to-text on interpreted speech.
 
 ## Verbatim Records
 
 \`pv_en/fr/es/ar/zh/ru\` — official UN verbatim records extracted from [documents.un.org](https://documents.un.org). Preamble stripped; spoken content only.
 
-**Note on WER**: Verbatim records are lightly edited for publication, so WER of 20–40% is expected even for high-quality ASR. For Chinese and Arabic, CER is the primary metric.
+**Note on WER**: Verbatim records are lightly edited for publication, so WER of 20–40% is expected even for high-quality speech-to-text. For Chinese and Arabic, CER is the primary metric.
 
 ## Schema
 

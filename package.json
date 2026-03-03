@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
+    "google-auth-library": "^10.6.1",
     "lucide-react": "^0.562.0",
     "next": "^16.1.2",
     "openai": "^6.22.0",

@@ -1,6 +1,6 @@
 import { FILLER_WORDS } from '../config';
 
-/** Normalize text for fair WER comparison between ASR output and edited verbatim records */
+/** Normalize text for fair WER comparison between transcription output and edited verbatim records */
 export function normalizeForWER(text: string, language = 'en'): string {
   let normalized = text.toLowerCase();
 

@@ -70,6 +70,21 @@ a:hover {
   font-size: 0.9rem;
 }
 
+/* "Lower is better" badge */
+.lower-is-better {
+  display: inline-block;
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: var(--green);
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+
 /* Tabs */
 .tabs {
   display: flex;
@@ -116,7 +131,7 @@ a:hover {
   color: var(--text-muted);
 }
 
-/* Filters */
+/* Filters (generic) */
 .filters {
   display: flex;
   gap: 0.75rem;
@@ -129,6 +144,7 @@ a:hover {
   display: flex;
   gap: 0.25rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .filter-label {
@@ -137,6 +153,7 @@ a:hover {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-right: 0.5rem;
+  flex-shrink: 0;
 }
 
 .chip {
@@ -149,6 +166,7 @@ a:hover {
   color: var(--text-muted);
   transition: all 0.15s;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .chip:hover {
@@ -162,11 +180,30 @@ a:hover {
   color: white;
 }
 
-/* Tables */
-.table-container {
-  overflow-x: auto;
-  border-radius: 0.5rem;
+/* Diff page filters — horizontal single row */
+.diff-filters {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-card);
   border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+.diff-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Tables */
+.table-scroll-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
 }
 
 table {
@@ -186,12 +223,9 @@ th {
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
-}
-
-th:hover {
-  color: var(--text);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 td {
@@ -265,16 +299,32 @@ tr:hover td {
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-/* Credible interval whisker */
+/* Credible interval whisker — traditional I-beam error bar */
 .ci-whisker {
   position: absolute;
   top: 50%;
-  height: 12px;
   transform: translateY(-50%);
-  border-left: 2px solid rgba(0,0,0,0.35);
-  border-right: 2px solid rgba(0,0,0,0.35);
-  border-top: 1px solid rgba(0,0,0,0.35);
-  border-bottom: 1px solid rgba(0,0,0,0.35);
+  height: 0;
+  border-top: 1.5px solid rgba(0,0,0,0.45);
+}
+
+/* Left cap */
+.ci-whisker::before,
+.ci-whisker::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  width: 1.5px;
+  height: 12px;
+  background: rgba(0,0,0,0.45);
+}
+
+.ci-whisker::before {
+  left: 0;
+}
+
+.ci-whisker::after {
+  right: 0;
 }
 
 /* Heatmap */
@@ -318,25 +368,43 @@ tr:hover td {
   margin-top: 1px;
 }
 
-/* Diff view - side by side aligned */
-.diff-side-by-side {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* Diff view - wrapper with consistent border around header + body */
+.diff-wrapper {
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   overflow: hidden;
   margin-top: 1rem;
 }
 
-.diff-side-by-side-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
+/* Single scroll container — header sticks at top */
+.diff-scroll {
+  max-height: 700px;
+  overflow-y: auto;
 }
 
-.diff-side-by-side-header > div {
-  padding: 0.5rem 1rem;
+/* 3-column diff header */
+.diff-3col-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.diff-3col-header > .diff-col-header:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.diff-col-header {
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.diff-col-title {
   font-weight: 600;
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -344,47 +412,93 @@ tr:hover td {
   letter-spacing: 0.05em;
 }
 
-.diff-side-by-side-header > div:first-child {
-  border-right: 1px solid var(--border);
+.diff-provider-select {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 0.4rem;
+  color: var(--text);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
 }
 
-.diff-rows {
-  max-height: 600px;
-  overflow-y: auto;
+.diff-provider-select:focus {
+  outline: none;
 }
 
-.diff-row {
+.diff-metric-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.diff-metric-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+}
+
+.diff-metric-label {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  letter-spacing: 0.03em;
+}
+
+.diff-metric-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.diff-3col-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   border-bottom: 1px solid var(--border);
 }
 
-.diff-row:last-child {
+.diff-3col-row:last-child {
   border-bottom: none;
 }
 
 .diff-cell {
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  line-height: 1.7;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.65;
   word-break: break-word;
   white-space: pre-wrap;
 }
 
-.diff-cell-left {
+.diff-cell-border {
   border-right: 1px solid var(--border);
+}
+
+.diff-cell-empty {
+  background: var(--bg);
 }
 
 .diff-cell.diff-row-added {
   background: #f0fdf4;
 }
 
-.diff-cell.diff-row-removed {
-  background: #fef2f2;
-}
-
 .diff-cell.diff-row-changed {
   background: #eff6ff;
+}
+
+/* Source links (inline in filter bar) */
+.source-link {
+  color: var(--accent);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.source-link::before {
+  content: '\2197 ';
+  font-size: 0.7rem;
 }
 
 .diff-insert {
@@ -398,6 +512,62 @@ tr:hover td {
   text-decoration: line-through;
   border-radius: 2px;
   padding: 0 1px;
+}
+
+/* Substitution: old (strikethrough red) + new (green) inline */
+.diff-substitute {
+  border-radius: 2px;
+}
+.diff-sub-old {
+  background: #fecaca;
+  text-decoration: line-through;
+  border-radius: 2px 0 0 2px;
+  padding: 0 1px;
+  opacity: 0.7;
+}
+.diff-sub-new {
+  background: #bbf7d0;
+  border-radius: 0 2px 2px 0;
+  padding: 0 1px;
+}
+
+/* Punctuation-only changes: very subtle */
+.diff-punct {
+  border-radius: 2px;
+}
+.diff-punct-old {
+  background: #e5e7eb;
+  text-decoration: line-through;
+  border-radius: 2px 0 0 2px;
+  padding: 0 1px;
+  opacity: 0.5;
+}
+.diff-punct-new {
+  background: #e5e7eb;
+  border-radius: 0 2px 2px 0;
+  padding: 0 1px;
+  opacity: 0.7;
+}
+
+/* Collapsed identical rows */
+.diff-collapsed-toggle {
+  cursor: pointer;
+}
+.diff-collapsed-toggle:hover {
+  background: var(--bg-card-hover);
+}
+.diff-collapsed-label {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  font-style: italic;
+  padding: 0.25rem 0.75rem;
+}
+.diff-row-dimmed {
+  opacity: 0.5;
+}
+.diff-row-dimmed:hover {
+  opacity: 0.8;
 }
 
 /* Provider badge */
@@ -429,11 +599,12 @@ tr:hover td {
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   color: var(--text);
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
   font-family: inherit;
   cursor: pointer;
   min-width: 200px;
+  max-width: 420px;
 }
 
 .session-select:focus {

@@ -3,12 +3,16 @@ import { assemblyai } from './assemblyai';
 import { azureOpenai } from './azure-openai';
 import { elevenlabs } from './elevenlabs';
 import { azureSpeech } from './azure-speech';
+import { googleChirp } from './google-chirp';
+import { gemini } from './gemini';
 
 const providers: Record<string, TranscriptionProvider> = {
   assemblyai,
   'azure-openai': azureOpenai,
   elevenlabs,
   'azure-speech': azureSpeech,
+  'google-chirp': googleChirp,
+  gemini,
 };
 
 export function getProvider(name: string): TranscriptionProvider {
