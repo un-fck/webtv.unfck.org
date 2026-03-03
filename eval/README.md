@@ -1,9 +1,11 @@
 # UN Transcription Eval
 
-Benchmarks ASR transcription providers against official UN verbatim records (PV documents).
+Benchmarks speech-to-text providers against official UN verbatim records (PV documents).
 Uses UN Web TV audio + documents.un.org ground truth across all 6 UN official languages.
 
-Published as [united-nations/transcription-corpus](https://huggingface.co/datasets/united-nations/transcription-corpus) on HuggingFace.
+**Live dashboard**: [huggingface.co/spaces/united-nations/transcription-benchmark](https://huggingface.co/spaces/united-nations/transcription-benchmark)
+
+**Datasets**: [transcription-corpus](https://huggingface.co/datasets/united-nations/transcription-corpus) &middot; [transcription-results](https://huggingface.co/datasets/united-nations/transcription-results)
 
 ## Quick Start
 
@@ -26,7 +28,7 @@ For each session × language × provider:
 3. Runs the transcription provider on the audio
 4. Computes WER and CER against the verbatim record
 
-**Expected WER**: 15–40% even for excellent ASR, because verbatim records are professionally edited (fillers removed, grammar cleaned). This is documented in results.
+**Expected WER**: 15–40% even for excellent transcription, because verbatim records are professionally edited (fillers removed, grammar cleaned). This is documented in results.
 
 ## Corpus: Two Splits
 
@@ -72,11 +74,14 @@ Sessions list: `eval/corpus/sessions.json` (20 sessions ≤ 90 min from 2024).
 
 ## Providers
 
-| Provider | Command name | Languages | Notes |
-|---|---|---|---|
-| AssemblyAI | `assemblyai` | all 6 | Speaker diarization |
-| Azure OpenAI (gpt-4o-transcribe) | `azure-openai` | en only | No diarization |
-| ElevenLabs | `elevenlabs` | en only | — |
+| Provider | Command name | Model | Languages | Pricing |
+|---|---|---|---|---|
+| AssemblyAI | `assemblyai` | Universal-2 | all 6 | ~$0.27/hr |
+| Azure OpenAI | `azure-openai` | gpt-4o-transcribe | all 6 | ~$0.06/hr |
+| ElevenLabs | `elevenlabs` | Scribe v2 | all 6 | ~$0.40/hr |
+| Azure Speech | `azure-speech` | Cognitive Services Batch | all 6 | ~$0.36/hr |
+| Gemini | `gemini` | Gemini 3 Flash | all 6 | ~$0.01/hr |
+| Google Chirp | `google-chirp` | Chirp 3 (Speech V2 API) | en, fr, es, zh (no diarization for ar, ru) | ~$0.016/min |
 
 Add providers in `eval/providers/` implementing the `TranscriptionProvider` interface.
 
@@ -90,6 +95,28 @@ Upload results to HuggingFace:
 npm run hf:upload-results
 ```
 
+## Dashboard
+
+Interactive React dashboard comparing providers. Built with Vite, deployed to HuggingFace Spaces.
+
+```bash
+# Prepare data (aggregates results + ground truth into data.json)
+cd eval/dashboard && npm run prepare-data
+
+# Dev server
+cd eval/dashboard && npm run dev
+
+# Build for production
+cd eval/dashboard && npm run build
+```
+
+Features:
+- Provider ranking with 95% confidence intervals
+- Per-language breakdown charts
+- Side-by-side 3-column diff view (ground truth vs two providers)
+- Word-level diff highlighting with substitution detection
+- Punctuation-only change de-emphasis
+
 ## File Structure
 
 ```
@@ -101,9 +128,12 @@ eval/
   providers/
     types.ts                # TranscriptionProvider, NormalizedTranscript interfaces
     registry.ts             # Provider lookup by name
-    assemblyai.ts           # AssemblyAI implementation
+    assemblyai.ts           # AssemblyAI Universal-2
     azure-openai.ts         # Azure OpenAI gpt-4o-transcribe
-    elevenlabs.ts           # ElevenLabs
+    elevenlabs.ts           # ElevenLabs Scribe v2
+    azure-speech.ts         # Azure Cognitive Services Speech
+    gemini.ts               # Gemini 3 Flash (structured diarization via prompt)
+    google-chirp.ts         # Google Cloud Chirp 3 (Speech V2 API)
 
   ground-truth/
     documents-api.ts        # Fetch PV PDFs from documents.un.org
@@ -115,6 +145,15 @@ eval/
     wer.ts                  # WER + CER via Levenshtein DP
     text-normalizer.ts      # Lowercase, strip punctuation, remove fillers
     index.ts                # computeMetrics(), computePairwiseMetrics()
+
+  dashboard/
+    src/App.tsx             # Main app with tabs (Overview, Transcriptions & Diff)
+    src/components/
+      Leaderboard.tsx       # Bar charts with CI whiskers
+      DiffView.tsx          # 3-column diff viewer
+    src/lib/diff.ts         # Sentence-aligned diff with word-level highlighting
+    src/types.ts            # Shared types and constants
+    scripts/prepare-data.ts # Aggregates results into data.json
 
   corpus/
     sessions.json           # Split 2 test set: [{symbol, assetId, notes}]

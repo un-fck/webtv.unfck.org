@@ -91,6 +91,10 @@ function App() {
             Results dataset
           </a>
           {' '}&middot;{' '}
+          <a href="https://github.com/un-fck/webtv.unfck.org/tree/main/eval" target="_blank" rel="noopener">
+            Source code
+          </a>
+          {' '}&middot;{' '}
           Generated {new Date(data.generatedAt).toLocaleDateString()}
         </p>
       </div>
