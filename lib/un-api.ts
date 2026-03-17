@@ -132,11 +132,17 @@ function calculateStatus(
 
   if (now < startTime) {
     return "scheduled";
-  } else if (now >= startTime && now <= endTime) {
-    return "live";
-  } else {
-    return "finished";
   }
+
+  if (durationMs > 0) {
+    return now <= endTime ? "live" : "finished";
+  }
+
+  // Duration is unknown (zero) — video was cached before the meeting started/ended.
+  // UN Web TV scraping may be unavailable (bot protection), so we can't get the real duration.
+  // Treat as live for up to 8 hours after the scheduled start time as a best-effort fallback.
+  const maxLiveFallbackMs = 8 * 60 * 60 * 1000;
+  return now <= new Date(startTime.getTime() + maxLiveFallbackMs) ? "live" : "finished";
 }
 
 function decodeEventCode(code: string): string {
