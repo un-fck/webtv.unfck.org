@@ -41,15 +41,13 @@ SESSIONS_PATH = Path(__file__).parent.parent / "corpus" / "sessions.json"
 
 LANGS = ["en", "fr", "es", "ar", "zh", "ru"]
 
-AUDIO_TYPE = pa.struct([pa.field("path", pa.string()), pa.field("bytes", pa.large_binary())])
-
 SCHEMA = pa.schema([
     pa.field("symbol", pa.string()),
     pa.field("webtv_url", pa.string()),
     pa.field("duration_ms", pa.int64()),
     pa.field("num_speakers", pa.int64()),
-    pa.field("audio_floor", AUDIO_TYPE),
-    *[pa.field(f"audio_{lang}", AUDIO_TYPE) for lang in LANGS],
+    pa.field("audio_floor", pa.string()),
+    *[pa.field(f"audio_{lang}", pa.string()) for lang in LANGS],
     *[pa.field(f"pv_{lang}", pa.string()) for lang in LANGS],
 ])
 
@@ -80,74 +78,10 @@ configs:
   data_files:
   - split: train
     path: data/sessions/*.parquet
-  features:
-  - name: symbol
-    dtype: string
-  - name: webtv_url
-    dtype: string
-  - name: duration_ms
-    dtype: int64
-  - name: num_speakers
-    dtype: int64
-  - name: audio_floor
-    dtype: audio
-  - name: audio_en
-    dtype: audio
-  - name: audio_fr
-    dtype: audio
-  - name: audio_es
-    dtype: audio
-  - name: audio_ar
-    dtype: audio
-  - name: audio_zh
-    dtype: audio
-  - name: audio_ru
-    dtype: audio
-  - name: pv_en
-    dtype: string
-  - name: pv_fr
-    dtype: string
-  - name: pv_es
-    dtype: string
-  - name: pv_ar
-    dtype: string
-  - name: pv_zh
-    dtype: string
-  - name: pv_ru
-    dtype: string
 - config_name: gadebate
   data_files:
   - split: train
     path: data/gadebate/*.parquet
-  features:
-  - name: session
-    dtype: int32
-  - name: year
-    dtype: int32
-  - name: country_iso
-    dtype: string
-  - name: country_name
-    dtype: string
-  - name: original_lang
-    dtype: string
-  - name: speech_date
-    dtype: string
-  - name: audio_floor
-    dtype: audio
-  - name: audio_en
-    dtype: audio
-  - name: audio_fr
-    dtype: audio
-  - name: audio_es
-    dtype: audio
-  - name: audio_ar
-    dtype: audio
-  - name: audio_zh
-    dtype: audio
-  - name: audio_ru
-    dtype: audio
-  - name: orig_lang_text
-    dtype: string
 ---
 
 # UN Transcription Corpus
@@ -239,32 +173,30 @@ def build_and_push_session(row: dict, idx: int, total: int, api: HfApi | None) -
 
     # Collect audio files and their repo paths
     operations: list[CommitOperationAdd] = []
-    audio_paths: dict[str, dict | None] = {}
+    audio_urls: dict[str, str | None] = {}
 
     for track, meta_key in [("floor", "floor_file_name")] + [(l, f"{l}_file_name") for l in LANGS]:
         col = "audio_floor" if track == "floor" else f"audio_{track}"
         filename = row.get(meta_key)
         if not filename:
-            audio_paths[col] = None
+            audio_urls[col] = None
             continue
         local = AUDIO_DIR / Path(filename).name
         if not local.exists():
             print(f"  WARNING: audio file not found: {local}")
-            audio_paths[col] = None
+            audio_urls[col] = None
             continue
         hf_audio_path = f"data/sessions/audio/{symbol_safe}_{track}.mp3"
-        # Path in Parquet is relative to the Parquet file's directory (data/sessions/)
-        hf_path = f"audio/{symbol_safe}_{track}.mp3"
         operations.append(CommitOperationAdd(path_in_repo=hf_audio_path, path_or_fileobj=str(local)))
-        audio_paths[col] = {"path": hf_path, "bytes": None}
+        audio_urls[col] = f"https://huggingface.co/datasets/{HF_REPO}/resolve/main/{hf_audio_path}"
 
-    # Build Parquet with path references
+    # Build Parquet with URL strings for audio columns
     cols: dict = {
         "symbol": [row["symbol"]],
         "webtv_url": [row["webtv_url"]],
         "duration_ms": [row["duration_ms"]],
         "num_speakers": [row["num_speakers"]],
-        **{k: [v] for k, v in audio_paths.items()},
+        **{k: [v] for k, v in audio_urls.items()},
         **{f"pv_{lang}": [row.get(f"pv_{lang}")] for lang in LANGS},
     }
 

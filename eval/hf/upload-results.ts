@@ -62,8 +62,8 @@ See [united-nations/transcription-corpus](https://huggingface.co/datasets/united
 
 | Provider | Model | Pricing |
 |---|---|---|
-| \`assemblyai\` | AssemblyAI Universal-2 (diarization enabled) | ~$0.27/hr |
-| \`azure-openai\` | Azure OpenAI gpt-4o-transcribe-diarize | ~$0.06/hr |
+| \`assemblyai\` | AssemblyAI Universal-2 (diarization enabled) | ~$0.17/hr |
+| \`azure-openai\` | Azure OpenAI gpt-4o-transcribe-diarize | ~$0.36/hr |
 | \`elevenlabs\` | ElevenLabs Scribe v2 | ~$0.40/hr |
 | \`azure-speech\` | Azure Cognitive Services Speech Batch Transcription | ~$0.36/hr |
 | \`gemini\` | Gemini 3 Flash (structured diarization via prompt) | ~$0.01/hr |

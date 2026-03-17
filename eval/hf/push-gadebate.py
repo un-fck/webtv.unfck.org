@@ -42,8 +42,6 @@ TARGET_SESSIONS = set(int(s) for s in SESSIONS_ARG.replace("--sessions=", "").sp
 
 S3_BASE = "https://s3.amazonaws.com/downloads.unmultimedia.org/radio/library/ltd/mp3/ga"
 
-AUDIO_TYPE = pa.struct([pa.field("path", pa.string()), pa.field("bytes", pa.large_binary())])
-
 SCHEMA = pa.schema([
     pa.field("session", pa.int32()),
     pa.field("year", pa.int32()),
@@ -51,13 +49,13 @@ SCHEMA = pa.schema([
     pa.field("country_name", pa.string()),
     pa.field("original_lang", pa.string()),
     pa.field("speech_date", pa.string()),
-    pa.field("audio_floor", AUDIO_TYPE),
-    pa.field("audio_en", AUDIO_TYPE),
-    pa.field("audio_fr", AUDIO_TYPE),
-    pa.field("audio_es", AUDIO_TYPE),
-    pa.field("audio_ar", AUDIO_TYPE),
-    pa.field("audio_zh", AUDIO_TYPE),
-    pa.field("audio_ru", AUDIO_TYPE),
+    pa.field("audio_floor", pa.string()),
+    pa.field("audio_en", pa.string()),
+    pa.field("audio_fr", pa.string()),
+    pa.field("audio_es", pa.string()),
+    pa.field("audio_ar", pa.string()),
+    pa.field("audio_zh", pa.string()),
+    pa.field("audio_ru", pa.string()),
     pa.field("orig_lang_text", pa.string()),
 ])
 
@@ -66,7 +64,7 @@ SESSION_YEAR = {70: 2015, 71: 2016, 72: 2017, 73: 2018, 76: 2021, 77: 2022, 78: 
 
 
 def fetch_and_upload_audio(session: int, year: int, iso: str, lang: str, api: HfApi | None) -> dict | None:
-    """Fetch audio from S3, upload to HF as a separate file, return audio struct."""
+    """Fetch audio from S3, upload to HF as a separate file, return URL string."""
     url = f"{S3_BASE}/{year}/{session}_{iso}_{lang}.mp3"
     try:
         r = requests.get(url, timeout=60, stream=False)
@@ -85,8 +83,7 @@ def fetch_and_upload_audio(session: int, year: int, iso: str, lang: str, api: Hf
                 commit_message=f"Audio: {filename}",
             )
             local.unlink()
-        # Path relative to Parquet location (data/gadebate/)
-        return {"path": f"audio/{filename}", "bytes": None}
+        return f"https://huggingface.co/datasets/{HF_REPO}/resolve/main/{hf_upload_path}"
     except Exception as e:
         print(f"    WARN: {url}: {e}")
         return None
@@ -207,74 +204,10 @@ configs:
   data_files:
   - split: train
     path: data/sessions/*.parquet
-  features:
-  - name: symbol
-    dtype: string
-  - name: webtv_url
-    dtype: string
-  - name: duration_ms
-    dtype: int64
-  - name: num_speakers
-    dtype: int64
-  - name: audio_floor
-    dtype: audio
-  - name: audio_en
-    dtype: audio
-  - name: audio_fr
-    dtype: audio
-  - name: audio_es
-    dtype: audio
-  - name: audio_ar
-    dtype: audio
-  - name: audio_zh
-    dtype: audio
-  - name: audio_ru
-    dtype: audio
-  - name: pv_en
-    dtype: string
-  - name: pv_fr
-    dtype: string
-  - name: pv_es
-    dtype: string
-  - name: pv_ar
-    dtype: string
-  - name: pv_zh
-    dtype: string
-  - name: pv_ru
-    dtype: string
 - config_name: gadebate
   data_files:
   - split: train
     path: data/gadebate/*.parquet
-  features:
-  - name: session
-    dtype: int32
-  - name: year
-    dtype: int32
-  - name: country_iso
-    dtype: string
-  - name: country_name
-    dtype: string
-  - name: original_lang
-    dtype: string
-  - name: speech_date
-    dtype: string
-  - name: audio_floor
-    dtype: audio
-  - name: audio_en
-    dtype: audio
-  - name: audio_fr
-    dtype: audio
-  - name: audio_es
-    dtype: audio
-  - name: audio_ar
-    dtype: audio
-  - name: audio_zh
-    dtype: audio
-  - name: audio_ru
-    dtype: audio
-  - name: orig_lang_text
-    dtype: string
 ---
 
 # UN Transcription Corpus
