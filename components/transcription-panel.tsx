@@ -1184,13 +1184,53 @@ export function TranscriptionPanel({
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Transcript</h2>
-        <div className="flex gap-2">
+      {/* Single compact toolbar row: title | tabs | actions */}
+      <div className="mb-3 flex items-center gap-3">
+        <h2 className="shrink-0 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+          Transcript
+        </h2>
+
+        {/* Tabs — only when there's data */}
+        {segments &&
+          (propositions.length > 0 || Object.keys(topics).length > 0) && (
+            <div className="flex gap-1 rounded-md bg-muted p-0.5">
+              <button
+                onClick={() => setViewMode("transcript")}
+                className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${
+                  viewMode === "transcript"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <FileText className="h-3 w-3" />
+                Transcript
+              </button>
+              <button
+                onClick={() => setViewMode("analysis")}
+                className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${
+                  viewMode === "analysis"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                disabled={propositions.length === 0}
+                title={
+                  propositions.length === 0
+                    ? "No propositions analyzed yet"
+                    : undefined
+                }
+              >
+                <BarChart3 className="h-3 w-3" />
+                Analysis
+              </button>
+            </div>
+          )}
+
+        {/* Actions — pushed to the right */}
+        <div className="ml-auto flex gap-2">
           {!segments && !rawParagraphs && !checking && stage === "idle" && (
             <button
               onClick={() => handleTranscribe()}
-              className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90"
+              className="rounded-md bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
               Generate
             </button>
@@ -1200,35 +1240,35 @@ export function TranscriptionPanel({
               <div className="relative">
                 <button
                   onClick={handleShare}
-                  className="rounded border border-border px-2.5 py-1 text-xs hover:bg-muted"
+                  className="rounded-md border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
                 >
                   Share
                 </button>
                 {showCopied && (
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-foreground px-2 py-1 text-xs whitespace-nowrap text-background">
-                    Copied link to clipboard!
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs whitespace-nowrap text-background">
+                    Copied!
                   </div>
                 )}
               </div>
               <div className="relative" ref={downloadButtonRef}>
                 <button
                   onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                  className="flex items-center gap-1 rounded border border-border px-2.5 py-1 text-xs hover:bg-muted"
+                  className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
                 >
                   Download
                   <ChevronDown className="h-3 w-3" />
                 </button>
                 {showDownloadMenu && (
-                  <div className="absolute right-0 z-10 mt-1 w-40 rounded border border-border bg-background shadow-lg">
+                  <div className="absolute right-0 z-10 mt-1 w-44 overflow-hidden rounded-md border border-border bg-background shadow-md">
                     <button
                       onClick={downloadDocx}
-                      className="w-full px-3 py-2 text-left text-xs hover:bg-muted"
+                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
                     >
                       Text Document
                     </button>
                     <button
                       onClick={downloadExcel}
-                      className="w-full px-3 py-2 text-left text-xs hover:bg-muted"
+                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
                     >
                       Excel Table
                     </button>
@@ -1240,7 +1280,7 @@ export function TranscriptionPanel({
                         );
                         setShowDownloadMenu(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-xs hover:bg-muted"
+                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
                     >
                       JSON API
                     </button>
@@ -1268,41 +1308,6 @@ export function TranscriptionPanel({
           onRetry={handleRetry}
         />
       )}
-
-      {/* View toggle - only show when we have data */}
-      {segments &&
-        (propositions.length > 0 || Object.keys(topics).length > 0) && (
-          <div className="mb-4 flex w-fit gap-1 rounded-lg bg-muted p-1">
-            <button
-              onClick={() => setViewMode("transcript")}
-              className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition-colors ${
-                viewMode === "transcript"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <FileText className="h-4 w-4" />
-              Transcript
-            </button>
-            <button
-              onClick={() => setViewMode("analysis")}
-              className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition-colors ${
-                viewMode === "analysis"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              disabled={propositions.length === 0}
-              title={
-                propositions.length === 0
-                  ? "No propositions analyzed yet"
-                  : undefined
-              }
-            >
-              <BarChart3 className="h-4 w-4" />
-              Analysis
-            </button>
-          </div>
-        )}
 
       {/* Analysis View */}
       {viewMode === "analysis" && propositions.length > 0 && (
@@ -1341,7 +1346,7 @@ export function TranscriptionPanel({
           const allTopicKeys = Object.keys(topics);
 
           return (
-            <div className="mb-3 border-b border-border/50 pb-3">
+            <div className="mb-2 border-b border-border/50 pb-2">
               <div className="flex flex-wrap gap-1.5">
                 {usedTopics.map((topic) => {
                   const color = getTopicColor(topic.key, allTopicKeys);
@@ -1375,13 +1380,13 @@ export function TranscriptionPanel({
                 })}
               </div>
               {selectedTopic && (
-                <div className="mt-2 inline-flex items-center gap-0.5 rounded bg-gray-100 p-0.5 text-xs">
+                <div className="mt-2 inline-flex items-center gap-0.5 rounded-md bg-muted p-0.5 text-xs">
                   <button
                     onClick={() => setTopicCollapsed(true)}
                     className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${
                       topicCollapsed
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <FoldVertical className="h-3 w-3" />
@@ -1391,8 +1396,8 @@ export function TranscriptionPanel({
                     onClick={() => setTopicCollapsed(false)}
                     className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${
                       !topicCollapsed
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <UnfoldVertical className="h-3 w-3" />
@@ -1405,7 +1410,7 @@ export function TranscriptionPanel({
         })()}
 
       {viewMode === "transcript" && segments && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {segments.map((segment, segmentIndex) => {
             const isSegmentActive = segmentIndex === activeSegmentIndex;
             const firstStmtIndex = segment.statementIndices[0] ?? 0;
@@ -1439,20 +1444,20 @@ export function TranscriptionPanel({
                   </div>
                   <button
                     onClick={() => seekToTimestamp(segment.timestamp)}
-                    className="cursor-pointer text-xs text-muted-foreground transition-colors hover:text-primary hover:underline"
+                    className="rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
                     title="Jump to this timestamp"
                   >
-                    [{formatTime(segment.timestamp)}]
+                    {formatTime(segment.timestamp)}
                   </button>
                 </div>
                 <div
-                  className={`rounded-lg p-4 transition-all duration-200 ${
+                  className={`rounded-lg border p-4 transition-colors duration-200 ${
                     isSegmentActive
-                      ? "border-2 border-primary/50 bg-primary/10"
-                      : "border-2 border-transparent bg-muted/50"
+                      ? "border-primary/40 bg-primary/5"
+                      : "border-transparent bg-muted/40"
                   }`}
                 >
-                  <div className="space-y-3 text-sm leading-relaxed">
+                  <div className="space-y-3 text-sm leading-loose">
                     {segment.statementIndices.map((stmtIdx, indexInSegment) => {
                       const stmt = statements?.[stmtIdx];
 
@@ -1652,10 +1657,15 @@ export function TranscriptionPanel({
       )}
 
       {!segments && !rawParagraphs && stage === "idle" && !checking && (
-        <p className="text-sm text-muted-foreground">
-          Click &quot;Generate&quot; to create a text transcript of this video
-          using AI.
-        </p>
+        <div className="mt-2 rounded-lg border border-border bg-muted/30 px-5 py-6">
+          <p className="mb-1 text-sm font-medium text-foreground">
+            No transcript available yet
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Generate an AI transcript to read along with speaker identification,
+            topic tagging, and analysis.
+          </p>
+        </div>
       )}
     </div>
   );

@@ -8,6 +8,8 @@ import { AnimatedCornerLogo } from "@/components/AnimatedCornerLogo";
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700", "800", "900"],
   subsets: ["latin"],
+  variable: "--font-roboto",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -21,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${roboto.className} antialiased`}>
+    <html lang="en" className={`${roboto.variable} antialiased`}>
       <body>
         {children}
         <AnimatedCornerLogo />

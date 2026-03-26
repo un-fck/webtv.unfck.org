@@ -667,7 +667,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                     {headerGroup.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="cursor-pointer px-4 py-3 text-left font-medium hover:bg-muted/80"
+                        className={`cursor-pointer px-4 py-3 text-left font-medium hover:bg-muted/80 ${header.column.getIsSorted() ? "border-b-2 border-b-primary" : "border-b-2 border-b-transparent"}`}
                         onClick={header.column.getToggleSortingHandler()}
                         style={{ width: header.getSize() }}
                       >
@@ -741,28 +741,28 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           <button
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
-            className="rounded border px-3 py-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded border px-3 py-1 hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
             ««
           </button>
           <button
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="rounded border px-3 py-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded border px-3 py-1 hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
             «
           </button>
           <button
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="rounded border px-3 py-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded border px-3 py-1 hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
             »
           </button>
           <button
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
-            className="rounded border px-3 py-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded border px-3 py-1 hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
             »»
           </button>

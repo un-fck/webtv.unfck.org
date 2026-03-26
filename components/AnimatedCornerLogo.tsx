@@ -29,8 +29,14 @@ export function AnimatedCornerLogo() {
   useEffect(() => {
     if (pathname !== "/") return;
 
-    const cornerTimer = setTimeout(() => setCornerClass("corner-slide-entrance"), 1500);
-    const spriteTimer = setTimeout(() => setSpriteClass("un-two-zero-roll-entrance"), 2500);
+    const cornerTimer = setTimeout(
+      () => setCornerClass("corner-slide-entrance"),
+      1500,
+    );
+    const spriteTimer = setTimeout(
+      () => setSpriteClass("un-two-zero-roll-entrance"),
+      2500,
+    );
 
     return () => {
       clearTimeout(cornerTimer);

@@ -10,23 +10,33 @@ export default async function Home() {
   const videos = await getScheduleVideos(scheduleLookbackDays);
 
   return (
-    <main className="min-h-screen bg-background px-4 sm:px-6">
-      <div className="mx-auto max-w-[1600px] py-8">
-        <Image
-          src="/images/un-logo-stacked-colour-english.svg"
-          alt="UN Logo"
-          width={402}
-          height={127}
-          className="mb-8 h-10 w-auto"
-        />
-
-        <header className="mb-8">
-          <h1 className="mb-2 text-3xl font-semibold">UN Web TV 2.0</h1>
+    <main className="min-h-screen bg-background">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6">
+        <header className="flex items-center gap-4 border-b border-border py-5">
+          <div className="h-9 w-1 shrink-0 rounded-full bg-un-blue" />
+          <Image
+            src="/images/un-logo-stacked-colour-english.svg"
+            alt="United Nations"
+            width={402}
+            height={127}
+            className="h-8 w-auto shrink-0"
+          />
+          <div className="h-8 w-px shrink-0 bg-border" />
+          <div>
+            <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground">
+              Web TV
+            </h1>
+            <p className="text-xs font-light tracking-widest text-muted-foreground uppercase">
+              Schedule &amp; Transcripts
+            </p>
+          </div>
         </header>
 
-        <Suspense fallback={<div>Loading...</div>}>
-          <VideoTable videos={videos} />
-        </Suspense>
+        <div className="py-6">
+          <Suspense fallback={<div>Loading...</div>}>
+            <VideoTable videos={videos} />
+          </Suspense>
+        </div>
       </div>
     </main>
   );

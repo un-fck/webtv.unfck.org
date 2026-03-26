@@ -54,14 +54,12 @@ export default async function VideoPage({
   const metadata = await getVideoMetadata(video.id);
 
   return (
-    <main className="min-h-screen bg-background px-4 sm:px-6 lg:h-screen lg:overflow-hidden">
-      <div className="mx-auto h-full max-w-5xl">
-        <VideoPageClient
-          kalturaId={kalturaId}
-          video={video}
-          metadata={metadata}
-        />
-      </div>
+    <main className="flex h-screen flex-col overflow-hidden bg-background">
+      <VideoPageClient
+        kalturaId={kalturaId}
+        video={video}
+        metadata={metadata}
+      />
     </main>
   );
 }

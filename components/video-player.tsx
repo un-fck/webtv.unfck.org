@@ -54,6 +54,16 @@ export function VideoPlayer({
         const KalturaPlayerGlobal = windowWithKaltura.KalturaPlayer;
         if (!KalturaPlayerGlobal) return;
 
+        // Destroy any existing player instance before setting up a new one
+        if (playerRef.current) {
+          try {
+            playerRef.current.destroy();
+          } catch {
+            // ignore
+          }
+          playerRef.current = null;
+        }
+
         const config = {
           targetId: "kaltura-player-container",
           provider: {
@@ -70,12 +80,7 @@ export function VideoPlayer({
 
         const player = KalturaPlayerGlobal.setup(config);
 
-        const mediaInfo = {
-          entryId: kalturaId,
-        };
-
-        player.loadMedia(mediaInfo).then(() => {
-          console.log("Kaltura player loaded successfully");
+        player.loadMedia({ entryId: kalturaId }).then(() => {
           playerRef.current = player;
           onPlayerReady?.(player);
         });
@@ -88,9 +93,10 @@ export function VideoPlayer({
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
-        } catch (err) {
-          console.error("Error destroying player:", err);
+        } catch {
+          // ignore
         }
+        playerRef.current = null;
       }
     };
   }, [kalturaId, partnerId, uiConfId, onPlayerReady]);
