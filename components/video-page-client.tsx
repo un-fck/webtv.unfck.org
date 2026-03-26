@@ -4,9 +4,8 @@ import { useState } from "react";
 import { VideoPlayer } from "./video-player";
 import { TranscriptionPanel } from "./transcription-panel";
 import { LiveTranscription } from "./live-transcription";
+import { SiteHeader } from "./site-header";
 import type { Video, VideoMetadata } from "@/lib/un-api";
-import Link from "next/link";
-import Image from "next/image";
 
 interface VideoPageClientProps {
   kalturaId: string;
@@ -30,26 +29,7 @@ export function VideoPageClient({
     // Desktop (lg): shared header + two-column body — left (video + meta) | right (transcript)
     <div className="flex h-full flex-col overflow-hidden">
       {/* ── HEADER BAR (shared) ───────────────────────── */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-3">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-3 hover:opacity-80"
-        >
-          <Image
-            src="/images/un-logo-stacked-colour-english.svg"
-            alt="United Nations"
-            width={402}
-            height={127}
-            className="h-7 w-auto"
-          />
-        </Link>
-        <Link
-          href="/"
-          className="text-sm text-foreground transition-colors hover:text-primary"
-        >
-          ← Back to Schedule
-        </Link>
-      </div>
+      <SiteHeader variant="nav" backHref="/" />
 
       {/* ── BODY: two columns on desktop ─────────────── */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">

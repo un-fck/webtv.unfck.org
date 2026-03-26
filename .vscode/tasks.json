@@ -60,6 +60,13 @@
             "label": "diff [shadcn]",
             "type": "shell",
             "command": "npx shadcn@latest diff",
-            "problemMatcher": [ ] }
+            "problemMatcher": [ ] },
+
+        {
+            "label": "kill dev processes",
+            "type": "shell",
+            "command": "lsof -ti:3000,3001 | xargs kill -9 2>/dev/null || true",
+            "problemMatcher": [ ]
+        }
     ]
 }
