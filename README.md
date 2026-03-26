@@ -16,7 +16,7 @@ This app displays videos from [UN Web TV](https://webtv.un.org/en/schedule) in a
 - **Filterable Data Table**: Sortable, searchable table with pagination (powered by TanStack Table)
 - **Multi-day Fetching**: Displays videos from 1 day ahead to 14 days in the past (configurable)
 - **Global Search**: Real-time filtering across all columns
-- **Smart Column Filters**: 
+- **Smart Column Filters**:
   - **Date dropdown** for When column (Tomorrow, Today, Yesterday, specific dates with weekdays)
   - **Dropdown filters** for categorical data (Status, Body)
   - **Text filter** for Title search
@@ -25,26 +25,29 @@ This app displays videos from [UN Web TV](https://webtv.un.org/en/schedule) in a
 
 ### Extracted Metadata Fields
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| **When** | Relative date & time with weekday | Tomorrow 10:00 AM, Today 10:30 AM, Yesterday 2:15 PM, Wed, Oct 9 9:00 AM |
-| **Status** | Event status badge (based on time & duration) | 🔴 Live, Scheduled, Finished |
-| **Title** | Full title (event code removed) | High-Level Event, Second Committee, 9th plenary meeting - General Assembly, 80th session |
-| **Body** | UN body (committee, council, or assembly) | Fourth Committee, General Assembly, Security Council |
+| Field      | Description                                   | Example                                                                                  |
+| ---------- | --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **When**   | Relative date & time with weekday             | Tomorrow 10:00 AM, Today 10:30 AM, Yesterday 2:15 PM, Wed, Oct 9 9:00 AM                 |
+| **Status** | Event status badge (based on time & duration) | 🔴 Live, Scheduled, Finished                                                             |
+| **Title**  | Full title (event code removed)               | High-Level Event, Second Committee, 9th plenary meeting - General Assembly, 80th session |
+| **Body**   | UN body (committee, council, or assembly)     | Fourth Committee, General Assembly, Security Council                                     |
 
 **Title Cleaning:** The app removes event code prefixes from titles:
+
 - Event codes (EM07, GO19, etc.) → removed from display (extracted to metadata)
 - Everything else remains in the title as-is for full context
 
 ### Technical Details
 
 **Data Fetching:**
+
 - No official API exists - data is scraped from the HTML
 - Fetches 14 dates in parallel for performance
 - Page data cached for 5 minutes
 - Videos hosted on Kaltura (partner ID: 2503451)
 
 **Metadata Extraction:**
+
 - Regex-based title parsing for structured data
 - Extracts event codes, committee names, session numbers, part numbers
 - Identifies organizations from titles and descriptions
@@ -52,22 +55,23 @@ This app displays videos from [UN Web TV](https://webtv.un.org/en/schedule) in a
 
 ## Getting Started
 
-First, install dependencies:
+Install dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
-Create a `.env.local` file in the project root with your API key:
+Set up environment variables:
 
 ```bash
-ASSEMBLYAI_API_KEY=your_assemblyai_api_key_here
+cp .env.example .env.local
+# then fill in values in .env.local
 ```
 
 Run the development server:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.

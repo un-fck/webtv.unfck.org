@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
 
-config({ override: true });
+config({ override: true, quiet: true });
 

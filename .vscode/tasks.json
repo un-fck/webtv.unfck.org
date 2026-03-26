@@ -1,0 +1,65 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build [pnpm]",
+            "type": "shell",
+            "command": "pnpm build",
+            "problemMatcher": "$tsc",
+            "group": "build"
+        },
+        {
+            "label": "dev [pnpm]",
+            "type": "shell",
+            "command": "pnpm dev",
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "start [pnpm]",
+            "type": "shell",
+            "command": "pnpm start",
+            "isBackground": true,
+            "problemMatcher": [ ]
+        },
+        {
+            "label": "typecheck [pnpm]",
+            "type": "shell",
+            "command": "pnpm typecheck",
+            "problemMatcher": "$tsc"
+        },
+        {
+            "label": "lint [pnpm]",
+            "type": "shell",
+            "command": "pnpm lint",
+            "problemMatcher": "$eslint-stylish"
+        },
+        {
+            "label": "format [pnpm]",
+            "type": "shell",
+            "command": "pnpm format",
+            "problemMatcher": [ ]
+        },
+        {
+            "label": "install [pnpm]",
+            "type": "shell",
+            "command": "pnpm install",
+            "problemMatcher": [ ],
+            "group": "build"
+        },
+        {
+            "label": "outdated [pnpm]",
+            "type": "shell",
+            "command": "pnpm outdated",
+            "problemMatcher": [ ] },
+        {
+            "label": "diff [shadcn]",
+            "type": "shell",
+            "command": "npx shadcn@latest diff",
+            "problemMatcher": [ ] }
+    ]
+}
