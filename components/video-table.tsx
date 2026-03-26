@@ -44,6 +44,12 @@ function parseUNTimestamp(timestamp: string): Date {
   return new Date(dateTimeWithoutTz + "Z"); // Append 'Z' to treat as UTC
 }
 
+const filterSelectClass =
+  "w-full border-0 border-b border-border bg-transparent px-0 py-1 text-xs text-foreground focus:border-primary focus:outline-none appearance-none cursor-pointer";
+
+const filterInputClass =
+  "w-full border-0 border-b border-border bg-transparent px-0 py-1 text-xs placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none";
+
 function SelectFilter({
   column,
   options = [],
@@ -57,7 +63,7 @@ function SelectFilter({
     <select
       value={filterValue || ""}
       onChange={(e) => column.setFilterValue(e.target.value || undefined)}
-      className="w-full rounded border px-2 py-1 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
+      className={filterSelectClass}
       onClick={(e) => e.stopPropagation()}
     >
       <option value="">All</option>
@@ -78,8 +84,8 @@ function TextFilter({ column }: { column: Column<Video, unknown> }) {
       type="text"
       value={filterValue || ""}
       onChange={(e) => column.setFilterValue(e.target.value || undefined)}
-      placeholder="Filter..."
-      className="w-full rounded border px-2 py-1 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
+      placeholder="Filter…"
+      className={filterInputClass}
       onClick={(e) => e.stopPropagation()}
     />
   );
@@ -98,7 +104,7 @@ function DateFilter({
     <select
       value={filterValue || ""}
       onChange={(e) => column.setFilterValue(e.target.value || undefined)}
-      className="w-full rounded border px-2 py-1 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
+      className={filterSelectClass}
       onClick={(e) => e.stopPropagation()}
     >
       <option value="">All dates</option>
@@ -122,7 +128,7 @@ function CheckboxFilter({ column }: { column: Column<Video, unknown> }) {
         column.setFilterValue(e.target.checked ? true : undefined)
       }
       onClick={(e) => e.stopPropagation()}
-      className="h-4 w-4 cursor-pointer rounded border-gray-300"
+      className="h-3.5 w-3.5 cursor-pointer accent-primary"
       title="Show only videos with transcript"
     />
   );
@@ -421,16 +427,16 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         },
       }),
       columnHelper.accessor("hasTranscript", {
-        header: "Transcribed",
+        header: "✓",
         cell: (info) => {
           const hasTranscript = info.getValue();
           return hasTranscript ? (
-            <span className="text-sm text-green-600">✓</span>
+            <span className="text-sm text-primary">✓</span>
           ) : (
-            <span className="text-sm text-gray-300">—</span>
+            <span className="text-sm text-muted-foreground/30">—</span>
           );
         },
-        size: 100,
+        size: 50,
         enableColumnFilter: true,
         filterFn: (row, columnId, filterValue) => {
           if (filterValue === true) return row.getValue(columnId) === true;
@@ -438,6 +444,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         },
         meta: {
           filterComponent: CheckboxFilter,
+          align: "center",
         },
       }),
     ],
@@ -494,10 +501,10 @@ export function VideoTable({ videos }: { videos: Video[] }) {
       <div className="hidden flex-wrap items-center gap-4 lg:flex">
         <input
           type="text"
-          placeholder="Search all columns..."
+          placeholder="Search all columns…"
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="min-w-[200px] flex-1 rounded-lg border px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+          className="min-w-[200px] flex-1 rounded-lg border border-border bg-muted/40 px-4 py-2 text-sm transition-colors placeholder:text-muted-foreground/50 focus:border-primary focus:bg-background focus:outline-none"
         />
         <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
           <input
@@ -520,7 +527,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           placeholder="Search..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+          className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm transition-colors placeholder:text-muted-foreground/50 focus:border-primary focus:bg-background focus:outline-none"
         />
         <div className="flex flex-wrap gap-2">
           <select
@@ -633,7 +640,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                 </span>
                 <div className="flex flex-shrink-0 items-center gap-2">
                   {video.hasTranscript && (
-                    <span className="text-sm text-green-600">✓</span>
+                    <span className="text-sm text-primary">✓</span>
                   )}
                   {isLive ? (
                     <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />
@@ -660,31 +667,35 @@ export function VideoTable({ videos }: { videos: Video[] }) {
       <div className="hidden overflow-hidden rounded-lg border lg:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-muted">
+            <thead className="bg-muted/60">
               {table.getHeaderGroups().map((headerGroup) => (
                 <Fragment key={headerGroup.id}>
-                  <tr>
+                  <tr className="border-b border-border">
                     {headerGroup.headers.map((header) => (
                       <th
                         key={header.id}
-                        className={`cursor-pointer px-4 py-3 text-left font-medium hover:bg-muted/80 ${header.column.getIsSorted() ? "border-b-2 border-b-primary" : "border-b-2 border-b-transparent"}`}
+                        className={`cursor-pointer px-4 py-2.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase transition-colors hover:text-foreground ${header.column.columnDef.meta?.align === "center" ? "text-center" : header.column.columnDef.meta?.align === "right" ? "text-right" : "text-left"} ${header.column.getIsSorted() ? "text-primary" : ""}`}
                         onClick={header.column.getToggleSortingHandler()}
                         style={{ width: header.getSize() }}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
                           )}
                           {{
-                            asc: " ↑",
-                            desc: " ↓",
+                            asc: (
+                              <span className="text-primary opacity-70">↑</span>
+                            ),
+                            desc: (
+                              <span className="text-primary opacity-70">↓</span>
+                            ),
                           }[header.column.getIsSorted() as string] ?? null}
                         </div>
                       </th>
                     ))}
                   </tr>
-                  <tr className="border-t">
+                  <tr className="border-b border-border bg-muted/30">
                     {headerGroup.headers.map((header) => {
                       const FilterComponent =
                         header.column.columnDef.meta?.filterComponent;
@@ -692,7 +703,10 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                         header.column.columnDef.meta?.filterOptions;
 
                       return (
-                        <th key={header.id} className="px-4 py-2">
+                        <th
+                          key={header.id}
+                          className={`px-4 py-1.5 ${header.column.columnDef.meta?.align === "center" ? "text-center" : ""}`}
+                        >
                           {header.column.getCanFilter() && FilterComponent ? (
                             <FilterComponent
                               column={header.column}
@@ -712,14 +726,14 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b hover:bg-muted/50 ${isScheduled ? "opacity-50" : ""}`}
+                    className={`border-b border-border/60 transition-colors hover:bg-muted/40 ${isScheduled ? "opacity-50" : ""}`}
                   >
                     {row.getVisibleCells().map((cell) => {
                       const align = cell.column.columnDef.meta?.align;
                       return (
                         <td
                           key={cell.id}
-                          className={`px-4 py-3 ${align === "right" ? "text-right" : ""}`}
+                          className={`px-4 py-2.5 ${align === "right" ? "text-right" : align === "center" ? "text-center" : ""}`}
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
@@ -736,33 +750,33 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex gap-1">
           <button
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
-            className="rounded border px-3 py-1 hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
           >
             ««
           </button>
           <button
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="rounded border px-3 py-1 hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
           >
             «
           </button>
           <button
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="rounded border px-3 py-1 hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
           >
             »
           </button>
           <button
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
-            className="rounded border px-3 py-1 hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
           >
             »»
           </button>
@@ -776,7 +790,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         <select
           value={table.getState().pagination.pageSize}
           onChange={(e) => table.setPageSize(Number(e.target.value))}
-          className="rounded border px-3 py-1"
+          className="rounded-md border border-border bg-transparent px-3 py-2 text-sm text-muted-foreground focus:border-primary focus:outline-none"
         >
           {[25, 50, 100, 200].map((pageSize) => (
             <option key={pageSize} value={pageSize}>

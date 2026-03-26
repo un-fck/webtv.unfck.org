@@ -17,7 +17,10 @@ export function SiteHeader({
     // Compact header for content pages (video page)
     return (
       <header className="flex shrink-0 items-center justify-between border-b border-border px-5 py-2.5">
-        <Link href="/" className="inline-flex items-center gap-3 hover:opacity-75 transition-opacity">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-3 transition-opacity hover:opacity-75"
+        >
           <Image
             src="/images/un-logo-stacked-colour-english.svg"
             alt="United Nations"
@@ -45,7 +48,7 @@ export function SiteHeader({
   // Home page masthead
   return (
     <header className="border-b border-border py-5">
-      <div className="mx-auto max-w-350 px-4 sm:px-6 flex items-center gap-5">
+      <div className="mx-auto flex max-w-350 items-center gap-5 px-4 sm:px-6">
         <Image
           src="/images/un-logo-stacked-colour-english.svg"
           alt="United Nations"
@@ -59,7 +62,7 @@ export function SiteHeader({
             <span className="text-lg font-bold tracking-tight text-foreground">
               Web TV Transcripts
             </span>
-            <span className="rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-un-blue">
+            <span className="rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-[9px] font-bold tracking-widest text-un-blue uppercase">
               Beta
             </span>
           </div>
