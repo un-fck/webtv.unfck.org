@@ -357,7 +357,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
             );
           }
           if (!duration || duration === "00:00:00")
-            return <span className="text-gray-300">—</span>;
+            return <span className="text-muted-foreground/30">—</span>;
           // Strip leading zeros from HH:MM:SS
           return (
             <span className="tabular-nums">
@@ -365,7 +365,8 @@ export function VideoTable({ videos }: { videos: Video[] }) {
             </span>
           );
         },
-        size: 70,
+        size: 80,
+        maxSize: 80,
         meta: {
           align: "right",
         },
@@ -396,7 +397,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           return (
             <a
               href={`/video/${encodedId}`}
-              className={`hover:underline ${isScheduled ? "text-muted-foreground" : "text-primary"}`}
+              className={`underline-offset-2 hover:underline ${isScheduled ? "text-muted-foreground" : "text-foreground"}`}
             >
               {info.getValue()}
             </a>
@@ -410,7 +411,11 @@ export function VideoTable({ videos }: { videos: Video[] }) {
       }),
       columnHelper.accessor("body", {
         header: "Body",
-        cell: (info) => info.getValue() || "—",
+        cell: (info) => (
+          <span className="text-muted-foreground">
+            {info.getValue() || "—"}
+          </span>
+        ),
         size: 140,
         enableColumnFilter: true,
         meta: {
@@ -420,7 +425,11 @@ export function VideoTable({ videos }: { videos: Video[] }) {
       }),
       columnHelper.accessor("category", {
         header: "Category",
-        cell: (info) => info.getValue() || "—",
+        cell: (info) => (
+          <span className="text-muted-foreground">
+            {info.getValue() || "—"}
+          </span>
+        ),
         size: 140,
         enableColumnFilter: true,
         meta: {
@@ -678,7 +687,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
       {/* Desktop Table View */}
       <div className="hidden overflow-hidden rounded-lg border lg:block">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full table-fixed text-sm">
             <thead className="bg-muted/60">
               {table.getHeaderGroups().map((headerGroup) => (
                 <Fragment key={headerGroup.id}>
@@ -688,9 +697,19 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                         key={header.id}
                         className={`cursor-pointer px-4 py-2.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase transition-colors hover:text-foreground ${header.column.columnDef.meta?.align === "center" ? "text-center" : header.column.columnDef.meta?.align === "right" ? "text-right" : "text-left"} ${header.column.getIsSorted() ? "text-primary" : ""}`}
                         onClick={header.column.getToggleSortingHandler()}
-                        style={{ width: header.getSize() }}
+                        style={
+                          header.column.id === "cleanTitle"
+                            ? undefined
+                            : {
+                                width: header.getSize(),
+                                minWidth: header.getSize(),
+                                maxWidth: header.getSize(),
+                              }
+                        }
                       >
-                        <div className="flex items-center gap-1.5">
+                        <div
+                          className={`flex items-center gap-1.5 ${header.column.columnDef.meta?.align === "right" ? "justify-end" : header.column.columnDef.meta?.align === "center" ? "justify-center" : ""}`}
+                        >
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
@@ -738,7 +757,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b border-border/60 transition-colors hover:bg-muted/40 ${isScheduled ? "opacity-50" : ""}`}
+                    className={`border-b border-border/40 transition-colors odd:bg-muted/20 hover:bg-muted/50 ${isScheduled ? "opacity-50" : ""}`}
                   >
                     {row.getVisibleCells().map((cell) => {
                       const align = cell.column.columnDef.meta?.align;
