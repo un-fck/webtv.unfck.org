@@ -37,10 +37,10 @@ export function VideoPageClient({
               className="mb-4 inline-flex items-center gap-2 hover:opacity-80 lg:mb-6"
             >
               <Image
-                src="/images/UN Logo_Horizontal_English/Colour/UN Logo_Horizontal_Colour_English.svg"
+                src="/images/un-logo-stacked-colour-english.svg"
                 alt="UN Logo"
-                width={150}
-                height={30}
+                width={402}
+                height={127}
                 className="h-6 w-auto lg:h-8"
               />
             </Link>

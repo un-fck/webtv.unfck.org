@@ -13,10 +13,10 @@ export default async function Home() {
     <main className="min-h-screen bg-background px-4 sm:px-6">
       <div className="mx-auto max-w-[1600px] py-8">
         <Image
-          src="/images/UN Logo_Horizontal_English/Colour/UN Logo_Horizontal_Colour_English.svg"
+          src="/images/un-logo-stacked-colour-english.svg"
           alt="UN Logo"
-          width={200}
-          height={40}
+          width={402}
+          height={127}
           className="mb-8 h-10 w-auto"
         />
 
