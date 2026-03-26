@@ -3,13 +3,14 @@ import {
   getTranscript,
   saveTranscript,
   deleteTranscriptsForEntry,
+  scheduleTranscript,
 } from "@/lib/turso";
 import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 
 export async function POST(request: NextRequest) {
   try {
-    const { kalturaId, checkOnly, force, startTime, endTime } =
+    const { kalturaId, checkOnly, force, startTime, endTime, action, assetId } =
       await request.json();
 
     if (!kalturaId) {
@@ -17,6 +18,17 @@ export async function POST(request: NextRequest) {
         { error: "Kaltura ID is required" },
         { status: 400 },
       );
+    }
+
+    // Schedule action: queue transcript for later processing (video still live/upcoming)
+    if (action === "schedule") {
+      const transcriptId = await scheduleTranscript(
+        assetId || kalturaId,
+        kalturaId,
+        startTime ?? null,
+        endTime ?? null,
+      );
+      return NextResponse.json({ transcriptId, stage: "scheduled" });
     }
 
     const isSegmentRequest = startTime !== undefined && endTime !== undefined;

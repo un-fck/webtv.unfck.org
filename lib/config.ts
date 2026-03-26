@@ -1,4 +1,5 @@
-export const scheduleLookbackDays = 365;
+// Initial page load only fetches recent videos. Historical search uses /api/search (Turso).
+export const scheduleLookbackDays = 14;
 
 // Update this snapshot whenever pricing assumptions are revised.
 export const ASSEMBLYAI_RATE_CARD_VERSION = "2026-02-12";

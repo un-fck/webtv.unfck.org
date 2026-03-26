@@ -3,9 +3,16 @@ import { extractKalturaId } from "./kaltura";
 
 /**
  * Resolves an asset ID or Kaltura ID to an entry ID.
- * Always calls Kaltura API to handle redirects properly.
+ * If cachedEntryId is provided (already stored in DB), returns it immediately.
+ * Only calls Kaltura API when the entry ID is unknown.
  */
-export async function resolveEntryId(assetId: string): Promise<string | null> {
+export async function resolveEntryId(
+  assetId: string,
+  cachedEntryId?: string | null,
+): Promise<string | null> {
+  // Use cached value if available — avoids unnecessary Kaltura API calls
+  if (cachedEntryId) return cachedEntryId;
+
   // Step 1: Extract Kaltura ID from asset ID
   const kalturaId = extractKalturaId(assetId);
   if (!kalturaId) {

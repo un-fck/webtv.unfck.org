@@ -31,8 +31,11 @@ export async function GET(
     // Get video metadata
     const metadata = await getVideoMetadata(video.id);
 
-    // Resolve entry ID (checks cache first, then Kaltura API)
-    const entryId = await resolveEntryId(video.id);
+    // Resolve entry ID — getVideoById already checked Turso, so video may carry a cached entryId
+    // We pass it through to avoid a redundant Kaltura API call when already known
+    const { getVideoByAssetId } = await import("@/lib/turso");
+    const cachedRecord = await getVideoByAssetId(decodedId);
+    const entryId = await resolveEntryId(video.id, cachedRecord?.entry_id);
 
     if (!entryId) {
       const response = NextResponse.json({
@@ -86,12 +89,12 @@ export async function GET(
       }
     });
 
-    for (const code of iso3Codes) {
-      const name = await getCountryName(code);
-      if (name) {
-        countryNames.set(code, name);
-      }
-    }
+    await Promise.all(
+      Array.from(iso3Codes).map(async (code) => {
+        const name = await getCountryName(code);
+        if (name) countryNames.set(code, name);
+      }),
+    );
 
     const topics = transcript.content.topics || {};
 
@@ -160,6 +163,10 @@ export async function GET(
     });
 
     response.headers.set("Content-Type", "application/json; charset=utf-8");
+    response.headers.set(
+      "Cache-Control",
+      "s-maxage=60, stale-while-revalidate=300",
+    );
     return response;
   } catch (error) {
     console.error("JSON API error:", error);

@@ -187,16 +187,25 @@ export function VideoTable({ videos }: { videos: Video[] }) {
     { id: "status", desc: false }, // Live first, then finished
     { id: "scheduledTime", desc: true },
   ]);
+  // inputValue: what the user is currently typing (not yet submitted)
+  // globalFilter: the submitted query — drives URL, search API, and TanStack filter
+  const [inputValue, setInputValue] = useState(searchParams.get("q") || "");
   const [globalFilter, setGlobalFilter] = useState(searchParams.get("q") || "");
   const [showScheduled, setShowScheduled] = useState(false);
+  const [searchResults, setSearchResults] = useState<Video[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchOffset, setSearchOffset] = useState(0);
+  const [hasMoreResults, setHasMoreResults] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Sync URL to globalFilter (when URL changes via back/forward)
+  // Sync inputs from URL (back/forward navigation)
   useEffect(() => {
     const urlQuery = searchParams.get("q") || "";
+    setInputValue(urlQuery);
     setGlobalFilter(urlQuery);
   }, [searchParams]);
 
-  // Sync globalFilter to URL (when filter changes)
+  // Sync submitted query to URL
   useEffect(() => {
     const currentQuery = searchParams.get("q") || "";
     if (globalFilter !== currentQuery) {
@@ -211,21 +220,67 @@ export function VideoTable({ videos }: { videos: Video[] }) {
     }
   }, [globalFilter, searchParams, router]);
 
+  // Fetch search results when submitted query changes
+  useEffect(() => {
+    if (!globalFilter || globalFilter.length < 2) {
+      setSearchResults(null);
+      setSearchOffset(0);
+      setHasMoreResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchOffset(0);
+    fetch(`/api/search?q=${encodeURIComponent(globalFilter)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setSearchResults(data.videos);
+        setHasMoreResults(data.hasMore);
+        setSearchOffset(data.videos.length);
+      })
+      .catch(() => setSearchResults(null))
+      .finally(() => setIsSearching(false));
+  }, [globalFilter]);
+
+  const loadMore = () => {
+    if (!globalFilter || isLoadingMore) return;
+    setIsLoadingMore(true);
+    fetch(`/api/search?q=${encodeURIComponent(globalFilter)}&offset=${searchOffset}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setSearchResults((prev) => [...(prev ?? []), ...data.videos]);
+        setHasMoreResults(data.hasMore);
+        setSearchOffset((prev) => prev + data.videos.length);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMore(false));
+  };
+
+  const submitSearch = (value: string) => {
+    const trimmed = value.trim();
+    setInputValue(trimmed);
+    setGlobalFilter(trimmed);
+    if (!trimmed) setSearchResults(null);
+  };
+
+  // Use search results when a query is active, otherwise use the recent-window videos from props
+  const tableData = searchResults ?? videos;
+
   // Extract unique values for dropdowns
   const uniqueBodies = useMemo(
     () =>
       Array.from(
-        new Set(videos.map((v) => v.body).filter(Boolean) as string[]),
+        new Set(tableData.map((v) => v.body).filter(Boolean) as string[]),
       ).sort(),
-    [videos],
+    [tableData],
   );
 
   const uniqueCategories = useMemo(
     () =>
       Array.from(
-        new Set(videos.map((v) => v.category).filter(Boolean) as string[]),
+        new Set(tableData.map((v) => v.category).filter(Boolean) as string[]),
       ).sort(),
-    [videos],
+    [tableData],
   );
 
   // Extract unique date labels for filtering
@@ -238,7 +293,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    videos.forEach((v) => {
+    tableData.forEach((v) => {
       const time = v.scheduledTime;
       if (!time) return;
 
@@ -263,7 +318,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
     });
 
     return Array.from(dateLabels);
-  }, [videos]);
+  }, [tableData]);
 
   const columns = useMemo(
     () => [
@@ -463,12 +518,13 @@ export function VideoTable({ videos }: { videos: Video[] }) {
   );
 
   const table = useReactTable({
-    data: videos,
+    data: tableData,
     columns,
     state: {
       columnFilters,
       sorting,
-      globalFilter,
+      // When server search is active, tableData is already filtered — don't double-filter client-side
+      globalFilter: searchResults ? "" : globalFilter,
       columnVisibility: { status: false },
     },
     onColumnFiltersChange: setColumnFilters,
@@ -484,6 +540,16 @@ export function VideoTable({ videos }: { videos: Video[] }) {
       },
     },
   });
+
+  // When search activates: show all results (no pagination). When cleared: restore pagination.
+  useEffect(() => {
+    if (searchResults) {
+      table.setPageSize(1000);
+    } else {
+      table.setPageSize(50);
+    }
+    table.setPageIndex(0);
+  }, [searchResults]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Toggle between Past and Scheduled tabs
   const toggleScheduled = () => {
@@ -513,13 +579,26 @@ export function VideoTable({ videos }: { videos: Video[] }) {
     <div className="space-y-4">
       {/* Desktop: Search bar with count */}
       <div className="hidden items-center gap-4 lg:flex">
-        <input
-          type="text"
-          placeholder="Search all columns…"
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="w-1/2 rounded-full border border-border bg-muted/30 px-4 py-2 text-sm transition-colors placeholder:text-muted-foreground/40 focus:border-primary/50 focus:bg-background focus:ring-2 focus:ring-primary/10 focus:outline-none"
-        />
+        <div className="relative w-1/2">
+          <input
+            type="text"
+            placeholder="Search all columns… (press Enter)"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submitSearch(inputValue)}
+            onBlur={() => submitSearch(inputValue)}
+            className="w-full rounded-full border border-border bg-muted/30 px-4 py-2 text-sm transition-colors placeholder:text-muted-foreground/40 focus:border-primary/50 focus:bg-background focus:ring-2 focus:ring-primary/10 focus:outline-none"
+          />
+          {inputValue && (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); submitSearch(""); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
         <div className="flex rounded-full border border-border bg-background p-0.5 text-xs font-medium shadow-xs">
           <button
             onClick={() => showScheduled && toggleScheduled()}
@@ -535,19 +614,40 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           </button>
         </div>
         <div className="ml-auto text-sm whitespace-nowrap text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} meetings
+          {isSearching
+            ? "Searching…"
+            : searchResults !== null
+              ? hasMoreResults
+                ? `Showing ${searchResults.length} meetings`
+                : `${searchResults.length} meetings in total`
+              : globalFilter || columnFilters.some((f) => f.id !== "status")
+                ? `${table.getFilteredRowModel().rows.length} meetings`
+                : null}
         </div>
       </div>
 
       {/* Mobile: All filters grouped */}
       <div className="space-y-3 lg:hidden">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm transition-colors placeholder:text-muted-foreground/50 focus:border-primary focus:bg-background focus:outline-none"
-        />
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search… (press Enter)"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submitSearch(inputValue)}
+            onBlur={() => submitSearch(inputValue)}
+            className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm transition-colors placeholder:text-muted-foreground/50 focus:border-primary focus:bg-background focus:outline-none"
+          />
+          {inputValue && (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); submitSearch(""); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           <select
             value={
@@ -637,6 +737,19 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           </div>
         </div>
       </div>
+
+      {/* "Back to recent" banner — shown when server search results are active */}
+      {searchResults !== null && (
+        <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground">
+          <span>Showing historical results</span>
+          <button
+            onClick={() => submitSearch("")}
+            className="text-primary hover:underline"
+          >
+            Clear to return to recent meetings
+          </button>
+        </div>
+      )}
 
       {/* Mobile Card View */}
       <div className="grid gap-3 lg:hidden">
@@ -777,55 +890,70 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex gap-0.5">
+      {/* Load more — only shown when server search results have more pages */}
+      {searchResults !== null && hasMoreResults && (
+        <div className="flex justify-center pt-2">
           <button
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
+            onClick={loadMore}
+            disabled={isLoadingMore}
+            className="rounded-full border border-border px-6 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
-            ««
-          </button>
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
-          >
-            «
-          </button>
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
-          >
-            »
-          </button>
-          <button
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-            className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
-          >
-            »»
+            {isLoadingMore ? "Loading…" : "Load more"}
           </button>
         </div>
+      )}
 
-        <div className="text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+      {searchResults === null && (
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex gap-0.5">
+            <button
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
+            >
+              ««
+            </button>
+            <button
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
+            >
+              «
+            </button>
+            <button
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
+            >
+              »
+            </button>
+            <button
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
+            >
+              »»
+            </button>
+          </div>
+
+          <div className="text-sm text-muted-foreground">
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount()}
+          </div>
+
+          <select
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => table.setPageSize(Number(e.target.value))}
+            className="rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm text-muted-foreground focus:border-primary/50 focus:outline-none"
+          >
+            {[25, 50, 100, 200].map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                Show {pageSize}
+              </option>
+            ))}
+          </select>
         </div>
-
-        <select
-          value={table.getState().pagination.pageSize}
-          onChange={(e) => table.setPageSize(Number(e.target.value))}
-          className="rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm text-muted-foreground focus:border-primary/50 focus:outline-none"
-        >
-          {[25, 50, 100, 200].map((pageSize) => (
-            <option key={pageSize} value={pageSize}>
-              Show {pageSize}
-            </option>
-          ))}
-        </select>
-      </div>
+      )}
     </div>
   );
 }

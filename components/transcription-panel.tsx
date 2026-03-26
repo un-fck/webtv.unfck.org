@@ -18,6 +18,7 @@ import type { Proposition } from "@/lib/speaker-identification";
 
 type Stage =
   | "idle"
+  | "scheduled"
   | "transcribing"
   | "transcribed"
   | "identifying_speakers"
@@ -458,7 +459,10 @@ export function TranscriptionPanel({
   const downloadButtonRef = useRef<HTMLDivElement>(null);
 
   const isLoading =
-    stage !== "idle" && stage !== "completed" && stage !== "error";
+    stage !== "idle" &&
+    stage !== "scheduled" &&
+    stage !== "completed" &&
+    stage !== "error";
 
   // Filter segments by selected topic
 
@@ -694,6 +698,30 @@ export function TranscriptionPanel({
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : "Failed to transcribe",
+      );
+      setStage("error");
+    }
+  };
+
+  const handleSchedule = async () => {
+    try {
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kalturaId,
+          assetId: video.id,
+          action: "schedule",
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to schedule transcript");
+      }
+      setStage("scheduled");
+    } catch (err) {
+      setErrorMessage(
+        err instanceof Error ? err.message : "Failed to schedule transcript",
       );
       setStage("error");
     }
@@ -1228,13 +1256,32 @@ export function TranscriptionPanel({
         {/* Actions — pushed to the right */}
         <div className="ml-auto flex gap-2">
           {!segments && !rawParagraphs && !checking && stage === "idle" && (
-            <button
-              onClick={() => handleTranscribe()}
-              className="rounded-md bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Generate
-            </button>
+            <>
+              <button
+                onClick={() => handleTranscribe()}
+                className="rounded-md bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Generate
+              </button>
+              {(video.status === "live" || video.status === "scheduled") && (
+                <button
+                  onClick={() => handleSchedule()}
+                  className="rounded-md border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+                  title="Queue transcript to start automatically when recording ends"
+                >
+                  Schedule
+                </button>
+              )}
+            </>
           )}
+          {!segments &&
+            !rawParagraphs &&
+            !checking &&
+            stage === "scheduled" && (
+              <span className="text-xs text-muted-foreground">
+                Transcript scheduled — starts automatically when recording ends
+              </span>
+            )}
           {(segments || rawParagraphs) && (
             <>
               <div className="relative">

@@ -31,6 +31,10 @@ export async function GET() {
     });
 
     response.headers.set("Content-Type", "application/json; charset=utf-8");
+    response.headers.set(
+      "Cache-Control",
+      "s-maxage=60, stale-while-revalidate=300",
+    );
     return response;
   } catch (error) {
     console.error("JSON list API error:", error);

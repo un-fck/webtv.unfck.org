@@ -4,7 +4,7 @@ import { VideoTable } from "@/components/video-table";
 import { SiteHeader } from "@/components/site-header";
 import { scheduleLookbackDays } from "@/lib/config";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function Home() {
   const videos = await getScheduleVideos(scheduleLookbackDays);

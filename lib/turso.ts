@@ -2,6 +2,7 @@ import { createClient } from "@libsql/client/web";
 import "@/lib/load-env";
 
 export type TranscriptStatus =
+  | "scheduled"
   | "transcribing"
   | "transcribed"
   | "identifying_speakers"
@@ -28,112 +29,120 @@ let initialized = false;
 
 async function ensureInitialized() {
   if (initialized) return;
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS speaker_mappings (
-      transcript_id TEXT PRIMARY KEY,
-      mapping TEXT NOT NULL,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS transcripts (
-      entry_id TEXT NOT NULL,
-      transcript_id TEXT NOT NULL PRIMARY KEY,
-      start_time REAL,
-      end_time REAL,
-      audio_url TEXT NOT NULL,
-      status TEXT NOT NULL,
-      language_code TEXT,
-      content TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  await client.execute(`
-    CREATE INDEX IF NOT EXISTS idx_entry_id ON transcripts(entry_id)
-  `);
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS videos (
-      asset_id TEXT PRIMARY KEY,
-      entry_id TEXT,
-      title TEXT NOT NULL,
-      clean_title TEXT,
-      date TEXT NOT NULL,
-      scheduled_time TEXT,
-      duration INTEGER,
-      url TEXT NOT NULL,
-      body TEXT,
-      category TEXT,
-      event_code TEXT,
-      event_type TEXT,
-      session_number TEXT,
-      part_number TEXT,
-      last_seen TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  await client.execute(`
-    CREATE INDEX IF NOT EXISTS idx_videos_entry_id ON videos(entry_id)
-  `);
-  await client.execute(`
-    CREATE INDEX IF NOT EXISTS idx_videos_date ON videos(date)
-  `);
-  await client.execute(`
-    CREATE INDEX IF NOT EXISTS idx_videos_last_seen ON videos(last_seen)
-  `);
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS processing_usage_events (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      transcript_id TEXT NOT NULL,
-      provider TEXT NOT NULL,
-      stage TEXT NOT NULL,
-      operation TEXT NOT NULL,
-      status TEXT NOT NULL,
-      model TEXT,
-      input_tokens INTEGER,
-      output_tokens INTEGER,
-      reasoning_tokens INTEGER,
-      cached_input_tokens INTEGER,
-      total_tokens INTEGER,
-      usage_hours REAL,
-      usage_seconds INTEGER,
-      usage_quantity_type TEXT,
-      usage_multiplier REAL,
-      rate_card_version TEXT,
-      base_rate_per_hour_usd REAL,
-      feature_rate_per_hour_usd REAL,
-      pricing_meta TEXT,
-      duration_ms INTEGER,
-      request_meta TEXT,
-      error_message TEXT,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  await client.execute(`
-    CREATE INDEX IF NOT EXISTS idx_usage_transcript_id ON processing_usage_events(transcript_id)
-  `);
-  await client.execute(`
-    CREATE INDEX IF NOT EXISTS idx_usage_provider_stage ON processing_usage_events(provider, stage)
-  `);
-  await client.execute(`
-    CREATE INDEX IF NOT EXISTS idx_usage_created_at ON processing_usage_events(created_at)
-  `);
-  // Add pipeline_lock column if it doesn't exist
-  try {
-    await client.execute(
-      `ALTER TABLE transcripts ADD COLUMN pipeline_lock TEXT`,
-    );
-  } catch {
-    /* column already exists */
-  }
-  try {
-    await client.execute(
-      `ALTER TABLE transcripts ADD COLUMN error_message TEXT`,
-    );
-  } catch {
-    /* column already exists */
-  }
+
+  // Create all tables in parallel
+  await Promise.all([
+    client.execute(`
+      CREATE TABLE IF NOT EXISTS speaker_mappings (
+        transcript_id TEXT PRIMARY KEY,
+        mapping TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `),
+    client.execute(`
+      CREATE TABLE IF NOT EXISTS transcripts (
+        entry_id TEXT NOT NULL,
+        transcript_id TEXT NOT NULL PRIMARY KEY,
+        start_time REAL,
+        end_time REAL,
+        audio_url TEXT NOT NULL,
+        status TEXT NOT NULL,
+        language_code TEXT,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `),
+    client.execute(`
+      CREATE TABLE IF NOT EXISTS videos (
+        asset_id TEXT PRIMARY KEY,
+        entry_id TEXT,
+        title TEXT NOT NULL,
+        clean_title TEXT,
+        date TEXT NOT NULL,
+        scheduled_time TEXT,
+        duration INTEGER,
+        url TEXT NOT NULL,
+        body TEXT,
+        category TEXT,
+        event_code TEXT,
+        event_type TEXT,
+        session_number TEXT,
+        part_number TEXT,
+        last_seen TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `),
+    client.execute(`
+      CREATE TABLE IF NOT EXISTS processing_usage_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        transcript_id TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        stage TEXT NOT NULL,
+        operation TEXT NOT NULL,
+        status TEXT NOT NULL,
+        model TEXT,
+        input_tokens INTEGER,
+        output_tokens INTEGER,
+        reasoning_tokens INTEGER,
+        cached_input_tokens INTEGER,
+        total_tokens INTEGER,
+        usage_hours REAL,
+        usage_seconds INTEGER,
+        usage_quantity_type TEXT,
+        usage_multiplier REAL,
+        rate_card_version TEXT,
+        base_rate_per_hour_usd REAL,
+        feature_rate_per_hour_usd REAL,
+        pricing_meta TEXT,
+        duration_ms INTEGER,
+        request_meta TEXT,
+        error_message TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `),
+  ]);
+
+  // Create all indexes in parallel (tables must exist first)
+  await Promise.all([
+    client.execute(
+      `CREATE INDEX IF NOT EXISTS idx_entry_id ON transcripts(entry_id)`,
+    ),
+    client.execute(
+      `CREATE INDEX IF NOT EXISTS idx_videos_entry_id ON videos(entry_id)`,
+    ),
+    client.execute(
+      `CREATE INDEX IF NOT EXISTS idx_videos_date ON videos(date)`,
+    ),
+    client.execute(
+      `CREATE INDEX IF NOT EXISTS idx_videos_last_seen ON videos(last_seen)`,
+    ),
+    client.execute(
+      `CREATE INDEX IF NOT EXISTS idx_usage_transcript_id ON processing_usage_events(transcript_id)`,
+    ),
+    client.execute(
+      `CREATE INDEX IF NOT EXISTS idx_usage_provider_stage ON processing_usage_events(provider, stage)`,
+    ),
+    client.execute(
+      `CREATE INDEX IF NOT EXISTS idx_usage_created_at ON processing_usage_events(created_at)`,
+    ),
+  ]);
+
+  // Add new columns if they don't exist (parallel, errors are expected on re-runs)
+  await Promise.all([
+    client
+      .execute(`ALTER TABLE transcripts ADD COLUMN pipeline_lock TEXT`)
+      .catch(() => {
+        /* column already exists */
+      }),
+    client
+      .execute(`ALTER TABLE transcripts ADD COLUMN error_message TEXT`)
+      .catch(() => {
+        /* column already exists */
+      }),
+  ]);
+
   initialized = true;
 }
 
@@ -434,6 +443,59 @@ export async function updateTranscriptContent(
     sql: "UPDATE transcripts SET content = ?, updated_at = ? WHERE transcript_id = ?",
     args: [JSON.stringify(content), new Date().toISOString(), transcriptId],
   });
+}
+
+export async function scheduleTranscript(
+  assetId: string,
+  kalturaId: string,
+  startTime: number | null,
+  endTime: number | null,
+): Promise<string> {
+  await ensureInitialized();
+  const transcriptId = `scheduled-${assetId}-${Date.now()}`;
+  const now = new Date().toISOString();
+  await client.execute({
+    sql: `INSERT INTO transcripts (entry_id, transcript_id, start_time, end_time, audio_url, status, language_code, content, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 'scheduled', null, '{}', ?, ?)
+          ON CONFLICT(transcript_id) DO NOTHING`,
+    args: [
+      kalturaId,
+      transcriptId,
+      startTime,
+      endTime,
+      `pending:${assetId}`,
+      now,
+      now,
+    ],
+  });
+  return transcriptId;
+}
+
+export interface ScheduledTranscript {
+  transcript_id: string;
+  entry_id: string; // kaltura_id at schedule time (may be the asset_id before resolution)
+  start_time: number | null;
+  end_time: number | null;
+  audio_url: string; // contains "pending:<assetId>" for unresolved entries
+  created_at: string;
+}
+
+export async function getScheduledTranscripts(): Promise<
+  ScheduledTranscript[]
+> {
+  await ensureInitialized();
+  const result = await client.execute(
+    `SELECT transcript_id, entry_id, start_time, end_time, audio_url, created_at
+     FROM transcripts WHERE status = 'scheduled' ORDER BY created_at ASC`,
+  );
+  return result.rows.map((row) => ({
+    transcript_id: row.transcript_id as string,
+    entry_id: row.entry_id as string,
+    start_time: row.start_time as number | null,
+    end_time: row.end_time as number | null,
+    audio_url: row.audio_url as string,
+    created_at: row.created_at as string,
+  }));
 }
 
 const PIPELINE_LOCK_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
@@ -774,6 +836,40 @@ export async function updateVideoEntryId(
     sql: "UPDATE videos SET entry_id = ?, updated_at = ? WHERE asset_id = ?",
     args: [entryId, new Date().toISOString(), assetId],
   });
+}
+
+export async function searchVideos(
+  query: string,
+  limit = 50,
+  offset = 0,
+): Promise<VideoRecord[]> {
+  await ensureInitialized();
+
+  const pattern = `%${query}%`;
+  const result = await client.execute({
+    sql: "SELECT * FROM videos WHERE title LIKE ? OR clean_title LIKE ? ORDER BY date DESC, scheduled_time DESC LIMIT ? OFFSET ?",
+    args: [pattern, pattern, limit, offset],
+  });
+
+  return result.rows.map((row) => ({
+    asset_id: row.asset_id as string,
+    entry_id: row.entry_id as string | null,
+    title: row.title as string,
+    clean_title: row.clean_title as string | null,
+    date: row.date as string,
+    scheduled_time: row.scheduled_time as string | null,
+    duration: row.duration as number | null,
+    url: row.url as string,
+    body: row.body as string | null,
+    category: row.category as string | null,
+    event_code: row.event_code as string | null,
+    event_type: row.event_type as string | null,
+    session_number: row.session_number as string | null,
+    part_number: row.part_number as string | null,
+    last_seen: row.last_seen as string,
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+  }));
 }
 
 export const db = client;

@@ -74,7 +74,10 @@ export function videoToRecord(
   };
 }
 
-function recordToVideo(record: VideoRecord, hasTranscript: boolean): Video {
+export function recordToVideo(
+  record: VideoRecord,
+  hasTranscript: boolean,
+): Video {
   // Convert duration from seconds to HH:MM:SS for status calculation
   const durationSeconds = record.duration || 0;
   const hours = Math.floor(durationSeconds / 3600);
@@ -417,10 +420,21 @@ export async function getScheduleVideos(
         }
         allVideos = Array.from(videoMap.values());
 
+        // Build a map of already-resolved entry IDs from Turso records
+        const cachedEntryIdMap = new Map(
+          cachedRecords
+            .filter((r) => r.entry_id)
+            .map((r) => [r.asset_id, r.entry_id!]),
+        );
+
         // Resolve entry IDs and save new videos to cache
         const entryIdResolutions = await Promise.all(
           recentVideos.map(async (video) => {
-            const entryId = await resolveEntryId(video.id);
+            // Reuse cached entry_id if already stored in Turso — avoids Kaltura API call
+            const entryId = await resolveEntryId(
+              video.id,
+              cachedEntryIdMap.get(video.id),
+            );
 
             if (entryId) {
               const record = videoToRecord(video);
