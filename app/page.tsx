@@ -11,9 +11,8 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6">
-        <SiteHeader />
-
+      <SiteHeader />
+      <div className="mx-auto max-w-350 px-4 sm:px-6">
         <div className="py-6">
           <Suspense fallback={<div>Loading...</div>}>
             <VideoTable videos={videos} />

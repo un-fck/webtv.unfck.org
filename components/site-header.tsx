@@ -44,8 +44,8 @@ export function SiteHeader({
 
   // Home page masthead
   return (
-    <header className="border-b border-border px-6 py-5">
-      <div className="flex items-center gap-5">
+    <header className="border-b border-border py-5">
+      <div className="mx-auto max-w-350 px-4 sm:px-6 flex items-center gap-5">
         <Image
           src="/images/un-logo-stacked-colour-english.svg"
           alt="United Nations"
