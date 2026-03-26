@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
-import type { DashboardData, Result } from '../types';
-import { LANGUAGE_NAMES, PROVIDER_LABELS, PROVIDER_COLORS } from '../types';
-import { alignedDiff3 } from '../lib/diff';
-import type { DiffToken } from '../lib/diff';
+import { useState, useMemo } from "react";
+import type { DashboardData, Result } from "../types";
+import { LANGUAGE_NAMES, PROVIDER_LABELS, PROVIDER_COLORS } from "../types";
+import { alignedDiff3 } from "../lib/diff";
+import type { DiffToken } from "../lib/diff";
 
 /** documents.un.org language codes */
 const DOC_LANG_CODES: Record<string, string> = {
-  en: 'en', fr: 'fr', es: 'es', ar: 'ar', zh: 'zh', ru: 'ru',
+  en: "en",
+  fr: "fr",
+  es: "es",
+  ar: "ar",
+  zh: "zh",
+  ru: "ru",
 };
 
 interface Props {
@@ -17,16 +22,16 @@ function renderTokens(tokens: DiffToken[], showDiff: boolean) {
   if (!showDiff) {
     // Plain text: show the transcription text without any highlighting
     return tokens.map((token, i) => {
-      if (token.type === 'equal') return <span key={i}>{token.text}</span>;
-      if (token.type === 'substitute') return <span key={i}>{token.text}</span>;
-      if (token.type === 'insert') return <span key={i}>{token.text}</span>;
+      if (token.type === "equal") return <span key={i}>{token.text}</span>;
+      if (token.type === "substitute") return <span key={i}>{token.text}</span>;
+      if (token.type === "insert") return <span key={i}>{token.text}</span>;
       // delete tokens are ref-only words, skip them in plain mode
       return null;
     });
   }
   return tokens.map((token, i) => {
-    if (token.type === 'equal') return <span key={i}>{token.text}</span>;
-    if (token.type === 'substitute') {
+    if (token.type === "equal") return <span key={i}>{token.text}</span>;
+    if (token.type === "substitute") {
       if (token.punctOnly) {
         return (
           <span key={i} className="diff-punct">
@@ -42,8 +47,18 @@ function renderTokens(tokens: DiffToken[], showDiff: boolean) {
         </span>
       );
     }
-    if (token.type === 'delete') return <span key={i} className="diff-delete">{token.text}</span>;
-    if (token.type === 'insert') return <span key={i} className="diff-insert">{token.text}</span>;
+    if (token.type === "delete")
+      return (
+        <span key={i} className="diff-delete">
+          {token.text}
+        </span>
+      );
+    if (token.type === "insert")
+      return (
+        <span key={i} className="diff-insert">
+          {token.text}
+        </span>
+      );
     return null;
   });
 }
@@ -57,7 +72,12 @@ function MetricBadge({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ProviderHeader({ provider, result, availableProviders, onChange }: {
+function ProviderHeader({
+  provider,
+  result,
+  availableProviders,
+  onChange,
+}: {
   provider: string;
   result: Result | undefined;
   availableProviders: string[];
@@ -68,31 +88,41 @@ function ProviderHeader({ provider, result, availableProviders, onChange }: {
       <select
         className="diff-provider-select"
         value={provider}
-        onChange={e => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         style={{ borderColor: PROVIDER_COLORS[provider] }}
       >
-        {availableProviders.map(p => (
-          <option key={p} value={p}>{PROVIDER_LABELS[p] || p}</option>
+        {availableProviders.map((p) => (
+          <option key={p} value={p}>
+            {PROVIDER_LABELS[p] || p}
+          </option>
         ))}
       </select>
       {result && (
         <div className="diff-metric-row">
-          <MetricBadge label="WER" value={`${(result.wer * 100).toFixed(1)}%`} />
-          <MetricBadge label="nWER" value={`${(result.normalizedWer * 100).toFixed(1)}%`} />
-          <MetricBadge label="CER" value={`${(result.cer * 100).toFixed(1)}%`} />
+          <MetricBadge
+            label="WER"
+            value={`${(result.wer * 100).toFixed(1)}%`}
+          />
+          <MetricBadge
+            label="nWER"
+            value={`${(result.normalizedWer * 100).toFixed(1)}%`}
+          />
+          <MetricBadge
+            label="CER"
+            value={`${(result.cer * 100).toFixed(1)}%`}
+          />
         </div>
       )}
     </div>
   );
 }
 
-
 export function DiffView({ data }: Props) {
   const symbols = useMemo(() => Object.keys(data.groundTruth).sort(), [data]);
-  const [selectedSymbol, setSelectedSymbol] = useState(symbols[0] || '');
-  const [selectedLang, setSelectedLang] = useState('en');
-  const [providerA, setProviderA] = useState('assemblyai');
-  const [providerB, setProviderB] = useState('azure-openai');
+  const [selectedSymbol, setSelectedSymbol] = useState(symbols[0] || "");
+  const [selectedLang, setSelectedLang] = useState("en");
+  const [providerA, setProviderA] = useState("assemblyai");
+  const [providerB, setProviderB] = useState("azure-openai");
   const [showDiff, setShowDiff] = useState(true);
 
   const availableLangs = useMemo(() => {
@@ -101,13 +131,18 @@ export function DiffView({ data }: Props) {
   }, [selectedSymbol, data]);
 
   const availableProviders = useMemo(() => {
-    if (!selectedSymbol || !data.transcriptions[selectedSymbol]?.[selectedLang]) return [];
-    return Object.keys(data.transcriptions[selectedSymbol][selectedLang]).sort();
+    if (!selectedSymbol || !data.transcriptions[selectedSymbol]?.[selectedLang])
+      return [];
+    return Object.keys(
+      data.transcriptions[selectedSymbol][selectedLang],
+    ).sort();
   }, [selectedSymbol, selectedLang, data]);
 
-  const groundTruth = data.groundTruth[selectedSymbol]?.[selectedLang] || '';
-  const textA = data.transcriptions[selectedSymbol]?.[selectedLang]?.[providerA] || '';
-  const textB = data.transcriptions[selectedSymbol]?.[selectedLang]?.[providerB] || '';
+  const groundTruth = data.groundTruth[selectedSymbol]?.[selectedLang] || "";
+  const textA =
+    data.transcriptions[selectedSymbol]?.[selectedLang]?.[providerA] || "";
+  const textB =
+    data.transcriptions[selectedSymbol]?.[selectedLang]?.[providerB] || "";
 
   const alignedRows = useMemo(() => {
     if (!groundTruth || (!textA && !textB)) return [];
@@ -115,16 +150,22 @@ export function DiffView({ data }: Props) {
   }, [groundTruth, textA, textB]);
 
   const resultA = data.results.find(
-    r => r.symbol === selectedSymbol && r.language === selectedLang && r.provider === providerA
+    (r) =>
+      r.symbol === selectedSymbol &&
+      r.language === selectedLang &&
+      r.provider === providerA,
   );
   const resultB = data.results.find(
-    r => r.symbol === selectedSymbol && r.language === selectedLang && r.provider === providerB
+    (r) =>
+      r.symbol === selectedSymbol &&
+      r.language === selectedLang &&
+      r.provider === providerB,
   );
 
   // Source links
   const session = data.sessions[selectedSymbol];
   const pvUrl = selectedSymbol
-    ? `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(selectedSymbol)}&l=${DOC_LANG_CODES[selectedLang] || 'en'}`
+    ? `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(selectedSymbol)}&l=${DOC_LANG_CODES[selectedLang] || "en"}`
     : null;
   const webtvUrl = session?.assetId
     ? `https://webtv.un.org/en/asset/${session.assetId}`
@@ -139,11 +180,14 @@ export function DiffView({ data }: Props) {
           <select
             className="session-select"
             value={selectedSymbol}
-            onChange={e => setSelectedSymbol(e.target.value)}
+            onChange={(e) => setSelectedSymbol(e.target.value)}
           >
-            {symbols.map(s => (
+            {symbols.map((s) => (
               <option key={s} value={s}>
-                {s} {data.sessions[s]?.notes ? `\u2014 ${data.sessions[s].notes.split('(')[0].trim().slice(0, 60)}` : ''}
+                {s}{" "}
+                {data.sessions[s]?.notes
+                  ? `\u2014 ${data.sessions[s].notes.split("(")[0].trim().slice(0, 60)}`
+                  : ""}
               </option>
             ))}
           </select>
@@ -151,10 +195,10 @@ export function DiffView({ data }: Props) {
         <div className="diff-filter-item">
           <span className="filter-label">Language</span>
           <div className="filter-group">
-            {availableLangs.map(lang => (
+            {availableLangs.map((lang) => (
               <button
                 key={lang}
-                className={`chip ${selectedLang === lang ? 'active' : ''}`}
+                className={`chip ${selectedLang === lang ? "active" : ""}`}
                 onClick={() => setSelectedLang(lang)}
               >
                 {LANGUAGE_NAMES[lang] || lang}
@@ -164,14 +208,24 @@ export function DiffView({ data }: Props) {
         </div>
         {/* Source links inline */}
         {(pvUrl || webtvUrl) && (
-          <div className="diff-filter-item" style={{ marginLeft: 'auto' }}>
+          <div className="diff-filter-item" style={{ marginLeft: "auto" }}>
             {pvUrl && (
-              <a href={pvUrl} target="_blank" rel="noopener" className="source-link">
+              <a
+                href={pvUrl}
+                target="_blank"
+                rel="noopener"
+                className="source-link"
+              >
                 Verbatim Record
               </a>
             )}
             {webtvUrl && (
-              <a href={webtvUrl} target="_blank" rel="noopener" className="source-link">
+              <a
+                href={webtvUrl}
+                target="_blank"
+                rel="noopener"
+                className="source-link"
+              >
                 Web TV
               </a>
             )}
@@ -185,25 +239,34 @@ export function DiffView({ data }: Props) {
           {showDiff && (
             <>
               <div className="diff-legend-item">
-                <div className="diff-legend-swatch" style={{ background: '#fecaca' }} />
+                <div
+                  className="diff-legend-swatch"
+                  style={{ background: "#fecaca" }}
+                />
                 <span>Missed from reference</span>
               </div>
               <div className="diff-legend-item">
-                <div className="diff-legend-swatch" style={{ background: '#bbf7d0' }} />
+                <div
+                  className="diff-legend-swatch"
+                  style={{ background: "#bbf7d0" }}
+                />
                 <span>Added by transcription</span>
               </div>
               <div className="diff-legend-item">
-                <div className="diff-legend-swatch" style={{ background: '#e5e7eb' }} />
+                <div
+                  className="diff-legend-swatch"
+                  style={{ background: "#e5e7eb" }}
+                />
                 <span>Punctuation only</span>
               </div>
             </>
           )}
           <button
-            className={`chip ${showDiff ? 'active' : ''}`}
-            onClick={() => setShowDiff(d => !d)}
-            style={{ marginLeft: 'auto' }}
+            className={`chip ${showDiff ? "active" : ""}`}
+            onClick={() => setShowDiff((d) => !d)}
+            style={{ marginLeft: "auto" }}
           >
-            {showDiff ? 'Hide diff' : 'Show diff'}
+            {showDiff ? "Hide diff" : "Show diff"}
           </button>
         </div>
       )}
@@ -218,7 +281,10 @@ export function DiffView({ data }: Props) {
                 {resultA && (
                   <span className="diff-metric-row">
                     <span className="diff-metric-badge">
-                      <span className="diff-metric-value" style={{ opacity: 0.5 }}>
+                      <span
+                        className="diff-metric-value"
+                        style={{ opacity: 0.5 }}
+                      >
                         {resultA.refLength} words
                       </span>
                     </span>
@@ -240,24 +306,45 @@ export function DiffView({ data }: Props) {
             </div>
             {alignedRows.map((row, i) => (
               <div key={i} className="diff-3col-row">
-                <div className={`diff-cell diff-cell-border ${!row.ref ? 'diff-cell-empty' : ''}`}>
+                <div
+                  className={`diff-cell diff-cell-border ${!row.ref ? "diff-cell-empty" : ""}`}
+                >
                   {row.ref || <span style={{ opacity: 0.2 }}>&nbsp;</span>}
                 </div>
-                <div className={`diff-cell diff-cell-border ${row.colA.length > 0 && !row.ref ? 'diff-row-added' : row.colA.length > 0 && row.ref ? 'diff-row-changed' : 'diff-cell-empty'}`}>
-                  {row.colA.length > 0 ? renderTokens(row.colA, showDiff) : <span style={{ opacity: 0.2 }}>&nbsp;</span>}
+                <div
+                  className={`diff-cell diff-cell-border ${row.colA.length > 0 && !row.ref ? "diff-row-added" : row.colA.length > 0 && row.ref ? "diff-row-changed" : "diff-cell-empty"}`}
+                >
+                  {row.colA.length > 0 ? (
+                    renderTokens(row.colA, showDiff)
+                  ) : (
+                    <span style={{ opacity: 0.2 }}>&nbsp;</span>
+                  )}
                 </div>
-                <div className={`diff-cell ${row.colB.length > 0 && !row.ref ? 'diff-row-added' : row.colB.length > 0 && row.ref ? 'diff-row-changed' : 'diff-cell-empty'}`}>
-                  {row.colB.length > 0 ? renderTokens(row.colB, showDiff) : <span style={{ opacity: 0.2 }}>&nbsp;</span>}
+                <div
+                  className={`diff-cell ${row.colB.length > 0 && !row.ref ? "diff-row-added" : row.colB.length > 0 && row.ref ? "diff-row-changed" : "diff-cell-empty"}`}
+                >
+                  {row.colB.length > 0 ? (
+                    renderTokens(row.colB, showDiff)
+                  ) : (
+                    <span style={{ opacity: 0.2 }}>&nbsp;</span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
       ) : (
-        <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
+        <div
+          className="card"
+          style={{
+            textAlign: "center",
+            padding: "3rem",
+            color: "var(--text-dim)",
+          }}
+        >
           {!groundTruth
-            ? 'No ground truth available for this language'
-            : 'No transcriptions available for this provider/language combination'}
+            ? "No ground truth available for this language"
+            : "No transcriptions available for this provider/language combination"}
         </div>
       )}
     </div>

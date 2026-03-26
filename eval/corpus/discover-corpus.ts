@@ -9,11 +9,18 @@
  *   tsx eval/corpus/discover-corpus.ts
  *   tsx eval/corpus/discover-corpus.ts --year=2024 --target=30
  */
-import '../../lib/load-env';
-import { pvDocumentExists } from '../ground-truth/documents-api';
+import "../../lib/load-env";
+import { pvDocumentExists } from "../ground-truth/documents-api";
 
-const YEAR = parseInt(process.argv.find(a => a.startsWith('--year='))?.replace('--year=', '') ?? '2024');
-const TARGET = parseInt(process.argv.find(a => a.startsWith('--target='))?.replace('--target=', '') ?? '30');
+const YEAR = parseInt(
+  process.argv.find((a) => a.startsWith("--year="))?.replace("--year=", "") ??
+    "2024",
+);
+const TARGET = parseInt(
+  process.argv
+    .find((a) => a.startsWith("--target="))
+    ?.replace("--target=", "") ?? "30",
+);
 
 interface WeekEntry {
   assetId: string;
@@ -40,24 +47,38 @@ async function scrapeDate(date: string): Promise<WeekEntry[]> {
 
     // Extract all text nodes from this block
     const texts = (block.match(/>([^<]{3,300})</g) || [])
-      .map(t => t.replace(/^>|<$/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').trim())
-      .filter(t => t.length > 2);
+      .map((t) =>
+        t
+          .replace(/^>|<$/g, "")
+          .replace(/&amp;/g, "&")
+          .replace(/&nbsp;/g, " ")
+          .trim(),
+      )
+      .filter((t) => t.length > 2);
 
     // Duration is first match of HH:MM:SS pattern (second timestamp)
-    const durs = texts.filter(t => /^\d{2}:\d{2}:\d{2}$/.test(t));
-    const dur = durs[1] || durs[0] || '00:00:00';
+    const durs = texts.filter((t) => /^\d{2}:\d{2}:\d{2}$/.test(t));
+    const dur = durs[1] || durs[0] || "00:00:00";
 
     // Category and title: look for known category strings
-    const catPatterns = ['Security Council', 'General Assembly', 'Economic and Social Council'];
-    const category = texts.find(t => catPatterns.some(p => t.includes(p))) || '';
+    const catPatterns = [
+      "Security Council",
+      "General Assembly",
+      "Economic and Social Council",
+    ];
+    const category =
+      texts.find((t) => catPatterns.some((p) => t.includes(p))) || "";
     if (!category) continue;
 
     // Title: longest text that contains "meeting" or "Committee" or "plenary"
-    const title = texts.find(t =>
-      /meeting|committee|plenary/i.test(t) && t !== category
-    ) || texts.filter(t => t.length > 20 && t !== category)[0] || '';
+    const title =
+      texts.find(
+        (t) => /meeting|committee|plenary/i.test(t) && t !== category,
+      ) ||
+      texts.filter((t) => t.length > 20 && t !== category)[0] ||
+      "";
 
-    const [h, m, s] = dur.split(':').map(Number);
+    const [h, m, s] = dur.split(":").map(Number);
 
     results.push({
       assetId: assetM[1],
@@ -80,7 +101,9 @@ function parseMeetingSymbol(title: string, category: string): string | null {
 
   // First Committee: "First Committee, 7th plenary meeting - General Assembly, 79th session"
   // → A/C.1/79/PV.7
-  const firstCommM = title.match(/First Committee.*?(\d+)(?:st|nd|rd|th)\s+(?:plenary\s+)?meeting.*?(\d+)(?:st|nd|rd|th)\s+session/i);
+  const firstCommM = title.match(
+    /First Committee.*?(\d+)(?:st|nd|rd|th)\s+(?:plenary\s+)?meeting.*?(\d+)(?:st|nd|rd|th)\s+session/i,
+  );
   if (firstCommM && /general assembly/i.test(category)) {
     return `A/C.1/${firstCommM[2]}/PV.${firstCommM[1]}`;
   }
@@ -89,8 +112,12 @@ function parseMeetingSymbol(title: string, category: string): string | null {
   // → A/79/PV.21
   const sessionM = title.match(/(\d+)(?:st|nd|rd|th)\s+session/);
   const plenaryM = title.match(/(\d+)(?:st|nd|rd|th)\s+plenary\s+meeting/);
-  if (sessionM && plenaryM && /general assembly/i.test(category) &&
-      !/committee/i.test(title)) {
+  if (
+    sessionM &&
+    plenaryM &&
+    /general assembly/i.test(category) &&
+    !/committee/i.test(title)
+  ) {
     return `A/${sessionM[1]}/PV.${plenaryM[1]}`;
   }
 
@@ -103,13 +130,17 @@ function getDatesToScan(year: number): string[] {
   const start = new Date(year, 0, 1);
   const end = new Date(year, 11, 31);
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 3)) {
-    dates.push(d.toISOString().split('T')[0]);
+    dates.push(d.toISOString().split("T")[0]);
   }
   return dates;
 }
 
 /** Run async tasks with bounded concurrency. */
-async function pMap<T, R>(items: T[], fn: (item: T) => Promise<R>, concurrency: number): Promise<R[]> {
+async function pMap<T, R>(
+  items: T[],
+  fn: (item: T) => Promise<R>,
+  concurrency: number,
+): Promise<R[]> {
   const results: R[] = new Array(items.length);
   let i = 0;
   async function worker() {
@@ -132,19 +163,28 @@ async function main() {
   const all: Array<WeekEntry & { symbol: string; date: string }> = [];
   let scanned = 0;
 
-  await pMap(dates, async (date) => {
-    const entries = await scrapeDate(date);
-    for (const e of entries) {
-      const symbol = parseMeetingSymbol(e.title, e.category);
-      if (symbol) all.push({ ...e, symbol, date });
-    }
-    scanned++;
-    if (scanned % 20 === 0) process.stdout.write(`\r  ${scanned}/${dates.length} dates scanned, ${all.length} found`);
-  }, 8);
-  console.log(`\r  Scanned ${scanned} dates, found ${all.length} meetings        `);
+  await pMap(
+    dates,
+    async (date) => {
+      const entries = await scrapeDate(date);
+      for (const e of entries) {
+        const symbol = parseMeetingSymbol(e.title, e.category);
+        if (symbol) all.push({ ...e, symbol, date });
+      }
+      scanned++;
+      if (scanned % 20 === 0)
+        process.stdout.write(
+          `\r  ${scanned}/${dates.length} dates scanned, ${all.length} found`,
+        );
+    },
+    8,
+  );
+  console.log(
+    `\r  Scanned ${scanned} dates, found ${all.length} meetings        `,
+  );
 
   // Deduplicate by symbol
-  const bySymbol = new Map<string, typeof all[0]>();
+  const bySymbol = new Map<string, (typeof all)[0]>();
   for (const e of all) {
     if (!bySymbol.has(e.symbol)) bySymbol.set(e.symbol, e);
   }
@@ -152,11 +192,13 @@ async function main() {
   console.log(`  ${unique.length} unique sessions`);
 
   // Categorize
-  const sc = unique.filter(e => e.symbol.startsWith('S/PV.'));
-  const ga = unique.filter(e => /^A\/\d+\/PV\./.test(e.symbol));
-  const c1 = unique.filter(e => e.symbol.startsWith('A/C.1/'));
+  const sc = unique.filter((e) => e.symbol.startsWith("S/PV."));
+  const ga = unique.filter((e) => /^A\/\d+\/PV\./.test(e.symbol));
+  const c1 = unique.filter((e) => e.symbol.startsWith("A/C.1/"));
 
-  console.log(`\n  SC: ${sc.length}, GA plenary: ${ga.length}, First Committee: ${c1.length}`);
+  console.log(
+    `\n  SC: ${sc.length}, GA plenary: ${ga.length}, First Committee: ${c1.length}`,
+  );
 
   // Stratified sample — verify each category separately to hit quotas
   const shuffle = <T>(arr: T[]) => [...arr].sort(() => Math.random() - 0.5);
@@ -167,48 +209,65 @@ async function main() {
   async function verifyCategory(
     candidates: typeof unique,
     target: number,
-    label: string
+    label: string,
   ): Promise<Array<{ symbol: string; assetId: string; notes: string }>> {
-    const result: Array<{ symbol: string; assetId: string; notes: string }> = [];
+    const result: Array<{ symbol: string; assetId: string; notes: string }> =
+      [];
     const shuffled = shuffle(candidates);
 
     // Verify up to 2×target candidates in parallel (stop early once target is hit)
     const toCheck = shuffled.slice(0, Math.min(target * 2, shuffled.length));
-    await pMap(toCheck, async (c) => {
-      if (result.length >= target) return;
-      const exists = await pvDocumentExists(c.symbol, 'en');
-      if (exists && result.length < target) {
-        result.push({ symbol: c.symbol, assetId: c.assetId, notes: `${c.title} (${c.duration})` });
-        console.log(`  ✓ ${c.symbol} [${label}]`);
-      }
-    }, 8);
+    await pMap(
+      toCheck,
+      async (c) => {
+        if (result.length >= target) return;
+        const exists = await pvDocumentExists(c.symbol, "en");
+        if (exists && result.length < target) {
+          result.push({
+            symbol: c.symbol,
+            assetId: c.assetId,
+            notes: `${c.title} (${c.duration})`,
+          });
+          console.log(`  ✓ ${c.symbol} [${label}]`);
+        }
+      },
+      8,
+    );
 
     // If still short, check remaining candidates serially
     for (const c of shuffled.slice(toCheck.length)) {
       if (result.length >= target) break;
-      const exists = await pvDocumentExists(c.symbol, 'en');
+      const exists = await pvDocumentExists(c.symbol, "en");
       if (exists) {
-        result.push({ symbol: c.symbol, assetId: c.assetId, notes: `${c.title} (${c.duration})` });
+        result.push({
+          symbol: c.symbol,
+          assetId: c.assetId,
+          notes: `${c.title} (${c.duration})`,
+        });
         console.log(`  ✓ ${c.symbol} [${label}]`);
       }
     }
     return result;
   }
 
-  console.log(`\nVerifying candidates (targets: ${targetSC} SC, ${targetGA} GA, ${targetC1} C1)...`);
+  console.log(
+    `\nVerifying candidates (targets: ${targetSC} SC, ${targetGA} GA, ${targetC1} C1)...`,
+  );
   const [finalSC, finalGA, finalC1] = await Promise.all([
-    verifyCategory(sc, targetSC, 'SC'),
-    verifyCategory(ga, targetGA, 'GA'),
-    verifyCategory(c1, targetC1, 'C1'),
+    verifyCategory(sc, targetSC, "SC"),
+    verifyCategory(ga, targetGA, "GA"),
+    verifyCategory(c1, targetC1, "C1"),
   ]);
   const final = [...finalSC, ...finalGA, ...finalC1];
 
-  console.log(`\n${'='.repeat(60)}`);
-  console.log(`CORPUS SESSIONS (${final.length}): ${finalSC.length} SC, ${finalGA.length} GA, ${finalC1.length} First Comm`);
-  console.log('='.repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
+  console.log(
+    `CORPUS SESSIONS (${final.length}): ${finalSC.length} SC, ${finalGA.length} GA, ${finalC1.length} First Comm`,
+  );
+  console.log("=".repeat(60));
 
   const output = JSON.stringify(final, null, 2);
-  console.log('\nsessions.json:');
+  console.log("\nsessions.json:");
   console.log(output);
 
   // Write to sessions.json
@@ -216,16 +275,21 @@ async function main() {
   // Read existing sessions to merge
   let existing: typeof final = [];
   try {
-    existing = JSON.parse(require('fs').readFileSync(sessionsPath, 'utf-8'));
+    existing = JSON.parse(require("fs").readFileSync(sessionsPath, "utf-8"));
   } catch {}
 
   const merged = [...existing];
   for (const s of final) {
-    if (!merged.find(e => e.symbol === s.symbol)) merged.push(s);
+    if (!merged.find((e) => e.symbol === s.symbol)) merged.push(s);
   }
 
-  require('fs').writeFileSync(sessionsPath, JSON.stringify(merged, null, 2));
-  console.log(`\nMerged ${final.length} new sessions into ${sessionsPath} (total: ${merged.length})`);
+  require("fs").writeFileSync(sessionsPath, JSON.stringify(merged, null, 2));
+  console.log(
+    `\nMerged ${final.length} new sessions into ${sessionsPath} (total: ${merged.length})`,
+  );
 }
 
-main().catch(err => { console.error('Fatal:', err); process.exit(1); });
+main().catch((err) => {
+  console.error("Fatal:", err);
+  process.exit(1);
+});

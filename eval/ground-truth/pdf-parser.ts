@@ -1,5 +1,5 @@
-import { PDFParse } from 'pdf-parse';
-import { stripPDFArtifacts } from './normalizer';
+import { PDFParse } from "pdf-parse";
+import { stripPDFArtifacts } from "./normalizer";
 
 export interface ParsedSpeakerTurn {
   name: string;
@@ -28,10 +28,12 @@ const SPEAKER_PATTERNS = [
   /^([\p{L}\s'-]{2,40})\s*\(([^)]+)\)\s*(?:\([^)]+\)\s*)?:\s*/mu,
 ];
 
-export async function parsePVDocument(pdfBuffer: Buffer): Promise<ParsedPVDocument> {
+export async function parsePVDocument(
+  pdfBuffer: Buffer,
+): Promise<ParsedPVDocument> {
   const parser = new PDFParse({ data: pdfBuffer });
   const data = await parser.getText();
-  const rawText = data.pages.map(p => p.text).join('\n');
+  const rawText = data.pages.map((p) => p.text).join("\n");
 
   const cleanedText = stripPDFArtifacts(rawText);
   const speakers: ParsedSpeakerTurn[] = [];
@@ -41,7 +43,12 @@ export async function parsePVDocument(pdfBuffer: Buffer): Promise<ParsedPVDocume
   let lastSpeaker: ParsedSpeakerTurn | null = null;
 
   while (remaining.length > 0) {
-    let earliestMatch: { index: number; name: string; affiliation?: string; matchLength: number } | null = null;
+    let earliestMatch: {
+      index: number;
+      name: string;
+      affiliation?: string;
+      matchLength: number;
+    } | null = null;
 
     for (const pattern of SPEAKER_PATTERNS) {
       const match = remaining.match(pattern);
@@ -60,24 +67,26 @@ export async function parsePVDocument(pdfBuffer: Buffer): Promise<ParsedPVDocume
     if (!earliestMatch) {
       // No more speakers found — append remaining to last speaker or as standalone
       if (lastSpeaker) {
-        lastSpeaker.text += ' ' + remaining.trim();
+        lastSpeaker.text += " " + remaining.trim();
       }
       break;
     }
 
     // Text before this speaker belongs to previous speaker
     if (earliestMatch.index > 0 && lastSpeaker) {
-      lastSpeaker.text += ' ' + remaining.slice(0, earliestMatch.index).trim();
+      lastSpeaker.text += " " + remaining.slice(0, earliestMatch.index).trim();
     }
 
     lastSpeaker = {
       name: earliestMatch.name,
       affiliation: earliestMatch.affiliation,
-      text: '',
+      text: "",
     };
     speakers.push(lastSpeaker);
 
-    remaining = remaining.slice(earliestMatch.index + earliestMatch.matchLength);
+    remaining = remaining.slice(
+      earliestMatch.index + earliestMatch.matchLength,
+    );
   }
 
   return {

@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
-import '../lib/load-env';
-import { getTursoClient } from '../lib/turso';
-import { transcribeEntry, pollTranscription } from '../lib/transcription';
-import { resolveEntryId as resolveEntryIdHelper } from '../lib/kaltura-helpers';
+import "../lib/load-env";
+import { getTursoClient } from "../lib/turso";
+import { transcribeEntry, pollTranscription } from "../lib/transcription";
+import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 
 const usage = `Usage:
   npm run retranscribe -- <asset|entry-id>
@@ -17,51 +17,59 @@ if (!rawArg) {
 
 async function resolveEntryId(input: string) {
   const decoded = decodeURIComponent(input.trim());
-  if (!decoded) throw new Error('Empty id');
+  if (!decoded) throw new Error("Empty id");
   const entryId = await resolveEntryIdHelper(decoded);
   if (!entryId) throw new Error(`Unable to resolve entry ID for: ${input}`);
   return entryId;
 }
 
 async function loadTargets(arg: string) {
-  if (arg.toLowerCase() === 'all') {
+  if (arg.toLowerCase() === "all") {
     const client = await getTursoClient();
-    const rows = await client.execute({ 
-      sql: 'SELECT DISTINCT entry_id FROM transcripts WHERE status = \'completed\' AND start_time IS NULL AND end_time IS NULL' 
+    const rows = await client.execute({
+      sql: "SELECT DISTINCT entry_id FROM transcripts WHERE status = 'completed' AND start_time IS NULL AND end_time IS NULL",
     });
-    return rows.rows.map(row => row.entry_id as string);
+    return rows.rows.map((row) => row.entry_id as string);
   }
   return [await resolveEntryId(arg)];
 }
 
-async function pollUntilComplete(transcriptId: string, entryId: string): Promise<void> {
+async function pollUntilComplete(
+  transcriptId: string,
+  entryId: string,
+): Promise<void> {
   const maxAttempts = 120; // 10 minutes max
   const pollInterval = 5000; // 5 seconds
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const result = await pollTranscription(transcriptId);
-    
-    if (result.stage === 'completed') {
+
+    if (result.stage === "completed") {
       console.log(`  ✓ Completed ${entryId}`);
       return;
-    } else if (result.stage === 'error') {
-      throw new Error(`Transcription failed for ${entryId}: ${result.error_message}`);
+    } else if (result.stage === "error") {
+      throw new Error(
+        `Transcription failed for ${entryId}: ${result.error_message}`,
+      );
     }
-    
-    if (attempt % 6 === 0) { // Every 30s
-      console.log(`  ⏳ Still processing ${entryId} (${result.stage})... (${attempt * 5}s)`);
+
+    if (attempt % 6 === 0) {
+      // Every 30s
+      console.log(
+        `  ⏳ Still processing ${entryId} (${result.stage})... (${attempt * 5}s)`,
+      );
     }
-    
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
+
+    await new Promise((resolve) => setTimeout(resolve, pollInterval));
   }
-  
+
   throw new Error(`Timeout polling ${entryId}`);
 }
 
 async function run() {
   const targets = await loadTargets(rawArg);
   const total = targets.length;
-  
+
   console.log(`Processing ${total} entry/entries...\n`);
 
   for (const entryId of targets) {
@@ -74,8 +82,7 @@ async function run() {
   process.exit(0);
 }
 
-run().catch(error => {
-  console.error('Retranscribe failed:', error);
+run().catch((error) => {
+  console.error("Retranscribe failed:", error);
   process.exit(1);
 });
-

@@ -1,24 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getVideoById, getVideoMetadata } from '@/lib/un-api';
-import { getTranscript } from '@/lib/turso';
-import { getSpeakerMapping, SpeakerInfo, formatSpeakerInfo } from '@/lib/speakers';
-import { getCountryName } from '@/lib/country-lookup';
-import { resolveEntryId } from '@/lib/kaltura-helpers';
-import { extractKalturaId } from '@/lib/kaltura';
+import { NextRequest, NextResponse } from "next/server";
+import { getVideoById, getVideoMetadata } from "@/lib/un-api";
+import { getTranscript } from "@/lib/turso";
+import {
+  getSpeakerMapping,
+  SpeakerInfo,
+  formatSpeakerInfo,
+} from "@/lib/speakers";
+import { getCountryName } from "@/lib/country-lookup";
+import { resolveEntryId } from "@/lib/kaltura-helpers";
+import { extractKalturaId } from "@/lib/kaltura";
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
     const decodedId = decodeURIComponent(id);
-    
+
     // Get video info - search backwards from today (fast for recent videos)
     const video = await getVideoById(decodedId);
 
     if (!video) {
-      return NextResponse.json({ error: 'Video not found' }, { status: 404 });
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
     // Extract Kaltura ID for response
@@ -29,48 +33,49 @@ export async function GET(
 
     // Resolve entry ID (checks cache first, then Kaltura API)
     const entryId = await resolveEntryId(video.id);
-    
+
     if (!entryId) {
       const response = NextResponse.json({
         video,
         metadata,
         transcript: null,
-        error: 'Unable to resolve video entry ID'
+        error: "Unable to resolve video entry ID",
       });
-      response.headers.set('Content-Type', 'application/json; charset=utf-8');
+      response.headers.set("Content-Type", "application/json; charset=utf-8");
       return response;
     }
 
     // Check Turso for transcript
     const transcript = await getTranscript(entryId);
-    
+
     if (!transcript) {
       const response = NextResponse.json({
         video,
         metadata,
         transcript: null,
-        message: 'No transcript available'
+        message: "No transcript available",
       });
-      response.headers.set('Content-Type', 'application/json; charset=utf-8');
+      response.headers.set("Content-Type", "application/json; charset=utf-8");
       return response;
     }
 
-    if (transcript.status !== 'completed') {
+    if (transcript.status !== "completed") {
       const response = NextResponse.json({
         video,
         metadata,
         transcript: {
           status: transcript.status,
-          transcriptId: transcript.transcript_id
+          transcriptId: transcript.transcript_id,
         },
-        message: 'Transcript not completed'
+        message: "Transcript not completed",
       });
-      response.headers.set('Content-Type', 'application/json; charset=utf-8');
+      response.headers.set("Content-Type", "application/json; charset=utf-8");
       return response;
     }
 
     // Get speaker mappings
-    const speakerMappings = await getSpeakerMapping(transcript.transcript_id) || {};
+    const speakerMappings =
+      (await getSpeakerMapping(transcript.transcript_id)) || {};
 
     // Load country names for affiliations
     const countryNames = new Map<string, string>();
@@ -80,7 +85,7 @@ export async function GET(
         iso3Codes.add(info.affiliation);
       }
     });
-    
+
     for (const code of iso3Codes) {
       const name = await getCountryName(code);
       if (name) {
@@ -90,26 +95,29 @@ export async function GET(
 
     const topics = transcript.content.topics || {};
 
-    const transcriptData = transcript.content.statements.map((stmt, index: number) => {
-      const info = speakerMappings[index.toString()];
-      
-      return {
-        statement_number: index + 1,
-        paragraphs: stmt.paragraphs.map(para => ({
-          sentences: para.sentences.map(sent => ({
-            text: sent.text,
-            start: sent.start / 1000,
-            end: sent.end / 1000,
-            topics: sent.topic_keys?.map(key => ({
-              key,
-              label: topics[key]?.label || key,
-              description: topics[key]?.description || '',
-            })) || [],
+    const transcriptData = transcript.content.statements.map(
+      (stmt, index: number) => {
+        const info = speakerMappings[index.toString()];
+
+        return {
+          statement_number: index + 1,
+          paragraphs: stmt.paragraphs.map((para) => ({
+            sentences: para.sentences.map((sent) => ({
+              text: sent.text,
+              start: sent.start / 1000,
+              end: sent.end / 1000,
+              topics:
+                sent.topic_keys?.map((key) => ({
+                  key,
+                  label: topics[key]?.label || key,
+                  description: topics[key]?.description || "",
+                })) || [],
+            })),
           })),
-        })),
-        speaker: formatSpeakerInfo(info, countryNames),
-      };
-    });
+          speaker: formatSpeakerInfo(info, countryNames),
+        };
+      },
+    );
 
     const response = NextResponse.json({
       video: {
@@ -143,25 +151,23 @@ export async function GET(
         transcript_id: transcript.transcript_id,
         language: transcript.language_code,
         data: transcriptData,
-        topics: Object.values(topics).map(t => ({
+        topics: Object.values(topics).map((t) => ({
           key: t.key,
           label: t.label,
           description: t.description,
         })),
       },
     });
-    
-    response.headers.set('Content-Type', 'application/json; charset=utf-8');
+
+    response.headers.set("Content-Type", "application/json; charset=utf-8");
     return response;
-    
   } catch (error) {
-    console.error('JSON API error:', error);
+    console.error("JSON API error:", error);
     const response = NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
     );
-    response.headers.set('Content-Type', 'application/json; charset=utf-8');
+    response.headers.set("Content-Type", "application/json; charset=utf-8");
     return response;
   }
 }
-

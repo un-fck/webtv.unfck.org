@@ -33,4 +33,3 @@ export function extractKalturaId(assetId: string): string | null {
 
   return null;
 }
-

@@ -1,13 +1,13 @@
 #!/usr/bin/env tsx
-import '../lib/load-env';
-import { resolveEntryId } from '../lib/kaltura-helpers';
-import { getKalturaAudioUrl } from '../lib/transcription';
-import { assemblyai } from '../eval/providers/assemblyai';
-import { azureOpenai } from '../eval/providers/azure-openai';
-import { downloadAudioToTemp, formatTime } from '../eval/utils';
-import type { NormalizedTranscript } from '../eval/providers/types';
-import fs from 'fs';
-import path from 'path';
+import "../lib/load-env";
+import { resolveEntryId } from "../lib/kaltura-helpers";
+import { getKalturaAudioUrl } from "../lib/transcription";
+import { assemblyai } from "../eval/providers/assemblyai";
+import { azureOpenai } from "../eval/providers/azure-openai";
+import { downloadAudioToTemp, formatTime } from "../eval/utils";
+import type { NormalizedTranscript } from "../eval/providers/types";
+import fs from "fs";
+import path from "path";
 
 const usage = `Usage:
   npm run compare-transcribe -- <asset-id|entry-id>
@@ -22,20 +22,24 @@ if (!rawArg) {
 }
 const decodedArg = decodeURIComponent(rawArg.trim());
 
-const outputDir = path.join(process.cwd(), 'transcription-comparisons');
+const outputDir = path.join(process.cwd(), "transcription-comparisons");
 
 function transcriptToText(t: NormalizedTranscript): string {
   if (t.utterances.length > 0) {
-    return t.utterances.map((u, i) =>
-      `[${i + 1}] Speaker ${u.speaker} (${formatTime(u.start)} - ${formatTime(u.end)})\n${u.text}\n`
-    ).join('\n');
+    return t.utterances
+      .map(
+        (u, i) =>
+          `[${i + 1}] Speaker ${u.speaker} (${formatTime(u.start)} - ${formatTime(u.end)})\n${u.text}\n`,
+      )
+      .join("\n");
   }
   return t.fullText;
 }
 
 async function main() {
   const entryId = await resolveEntryId(decodedArg);
-  if (!entryId) throw new Error(`Could not resolve entry ID for: ${decodedArg}`);
+  if (!entryId)
+    throw new Error(`Could not resolve entry ID for: ${decodedArg}`);
 
   console.log(`Entry ID: ${entryId}`);
   const { audioUrl } = await getKalturaAudioUrl(entryId);
@@ -53,8 +57,14 @@ async function main() {
     ]);
 
     // Save raw JSON for debugging
-    fs.writeFileSync(path.join(outputDir, `${entryId}_azure_raw.json`), JSON.stringify(azureTranscript.raw, null, 2));
-    fs.writeFileSync(path.join(outputDir, `${entryId}_assemblyai_raw.json`), JSON.stringify(assemblyTranscript.raw, null, 2));
+    fs.writeFileSync(
+      path.join(outputDir, `${entryId}_azure_raw.json`),
+      JSON.stringify(azureTranscript.raw, null, 2),
+    );
+    fs.writeFileSync(
+      path.join(outputDir, `${entryId}_assemblyai_raw.json`),
+      JSON.stringify(assemblyTranscript.raw, null, 2),
+    );
 
     const azureFile = path.join(outputDir, `${entryId}_azure.txt`);
     const assemblyFile = path.join(outputDir, `${entryId}_assemblyai.txt`);
@@ -65,11 +75,13 @@ async function main() {
     console.log(`  Azure:      ${azureFile}`);
     console.log(`  AssemblyAI: ${assemblyFile}`);
   } finally {
-    try { fs.unlinkSync(tmpPath); } catch {}
+    try {
+      fs.unlinkSync(tmpPath);
+    } catch {}
   }
 }
 
-main().catch(err => {
-  console.error('Error:', err);
+main().catch((err) => {
+  console.error("Error:", err);
   process.exit(1);
 });

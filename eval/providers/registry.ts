@@ -1,23 +1,26 @@
-import type { TranscriptionProvider } from './types';
-import { assemblyai } from './assemblyai';
-import { azureOpenai } from './azure-openai';
-import { elevenlabs } from './elevenlabs';
-import { azureSpeech } from './azure-speech';
-import { googleChirp } from './google-chirp';
-import { gemini } from './gemini';
+import type { TranscriptionProvider } from "./types";
+import { assemblyai } from "./assemblyai";
+import { azureOpenai } from "./azure-openai";
+import { elevenlabs } from "./elevenlabs";
+import { azureSpeech } from "./azure-speech";
+import { googleChirp } from "./google-chirp";
+import { gemini } from "./gemini";
 
 const providers: Record<string, TranscriptionProvider> = {
   assemblyai,
-  'azure-openai': azureOpenai,
+  "azure-openai": azureOpenai,
   elevenlabs,
-  'azure-speech': azureSpeech,
-  'google-chirp': googleChirp,
+  "azure-speech": azureSpeech,
+  "google-chirp": googleChirp,
   gemini,
 };
 
 export function getProvider(name: string): TranscriptionProvider {
   const provider = providers[name];
-  if (!provider) throw new Error(`Unknown provider: ${name}. Available: ${Object.keys(providers).join(', ')}`);
+  if (!provider)
+    throw new Error(
+      `Unknown provider: ${name}. Available: ${Object.keys(providers).join(", ")}`,
+    );
   return provider;
 }
 

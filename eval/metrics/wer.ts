@@ -27,7 +27,12 @@ function editDistance(ref: string[], hyp: string[]) {
 
       if (min === sub) {
         const isSub = ref[i - 1] !== hyp[j - 1] ? 1 : 0;
-        curr.push([sub, prev[j - 1][1] + isSub, prev[j - 1][2], prev[j - 1][3]]);
+        curr.push([
+          sub,
+          prev[j - 1][1] + isSub,
+          prev[j - 1][2],
+          prev[j - 1][3],
+        ]);
       } else if (min === del) {
         curr.push([del, prev[j][1], prev[j][2], prev[j][3] + 1]);
       } else {
@@ -46,14 +51,36 @@ export function computeWER(reference: string, hypothesis: string): WERResult {
   const refWords = reference.split(/\s+/).filter(Boolean);
   const hypWords = hypothesis.split(/\s+/).filter(Boolean);
 
-  const { substitutions, insertions, deletions } = editDistance(refWords, hypWords);
-  const wer = refWords.length === 0 ? (hypWords.length === 0 ? 0 : 1) : (substitutions + insertions + deletions) / refWords.length;
+  const { substitutions, insertions, deletions } = editDistance(
+    refWords,
+    hypWords,
+  );
+  const wer =
+    refWords.length === 0
+      ? hypWords.length === 0
+        ? 0
+        : 1
+      : (substitutions + insertions + deletions) / refWords.length;
 
   // CER
-  const refChars = [...reference.replace(/\s+/g, '')];
-  const hypChars = [...hypothesis.replace(/\s+/g, '')];
+  const refChars = [...reference.replace(/\s+/g, "")];
+  const hypChars = [...hypothesis.replace(/\s+/g, "")];
   const charEdit = editDistance(refChars, hypChars);
-  const cer = refChars.length === 0 ? (hypChars.length === 0 ? 0 : 1) : (charEdit.substitutions + charEdit.insertions + charEdit.deletions) / refChars.length;
+  const cer =
+    refChars.length === 0
+      ? hypChars.length === 0
+        ? 0
+        : 1
+      : (charEdit.substitutions + charEdit.insertions + charEdit.deletions) /
+        refChars.length;
 
-  return { wer, cer, substitutions, insertions, deletions, refLength: refWords.length, hypLength: hypWords.length };
+  return {
+    wer,
+    cer,
+    substitutions,
+    insertions,
+    deletions,
+    refLength: refWords.length,
+    hypLength: hypWords.length,
+  };
 }

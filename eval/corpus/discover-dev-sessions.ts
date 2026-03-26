@@ -3,10 +3,10 @@
  * Discover short SC/GA meetings suitable for eval dev iteration.
  * Checks: audio languages available, PV document exists.
  */
-import '../../lib/load-env';
-import { getAvailableAudioLanguages } from '../../lib/transcription';
-import { resolveEntryId } from '../../lib/kaltura-helpers';
-import { pvDocumentExists } from '../ground-truth/documents-api';
+import "../../lib/load-env";
+import { getAvailableAudioLanguages } from "../../lib/transcription";
+import { resolveEntryId } from "../../lib/kaltura-helpers";
+import { pvDocumentExists } from "../ground-truth/documents-api";
 
 // Scrape UN Web TV schedule for a specific date, looking for SC/GA meetings
 async function scrapeDate(date: string) {
@@ -22,8 +22,10 @@ async function scrapeDate(date: string) {
     durationSeconds: number;
   }> = [];
 
-  const videoPattern = /<h6[^>]*class="text-primary"[^>]*>([^<]+)<\/h6>[\s\S]*?<h4[^>]*>[\s\S]*?href="\/en\/asset\/([^"]+)"[^>]*>[\s\S]*?<div class="field__item">([^<]+)<\/div>/g;
-  const durationPattern = /<span class="badge[^"]*">(\d{2}:\d{2}:\d{2})<\/span>/g;
+  const videoPattern =
+    /<h6[^>]*class="text-primary"[^>]*>([^<]+)<\/h6>[\s\S]*?<h4[^>]*>[\s\S]*?href="\/en\/asset\/([^"]+)"[^>]*>[\s\S]*?<div class="field__item">([^<]+)<\/div>/g;
+  const durationPattern =
+    /<span class="badge[^"]*">(\d{2}:\d{2}:\d{2})<\/span>/g;
 
   // Collect durations
   const durations: string[] = [];
@@ -35,12 +37,12 @@ async function scrapeDate(date: string) {
   for (const match of html.matchAll(videoPattern)) {
     const [, category, assetId, title] = match;
     const cat = category.trim();
-    const dur = durations[dIdx++] || '00:00:00';
+    const dur = durations[dIdx++] || "00:00:00";
 
     // Only SC or GA meetings
     if (!/security council|general assembly/i.test(cat)) continue;
 
-    const [h, m, s] = dur.split(':').map(Number);
+    const [h, m, s] = dur.split(":").map(Number);
     const seconds = h * 3600 + m * 60 + s;
 
     results.push({
@@ -73,7 +75,7 @@ function parseMeetingSymbol(title: string, category: string): string | null {
 }
 
 async function main() {
-  console.log('Discovering short SC/GA sessions for eval dev set...\n');
+  console.log("Discovering short SC/GA sessions for eval dev set...\n");
 
   const candidates: Array<{
     symbol: string;
@@ -91,7 +93,7 @@ async function main() {
   for (let i = 0; i < daysBack; i++) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split("T")[0];
 
     if (i % 10 === 0) console.log(`Scanning ${dateStr}...`);
 
@@ -124,7 +126,7 @@ async function main() {
     console.log(`Checking ${c.symbol} (${c.duration}, ${c.title})...`);
 
     // Check PV exists (English)
-    const pvExists = await pvDocumentExists(c.symbol, 'en');
+    const pvExists = await pvDocumentExists(c.symbol, "en");
     if (!pvExists) {
       console.log(`  PV document not found, skipping.`);
       continue;
@@ -139,8 +141,8 @@ async function main() {
       }
 
       const { languages } = await getAvailableAudioLanguages(entryId);
-      const langNames = languages.map(l => l.language);
-      console.log(`  PV: yes | Audio langs: ${langNames.join(', ')}`);
+      const langNames = languages.map((l) => l.language);
+      console.log(`  PV: yes | Audio langs: ${langNames.join(", ")}`);
 
       (c as any).languages = langNames;
       verified.push(c as any);
@@ -151,30 +153,30 @@ async function main() {
     }
   }
 
-  console.log(`\n${'='.repeat(60)}`);
-  console.log('RECOMMENDED DEV SESSIONS:');
-  console.log('='.repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
+  console.log("RECOMMENDED DEV SESSIONS:");
+  console.log("=".repeat(60));
 
   for (const v of verified.slice(0, 3)) {
     console.log(`\n  Symbol:   ${v.symbol}`);
     console.log(`  Asset ID: ${(v as any).assetId}`);
     console.log(`  Title:    ${(v as any).title}`);
     console.log(`  Duration: ${(v as any).duration}`);
-    console.log(`  Langs:    ${(v as any).languages?.join(', ')}`);
+    console.log(`  Langs:    ${(v as any).languages?.join(", ")}`);
   }
 
   // Output sessions.json content
-  const sessions = verified.slice(0, 3).map(v => ({
+  const sessions = verified.slice(0, 3).map((v) => ({
     symbol: v.symbol,
     assetId: (v as any).assetId,
     notes: `${(v as any).title} (${(v as any).duration})`,
   }));
 
-  console.log('\n\nsessions.json content:');
+  console.log("\n\nsessions.json content:");
   console.log(JSON.stringify(sessions, null, 2));
 }
 
-main().catch(err => {
-  console.error('Fatal:', err);
+main().catch((err) => {
+  console.error("Fatal:", err);
   process.exit(1);
 });

@@ -23,6 +23,7 @@ npm run eval -- --languages=en
 ## How It Works
 
 For each session × language × provider:
+
 1. Fetches audio URL from Kaltura (UN Web TV's CDN), for the requested language track
 2. Fetches the PV document PDF from documents.un.org in the same language
 3. Runs the transcription provider on the audio
@@ -74,14 +75,14 @@ Sessions list: `eval/corpus/sessions.json` (20 sessions ≤ 90 min from 2024).
 
 ## Providers
 
-| Provider | Command name | Model | Languages | Pricing |
-|---|---|---|---|---|
-| AssemblyAI | `assemblyai` | Universal-2 | all 6 | ~$0.27/hr |
-| Azure OpenAI | `azure-openai` | gpt-4o-transcribe | all 6 | ~$0.06/hr |
-| ElevenLabs | `elevenlabs` | Scribe v2 | all 6 | ~$0.40/hr |
-| Azure Speech | `azure-speech` | Cognitive Services Batch | all 6 | ~$0.36/hr |
-| Gemini | `gemini` | Gemini 3 Flash | all 6 | ~$0.01/hr |
-| Google Chirp | `google-chirp` | Chirp 3 (Speech V2 API) | en, fr, es, zh (no diarization for ar, ru) | ~$0.016/min |
+| Provider     | Command name   | Model                    | Languages                                  | Pricing     |
+| ------------ | -------------- | ------------------------ | ------------------------------------------ | ----------- |
+| AssemblyAI   | `assemblyai`   | Universal-2              | all 6                                      | ~$0.27/hr   |
+| Azure OpenAI | `azure-openai` | gpt-4o-transcribe        | all 6                                      | ~$0.06/hr   |
+| ElevenLabs   | `elevenlabs`   | Scribe v2                | all 6                                      | ~$0.40/hr   |
+| Azure Speech | `azure-speech` | Cognitive Services Batch | all 6                                      | ~$0.36/hr   |
+| Gemini       | `gemini`       | Gemini 3 Flash           | all 6                                      | ~$0.01/hr   |
+| Google Chirp | `google-chirp` | Chirp 3 (Speech V2 API)  | en, fr, es, zh (no diarization for ar, ru) | ~$0.016/min |
 
 Add providers in `eval/providers/` implementing the `TranscriptionProvider` interface.
 
@@ -91,6 +92,7 @@ Raw results: `eval/results/raw/{symbol}/{provider}_{lang}.json`
 Summary: `eval/results/summary.json`
 
 Upload results to HuggingFace:
+
 ```bash
 npm run hf:upload-results
 ```
@@ -111,6 +113,7 @@ cd eval/dashboard && npm run build
 ```
 
 Features:
+
 - Provider ranking with 95% confidence intervals
 - Per-language breakdown charts
 - Side-by-side 3-column diff view (ground truth vs two providers)
@@ -182,6 +185,7 @@ eval/
 ## Session Symbols
 
 The primary identifier throughout is the UN document symbol:
+
 - Security Council: `S/PV.{meeting_number}` e.g. `S/PV.9826`
 - General Assembly plenary: `A/{session}/PV.{meeting}` e.g. `A/79/PV.18`
 - First Committee: `A/C.1/{session}/PV.{meeting}`
@@ -189,6 +193,7 @@ The primary identifier throughout is the UN document symbol:
 ## Notes on Storage
 
 Audio files are large (~7 tracks × MP3). Scripts are designed to minimize peak disk usage:
+
 - `push-gadebate.py`: streams S3 audio into Parquet row-by-row, never holds all audio in RAM
 - `push-corpus.py`: processes one session at a time, deletes audio after each upload
 

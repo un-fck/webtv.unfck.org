@@ -11,7 +11,7 @@
   --green: #16a34a;
   --red: #dc2626;
   --yellow: #ca8a04;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
 }
 
 * {
@@ -25,7 +25,8 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
@@ -249,9 +250,15 @@ tr:hover td {
   font-size: 0.85rem;
 }
 
-.metric-good { color: var(--green); }
-.metric-ok { color: var(--yellow); }
-.metric-bad { color: var(--red); }
+.metric-good {
+  color: var(--green);
+}
+.metric-ok {
+  color: var(--yellow);
+}
+.metric-bad {
+  color: var(--red);
+}
 
 /* Bar chart */
 .bar-chart {
@@ -297,7 +304,7 @@ tr:hover td {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Credible interval whisker — traditional I-beam error bar */
@@ -306,18 +313,18 @@ tr:hover td {
   top: 50%;
   transform: translateY(-50%);
   height: 0;
-  border-top: 1.5px solid rgba(0,0,0,0.45);
+  border-top: 1.5px solid rgba(0, 0, 0, 0.45);
 }
 
 /* Left cap */
 .ci-whisker::before,
 .ci-whisker::after {
-  content: '';
+  content: "";
   position: absolute;
   top: -6px;
   width: 1.5px;
   height: 12px;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .ci-whisker::before {
@@ -498,7 +505,7 @@ tr:hover td {
 }
 
 .source-link::before {
-  content: '\2197 ';
+  content: "\2197 ";
   font-size: 0.7rem;
 }
 

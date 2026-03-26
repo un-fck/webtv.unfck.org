@@ -1,12 +1,16 @@
-import { getVideoById, getVideoMetadata } from '@/lib/un-api';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { VideoPageClient } from '@/components/video-page-client';
-import { extractKalturaId } from '@/lib/kaltura';
+import { getVideoById, getVideoMetadata } from "@/lib/un-api";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { VideoPageClient } from "@/components/video-page-client";
+import { extractKalturaId } from "@/lib/kaltura";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export default async function VideoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function VideoPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const decodedId = decodeURIComponent(id);
   // Search backwards from today to find the video (much faster than loading 365 days)
@@ -17,22 +21,27 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
   }
 
   const kalturaId = extractKalturaId(video.id);
-  
+
   if (!kalturaId) {
     return (
       <main className="min-h-screen bg-background px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto py-8">
-          <Link href="/" className="text-primary hover:underline mb-4 inline-block">
+        <div className="mx-auto max-w-5xl py-8">
+          <Link
+            href="/"
+            className="mb-4 inline-block text-primary hover:underline"
+          >
             ← Back to Schedule
           </Link>
           <div className="space-y-2">
             <p className="text-red-600">Unable to extract video ID</p>
-            <p className="text-sm text-muted-foreground">Asset ID: {video.id}</p>
+            <p className="text-sm text-muted-foreground">
+              Asset ID: {video.id}
+            </p>
             <a
               href={video.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline text-sm block"
+              className="block text-sm text-primary hover:underline"
             >
               View on UN Web TV →
             </a>
@@ -45,11 +54,14 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
   const metadata = await getVideoMetadata(video.id);
 
   return (
-    <main className="min-h-screen lg:h-screen bg-background lg:overflow-hidden px-4 sm:px-6">
-      <div className="max-w-5xl mx-auto h-full">
-        <VideoPageClient kalturaId={kalturaId} video={video} metadata={metadata} />
+    <main className="min-h-screen bg-background px-4 sm:px-6 lg:h-screen lg:overflow-hidden">
+      <div className="mx-auto h-full max-w-5xl">
+        <VideoPageClient
+          kalturaId={kalturaId}
+          video={video}
+          metadata={metadata}
+        />
       </div>
     </main>
   );
 }
-

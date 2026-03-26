@@ -11,15 +11,15 @@
  *   npm run hf:upload-results
  *   npm run hf:upload-results -- --dry-run
  */
-import '../../lib/load-env';
-import fs from 'fs';
-import path from 'path';
-import { uploadFiles, createRepo } from '@huggingface/hub';
+import "../../lib/load-env";
+import fs from "fs";
+import path from "path";
+import { uploadFiles, createRepo } from "@huggingface/hub";
 
 const HF_TOKEN = process.env.HF_TOKEN!;
-const HF_REPO = 'united-nations/transcription-results';
-const RESULTS_DIR = path.join(__dirname, '..', 'results');
-const DRY_RUN = process.argv.includes('--dry-run');
+const HF_REPO = "united-nations/transcription-results";
+const RESULTS_DIR = path.join(__dirname, "..", "results");
+const DRY_RUN = process.argv.includes("--dry-run");
 
 const README_CONTENT = `---
 license: cc-by-4.0
@@ -91,17 +91,19 @@ See [united-nations/transcription-corpus](https://huggingface.co/datasets/united
 `;
 
 async function main() {
-  const summaryPath = path.join(RESULTS_DIR, 'summary.json');
+  const summaryPath = path.join(RESULTS_DIR, "summary.json");
   if (!fs.existsSync(summaryPath)) {
-    console.error(`No summary.json found at ${summaryPath}. Run npm run eval first.`);
+    console.error(
+      `No summary.json found at ${summaryPath}. Run npm run eval first.`,
+    );
     process.exit(1);
   }
 
-  const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf-8'));
+  const summary = JSON.parse(fs.readFileSync(summaryPath, "utf-8"));
   console.log(`Found ${summary.length} result rows.`);
 
   if (DRY_RUN) {
-    console.log('DRY RUN — would upload:');
+    console.log("DRY RUN — would upload:");
     console.log(`  results.jsonl (${summary.length} rows)`);
     const rawFiles = collectRawFiles();
     console.log(`  ${rawFiles.length} raw transcript JSON files`);
@@ -110,39 +112,44 @@ async function main() {
 
   const credentials = { accessToken: HF_TOKEN };
   try {
-    await createRepo({ repo: { type: 'dataset', name: HF_REPO }, credentials });
+    await createRepo({ repo: { type: "dataset", name: HF_REPO }, credentials });
   } catch (err: unknown) {
-    if (!(err instanceof Error && err.message.includes('already created'))) throw err;
+    if (!(err instanceof Error && err.message.includes("already created")))
+      throw err;
   }
 
   const files: Array<{ path: string; content: Blob }> = [];
 
   // README
-  files.push({ path: 'README.md', content: new Blob([README_CONTENT]) });
+  files.push({ path: "README.md", content: new Blob([README_CONTENT]) });
 
   // results.jsonl
-  const resultsJsonl = summary.map((r: object) => JSON.stringify(r)).join('\n') + '\n';
-  files.push({ path: 'results.jsonl', content: new Blob([resultsJsonl]) });
+  const resultsJsonl =
+    summary.map((r: object) => JSON.stringify(r)).join("\n") + "\n";
+  files.push({ path: "results.jsonl", content: new Blob([resultsJsonl]) });
 
   // Raw transcript JSON files
   for (const { hfPath, localPath } of collectRawFiles()) {
-    files.push({ path: hfPath, content: new Blob([fs.readFileSync(localPath)]) });
+    files.push({
+      path: hfPath,
+      content: new Blob([fs.readFileSync(localPath)]),
+    });
   }
 
   console.log(`Uploading ${files.length} files to ${HF_REPO}...`);
 
   await uploadFiles({
-    repo: { type: 'dataset', name: HF_REPO },
+    repo: { type: "dataset", name: HF_REPO },
     credentials,
     files,
-    commitTitle: `Update results: ${summary.length} rows, ${new Date().toISOString().split('T')[0]}`,
+    commitTitle: `Update results: ${summary.length} rows, ${new Date().toISOString().split("T")[0]}`,
   });
 
   console.log(`\nDone! https://huggingface.co/datasets/${HF_REPO}`);
 }
 
 function collectRawFiles(): Array<{ hfPath: string; localPath: string }> {
-  const rawDir = path.join(RESULTS_DIR, 'raw');
+  const rawDir = path.join(RESULTS_DIR, "raw");
   if (!fs.existsSync(rawDir)) return [];
 
   const files: Array<{ hfPath: string; localPath: string }> = [];
@@ -150,7 +157,7 @@ function collectRawFiles(): Array<{ hfPath: string; localPath: string }> {
     const sessionPath = path.join(rawDir, sessionDir);
     if (!fs.statSync(sessionPath).isDirectory()) continue;
     for (const file of fs.readdirSync(sessionPath)) {
-      if (!file.endsWith('.json')) continue;
+      if (!file.endsWith(".json")) continue;
       files.push({
         hfPath: `raw/${sessionDir}/${file}`,
         localPath: path.join(sessionPath, file),
@@ -160,4 +167,7 @@ function collectRawFiles(): Array<{ hfPath: string; localPath: string }> {
   return files;
 }
 
-main().catch(err => { console.error('Fatal:', err); process.exit(1); });
+main().catch((err) => {
+  console.error("Fatal:", err);
+  process.exit(1);
+});

@@ -1,8 +1,11 @@
 #!/usr/bin/env tsx
-import '../lib/load-env';
-import { identifySpeakers, ParagraphInput } from '../lib/speaker-identification';
-import { getTursoClient } from '../lib/turso';
-import { resolveEntryId as resolveEntryIdHelper } from '../lib/kaltura-helpers';
+import "../lib/load-env";
+import {
+  identifySpeakers,
+  ParagraphInput,
+} from "../lib/speaker-identification";
+import { getTursoClient } from "../lib/turso";
+import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 
 const usage = `Usage:
   npm run reidentify -- <asset|entry-id>
@@ -45,38 +48,41 @@ const clientPromise = getTursoClient();
 
 async function resolveEntryId(input: string) {
   const decoded = decodeURIComponent(input.trim());
-  if (!decoded) throw new Error('Empty id');
+  if (!decoded) throw new Error("Empty id");
 
   // Use centralized helper that checks cache first
   const entryId = await resolveEntryIdHelper(decoded);
   if (!entryId) throw new Error(`Unable to resolve entry ID for: ${input}`);
-  
+
   return entryId;
 }
 
 function parseParagraphs(row: TranscriptRow) {
-  const content = typeof row.content === 'string'
-    ? JSON.parse(row.content)
-    : row.content;
+  const content =
+    typeof row.content === "string" ? JSON.parse(row.content) : row.content;
   // Try raw_paragraphs first (new schema), fall back to paragraphs (old schema)
-  return (content?.raw_paragraphs || content?.paragraphs || []) as ParagraphInput[];
+  return (content?.raw_paragraphs ||
+    content?.paragraphs ||
+    []) as ParagraphInput[];
 }
 
 async function loadTargets(arg: string) {
-  if (arg.toLowerCase() === 'all') {
+  if (arg.toLowerCase() === "all") {
     const client = await clientPromise;
-    const rows = await client.execute({ sql: 'SELECT DISTINCT entry_id FROM transcripts WHERE status = \'completed\' AND start_time IS NULL AND end_time IS NULL' });
-    return rows.rows.map(row => row.entry_id as string);
+    const rows = await client.execute({
+      sql: "SELECT DISTINCT entry_id FROM transcripts WHERE status = 'completed' AND start_time IS NULL AND end_time IS NULL",
+    });
+    return rows.rows.map((row) => row.entry_id as string);
   }
   return [await resolveEntryId(arg)];
 }
 
 async function loadTranscripts(entryId: string) {
   const client = await clientPromise;
-  const query = entryId === '*ALL*' ? ALL_QUERY : SINGLE_QUERY;
-  const args = entryId === '*ALL*' ? [] : [entryId];
+  const query = entryId === "*ALL*" ? ALL_QUERY : SINGLE_QUERY;
+  const args = entryId === "*ALL*" ? [] : [entryId];
   const result = await client.execute({ sql: query, args });
-  return result.rows.map(row => ({
+  return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
     entry_id: row.entry_id as string,
     content: row.content as string,
@@ -84,15 +90,16 @@ async function loadTranscripts(entryId: string) {
 }
 
 async function run() {
-  const targets = rawArg.toLowerCase() === 'all'
-    ? ['*ALL*']
-    : await loadTargets(rawArg);
+  const targets =
+    rawArg.toLowerCase() === "all" ? ["*ALL*"] : await loadTargets(rawArg);
 
   console.log(`Loading transcripts...`);
-  const allTranscripts = (await Promise.all(targets.map(loadTranscripts))).flat();
-  
+  const allTranscripts = (
+    await Promise.all(targets.map(loadTranscripts))
+  ).flat();
+
   const toProcess = allTranscripts
-    .map(row => ({ row, paragraphs: parseParagraphs(row) }))
+    .map((row) => ({ row, paragraphs: parseParagraphs(row) }))
     .filter(({ row, paragraphs }) => {
       if (!paragraphs.length) {
         console.warn(`Skipping ${row.transcript_id}: no paragraphs`);
@@ -108,7 +115,9 @@ async function run() {
   const tasks = toProcess.map(async ({ row, paragraphs }) => {
     await identifySpeakers(paragraphs, row.transcript_id);
     completed++;
-    console.log(`[${completed}/${total}] ✓ Re-identified ${row.entry_id} (${row.transcript_id})`);
+    console.log(
+      `[${completed}/${total}] ✓ Re-identified ${row.entry_id} (${row.transcript_id})`,
+    );
   });
 
   await Promise.all(tasks);
@@ -116,8 +125,7 @@ async function run() {
   process.exit(0);
 }
 
-run().catch(error => {
-  console.error('Reidentify failed:', error);
+run().catch((error) => {
+  console.error("Reidentify failed:", error);
   process.exit(1);
 });
-

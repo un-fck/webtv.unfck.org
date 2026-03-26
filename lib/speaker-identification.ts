@@ -1,44 +1,58 @@
-import { AzureOpenAI } from 'openai';
-import { z } from 'zod';
-import { zodResponseFormat } from 'openai/helpers/zod';
-import { setSpeakerMapping, SpeakerInfo } from './speakers';
-import { getTranscriptById, updateTranscriptContent, updateTranscriptStatus } from './turso';
-import { trackOpenAIChatCompletion, UsageOperations, UsageStages } from './usage-tracking';
-import './load-env';
+import { AzureOpenAI } from "openai";
+import { z } from "zod";
+import { zodResponseFormat } from "openai/helpers/zod";
+import { setSpeakerMapping, SpeakerInfo } from "./speakers";
+import {
+  getTranscriptById,
+  updateTranscriptContent,
+  updateTranscriptStatus,
+} from "./turso";
+import {
+  trackOpenAIChatCompletion,
+  UsageOperations,
+  UsageStages,
+} from "./usage-tracking";
+import "./load-env";
 // @ts-expect-error - no types available for sbd
-import sbd from 'sbd';
+import sbd from "sbd";
 
 const ParagraphSpeakerMapping = z.object({
-  paragraphs: z.array(z.object({
-    index: z.number(),
-    name: z.string().nullable(),
-    function: z.string().nullable(),
-    affiliation: z.string().nullable(),
-    group: z.string().nullable(),
-    has_multiple_speakers: z.boolean(),
-    is_off_record: z.boolean(),
-  })),
+  paragraphs: z.array(
+    z.object({
+      index: z.number(),
+      name: z.string().nullable(),
+      function: z.string().nullable(),
+      affiliation: z.string().nullable(),
+      group: z.string().nullable(),
+      has_multiple_speakers: z.boolean(),
+      is_off_record: z.boolean(),
+    }),
+  ),
 });
 
 const ResegmentationResult = z.object({
   should_split: z.boolean(),
-  confidence: z.enum(['high', 'medium', 'low']),
+  confidence: z.enum(["high", "medium", "low"]),
   reason: z.string(),
-  segments: z.array(z.object({
-    text: z.string(),
-    name: z.string().nullable(),
-    function: z.string().nullable(),
-    affiliation: z.string().nullable(),
-    group: z.string().nullable(),
-  })),
+  segments: z.array(
+    z.object({
+      text: z.string(),
+      name: z.string().nullable(),
+      function: z.string().nullable(),
+      affiliation: z.string().nullable(),
+      group: z.string().nullable(),
+    }),
+  ),
 });
 
 const TopicDefinitions = z.object({
-  topics: z.array(z.object({
-    key: z.string(),
-    label: z.string(),
-    description: z.string(),
-  })),
+  topics: z.array(
+    z.object({
+      key: z.string(),
+      label: z.string(),
+      description: z.string(),
+    }),
+  ),
 });
 
 const ParagraphTopicTags = z.object({
@@ -54,7 +68,7 @@ const EvidenceQuoteSchema = z.object({
 });
 
 const PositionSchema = z.object({
-  stance: z.enum(['support', 'oppose', 'conditional', 'neutral']),
+  stance: z.enum(["support", "oppose", "conditional", "neutral"]),
   stakeholders: z.array(z.string()),
   summary: z.string(),
   evidence: z.array(EvidenceQuoteSchema),
@@ -76,7 +90,7 @@ export type EvidenceQuote = z.infer<typeof EvidenceQuoteSchema>;
 export type Position = z.infer<typeof PositionSchema>;
 export type Proposition = z.infer<typeof PropositionSchema>;
 
-const API_VERSION = '2025-01-01-preview';
+const API_VERSION = "2025-01-01-preview";
 
 const IDENTIFICATION_RULES = `IDENTIFICATION RULES:
 - Use AssemblyAI labels as HINTS for speaker changes (label change often = new speaker), but verify with text
@@ -165,14 +179,16 @@ function createOpenAIClient() {
 }
 
 function normalizeText(text: string): string {
-  return text.replace(/[^a-z0-9]/gi, '').toLowerCase();
+  return text.replace(/[^a-z0-9]/gi, "").toLowerCase();
 }
 
 function speakersEqual(a: SpeakerInfo, b: SpeakerInfo): boolean {
-  return a.name === b.name &&
-         a.function === b.function &&
-         a.affiliation === b.affiliation &&
-         a.group === b.group;
+  return (
+    a.name === b.name &&
+    a.function === b.function &&
+    a.affiliation === b.affiliation &&
+    a.group === b.group
+  );
 }
 
 interface StatementWithSentences {
@@ -193,15 +209,19 @@ interface StatementWithSentences {
   words: ParagraphWord[];
 }
 
-function matchWordsToText(words: ParagraphWord[], offset: number, targetText: string): ParagraphWord[] {
+function matchWordsToText(
+  words: ParagraphWord[],
+  offset: number,
+  targetText: string,
+): ParagraphWord[] {
   const normalized = normalizeText(targetText);
   const matched: ParagraphWord[] = [];
-  let matchedNorm = '';
-  
+  let matchedNorm = "";
+
   for (let i = offset; i < words.length; i++) {
     const testWords = [...matched, words[i]];
-    const testNorm = normalizeText(testWords.map(w => w.text).join(' '));
-    
+    const testNorm = normalizeText(testWords.map((w) => w.text).join(" "));
+
     if (normalized.startsWith(testNorm)) {
       matched.push(words[i]);
       matchedNorm = testNorm;
@@ -210,31 +230,49 @@ function matchWordsToText(words: ParagraphWord[], offset: number, targetText: st
       break;
     }
   }
-  
+
   return matched;
 }
 
-function buildStatementsWithSentences(paragraphInputs: ParagraphInput[]): StatementWithSentences[] {
-  return paragraphInputs.map(paraInput => {
+function buildStatementsWithSentences(
+  paragraphInputs: ParagraphInput[],
+): StatementWithSentences[] {
+  return paragraphInputs.map((paraInput) => {
     // Split by \n\n to create separate paragraphs
-    const parts = paraInput.text.split('\n\n');
-    
+    const parts = paraInput.text.split("\n\n");
+
     const paragraphs: Array<{
-      sentences: Array<{ text: string; start: number; end: number; words: ParagraphWord[] }>;
+      sentences: Array<{
+        text: string;
+        start: number;
+        end: number;
+        words: ParagraphWord[];
+      }>;
       start: number;
       end: number;
       words: ParagraphWord[];
     }> = [];
-    
+
     let wordOffset = 0;
-    
+
     parts.forEach((part) => {
-      const partSentences: string[] = sbd.sentences(part.trim(), { preserve_whitespace: false });
-      const sentences: Array<{ text: string; start: number; end: number; words: ParagraphWord[] }> = [];
-      
+      const partSentences: string[] = sbd.sentences(part.trim(), {
+        preserve_whitespace: false,
+      });
+      const sentences: Array<{
+        text: string;
+        start: number;
+        end: number;
+        words: ParagraphWord[];
+      }> = [];
+
       partSentences.forEach((sentText: string) => {
         // Match sentence to words
-        const sentWords = matchWordsToText(paraInput.words, wordOffset, sentText);
+        const sentWords = matchWordsToText(
+          paraInput.words,
+          wordOffset,
+          sentText,
+        );
         if (sentWords.length > 0) {
           sentences.push({
             text: sentText,
@@ -245,17 +283,17 @@ function buildStatementsWithSentences(paragraphInputs: ParagraphInput[]): Statem
           wordOffset += sentWords.length;
         }
       });
-      
+
       if (sentences.length > 0) {
         paragraphs.push({
           sentences,
           start: sentences[0].start,
           end: sentences[sentences.length - 1].end,
-          words: sentences.flatMap(s => s.words),
+          words: sentences.flatMap((s) => s.words),
         });
       }
     });
-    
+
     return {
       paragraphs,
       start: paraInput.start,
@@ -270,43 +308,53 @@ async function defineTopics(
   speakerMapping: SpeakerMapping,
   client: AzureOpenAI,
   transcriptId?: string,
-): Promise<Record<string, { key: string; label: string; description: string }>> {
+): Promise<
+  Record<string, { key: string; label: string; description: string }>
+> {
   console.log(`  → Defining topics...`);
 
   // Build context with paragraphs and speakers, excluding moderators/chairs
   const substantiveStatements = paragraphs
     .map((p, idx) => {
       const speaker = speakerMapping[idx.toString()];
-      const isChair = speaker?.function?.toLowerCase().includes('chair') || 
-                      speaker?.function?.toLowerCase().includes('president') ||
-                      speaker?.function?.toLowerCase().includes('moderator');
+      const isChair =
+        speaker?.function?.toLowerCase().includes("chair") ||
+        speaker?.function?.toLowerCase().includes("president") ||
+        speaker?.function?.toLowerCase().includes("moderator");
       return { paragraph: p, index: idx, speaker, isChair };
     })
     .filter(({ isChair }) => !isChair);
 
   if (substantiveStatements.length < 2) {
-    console.log(`  ℹ Too few non-chair statements (${substantiveStatements.length}), skipping topic analysis`);
+    console.log(
+      `  ℹ Too few non-chair statements (${substantiveStatements.length}), skipping topic analysis`,
+    );
     return {};
   }
 
-  const contextParts = substantiveStatements.map(({ paragraph, index, speaker }) => {
-    const speakerLabel = speaker?.name || speaker?.affiliation || 'Unknown';
-    return `[${index}] ${speakerLabel}: ${paragraph.text}`;
-  });
+  const contextParts = substantiveStatements.map(
+    ({ paragraph, index, speaker }) => {
+      const speakerLabel = speaker?.name || speaker?.affiliation || "Unknown";
+      return `[${index}] ${speakerLabel}: ${paragraph.text}`;
+    },
+  );
 
   const completion = await trackOpenAIChatCompletion({
     client,
     transcriptId,
     stage: UsageStages.analyzingTopics,
     operation: UsageOperations.openaiDefineTopics,
-    model: 'gpt-5',
-    requestMeta: { paragraph_count: paragraphs.length, substantive_statements: substantiveStatements.length },
+    model: "gpt-5",
+    requestMeta: {
+      paragraph_count: paragraphs.length,
+      substantive_statements: substantiveStatements.length,
+    },
     request: {
-      model: 'gpt-5',
+      model: "gpt-5",
       messages: [
-      {
-        role: 'system',
-        content: `You are analyzing a UN proceedings transcript to identify main discussion topics.
+        {
+          role: "system",
+          content: `You are analyzing a UN proceedings transcript to identify main discussion topics.
 
 TASK:
 - Identify 5-10 distinct topics discussed in the transcript
@@ -326,32 +374,37 @@ EXAMPLES:
 OUTPUT:
 - Return 5-10 topics as an array
 - Each topic must have key, label, and description fields`,
-      },
-      {
-        role: 'user',
-        content: `Analyze these statements from a UN proceeding and identify the main topics:
+        },
+        {
+          role: "user",
+          content: `Analyze these statements from a UN proceeding and identify the main topics:
 
-${contextParts.join('\n\n')}`,
-      },
+${contextParts.join("\n\n")}`,
+        },
       ],
-      response_format: zodResponseFormat(TopicDefinitions, 'topics'),
+      response_format: zodResponseFormat(TopicDefinitions, "topics"),
     },
   });
 
   const result = completion.choices[0]?.message?.content;
-  if (!result) throw new Error('Failed to define topics');
+  if (!result) throw new Error("Failed to define topics");
 
   const parsed = JSON.parse(result) as z.infer<typeof TopicDefinitions>;
-  
+
   // Convert array to record for easier lookup
-  const topicsRecord: Record<string, { key: string; label: string; description: string }> = {};
-  parsed.topics.forEach(topic => {
+  const topicsRecord: Record<
+    string,
+    { key: string; label: string; description: string }
+  > = {};
+  parsed.topics.forEach((topic) => {
     topicsRecord[topic.key] = topic;
   });
-  
+
   const topicKeys = Object.keys(topicsRecord);
-  console.log(`  ✓ Identified ${topicKeys.length} topics: [${topicKeys.join(', ')}]`);
-  
+  console.log(
+    `  ✓ Identified ${topicKeys.length} topics: [${topicKeys.join(", ")}]`,
+  );
+
   return topicsRecord;
 }
 
@@ -367,37 +420,46 @@ export async function analyzePropositions(
   const substantiveStatements = paragraphs
     .map((p, idx) => {
       const speaker = speakerMapping[idx.toString()];
-      const isChair = speaker?.function?.toLowerCase().includes('chair') || 
-                      speaker?.function?.toLowerCase().includes('president') ||
-                      speaker?.function?.toLowerCase().includes('moderator');
+      const isChair =
+        speaker?.function?.toLowerCase().includes("chair") ||
+        speaker?.function?.toLowerCase().includes("president") ||
+        speaker?.function?.toLowerCase().includes("moderator");
       return { paragraph: p, index: idx, speaker, isChair };
     })
     .filter(({ isChair }) => !isChair);
 
   if (substantiveStatements.length < 2) {
-    console.log(`  ℹ Too few non-chair statements (${substantiveStatements.length}), skipping proposition analysis`);
+    console.log(
+      `  ℹ Too few non-chair statements (${substantiveStatements.length}), skipping proposition analysis`,
+    );
     return [];
   }
 
   // Format: [index] (Speaker) Text...
-  const transcriptParts = substantiveStatements.map(({ paragraph, index, speaker }) => {
-    const speakerLabel = speaker?.name || speaker?.affiliation || speaker?.group || 'Unknown';
-    return `[${index}] (${speakerLabel}) ${paragraph.text}`;
-  });
+  const transcriptParts = substantiveStatements.map(
+    ({ paragraph, index, speaker }) => {
+      const speakerLabel =
+        speaker?.name || speaker?.affiliation || speaker?.group || "Unknown";
+      return `[${index}] (${speakerLabel}) ${paragraph.text}`;
+    },
+  );
 
   const completion = await trackOpenAIChatCompletion({
     client,
     transcriptId,
     stage: UsageStages.analyzingPropositions,
     operation: UsageOperations.openaiAnalyzePropositions,
-    model: 'gpt-5',
-    requestMeta: { paragraph_count: paragraphs.length, substantive_statements: substantiveStatements.length },
+    model: "gpt-5",
+    requestMeta: {
+      paragraph_count: paragraphs.length,
+      substantive_statements: substantiveStatements.length,
+    },
     request: {
-      model: 'gpt-5',
+      model: "gpt-5",
       messages: [
-      {
-        role: 'system',
-        content: `You are analyzing a UN proceedings transcript to identify key propositions and stakeholder positions.
+        {
+          role: "system",
+          content: `You are analyzing a UN proceedings transcript to identify key propositions and stakeholder positions.
 
 TASK:
 1. Identify 3-8 distinct PROPOSITIONS discussed in the transcript
@@ -433,42 +495,53 @@ RULES:
 - Quotes must be EXACT text from the transcript (will be verified)
 - Sort evidence by relevance/importance (most compelling quotes first)
 - Keep quotes focused and relevant (1-3 sentences max)`,
-      },
-      {
-        role: 'user',
-        content: `Analyze this UN transcript and identify propositions with stakeholder positions:
+        },
+        {
+          role: "user",
+          content: `Analyze this UN transcript and identify propositions with stakeholder positions:
 
-${transcriptParts.join('\n\n')}`,
-      },
+${transcriptParts.join("\n\n")}`,
+        },
       ],
-      response_format: zodResponseFormat(PropositionAnalysis, 'propositions'),
+      response_format: zodResponseFormat(PropositionAnalysis, "propositions"),
     },
   });
 
   const result = completion.choices[0]?.message?.content;
-  if (!result) throw new Error('Failed to analyze propositions');
+  if (!result) throw new Error("Failed to analyze propositions");
 
   const parsed = JSON.parse(result) as z.infer<typeof PropositionAnalysis>;
-  
+
   // Verify and filter evidence quotes
-  const verified: Proposition[] = parsed.propositions.map(prop => ({
+  const verified: Proposition[] = parsed.propositions.map((prop) => ({
     ...prop,
-    positions: prop.positions.map(pos => {
-      const verifiedEvidence = pos.evidence.filter(ev => {
+    positions: prop.positions.map((pos) => {
+      const verifiedEvidence = pos.evidence.filter((ev) => {
         const para = paragraphs[ev.statementIndex];
         if (!para) {
           console.log(`  ⚠ Invalid statement index: ${ev.statementIndex}`);
           return false;
         }
         // Normalize for comparison (handle minor transcription variations)
-        const normalize = (s: string) => s.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+        const normalize = (s: string) =>
+          s
+            .toLowerCase()
+            .replace(/[^\w\s]/g, "")
+            .replace(/\s+/g, " ")
+            .trim();
         const paraText = normalize(para.text);
         const quoteText = normalize(ev.quote);
         // Check if quote is contained in paragraph (with some fuzzy matching for minor variations)
-        const found = paraText.includes(quoteText) || 
-          quoteText.split(' ').filter(w => w.length > 3).every(word => paraText.includes(word));
+        const found =
+          paraText.includes(quoteText) ||
+          quoteText
+            .split(" ")
+            .filter((w) => w.length > 3)
+            .every((word) => paraText.includes(word));
         if (!found) {
-          console.log(`  ⚠ Quote not found in statement ${ev.statementIndex}: "${ev.quote.substring(0, 50)}..."`);
+          console.log(
+            `  ⚠ Quote not found in statement ${ev.statementIndex}: "${ev.quote.substring(0, 50)}..."`,
+          );
         }
         return found;
       });
@@ -495,41 +568,48 @@ async function _tagParagraphsWithTopics(
     return {};
   }
 
-  const topicDescriptions = topicKeys.map(key => 
-    `- ${key}: ${topics[key].description}`
-  ).join('\n');
+  const topicDescriptions = topicKeys
+    .map((key) => `- ${key}: ${topics[key].description}`)
+    .join("\n");
 
   const taggingTasks = paragraphs.map(async (para, idx) => {
     const speaker = speakerMapping[idx.toString()];
-    
+
     // Skip chair/moderator statements
-    const isChair = speaker?.function?.toLowerCase().includes('chair') || 
-                    speaker?.function?.toLowerCase().includes('president') ||
-                    speaker?.function?.toLowerCase().includes('moderator');
-    
+    const isChair =
+      speaker?.function?.toLowerCase().includes("chair") ||
+      speaker?.function?.toLowerCase().includes("president") ||
+      speaker?.function?.toLowerCase().includes("moderator");
+
     if (isChair) {
       return { paragraph_index: idx, topic_keys: [] };
     }
 
     // Build context
     const contextParts: string[] = [];
-    
+
     // Previous paragraph
     if (idx > 0) {
       const prevSpeaker = speakerMapping[(idx - 1).toString()];
-      const prevLabel = prevSpeaker?.name || prevSpeaker?.affiliation || 'Unknown';
-      contextParts.push(`PREVIOUS: ${prevLabel}: ${paragraphs[idx - 1].text.substring(0, 200)}...`);
+      const prevLabel =
+        prevSpeaker?.name || prevSpeaker?.affiliation || "Unknown";
+      contextParts.push(
+        `PREVIOUS: ${prevLabel}: ${paragraphs[idx - 1].text.substring(0, 200)}...`,
+      );
     }
-    
+
     // Current paragraph
-    const currentLabel = speaker?.name || speaker?.affiliation || 'Unknown';
+    const currentLabel = speaker?.name || speaker?.affiliation || "Unknown";
     contextParts.push(`CURRENT: ${currentLabel}: ${para.text}`);
-    
+
     // Next paragraph
     if (idx < paragraphs.length - 1) {
       const nextSpeaker = speakerMapping[(idx + 1).toString()];
-      const nextLabel = nextSpeaker?.name || nextSpeaker?.affiliation || 'Unknown';
-      contextParts.push(`NEXT: ${nextLabel}: ${paragraphs[idx + 1].text.substring(0, 200)}...`);
+      const nextLabel =
+        nextSpeaker?.name || nextSpeaker?.affiliation || "Unknown";
+      contextParts.push(
+        `NEXT: ${nextLabel}: ${paragraphs[idx + 1].text.substring(0, 200)}...`,
+      );
     }
 
     try {
@@ -538,14 +618,17 @@ async function _tagParagraphsWithTopics(
         transcriptId,
         stage: UsageStages.analyzingTopics,
         operation: UsageOperations.openaiTagParagraphTopics,
-        model: 'gpt-5',
-        requestMeta: { paragraph_index: idx, paragraph_count: paragraphs.length },
+        model: "gpt-5",
+        requestMeta: {
+          paragraph_index: idx,
+          paragraph_count: paragraphs.length,
+        },
         request: {
-          model: 'gpt-5',
+          model: "gpt-5",
           messages: [
-          {
-            role: 'system',
-            content: `You are tagging UN proceeding statements with relevant topics.
+            {
+              role: "system",
+              content: `You are tagging UN proceeding statements with relevant topics.
 
 AVAILABLE TOPICS:
 ${topicDescriptions}
@@ -560,15 +643,15 @@ RULES:
 - A topic applies if the statement makes substantive points about it
 - Brief mentions don't count - the statement must engage with the topic
 - When uncertain, don't tag`,
-          },
-          {
-            role: 'user',
-            content: `Which topics (if any) are discussed in this statement?
+            },
+            {
+              role: "user",
+              content: `Which topics (if any) are discussed in this statement?
 
-${contextParts.join('\n\n')}`,
-          },
+${contextParts.join("\n\n")}`,
+            },
           ],
-          response_format: zodResponseFormat(ParagraphTopicTags, 'tags'),
+          response_format: zodResponseFormat(ParagraphTopicTags, "tags"),
         },
       });
 
@@ -580,20 +663,25 @@ ${contextParts.join('\n\n')}`,
       const parsed = JSON.parse(result) as z.infer<typeof ParagraphTopicTags>;
       return { paragraph_index: idx, topic_keys: parsed.topic_keys };
     } catch (error) {
-      console.warn(`  ⚠ Failed to tag paragraph ${idx}:`, error instanceof Error ? error.message : error);
+      console.warn(
+        `  ⚠ Failed to tag paragraph ${idx}:`,
+        error instanceof Error ? error.message : error,
+      );
       return { paragraph_index: idx, topic_keys: [] };
     }
   });
 
   const results = await Promise.all(taggingTasks);
-  
+
   const paragraphTopics: Record<string, string[]> = {};
   results.forEach(({ paragraph_index, topic_keys }) => {
     paragraphTopics[paragraph_index.toString()] = topic_keys;
   });
 
-  const taggedCount = results.filter(r => r.topic_keys.length > 0).length;
-  console.log(`  ✓ Tagged ${taggedCount}/${paragraphs.length} paragraphs with topics`);
+  const taggedCount = results.filter((r) => r.topic_keys.length > 0).length;
+  console.log(
+    `  ✓ Tagged ${taggedCount}/${paragraphs.length} paragraphs with topics`,
+  );
 
   return paragraphTopics;
 }
@@ -613,9 +701,9 @@ async function tagSentencesWithTopics(
     return statements;
   }
 
-  const topicDescriptions = topicKeys.map(key => 
-    `- ${key}: ${topics[key].description}`
-  ).join('\n');
+  const topicDescriptions = topicKeys
+    .map((key) => `- ${key}: ${topics[key].description}`)
+    .join("\n");
 
   // Build flat list of all sentences with metadata
   interface SentenceWithMeta {
@@ -627,7 +715,7 @@ async function tagSentencesWithTopics(
   }
 
   const allSentences: SentenceWithMeta[] = [];
-  
+
   statements.forEach((stmt, stmtIdx) => {
     const speaker = speakerMapping[stmtIdx.toString()];
     stmt.paragraphs.forEach((para, paraIdx) => {
@@ -644,11 +732,15 @@ async function tagSentencesWithTopics(
   });
 
   // Filter out moderator/chair sentences
-  const taggableSentences: Array<{ index: number; sentence: SentenceWithMeta }> = [];
+  const taggableSentences: Array<{
+    index: number;
+    sentence: SentenceWithMeta;
+  }> = [];
   allSentences.forEach((sent, idx) => {
-    const isModerator = sent.speaker.function?.toLowerCase().includes('chair') ||
-                       sent.speaker.function?.toLowerCase().includes('president') ||
-                       sent.speaker.function?.toLowerCase().includes('moderator');
+    const isModerator =
+      sent.speaker.function?.toLowerCase().includes("chair") ||
+      sent.speaker.function?.toLowerCase().includes("president") ||
+      sent.speaker.function?.toLowerCase().includes("moderator");
     if (!isModerator) {
       taggableSentences.push({ index: idx, sentence: sent });
     }
@@ -659,35 +751,45 @@ async function tagSentencesWithTopics(
     topic_keys: z.array(z.string()),
   });
 
-  const tasks = taggableSentences.map(async ({ index: globalIdx, sentence: sent }) => {
-    // Context: 2 sentences before and after from all sentences
-    const contextBefore = allSentences.slice(Math.max(0, globalIdx - 2), globalIdx);
-    const contextAfter = allSentences.slice(globalIdx + 1, Math.min(allSentences.length, globalIdx + 3));
-    
-    const numberedSentences = [
-      ...contextBefore.map((s, i) => `[${i - contextBefore.length}] ${s.text}`),
-      `[CURRENT] ${sent.text}`,
-      ...contextAfter.map((s, i) => `[+${i + 1}] ${s.text}`),
-    ].join('\n');
-    
-    try {
-      const completion = await trackOpenAIChatCompletion({
-        client,
-        transcriptId,
-        stage: UsageStages.taggingSentences,
-        operation: UsageOperations.openaiTagSentenceTopics,
-        model: 'gpt-5-mini',
-        requestMeta: {
-          sentence_global_index: globalIdx,
-          statement_index: sent.statementIdx,
-          paragraph_index: sent.paragraphIdx,
-          sentence_index: sent.sentenceIdx,
-        },
-        request: {
-          model: 'gpt-5-mini',
-          messages: [{
-          role: 'system',
-          content: `You are categorizing UN proceeding sentences by topic.
+  const tasks = taggableSentences.map(
+    async ({ index: globalIdx, sentence: sent }) => {
+      // Context: 2 sentences before and after from all sentences
+      const contextBefore = allSentences.slice(
+        Math.max(0, globalIdx - 2),
+        globalIdx,
+      );
+      const contextAfter = allSentences.slice(
+        globalIdx + 1,
+        Math.min(allSentences.length, globalIdx + 3),
+      );
+
+      const numberedSentences = [
+        ...contextBefore.map(
+          (s, i) => `[${i - contextBefore.length}] ${s.text}`,
+        ),
+        `[CURRENT] ${sent.text}`,
+        ...contextAfter.map((s, i) => `[+${i + 1}] ${s.text}`),
+      ].join("\n");
+
+      try {
+        const completion = await trackOpenAIChatCompletion({
+          client,
+          transcriptId,
+          stage: UsageStages.taggingSentences,
+          operation: UsageOperations.openaiTagSentenceTopics,
+          model: "gpt-5-mini",
+          requestMeta: {
+            sentence_global_index: globalIdx,
+            statement_index: sent.statementIdx,
+            paragraph_index: sent.paragraphIdx,
+            sentence_index: sent.sentenceIdx,
+          },
+          request: {
+            model: "gpt-5-mini",
+            messages: [
+              {
+                role: "system",
+                content: `You are categorizing UN proceeding sentences by topic.
 
 AVAILABLE TOPICS:
 ${topicDescriptions}
@@ -703,108 +805,136 @@ RULES:
 - Brief mentions don't count
 - When uncertain, don't tag
 - Return only topic keys, not labels or descriptions`,
-        }, {
-          role: 'user',
-          content: `Which topics (if any) are discussed in the [CURRENT] sentence?
+              },
+              {
+                role: "user",
+                content: `Which topics (if any) are discussed in the [CURRENT] sentence?
 
 ${numberedSentences}`,
-          }],
-          response_format: zodResponseFormat(SentenceTopicResponse, 'sentence_topics'),
-        },
-      });
-      
-      const result = completion.choices[0]?.message?.content;
-      if (!result) return { ...sent, topic_keys: [] };
-      
-      const parsed = JSON.parse(result) as z.infer<typeof SentenceTopicResponse>;
-      return { ...sent, topic_keys: parsed.topic_keys };
-    } catch (error) {
-      console.warn(`  ⚠ Failed to tag sentence:`, error);
-      return { ...sent, topic_keys: [] };
-    }
-  });
-  
+              },
+            ],
+            response_format: zodResponseFormat(
+              SentenceTopicResponse,
+              "sentence_topics",
+            ),
+          },
+        });
+
+        const result = completion.choices[0]?.message?.content;
+        if (!result) return { ...sent, topic_keys: [] };
+
+        const parsed = JSON.parse(result) as z.infer<
+          typeof SentenceTopicResponse
+        >;
+        return { ...sent, topic_keys: parsed.topic_keys };
+      } catch (error) {
+        console.warn(`  ⚠ Failed to tag sentence:`, error);
+        return { ...sent, topic_keys: [] };
+      }
+    },
+  );
+
   const taggedSentences = await Promise.all(tasks);
-  
+
   // Apply topic tags back to statements
-  const updatedStatements: StatementWithSentences[] = statements.map(stmt => ({
-    ...stmt,
-    paragraphs: stmt.paragraphs.map(para => ({
-      ...para,
-      sentences: para.sentences.map(s => ({ ...s })),
-    })),
-  }));
-  
-  taggedSentences.forEach(tagged => {
+  const updatedStatements: StatementWithSentences[] = statements.map(
+    (stmt) => ({
+      ...stmt,
+      paragraphs: stmt.paragraphs.map((para) => ({
+        ...para,
+        sentences: para.sentences.map((s) => ({ ...s })),
+      })),
+    }),
+  );
+
+  taggedSentences.forEach((tagged) => {
     const stmt = updatedStatements[tagged.statementIdx];
     const para = stmt.paragraphs[tagged.paragraphIdx];
     para.sentences[tagged.sentenceIdx].topic_keys = tagged.topic_keys;
   });
-  
-  const taggedCount = taggedSentences.filter(s => s.topic_keys && s.topic_keys.length > 0).length;
-  console.log(`  ✓ Tagged ${taggedCount}/${taggableSentences.length} sentences with topics`);
-  
+
+  const taggedCount = taggedSentences.filter(
+    (s) => s.topic_keys && s.topic_keys.length > 0,
+  ).length;
+  console.log(
+    `  ✓ Tagged ${taggedCount}/${taggableSentences.length} sentences with topics`,
+  );
+
   return updatedStatements;
 }
 
 async function resegmentParagraph(
   client: AzureOpenAI,
   paragraph: ParagraphInput,
-  contextParas: Array<{ para: ParagraphInput, speaker: SpeakerInfo, position: 'before' | 'current' | 'after' }>,
+  contextParas: Array<{
+    para: ParagraphInput;
+    speaker: SpeakerInfo;
+    position: "before" | "current" | "after";
+  }>,
   paragraphIndex?: number,
   transcriptId?: string,
-): Promise<{ segments: ParagraphInput[], speakers: SpeakerInfo[] }> {
+): Promise<{ segments: ParagraphInput[]; speakers: SpeakerInfo[] }> {
   const formatSpeaker = (s: SpeakerInfo) => {
     const parts = [];
     if (s?.name) parts.push(`name: "${s.name}"`);
     if (s?.function) parts.push(`function: "${s.function}"`);
     if (s?.affiliation) parts.push(`affiliation: "${s.affiliation}"`);
     if (s?.group) parts.push(`group: "${s.group}"`);
-    return parts.length > 0 ? `{ ${parts.join(', ')} }` : '{ unknown }';
+    return parts.length > 0 ? `{ ${parts.join(", ")} }` : "{ unknown }";
   };
-  
+
   const formatPara = (p: ParagraphInput, s: SpeakerInfo, label: string) => {
-    const text = p.words.map(w => w.text).join(' ');
-    const preview = text.length > 150 ? text.substring(0, 150) + '...' : text;
+    const text = p.words.map((w) => w.text).join(" ");
+    const preview = text.length > 150 ? text.substring(0, 150) + "..." : text;
     return `${label}:\nSpeaker: ${formatSpeaker(s)}\nText: ${preview}`;
   };
 
-  const beforeParas = contextParas.filter(c => c.position === 'before');
-  const currentPara = contextParas.find(c => c.position === 'current')!;
-  const afterParas = contextParas.filter(c => c.position === 'after');
+  const beforeParas = contextParas.filter((c) => c.position === "before");
+  const currentPara = contextParas.find((c) => c.position === "current")!;
+  const afterParas = contextParas.filter((c) => c.position === "after");
   const currentSpeaker = currentPara.speaker;
 
   // Collect all known speakers from context for reference
   const knownSpeakers = contextParas
-    .filter(c => c.speaker?.name)
-    .map(c => formatSpeaker(c.speaker));
+    .filter((c) => c.speaker?.name)
+    .map((c) => formatSpeaker(c.speaker));
   const uniqueKnownSpeakers = [...new Set(knownSpeakers)];
 
   const contextParts = [
-    ...beforeParas.reverse().map((c, i) => formatPara(c.para, c.speaker, `BEFORE-${beforeParas.length - i}`)),
+    ...beforeParas
+      .reverse()
+      .map((c, i) =>
+        formatPara(c.para, c.speaker, `BEFORE-${beforeParas.length - i}`),
+      ),
     `CURRENT (TO SPLIT):\nSpeaker: ${formatSpeaker(currentSpeaker)}\nText: ${paragraph.text}`,
-    ...afterParas.map((c, i) => formatPara(c.para, c.speaker, `AFTER+${i + 1}`)),
+    ...afterParas.map((c, i) =>
+      formatPara(c.para, c.speaker, `AFTER+${i + 1}`),
+    ),
   ];
 
-  const context = contextParts.join('\n\n');
-  
-  const knownSpeakersSection = uniqueKnownSpeakers.length > 0 
-    ? `\n\nKNOWN SPEAKERS (from previous identification - REUSE these exact labels when applicable):\n${uniqueKnownSpeakers.map((s, i) => `${i + 1}. ${s}`).join('\n')}`
-    : '';
+  const context = contextParts.join("\n\n");
+
+  const knownSpeakersSection =
+    uniqueKnownSpeakers.length > 0
+      ? `\n\nKNOWN SPEAKERS (from previous identification - REUSE these exact labels when applicable):\n${uniqueKnownSpeakers.map((s, i) => `${i + 1}. ${s}`).join("\n")}`
+      : "";
 
   const completion = await trackOpenAIChatCompletion({
     client,
     transcriptId,
     stage: UsageStages.resegmenting,
     operation: UsageOperations.openaiResegmentParagraph,
-    model: 'gpt-5',
-    requestMeta: { paragraph_index: paragraphIndex ?? null, context_size: contextParas.length },
+    model: "gpt-5",
+    requestMeta: {
+      paragraph_index: paragraphIndex ?? null,
+      context_size: contextParas.length,
+    },
     request: {
-      model: 'gpt-5',
+      model: "gpt-5",
       messages: [
-      {
-        role: 'system',
-        content: `You are an expert at correcting speaker segmentation errors in UN proceedings transcripts.
+        {
+          role: "system",
+          content: `You are an expert at correcting speaker segmentation errors in UN proceedings transcripts.
 
 BACKGROUND:
 This transcript was created by automatic speech recognition (AssemblyAI), which divided the audio into paragraphs. However, the automatic paragraph boundaries are sometimes incorrect - a paragraph may contain the end of one speaker's remarks followed by the beginning of another speaker's remarks, all incorrectly grouped together.
@@ -879,10 +1009,10 @@ reason: Brief explanation (1-2 sentences) focusing on WHO is speaking. Examples:
 
 text: EXACT text of each segment, copied character-by-character from the CURRENT paragraph. Every word, comma, period, space must be preserved exactly. Do NOT include speaker labels, prefixes like "(Speaker: ...)", or other metadata - ONLY the actual spoken words.
 `,
-      },
-      {
-        role: 'user',
-        content: `Analyze the CURRENT paragraph in context and determine if it should be split:
+        },
+        {
+          role: "user",
+          content: `Analyze the CURRENT paragraph in context and determine if it should be split:
 
 ${context}${knownSpeakersSection}
 
@@ -894,40 +1024,55 @@ The BEFORE and AFTER paragraphs provide context about the conversation flow. Use
 IMPORTANT: When identifying speakers for segments, REUSE the exact labels from KNOWN SPEAKERS above. Do not vary or re-identify speakers that are already known.
 
 If you determine the CURRENT paragraph should be split, copy the exact text from the "Text:" line of the CURRENT paragraph (not from BEFORE/AFTER paragraphs) and split it at speaker boundaries, returning each segment with its speaker identification.`,
-      },
+        },
       ],
-      response_format: zodResponseFormat(ResegmentationResult, 'resegmentation'),
+      response_format: zodResponseFormat(
+        ResegmentationResult,
+        "resegmentation",
+      ),
     },
   });
 
   const result = completion.choices[0]?.message?.content;
   const finishReason = completion.choices[0]?.finish_reason;
-  
+
   if (!result) {
-    if (finishReason === 'content_filter') {
-      const indexStr = paragraphIndex !== undefined ? ` [${paragraphIndex}]` : '';
-      console.warn(`  ⚠ Content filter triggered for paragraph${indexStr}, keeping original unsplit`);
+    if (finishReason === "content_filter") {
+      const indexStr =
+        paragraphIndex !== undefined ? ` [${paragraphIndex}]` : "";
+      console.warn(
+        `  ⚠ Content filter triggered for paragraph${indexStr}, keeping original unsplit`,
+      );
       return {
         segments: [paragraph],
         speakers: [currentSpeaker],
       };
     }
-    console.error('Resegmentation API response:', JSON.stringify(completion, null, 2));
-    throw new Error(`Failed to resegment paragraph: no content in response. Finish reason: ${finishReason}`);
+    console.error(
+      "Resegmentation API response:",
+      JSON.stringify(completion, null, 2),
+    );
+    throw new Error(
+      `Failed to resegment paragraph: no content in response. Finish reason: ${finishReason}`,
+    );
   }
 
   let parsed: z.infer<typeof ResegmentationResult>;
   try {
     parsed = JSON.parse(result);
   } catch (e) {
-    console.error('Failed to parse resegmentation result:', result);
-    throw new Error(`Failed to parse resegmentation JSON: ${e instanceof Error ? e.message : e}`);
+    console.error("Failed to parse resegmentation result:", result);
+    throw new Error(
+      `Failed to parse resegmentation JSON: ${e instanceof Error ? e.message : e}`,
+    );
   }
 
   // Check if splitting is recommended
   if (!parsed.should_split) {
-    const indexStr = paragraphIndex !== undefined ? ` [${paragraphIndex}]` : '';
-    console.log(`  → Para${indexStr} kept unsplit (${parsed.confidence} confidence): ${parsed.reason}`);
+    const indexStr = paragraphIndex !== undefined ? ` [${paragraphIndex}]` : "";
+    console.log(
+      `  → Para${indexStr} kept unsplit (${parsed.confidence} confidence): ${parsed.reason}`,
+    );
     return {
       segments: [paragraph],
       speakers: [currentSpeaker],
@@ -935,26 +1080,37 @@ If you determine the CURRENT paragraph should be split, copy the exact text from
   }
 
   // For low confidence splits, keep original
-  if (parsed.confidence === 'low') {
-    const indexStr = paragraphIndex !== undefined ? ` [${paragraphIndex}]` : '';
-    console.warn(`  ⚠ Low confidence split for para${indexStr}, keeping original: ${parsed.reason}`);
+  if (parsed.confidence === "low") {
+    const indexStr = paragraphIndex !== undefined ? ` [${paragraphIndex}]` : "";
+    console.warn(
+      `  ⚠ Low confidence split for para${indexStr}, keeping original: ${parsed.reason}`,
+    );
     return {
       segments: [paragraph],
       speakers: [currentSpeaker],
     };
   }
 
-  const indexStr = paragraphIndex !== undefined ? ` [${paragraphIndex}]` : '';
-  console.log(`  ✓ Para${indexStr} split into ${parsed.segments.length} (${parsed.confidence} confidence): ${parsed.reason}`);
+  const indexStr = paragraphIndex !== undefined ? ` [${paragraphIndex}]` : "";
+  console.log(
+    `  ✓ Para${indexStr} split into ${parsed.segments.length} (${parsed.confidence} confidence): ${parsed.reason}`,
+  );
 
   // Verify content integrity
   const originalNormalized = normalizeText(paragraph.text);
-  const segmentsNormalized = normalizeText(parsed.segments.map(s => s.text).join(' '));
-  
+  const segmentsNormalized = normalizeText(
+    parsed.segments.map((s) => s.text).join(" "),
+  );
+
   if (originalNormalized !== segmentsNormalized) {
     console.warn(`  ⚠ Content mismatch after resegmentation!`);
     console.warn(`    Original: "${paragraph.text.substring(0, 100)}..."`);
-    console.warn(`    Segments: "${parsed.segments.map(s => s.text).join(' ').substring(0, 100)}..."`);
+    console.warn(
+      `    Segments: "${parsed.segments
+        .map((s) => s.text)
+        .join(" ")
+        .substring(0, 100)}..."`,
+    );
   }
 
   // Match segment texts to words
@@ -965,17 +1121,20 @@ If you determine the CURRENT paragraph should be split, copy the exact text from
   for (const seg of parsed.segments) {
     const segNormalized = normalizeText(seg.text);
     const words: typeof paragraph.words = [];
-    let matchedNormalized = '';
+    let matchedNormalized = "";
 
-    while (wordOffset < paragraph.words.length && matchedNormalized.length < segNormalized.length) {
+    while (
+      wordOffset < paragraph.words.length &&
+      matchedNormalized.length < segNormalized.length
+    ) {
       words.push(paragraph.words[wordOffset]);
-      matchedNormalized = normalizeText(words.map(w => w.text).join(' '));
+      matchedNormalized = normalizeText(words.map((w) => w.text).join(" "));
       wordOffset++;
     }
 
     if (words.length > 0) {
       segments.push({
-        text: words.map(w => w.text).join(' '),
+        text: words.map((w) => w.text).join(" "),
         start: words[0].start,
         end: words[words.length - 1].end,
         words,
@@ -997,14 +1156,14 @@ export async function identifySpeakers(
   transcriptId?: string,
 ) {
   if (!paragraphs?.length) {
-    throw new Error('No paragraphs provided');
+    throw new Error("No paragraphs provided");
   }
 
   console.log(`  → Analyzing ${paragraphs.length} paragraphs...`);
 
   const transcriptParts = paragraphs.map((para, index) => {
-    const text = para.words.map(word => word.text).join(' ');
-    const assemblySpeaker = para.words?.[0]?.speaker || 'Unknown';
+    const text = para.words.map((word) => word.text).join(" ");
+    const assemblySpeaker = para.words?.[0]?.speaker || "Unknown";
     return `[${index}] (AssemblyAI: Speaker ${assemblySpeaker}) ${text}`;
   });
 
@@ -1015,14 +1174,14 @@ export async function identifySpeakers(
     transcriptId,
     stage: UsageStages.identifyingSpeakers,
     operation: UsageOperations.openaiInitialSpeakerMapping,
-    model: 'gpt-5',
+    model: "gpt-5",
     requestMeta: { paragraph_count: paragraphs.length },
     request: {
-      model: 'gpt-5',
+      model: "gpt-5",
       messages: [
-      {
-        role: 'system',
-        content: `You are an expert at identifying speakers in UN proceedings. For each paragraph in the transcript, extract the speaker's name, function/title, affiliation, and country-group information strictly from the context.
+        {
+          role: "system",
+          content: `You are an expert at identifying speakers in UN proceedings. For each paragraph in the transcript, extract the speaker's name, function/title, affiliation, and country-group information strictly from the context.
 
 CRITICAL: Identify WHO IS ACTUALLY SPEAKING each paragraph, NOT who is being introduced or mentioned.
 
@@ -1096,43 +1255,48 @@ has_multiple_speakers: Boolean - Does this paragraph contain words spoken by mul
 
 is_off_record: Boolean - Is this paragraph clearly NOT part of the formal meeting? Only true for paragraphs at the very start/end that are obviously pre-meeting chatter, audio tests, gibberish, or post-meeting remarks. When uncertain, use false.
 `,
-      },
-      {
-        role: 'user',
-        content: `Analyze the following UN transcript and identify the speaker for each numbered paragraph.
+        },
+        {
+          role: "user",
+          content: `Analyze the following UN transcript and identify the speaker for each numbered paragraph.
 
 Transcript:
-${transcriptParts.join('\n\n')}`,
-      },
+${transcriptParts.join("\n\n")}`,
+        },
       ],
-      response_format: zodResponseFormat(ParagraphSpeakerMapping, 'paragraph_speaker_mapping'),
+      response_format: zodResponseFormat(
+        ParagraphSpeakerMapping,
+        "paragraph_speaker_mapping",
+      ),
     },
   });
 
   const result = completion.choices[0]?.message?.content;
-  if (!result) throw new Error('Failed to parse speaker mappings');
+  if (!result) throw new Error("Failed to parse speaker mappings");
 
   const parsed = JSON.parse(result) as z.infer<typeof ParagraphSpeakerMapping>;
   console.log(`  ✓ Initial identification complete`);
 
   // Log off-record paragraphs
   const offRecord = parsed.paragraphs
-    .filter(p => p.is_off_record)
-    .map(p => p.index);
+    .filter((p) => p.is_off_record)
+    .map((p) => p.index);
   if (offRecord.length > 0) {
-    console.log(`  ℹ Found ${offRecord.length} off-record paragraph(s): [${offRecord.join(', ')}]`);
+    console.log(
+      `  ℹ Found ${offRecord.length} off-record paragraph(s): [${offRecord.join(", ")}]`,
+    );
   }
 
   // Collect paragraphs needing resegmentation
   const toResegment = parsed.paragraphs
-    .filter(p => p.has_multiple_speakers)
-    .map(p => p.index);
+    .filter((p) => p.has_multiple_speakers)
+    .map((p) => p.index);
 
   let finalParagraphs = [...paragraphs];
   let finalMapping: SpeakerMapping = {};
 
   // Build initial mapping
-  parsed.paragraphs.forEach(para => {
+  parsed.paragraphs.forEach((para) => {
     finalMapping[para.index.toString()] = {
       name: para.name,
       function: para.function,
@@ -1144,39 +1308,49 @@ ${transcriptParts.join('\n\n')}`,
 
   // Resegment in parallel
   if (toResegment.length > 0) {
-    console.log(`  → Found ${toResegment.length} paragraph(s) with mixed speakers: [${toResegment.join(', ')}]`);
-    
+    console.log(
+      `  → Found ${toResegment.length} paragraph(s) with mixed speakers: [${toResegment.join(", ")}]`,
+    );
+
     const CONTEXT_SIZE = 3; // Number of paragraphs before and after
-    
+
     const resegmentTasks = toResegment.map(async (idx) => {
       const para = paragraphs[idx];
       const speaker = finalMapping[idx.toString()];
-      
+
       // Gather context paragraphs
-      const contextParas: Array<{ para: ParagraphInput, speaker: SpeakerInfo, position: 'before' | 'current' | 'after' }> = [];
-      
+      const contextParas: Array<{
+        para: ParagraphInput;
+        speaker: SpeakerInfo;
+        position: "before" | "current" | "after";
+      }> = [];
+
       // Add before context
       for (let i = Math.max(0, idx - CONTEXT_SIZE); i < idx; i++) {
         contextParas.push({
           para: paragraphs[i],
           speaker: finalMapping[i.toString()],
-          position: 'before',
+          position: "before",
         });
       }
-      
+
       // Add current
       contextParas.push({
         para: para,
         speaker: speaker,
-        position: 'current',
+        position: "current",
       });
-      
+
       // Add after context
-      for (let i = idx + 1; i <= Math.min(paragraphs.length - 1, idx + CONTEXT_SIZE); i++) {
+      for (
+        let i = idx + 1;
+        i <= Math.min(paragraphs.length - 1, idx + CONTEXT_SIZE);
+        i++
+      ) {
         contextParas.push({
           para: paragraphs[i],
           speaker: finalMapping[i.toString()],
-          position: 'after',
+          position: "after",
         });
       }
 
@@ -1186,7 +1360,7 @@ ${transcriptParts.join('\n\n')}`,
         contextParas,
         idx,
         transcriptId,
-      ).then(result => ({ index: idx, ...result }));
+      ).then((result) => ({ index: idx, ...result }));
     });
 
     const resegmented = await Promise.all(resegmentTasks);
@@ -1199,8 +1373,8 @@ ${transcriptParts.join('\n\n')}`,
     let currentNewIndex = 0;
 
     for (let i = 0; i < paragraphs.length; i++) {
-      const reseg = resegmented.find(r => r.index === i);
-      
+      const reseg = resegmented.find((r) => r.index === i);
+
       if (reseg) {
         // Replace with segments
         for (let j = 0; j < reseg.segments.length; j++) {
@@ -1218,22 +1392,26 @@ ${transcriptParts.join('\n\n')}`,
 
     finalParagraphs = newParagraphs;
     finalMapping = newMapping;
-    console.log(`  ✓ Rebuilt transcript: ${paragraphs.length} → ${finalParagraphs.length} paragraphs`);
+    console.log(
+      `  ✓ Rebuilt transcript: ${paragraphs.length} → ${finalParagraphs.length} paragraphs`,
+    );
   }
 
   // Filter out off-record paragraphs
   const offRecordIndices = Object.keys(finalMapping)
-    .filter(idx => finalMapping[idx].is_off_record)
-    .map(idx => parseInt(idx));
-  
+    .filter((idx) => finalMapping[idx].is_off_record)
+    .map((idx) => parseInt(idx));
+
   if (offRecordIndices.length > 0) {
-    console.log(`  → Filtering out ${offRecordIndices.length} off-record paragraph(s): [${offRecordIndices.join(', ')}]`);
-    
+    console.log(
+      `  → Filtering out ${offRecordIndices.length} off-record paragraph(s): [${offRecordIndices.join(", ")}]`,
+    );
+
     // Remove from paragraphs array
     const filteredParagraphs: ParagraphInput[] = [];
     const filteredMapping: SpeakerMapping = {};
     let newIndex = 0;
-    
+
     for (let i = 0; i < finalParagraphs.length; i++) {
       if (!finalMapping[i.toString()].is_off_record) {
         filteredParagraphs.push(finalParagraphs[i]);
@@ -1243,7 +1421,7 @@ ${transcriptParts.join('\n\n')}`,
         newIndex++;
       }
     }
-    
+
     finalParagraphs = filteredParagraphs;
     finalMapping = filteredMapping;
     console.log(`  ✓ Kept ${finalParagraphs.length} on-record paragraphs`);
@@ -1253,18 +1431,18 @@ ${transcriptParts.join('\n\n')}`,
   if (finalParagraphs.length > 0) {
     const groupedParagraphs: ParagraphInput[] = [];
     const groupedMapping: SpeakerMapping = {};
-    
+
     let currentGroup = { ...finalParagraphs[0] };
-    let currentSpeaker = finalMapping['0'];
-    
+    let currentSpeaker = finalMapping["0"];
+
     for (let i = 1; i < finalParagraphs.length; i++) {
       const para = finalParagraphs[i];
       const speaker = finalMapping[i.toString()];
-      
+
       if (speakersEqual(currentSpeaker, speaker)) {
         // Merge with current group
         currentGroup = {
-          text: currentGroup.text + '\n\n' + para.text,
+          text: currentGroup.text + "\n\n" + para.text,
           start: currentGroup.start,
           end: para.end,
           words: [...currentGroup.words, ...para.words],
@@ -1277,22 +1455,24 @@ ${transcriptParts.join('\n\n')}`,
         currentSpeaker = speaker;
       }
     }
-    
+
     // Don't forget the last group
     groupedParagraphs.push(currentGroup);
     groupedMapping[groupedParagraphs.length - 1] = currentSpeaker;
-    
+
     if (groupedParagraphs.length < finalParagraphs.length) {
-      console.log(`  ✓ Grouped consecutive same-speaker paragraphs: ${finalParagraphs.length} → ${groupedParagraphs.length} paragraphs`);
+      console.log(
+        `  ✓ Grouped consecutive same-speaker paragraphs: ${finalParagraphs.length} → ${groupedParagraphs.length} paragraphs`,
+      );
     }
-    
+
     finalParagraphs = groupedParagraphs;
     finalMapping = groupedMapping;
   }
 
   // Build statements with sentences
   const statementsWithSentences = buildStatementsWithSentences(finalParagraphs);
-  
+
   // Save statements immediately after speaker identification (before topic analysis)
   if (transcriptId) {
     console.log(`  → Saving speaker identification results...`);
@@ -1307,23 +1487,42 @@ ${transcriptParts.join('\n\n')}`,
       console.log(`  ✓ Saved statements and speaker mappings`);
     }
   }
-  
+
   // Define and tag topics
-  let topics: Record<string, { key: string; label: string; description: string }> = {};
+  let topics: Record<
+    string,
+    { key: string; label: string; description: string }
+  > = {};
   let taggedStatements = statementsWithSentences;
-  
+
   if (statementsWithSentences.length > 0 && transcriptId) {
-    await updateTranscriptStatus(transcriptId, 'analyzing_topics');
+    await updateTranscriptStatus(transcriptId, "analyzing_topics");
     console.log(`  → Analyzing topics...`);
-    
+
     try {
-      topics = await defineTopics(finalParagraphs, finalMapping, client, transcriptId);
-      taggedStatements = await tagSentencesWithTopics(statementsWithSentences, topics, finalMapping, client, transcriptId);
-      
+      topics = await defineTopics(
+        finalParagraphs,
+        finalMapping,
+        client,
+        transcriptId,
+      );
+      taggedStatements = await tagSentencesWithTopics(
+        statementsWithSentences,
+        topics,
+        finalMapping,
+        client,
+        transcriptId,
+      );
+
       // Analyze propositions in parallel with saving topics
       console.log(`  → Analyzing propositions...`);
-      const propositions = await analyzePropositions(finalParagraphs, finalMapping, client, transcriptId);
-      
+      const propositions = await analyzePropositions(
+        finalParagraphs,
+        finalMapping,
+        client,
+        transcriptId,
+      );
+
       // Save final result with topics and propositions
       const transcript = await getTranscriptById(transcriptId);
       if (transcript) {
@@ -1335,13 +1534,16 @@ ${transcriptParts.join('\n\n')}`,
         });
         console.log(`  ✓ Saved topics and propositions`);
       }
-      
+
       // Mark as completed
-      await updateTranscriptStatus(transcriptId, 'completed');
+      await updateTranscriptStatus(transcriptId, "completed");
     } catch (error) {
-      console.warn(`  ⚠ Failed to analyze topics/propositions:`, error instanceof Error ? error.message : error);
+      console.warn(
+        `  ⚠ Failed to analyze topics/propositions:`,
+        error instanceof Error ? error.message : error,
+      );
       // Keep the statements without topics - still mark as completed
-      await updateTranscriptStatus(transcriptId, 'completed');
+      await updateTranscriptStatus(transcriptId, "completed");
     }
   }
 

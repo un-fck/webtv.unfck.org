@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 interface KalturaPlayer {
   currentTime: number;
@@ -16,21 +16,28 @@ interface VideoPlayerProps {
   onPlayerReady?: (player: KalturaPlayer) => void;
 }
 
-export function VideoPlayer({ kalturaId, partnerId, uiConfId, onPlayerReady }: VideoPlayerProps) {
+export function VideoPlayer({
+  kalturaId,
+  partnerId,
+  uiConfId,
+  onPlayerReady,
+}: VideoPlayerProps) {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<KalturaPlayer | null>(null);
 
   useEffect(() => {
     // Load Kaltura Player script
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/embedPlaykitJs/uiconf_id/${uiConfId}`;
     script.async = true;
-    
+
     script.onload = () => {
       // Wait for KalturaPlayer to be available
       const checkPlayer = setInterval(() => {
-        const windowWithKaltura = window as Window & { KalturaPlayer?: { setup: (config: unknown) => KalturaPlayer } };
-        if (typeof windowWithKaltura.KalturaPlayer !== 'undefined') {
+        const windowWithKaltura = window as Window & {
+          KalturaPlayer?: { setup: (config: unknown) => KalturaPlayer };
+        };
+        if (typeof windowWithKaltura.KalturaPlayer !== "undefined") {
           clearInterval(checkPlayer);
           initializePlayer();
         }
@@ -41,38 +48,39 @@ export function VideoPlayer({ kalturaId, partnerId, uiConfId, onPlayerReady }: V
 
     const initializePlayer = () => {
       try {
-        const windowWithKaltura = window as Window & { KalturaPlayer?: { setup: (config: unknown) => KalturaPlayer } };
+        const windowWithKaltura = window as Window & {
+          KalturaPlayer?: { setup: (config: unknown) => KalturaPlayer };
+        };
         const KalturaPlayerGlobal = windowWithKaltura.KalturaPlayer;
         if (!KalturaPlayerGlobal) return;
-        
+
         const config = {
-          targetId: 'kaltura-player-container',
+          targetId: "kaltura-player-container",
           provider: {
             partnerId: partnerId,
             uiConfId: uiConfId,
           },
           playback: {
-            audioLanguage: 'en',
+            audioLanguage: "en",
           },
           ui: {
-            locale: 'en',
+            locale: "en",
           },
         };
 
         const player = KalturaPlayerGlobal.setup(config);
-        
+
         const mediaInfo = {
           entryId: kalturaId,
         };
 
         player.loadMedia(mediaInfo).then(() => {
-          console.log('Kaltura player loaded successfully');
+          console.log("Kaltura player loaded successfully");
           playerRef.current = player;
           onPlayerReady?.(player);
         });
-
       } catch (error) {
-        console.error('Failed to initialize Kaltura player:', error);
+        console.error("Failed to initialize Kaltura player:", error);
       }
     };
 
@@ -81,19 +89,18 @@ export function VideoPlayer({ kalturaId, partnerId, uiConfId, onPlayerReady }: V
         try {
           playerRef.current.destroy();
         } catch (err) {
-          console.error('Error destroying player:', err);
+          console.error("Error destroying player:", err);
         }
       }
     };
   }, [kalturaId, partnerId, uiConfId, onPlayerReady]);
 
   return (
-    <div 
-      id="kaltura-player-container" 
+    <div
+      id="kaltura-player-container"
       ref={playerContainerRef}
-      className="w-full h-full"
-      style={{ aspectRatio: '16/9' }}
+      className="h-full w-full"
+      style={{ aspectRatio: "16/9" }}
     />
   );
 }
-
