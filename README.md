@@ -1,96 +1,142 @@
 # UN Web TV Transcribed
 
-Browse UN Web TV videos with transcripts of all speeches.
+Browse and search UN Web TV videos with AI-generated transcripts, speaker identification, and topic analysis.
+
+**Live site**: [webtv.unfck.org](https://webtv.unfck.org)
 
 ## Overview
 
-This app displays videos from [UN Web TV](https://webtv.un.org/en/schedule) in a filterable table with enhanced metadata extraction. The goal is to provide easy access to UN speeches and meetings with rich searchable metadata.
+This app scrapes [UN Web TV](https://webtv.un.org/en/schedule) (which has no public API), stores video metadata in Turso, and provides AI-powered transcription with speaker diarization, speaker identification, and topic analysis. Videos are displayed in a filterable table with real-time status tracking, search across the full archive, and individual video pages with embedded Kaltura player.
 
-### Current Features
+## Features
 
-- **Embedded Video Pages**: Click any video to watch directly in the app with Kaltura player
-- **AI-Powered Transcription**: Generate text transcripts of any video using AssemblyAI with speaker diarization and automatic paragraph breaks
-- **Enhanced Metadata Extraction**: Automatically extracts structured data from video titles
-- **Real-time Status Tracking**: Color-coded badges showing if events are 🔴 Live, Scheduled, or Finished
-- **Smart Sorting**: Sorts by status first (Live → Scheduled → Finished), then by date/time
-- **Filterable Data Table**: Sortable, searchable table with pagination (powered by TanStack Table)
-- **Multi-day Fetching**: Displays videos from 1 day ahead to 14 days in the past (configurable)
-- **Global Search**: Real-time filtering across all columns
-- **Smart Column Filters**:
-  - **Date dropdown** for When column (Tomorrow, Today, Yesterday, specific dates with weekdays)
-  - **Dropdown filters** for categorical data (Status, Body)
-  - **Text filter** for Title search
-  - Each column uses the most appropriate filter UI
-- **Active Filters Display**: See all active filters with one-click removal
-
-### Extracted Metadata Fields
-
-| Field      | Description                                   | Example                                                                                  |
-| ---------- | --------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **When**   | Relative date & time with weekday             | Tomorrow 10:00 AM, Today 10:30 AM, Yesterday 2:15 PM, Wed, Oct 9 9:00 AM                 |
-| **Status** | Event status badge (based on time & duration) | 🔴 Live, Scheduled, Finished                                                             |
-| **Title**  | Full title (event code removed)               | High-Level Event, Second Committee, 9th plenary meeting - General Assembly, 80th session |
-| **Body**   | UN body (committee, council, or assembly)     | Fourth Committee, General Assembly, Security Council                                     |
-
-**Title Cleaning:** The app removes event code prefixes from titles:
-
-- Event codes (EM07, GO19, etc.) → removed from display (extracted to metadata)
-- Everything else remains in the title as-is for full context
-
-### Technical Details
-
-**Data Fetching:**
-
-- No official API exists - data is scraped from the HTML
-- Fetches 14 dates in parallel for performance
-- Page data cached for 5 minutes
-- Videos hosted on Kaltura (partner ID: 2503451)
-
-**Metadata Extraction:**
-
-- Regex-based title parsing for structured data
-- Extracts event codes, committee names, session numbers, part numbers
-- Identifies organizations from titles and descriptions
-- Scheduled time with timezone from HTML
+- **Video schedule table** with column filters, sorting, pagination, and global search (TanStack Table)
+- **Full-archive search** via Turso database (beyond the rolling schedule window)
+- **Embedded video pages** with Kaltura player
+- **AI transcription** via AssemblyAI with speaker diarization and paragraph breaks
+- **Speaker identification** via Azure OpenAI (maps speaker labels to named delegates)
+- **Scheduled transcription** for upcoming events (cron job picks them up when audio becomes available)
+- **Live transcription** via AssemblyAI streaming API (real-time WebSocket)
+- **JSON API** for programmatic access to video data
+- **Status badges** (Live / Scheduled / Finished) with smart sorting
+- **Metadata extraction** from titles (UN body, event code, session number, etc.)
+- **API cost tracking** per transcript (AssemblyAI hours, OpenAI tokens)
 
 ## Getting Started
 
-Install dependencies:
-
 ```bash
 pnpm install
+cp .env.example .env.local   # fill in values
+pnpm dev                     # http://localhost:3000
 ```
 
-Set up environment variables:
+## Commands
 
 ```bash
-cp .env.example .env.local
-# then fill in values in .env.local
+pnpm dev                      # Next.js dev server with Turbopack
+pnpm build                    # Production build
+pnpm lint                     # ESLint
+pnpm typecheck                # TypeScript type-check (no emit)
+pnpm format                   # Prettier
+
+# Data management
+pnpm sync-videos              # Sync video metadata from UN Web TV into Turso
+pnpm fetch-video-metadata     # Fetch additional Kaltura metadata for stored videos
+pnpm retranscribe             # Re-run transcription pipeline on stored transcripts
+pnpm reidentify               # Re-run speaker identification on stored transcripts
+pnpm usage-report             # Print API usage/cost report from Turso
+pnpm usage-benchmark          # Run usage benchmark
+
+# Eval system (see eval/README.md)
+pnpm eval -- --symbol=S/PV.9826 --providers=assemblyai --languages=en
 ```
 
-Run the development server:
+## Environment Variables
 
-```bash
-pnpm dev
-```
+See `.env.example` for all variables. Core ones:
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
-
-## Project Structure
-
-- `app/page.tsx` - Main page (server component, fetches data)
-- `app/video/[id]/page.tsx` - Individual video pages with embedded Kaltura player
-- `app/api/transcribe/route.ts` - API endpoint for video transcription
-- `components/video-table.tsx` - Filterable table (client component with TanStack Table)
-- `components/transcription-panel.tsx` - Client component for generating and displaying transcripts
-- `lib/un-api.ts` - Scraping logic with enhanced metadata extraction
-- `app/globals.css` - Tailwind CSS v4 styling with UN color palette
+| Variable                | Required   | Purpose                    |
+| ----------------------- | ---------- | -------------------------- |
+| `TURSO_DB`              | Yes        | libSQL/Turso database URL  |
+| `TURSO_TOKEN`           | Yes        | Turso auth token           |
+| `ASSEMBLYAI_API_KEY`    | Yes        | Transcription (AssemblyAI) |
+| `AZURE_OPENAI_API_KEY`  | Yes        | Speaker identification     |
+| `AZURE_OPENAI_ENDPOINT` | Yes        | Speaker identification     |
+| `CRON_SECRET`           | Production | Vercel cron job auth       |
 
 ## Tech Stack
 
-- **Framework**: Next.js v15.4 with Server Components & API Routes
+- **Framework**: Next.js 16 (App Router, Server Components, Turbopack)
+- **Language**: TypeScript 6
 - **Styling**: Tailwind CSS v4
-- **Table**: TanStack Table v8 (headless, sortable, filterable)
-- **UI Components**: shadcn/ui base
-- **Transcription**: AssemblyAI for speech-to-text with speaker diarization and automatic paragraph breaks (stateless, no database needed)
-- **Video Player**: Kaltura embedded player
+- **UI**: shadcn/ui, Lucide icons, Radix UI primitives
+- **Table**: TanStack Table v8
+- **Database**: Turso (libSQL) via `@libsql/client`
+- **Transcription**: AssemblyAI (batch + real-time streaming)
+- **Speaker ID**: Azure OpenAI (structured output via Zod)
+- **Video hosting**: Kaltura (partner ID: 2503451)
+- **Deployment**: Vercel (cron job every 5 min for scheduled transcripts)
+- **Package manager**: pnpm
+
+## Project Structure
+
+```
+app/
+  page.tsx                          # Home page (server component, fetches schedule)
+  video/[id]/page.tsx               # Video page with player + transcript
+  layout.tsx                        # Root layout (Roboto font, corner logo)
+  globals.css                       # Tailwind v4 theme + UN color palette
+  api/
+    transcribe/route.ts             # Start transcription (accepts kalturaId)
+    transcribe/poll/route.ts        # Poll transcription status
+    transcribe/segments/route.ts    # Segmented transcription (time ranges)
+    identify-speakers/route.ts      # Speaker identification (Azure OpenAI)
+    get-speaker-mapping/route.ts    # Fetch speaker mapping for a transcript
+    search/route.ts                 # Full-archive video search (Turso)
+    stream-transcribe/token/route.ts # AssemblyAI streaming token generation
+    download-hls/route.ts           # HLS segment download + AssemblyAI upload
+    cron/process-scheduled/route.ts # Cron: process scheduled transcriptions
+  json/
+    route.ts                        # JSON API: video list
+    [id]/route.ts                   # JSON API: single video
+
+components/
+  video-table.tsx                   # Main schedule table (client, TanStack Table)
+  video-page-client.tsx             # Video page client wrapper
+  transcription-panel.tsx           # Transcribe/poll/display flow
+  video-player.tsx                  # Kaltura embedded player
+  live-transcription.tsx            # Real-time streaming transcription
+  site-header.tsx                   # Header (home vs nav variants)
+  AnimatedCornerLogo.tsx            # Animated corner logo
+  ui/switch.tsx                     # shadcn switch component
+
+lib/
+  turso.ts                          # Database layer (all queries, schema migration)
+  un-api.ts                         # UN Web TV HTML scraper + metadata extraction
+  transcription.ts                  # AssemblyAI submission + audio URL resolution
+  speaker-identification.ts         # Azure OpenAI speaker mapping pipeline
+  speakers.ts                       # Speaker mapping CRUD (Turso)
+  usage-tracking.ts                 # API cost tracking (AssemblyAI + OpenAI)
+  kaltura.ts                        # Kaltura ID extraction from various formats
+  kaltura-helpers.ts                # Kaltura entry ID resolution + audio URL
+  country-lookup.ts                 # ISO 3166 country code lookup
+  config.ts                         # App config (lookback days, pricing rates)
+  load-env.ts                       # Loads .env.local for scripts outside Next.js
+  utils.ts                          # Shared utilities (cn, etc.)
+
+scripts/                            # CLI scripts (run via tsx, use lib/load-env)
+  sync-videos.ts                    # Scrape UN Web TV -> Turso
+  fetch-video-metadata.ts           # Enrich videos with Kaltura metadata
+  retranscribe.ts                   # Re-run transcription on existing records
+  reidentify.ts                     # Re-run speaker identification
+  usage-report.ts                   # Print cost report
+  usage-benchmark.ts                # Benchmark usage tracking
+  compare-transcription.ts          # Compare transcription outputs
+
+eval/                               # Independent eval harness (see eval/README.md)
+  eval/dashboard/                   # Standalone Vite + React dashboard (npm, not pnpm)
+```
+
+## Eval System
+
+The `eval/` directory is an independent benchmarking harness for transcription providers. It has its own `tsconfig`, is excluded from the root type-check, and the dashboard uses npm (not pnpm). See [eval/README.md](eval/README.md) for full documentation.

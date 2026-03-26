@@ -1,106 +1,157 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Agent instructions for working with this codebase.
 
 @AGENTS.md
 
 ## Commands
 
 ```bash
-pnpm dev          # Start dev server (Next.js + Turbopack)
+pnpm dev          # Dev server (Next.js + Turbopack) → http://localhost:3000
 pnpm build        # Production build
 pnpm lint         # ESLint
+pnpm typecheck    # TypeScript type-check (no emit)
+pnpm format       # Prettier (app, components, lib, scripts, eval)
 
-# Data management scripts (run with tsx via pnpm)
-pnpm sync-videos              # Sync video metadata from UN Web TV into Turso DB
-pnpm fetch-video-metadata     # Fetch additional Kaltura metadata for stored videos
-pnpm retranscribe             # Re-run transcription pipeline on stored transcripts
-pnpm reidentify               # Re-run speaker identification on stored transcripts
-pnpm usage-report             # Print API usage/cost report from Turso
+# Data management (run with tsx, use lib/load-env for .env.local)
+pnpm sync-videos              # Scrape UN Web TV schedule → Turso
+pnpm fetch-video-metadata     # Enrich stored videos with Kaltura metadata
+pnpm retranscribe             # Re-run transcription pipeline on existing transcripts
+pnpm reidentify               # Re-run speaker identification on existing transcripts
+pnpm usage-report             # Print API cost report from Turso
+pnpm usage-benchmark          # Benchmark usage tracking
 
-# Transcription evaluation
-pnpm eval --symbol=A/... --providers=assemblyai,azure-openai --languages=en
+# Eval system (independent from main app, see eval/README.md)
+pnpm eval -- --symbol=A/... --providers=assemblyai,azure-openai --languages=en
 pnpm hf:upload-corpus         # Upload eval corpus to HuggingFace
 pnpm hf:push-corpus           # Push corpus via Python (requires uv)
+pnpm hf:build-gadebate        # Build GA debate metadata
+pnpm hf:push-gadebate         # Push GA debate to HuggingFace (requires uv)
+pnpm hf:discover-corpus       # Discover new sessions for eval corpus
+pnpm hf:upload-results        # Upload eval results to HuggingFace
 ```
 
 ## Environment Variables
 
-Create `.env.local` for the web app:
+Copy `.env.example` → `.env.local` and fill in values.
 
-```
-ASSEMBLYAI_API_KEY=          # Required: transcription
-TURSO_DB=                    # Required: libSQL/Turso database URL
-TURSO_TOKEN=                 # Required: Turso auth token
-AZURE_OPENAI_API_KEY=        # Required: speaker identification
-AZURE_OPENAI_ENDPOINT=       # Required: speaker identification
-NEXT_PUBLIC_BASE_URL=        # Optional: defaults to http://localhost:3000
-```
+**Required for the web app:**
 
-Additional vars for the eval system: `AZURE_OPENAI_API_VERSION`, `AZURE_SPEECH_KEY`, `AZURE_SPEECH_ENDPOINT`, `GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`.
+- `TURSO_DB` — libSQL/Turso database URL
+- `TURSO_TOKEN` — Turso auth token
+- `ASSEMBLYAI_API_KEY` — transcription (AssemblyAI batch + streaming)
+- `AZURE_OPENAI_ENDPOINT` — speaker identification
+- `AZURE_OPENAI_API_KEY` — speaker identification
+- `AZURE_OPENAI_API_VERSION` — defaults in `.env.example`
+
+**Production only:**
+
+- `CRON_SECRET` — Vercel cron job authorization
+
+**Optional:**
+
+- `NEXT_PUBLIC_BASE_URL` — defaults to `http://localhost:3000`
+
+**Eval system only:** `AZURE_SPEECH_KEY`, `AZURE_SPEECH_ENDPOINT`, `GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`.
 
 ## Architecture
 
 ### Data Flow
 
-UN Web TV has no public API — `lib/un-api.ts` scrapes HTML directly. Videos are fetched for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`), cached for 5 minutes, and stored/synced into Turso via `scripts/sync-videos.ts`.
+UN Web TV has no public API — `lib/un-api.ts` scrapes HTML directly. On page load, videos are fetched for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`, default 14 days), cached for 5 minutes. All scraped videos are persisted into Turso via `scripts/sync-videos.ts`.
 
-Videos are hosted on Kaltura (partner ID: `2503451`). The Kaltura entry ID differs from the asset ID visible in the URL; `lib/kaltura-helpers.ts` handles the resolution.
+For search beyond the rolling window, the frontend calls `/api/search` which queries Turso directly.
+
+Videos are hosted on Kaltura (partner ID: `2503451`). Two ID systems exist:
+
+- **Asset ID** — visible in UN Web TV URLs, used as primary key in `videos` table
+- **Kaltura entry ID** — needed for player embed and audio URL; `lib/kaltura.ts` extracts it from various formats, `lib/kaltura-helpers.ts` resolves asset ID → entry ID via Kaltura API
 
 ### Transcription Pipeline
 
-Triggered from the video page UI or API:
+Triggered from the video page UI or via scheduled processing:
 
-1. `app/api/transcribe/route.ts` — accepts `kalturaId`, resolves to Kaltura `entryId` + audio URL
-2. `lib/transcription.ts` — submits audio to AssemblyAI, returns `transcriptId` for polling
-3. `app/api/transcribe/poll/route.ts` — client polls this until AssemblyAI finishes
-4. `app/api/identify-speakers/route.ts` — fires async after transcription; uses Azure OpenAI to map raw speaker labels to named delegates
-5. Results stored in Turso (`lib/turso.ts`) under the `transcripts` table with a pipeline lock to prevent duplicate processing
+1. **Start**: `app/api/transcribe/route.ts` — accepts `kalturaId`, resolves to Kaltura `entryId` + audio URL via `lib/transcription.ts`
+2. **Submit**: `lib/transcription.ts` — submits audio to AssemblyAI, returns `transcriptId`
+3. **Poll**: `app/api/transcribe/poll/route.ts` — client polls until AssemblyAI completes; result stored in Turso
+4. **Speaker ID**: `app/api/identify-speakers/route.ts` — fires after transcription; uses Azure OpenAI with Zod structured output to map speaker labels → named delegates. Implemented in `lib/speaker-identification.ts`, mappings stored via `lib/speakers.ts`
+5. **Storage**: Results in Turso (`lib/turso.ts`) with pipeline lock to prevent duplicate processing
 
-Long sessions can be split into time segments (`startTime`/`endTime`); `app/api/transcribe/segments/route.ts` handles segmented transcription.
+**Segmented transcription**: Long sessions can be split into time ranges (`startTime`/`endTime`) via `app/api/transcribe/segments/route.ts`.
+
+**Scheduled transcription**: Videos can be queued for transcription before audio is available. `lib/turso.ts:scheduleTranscript()` creates a `scheduled` status record. The Vercel cron job (`/api/cron/process-scheduled`, every 5 min) picks these up and starts transcription once audio is available.
+
+**Live transcription**: `components/live-transcription.tsx` connects to AssemblyAI's streaming API via WebSocket. Token generated by `/api/stream-transcribe/token`.
+
+**HLS download**: `/api/download-hls` downloads HLS segments, concatenates them, and uploads to AssemblyAI for transcription of specific time ranges.
 
 ### Database (Turso / libSQL)
 
-`lib/turso.ts` is the single data access layer. Tables:
-- `videos` — scraped video metadata, keyed by `asset_id`
-- `transcripts` — transcription results with status lifecycle: `transcribing → transcribed → identifying_speakers → completed | error`
-- `speaker_mappings` — AI-resolved speaker name→label mapping per transcript
-- `processing_usage_events` — per-operation API cost tracking (AssemblyAI hours, OpenAI tokens)
+`lib/turso.ts` is the single data-access layer. Schema auto-migrates on first connection via `ensureInitialized()`.
 
-Schema is auto-migrated on first connection via `ensureInitialized()`.
+**Tables:**
+
+- `videos` — scraped video metadata, keyed by `asset_id`. Columns: `entry_id`, `title`, `clean_title`, `date`, `scheduled_time`, `duration`, `url`, `body`, `category`, `event_code`, `event_type`, `session_number`, `part_number`, `last_seen`
+- `transcripts` — transcription results, keyed by `transcript_id`. Status lifecycle: `scheduled → transcribing → transcribed → identifying_speakers → analyzing_topics → completed | error`. Has `pipeline_lock` column for concurrency control (30-min timeout)
+- `speaker_mappings` — AI-resolved speaker info per transcript (name, function, affiliation, group)
+- `processing_usage_events` — per-operation API cost tracking (provider, stage, tokens, hours, rate card)
+
+**Key queries:** `searchVideos` (LIKE on title/clean_title), `getScheduledTranscripts`, `getAllTranscriptedEntries`, `getRecentVideos`.
+
+**Types exported:** `Transcript`, `TranscriptContent`, `VideoRecord`, `TranscriptStatus`, `ProcessingUsageEvent`, `SpeakerMapping` (from `lib/speakers.ts`).
+
+### API Routes
+
+| Route                          | Method | Purpose                                                      |
+| ------------------------------ | ------ | ------------------------------------------------------------ |
+| `/api/transcribe`              | POST   | Start transcription for a video                              |
+| `/api/transcribe/poll`         | GET    | Poll transcription status                                    |
+| `/api/transcribe/segments`     | POST   | Segmented transcription (time ranges)                        |
+| `/api/identify-speakers`       | POST   | Run speaker identification on transcript                     |
+| `/api/get-speaker-mapping`     | GET    | Fetch speaker mapping for a transcript                       |
+| `/api/search`                  | GET    | Search video archive (`?q=...&offset=...`)                   |
+| `/api/stream-transcribe/token` | GET    | Generate AssemblyAI streaming token                          |
+| `/api/download-hls`            | POST   | Download HLS segments + upload to AssemblyAI                 |
+| `/api/cron/process-scheduled`  | POST   | Cron: process scheduled transcripts (auth via `CRON_SECRET`) |
+| `/json`                        | GET    | JSON API: all recent videos                                  |
+| `/json/[id]`                   | GET    | JSON API: single video by asset ID                           |
 
 ### Frontend
 
-- `app/page.tsx` — server component; scrapes/fetches videos and renders the table
-- `app/video/[id]/page.tsx` — individual video page; loads transcript from Turso server-side
-- `components/video-table.tsx` — client component using TanStack Table with column filters, sorting, pagination
-- `components/transcription-panel.tsx` — client component managing the transcribe/poll/display flow
-- `components/video-page-client.tsx` — wraps the video page client interactions
+**Pages:**
 
-### JSON API
+- `app/page.tsx` — server component; scrapes videos for schedule window, fetches transcripted entries from Turso, renders `VideoTable`
+- `app/video/[id]/page.tsx` — video page; loads transcript from Turso server-side, renders player + transcript panel
 
-`app/json/route.ts` and `app/json/[id]/route.ts` expose video list and individual video data as JSON.
+**Components:**
+
+- `components/video-table.tsx` — main table (client component, TanStack Table). Column filters (date dropdown, status dropdown, body dropdown, text search), pagination, active filters display. Includes scheduled-view toggle and search-archive mode
+- `components/transcription-panel.tsx` — manages the transcribe → poll → display lifecycle with speaker mapping display
+- `components/video-page-client.tsx` — wraps video page client interactions
+- `components/video-player.tsx` — Kaltura embedded player (loads Kaltura SDK dynamically)
+- `components/live-transcription.tsx` — real-time streaming transcription via WebSocket
+- `components/site-header.tsx` — header with two variants: `home` (full) and `nav` (compact with back link)
+- `components/AnimatedCornerLogo.tsx` — animated corner logo
+
+### Cost Tracking
+
+`lib/usage-tracking.ts` wraps OpenAI and AssemblyAI calls to record usage to the `processing_usage_events` table. Tracks tokens, hours, rate card versions, and estimated USD cost. Report via `pnpm usage-report`.
 
 ### Eval System
 
-`eval/` is an independent evaluation harness for benchmarking transcription providers (AssemblyAI, Azure OpenAI Whisper, Azure Speech, Gemini, ElevenLabs, Google Chirp) against UN verbatim records (PV documents) as ground truth.
+`eval/` is a fully independent evaluation harness — separate `tsconfig`, excluded from root type-check. The dashboard (`eval/dashboard/`) is a standalone Vite + React app using npm (not pnpm). See `eval/README.md` for full details.
 
-- `eval/run.ts` — CLI entry point; accepts `--symbol`, `--corpus`, `--providers`, `--languages`
-- `eval/providers/` — one file per STT provider implementing a common interface
-- `eval/ground-truth/` — fetches UN verbatim PDFs from the Official Document System API and normalizes them
-- `eval/metrics/` — WER/CER calculation with UN-specific text normalization
-- `eval/corpus/` — corpus discovery (sessions with available ground truth)
-- Results written to `eval/results/` as JSON; uploadable to HuggingFace via `eval/hf/`
-
-### Eval Dashboard (`eval/dashboard/`)
-
-A standalone Vite + React app for visualizing eval results. Completely independent from the root project — it has its own `package.json`, `node_modules`, and `tsconfig`, managed with `npm` (not pnpm). Run it with `npm run dev` from inside `eval/dashboard/`. The root `tsconfig.json` excludes `eval/` to prevent type-check cross-contamination.
+Benchmarks 6 STT providers against UN verbatim records (PV documents) as ground truth across all 6 UN languages.
 
 ## Conventions
 
-- Use Tailwind CSS v4 syntax — many v3 utilities changed; consult docs when unsure
-- Install shadcn components with `npx shadcn@latest add <component>`
-- Use colors defined in `app/globals.css` (`--color-un-blue`, `--color-un-gray`, etc.) via Tailwind theme tokens
-- Left-align UI elements; follow clear design hierarchy
-- Prefer global solutions over parallel infrastructures; avoid hardcoding values that are hard to locate
-- Scripts in `scripts/` use `lib/load-env` (loads `.env.local` via dotenv) since they run outside Next.js
+- **Tailwind CSS v4** — many utilities changed from v3; consult docs when unsure
+- **shadcn components**: `npx shadcn@latest add <component>`
+- **UN colors**: defined in `app/globals.css` (`--color-un-blue`, `--color-un-gray`, etc.), used via Tailwind theme tokens
+- **Font**: Roboto (loaded via `next/font/google` in layout)
+- **Left-align** UI elements; follow clear design hierarchy
+- **Global solutions** over parallel infrastructures; avoid hardcoding values
+- **Scripts** in `scripts/` use `lib/load-env` (loads `.env.local` via dotenv) since they run outside Next.js
+- **Path alias**: `@/*` maps to project root (see `tsconfig.json`)
+- **Vercel cron**: configured in `vercel.json`, authenticated via `CRON_SECRET` Bearer token
+- **Two ID systems**: Asset IDs (UN Web TV URLs, DB primary key) vs Kaltura entry IDs (player/audio). Always be clear which one you're working with
