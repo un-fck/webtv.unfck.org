@@ -382,6 +382,8 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         filterFn: (row, _columnId, filterValue) => {
           if (filterValue === "hide_scheduled")
             return row.original.status !== "scheduled";
+          if (filterValue === "show_only_scheduled")
+            return row.original.status === "scheduled";
           return true;
         },
         enableHiding: true,
@@ -474,16 +476,19 @@ export function VideoTable({ videos }: { videos: Video[] }) {
     },
   });
 
-  // Toggle showing scheduled videos - also update sorting
+  // Toggle between Past and Scheduled tabs
   const toggleScheduled = () => {
     const newValue = !showScheduled;
     setShowScheduled(newValue);
     if (newValue) {
-      // Show scheduled: remove status filter and sort by time only (scheduled in future = first)
-      setColumnFilters((prev) => prev.filter((f) => f.id !== "status"));
-      setSorting([{ id: "scheduledTime", desc: true }]);
+      // Scheduled tab: show only scheduled, sort soonest first
+      setColumnFilters((prev) => [
+        ...prev.filter((f) => f.id !== "status"),
+        { id: "status", value: "show_only_scheduled" },
+      ]);
+      setSorting([{ id: "scheduledTime", desc: false }]);
     } else {
-      // Hide scheduled: add filter back and sort live first
+      // Past tab: hide scheduled, sort live first then most recent
       setColumnFilters((prev) => [
         ...prev.filter((f) => f.id !== "status"),
         { id: "status", value: "hide_scheduled" },
@@ -498,25 +503,30 @@ export function VideoTable({ videos }: { videos: Video[] }) {
   return (
     <div className="space-y-4">
       {/* Desktop: Search bar with count */}
-      <div className="hidden flex-wrap items-center gap-4 lg:flex">
+      <div className="hidden items-center gap-4 lg:flex">
         <input
           type="text"
           placeholder="Search all columns…"
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="min-w-[200px] flex-1 rounded-lg border border-border bg-muted/40 px-4 py-2 text-sm transition-colors placeholder:text-muted-foreground/50 focus:border-primary focus:bg-background focus:outline-none"
+          className="w-1/2 rounded-lg border border-border bg-muted/40 px-4 py-2 text-sm transition-colors placeholder:text-muted-foreground/50 focus:border-primary focus:bg-background focus:outline-none"
         />
-        <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
-          <input
-            type="checkbox"
-            checked={showScheduled}
-            onChange={toggleScheduled}
-            className="h-4 w-4 rounded border-gray-300"
-          />
-          <span className="text-muted-foreground">Show scheduled</span>
-        </label>
+        <div className="flex rounded-md bg-muted p-0.5 text-xs font-medium">
+          <button
+            onClick={() => showScheduled && toggleScheduled()}
+            className={`rounded px-3 py-1.5 transition-colors ${!showScheduled ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Past
+          </button>
+          <button
+            onClick={() => !showScheduled && toggleScheduled()}
+            className={`rounded px-3 py-1.5 transition-colors ${showScheduled ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Scheduled
+          </button>
+        </div>
         <div className="ml-auto text-sm whitespace-nowrap text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} of {videos.length} videos
+          {table.getFilteredRowModel().rows.length} meetings
         </div>
       </div>
 
@@ -588,15 +598,6 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
             <input
               type="checkbox"
-              checked={showScheduled}
-              onChange={toggleScheduled}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <span className="text-muted-foreground">Show scheduled</span>
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
-            <input
-              type="checkbox"
               checked={
                 (table
                   .getColumn("hasTranscript")
@@ -607,12 +608,23 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                   .getColumn("hasTranscript")
                   ?.setFilterValue(e.target.checked ? true : undefined)
               }
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-gray-300 accent-primary"
             />
             <span className="text-muted-foreground">With transcript</span>
           </label>
-          <div className="ml-auto text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} of {videos.length}
+          <div className="flex rounded-md bg-muted p-0.5 text-xs font-medium">
+            <button
+              onClick={() => showScheduled && toggleScheduled()}
+              className={`rounded px-3 py-1.5 transition-colors ${!showScheduled ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Past
+            </button>
+            <button
+              onClick={() => !showScheduled && toggleScheduled()}
+              className={`rounded px-3 py-1.5 transition-colors ${showScheduled ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Scheduled
+            </button>
           </div>
         </div>
       </div>
