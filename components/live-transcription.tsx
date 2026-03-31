@@ -9,7 +9,6 @@ interface KalturaPlayer {
 
 interface LiveTranscriptionProps {
   player?: KalturaPlayer;
-  kalturaId: string;
 }
 
 interface Turn {
@@ -86,11 +85,12 @@ export function LiveTranscription({ player }: LiveTranscriptionProps) {
       };
 
       ws.onclose = (event) => {
-        if (event.code !== 1000) {
-          setError(`Connection closed: ${event.reason || "Unknown reason"} (code: ${event.code})`);
-        }
         setIsStreaming(false);
         setStatus("");
+        if (event.code === 1000) return;
+        // Reconnect on unexpected close (e.g. 1005 = server session timeout)
+        setStatus("Reconnecting...");
+        setTimeout(() => startStreaming(), 2000);
       };
 
       // Wait for video element

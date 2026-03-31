@@ -174,11 +174,7 @@ export function VideoPageClient({
         {/* RIGHT COLUMN: transcript (fills remaining width, full height scroll) */}
         <div className="min-h-0 flex-1 overflow-y-auto px-8 pt-5 pb-10">
           {isLive ? (
-            <LiveTranscription
-              player={player}
-              isLive={isLive}
-              kalturaId={kalturaId}
-            />
+            <LiveTranscription player={player} />
           ) : (
             <TranscriptionPanel
               kalturaId={kalturaId}
