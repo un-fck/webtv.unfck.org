@@ -159,7 +159,7 @@ export function LiveTranscription({ player }: LiveTranscriptionProps) {
   useEffect(() => () => stopStreaming(), [stopStreaming]);
 
   return (
-    <div className="mt-4 border-t pt-4">
+    <div className="mt-4">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold">Live Transcription</h3>

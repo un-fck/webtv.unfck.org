@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { VideoPlayer } from "./video-player";
 import { TranscriptionPanel } from "./transcription-panel";
 import { LiveTranscription } from "./live-transcription";
@@ -24,18 +24,47 @@ export function VideoPageClient({
   }>();
   const isLive = video.status === "live";
 
+  const [leftPct, setLeftPct] = useState(() => {
+    if (typeof window === "undefined") return 38;
+    return Number(localStorage.getItem("videoPageSplit") ?? 38);
+  });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragging.current || !containerRef.current) return;
+      const { left, width } = containerRef.current.getBoundingClientRect();
+      const pct = ((e.clientX - left) / width) * 100;
+      const next = Math.min(Math.max(pct, 20), 80);
+      setLeftPct(next);
+      localStorage.setItem("videoPageSplit", String(next));
+    };
+
+    const onMouseUp = () => {
+      dragging.current = false;
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  }, []);
+
   return (
-    // Mobile: single scrollable column
-    // Desktop (lg): shared header + two-column body — left (video + meta) | right (transcript)
     <div className="flex h-full flex-col overflow-hidden">
-      {/* ── HEADER BAR (shared) ───────────────────────── */}
       <SiteHeader variant="nav" backHref="/" />
 
-      {/* ── BODY: two columns on desktop ─────────────── */}
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* LEFT COLUMN: video + metadata (~38% width) */}
-        <div className="flex shrink-0 flex-col overflow-y-auto lg:w-[38%] lg:border-r lg:border-border">
-          {/* Video player */}
+      {/* Mobile: single column. Desktop: resizable two-column */}
+      <div ref={containerRef} className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        {/* LEFT COLUMN */}
+        <div
+          className="flex shrink-0 flex-col overflow-y-auto lg:border-r lg:border-border"
+          style={{ width: `${leftPct}%` }}
+        >
           <div className="aspect-video w-full shrink-0 bg-black">
             <VideoPlayer
               kalturaId={kalturaId}
@@ -45,7 +74,6 @@ export function VideoPageClient({
             />
           </div>
 
-          {/* Metadata */}
           <div className="px-5 py-4">
             <h1 className="mb-2 text-base leading-snug font-semibold">
               {video.cleanTitle}
@@ -171,18 +199,26 @@ export function VideoPageClient({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: transcript (fills remaining width, full height scroll) */}
+        {/* DRAG HANDLE */}
+        <div
+          onMouseDown={onMouseDown}
+          className="hidden lg:flex w-1 cursor-col-resize items-center justify-center bg-border hover:bg-primary/40 active:bg-primary/60 transition-colors"
+        />
+
+        {/* RIGHT COLUMN */}
         <div className="min-h-0 flex-1 overflow-y-auto px-8 pt-5 pb-10">
-          {isLive ? (
-            <LiveTranscription player={player} />
-          ) : (
-            <TranscriptionPanel
-              kalturaId={kalturaId}
-              player={player}
-              video={video}
-              metadata={metadata}
-            />
-          )}
+          <div className="mx-auto max-w-2xl">
+            {isLive ? (
+              <LiveTranscription player={player} />
+            ) : (
+              <TranscriptionPanel
+                kalturaId={kalturaId}
+                player={player}
+                video={video}
+                metadata={metadata}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
