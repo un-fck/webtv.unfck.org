@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { VideoPlayer } from "./video-player";
 import { TranscriptionPanel } from "./transcription-panel";
 import { LiveTranscription } from "./live-transcription";
@@ -24,10 +24,11 @@ export function VideoPageClient({
   }>();
   const isLive = video.status === "live";
 
-  const [leftPct, setLeftPct] = useState(() => {
-    if (typeof window === "undefined") return 38;
-    return Number(localStorage.getItem("videoPageSplit") ?? 38);
-  });
+  const [leftPct, setLeftPct] = useState(38);
+  useEffect(() => {
+    const stored = localStorage.getItem("videoPageSplit");
+    if (stored) setLeftPct(Number(stored));
+  }, []);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
 
