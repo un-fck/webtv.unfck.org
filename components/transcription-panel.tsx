@@ -142,7 +142,7 @@ interface TranscriptionPanelProps {
 
 interface Word {
   text: string;
-  speaker?: string | null; // AssemblyAI uses "speaker" (e.g., "A", "B", "C")
+  speaker?: string | null;
   start: number; // Milliseconds
   end: number; // Milliseconds
 }
@@ -431,7 +431,7 @@ export function TranscriptionPanel({
   const [stage, setStage] = useState<Stage>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
-  const [currentTime, setCurrentTime] = useState<number>(0);
+  const currentTimeRef = useRef<number>(0);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState<number>(-1);
   const [showCopied, setShowCopied] = useState(false);
   const [speakerMappings, setSpeakerMappings] = useState<SpeakerMapping>({});
@@ -729,7 +729,8 @@ export function TranscriptionPanel({
 
   const pollForCompletion = async (tid: string) => {
     let pollCount = 0;
-    const maxTranscriptionPolls = 200; // ~10 min for AssemblyAI
+    const maxTranscriptionPolls = 200;
+
 
     while (true) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -1026,20 +1027,84 @@ export function TranscriptionPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kalturaId, loadCountryNames]);
 
-  // Listen to player time updates with high frequency polling
+  // Poll player time via rAF and compute active indices in-loop.
+  // currentTime is kept as a ref (not state) to avoid triggering re-renders on every frame.
+  // setState is only called when an active index actually changes, which is far less frequent.
   useEffect(() => {
     if (!player) return;
 
     let animationFrameId: number;
     let lastTime = -1;
+    let lastSegIdx = -1;
+    let lastStmtIdx = -1;
+    let lastParaIdx = -1;
+    let lastSentIdx = -1;
+    let lastWordIdx = -1;
 
     const updateTime = () => {
       try {
         const time = player.currentTime;
-        // Only update if time has changed significantly (more than 0.01 seconds)
         if (Math.abs(time - lastTime) > 0.01) {
-          setCurrentTime(time);
           lastTime = time;
+          currentTimeRef.current = time;
+
+          if (!segments || !statements || statements.length === 0) {
+            if (lastSegIdx !== -1) { setActiveSegmentIndex(-1); lastSegIdx = -1; }
+            if (lastStmtIdx !== -1) { setActiveStatementIndex(-1); lastStmtIdx = -1; }
+            if (lastParaIdx !== -1) { setActiveParagraphIndex(-1); lastParaIdx = -1; }
+            if (lastSentIdx !== -1) { setActiveSentenceIndex(-1); lastSentIdx = -1; }
+            if (lastWordIdx !== -1) { setActiveWordIndex(-1); lastWordIdx = -1; }
+          } else {
+            let newSegIdx = -1;
+            for (let i = segments.length - 1; i >= 0; i--) {
+              if (time >= segments[i].timestamp) { newSegIdx = i; break; }
+            }
+
+            let newStmtIdx = -1;
+            for (let i = statements.length - 1; i >= 0; i--) {
+              const stmt = statements[i];
+              if (stmt?.paragraphs?.[0]?.sentences?.[0]) {
+                if (time >= stmt.paragraphs[0].sentences[0].start / 1000) { newStmtIdx = i; break; }
+              }
+            }
+
+            let newParaIdx = -1;
+            if (newStmtIdx >= 0) {
+              const stmt = statements[newStmtIdx];
+              if (stmt?.paragraphs) {
+                for (let i = stmt.paragraphs.length - 1; i >= 0; i--) {
+                  const para = stmt.paragraphs[i];
+                  if (para.sentences?.[0] && time >= para.sentences[0].start / 1000) { newParaIdx = i; break; }
+                }
+              }
+            }
+
+            let newSentIdx = -1;
+            if (newStmtIdx >= 0 && newParaIdx >= 0) {
+              const para = statements[newStmtIdx]?.paragraphs?.[newParaIdx];
+              if (para?.sentences) {
+                for (let i = para.sentences.length - 1; i >= 0; i--) {
+                  if (time >= para.sentences[i].start / 1000) { newSentIdx = i; break; }
+                }
+              }
+            }
+
+            let newWordIdx = -1;
+            if (newStmtIdx >= 0 && newParaIdx >= 0 && newSentIdx >= 0) {
+              const sentence = statements[newStmtIdx]?.paragraphs?.[newParaIdx]?.sentences?.[newSentIdx];
+              if (sentence?.words) {
+                for (let i = sentence.words.length - 1; i >= 0; i--) {
+                  if (time >= sentence.words[i].start / 1000) { newWordIdx = i; break; }
+                }
+              }
+            }
+
+            if (newSegIdx !== lastSegIdx) { setActiveSegmentIndex(newSegIdx); lastSegIdx = newSegIdx; }
+            if (newStmtIdx !== lastStmtIdx) { setActiveStatementIndex(newStmtIdx); lastStmtIdx = newStmtIdx; }
+            if (newParaIdx !== lastParaIdx) { setActiveParagraphIndex(newParaIdx); lastParaIdx = newParaIdx; }
+            if (newSentIdx !== lastSentIdx) { setActiveSentenceIndex(newSentIdx); lastSentIdx = newSentIdx; }
+            if (newWordIdx !== lastWordIdx) { setActiveWordIndex(newWordIdx); lastWordIdx = newWordIdx; }
+          }
         }
       } catch (err) {
         console.log("Failed to get current time:", err);
@@ -1052,97 +1117,7 @@ export function TranscriptionPanel({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [player]);
-
-  // Calculate all active indices in a single effect (avoids cascading effects)
-  useEffect(() => {
-    if (!segments || !statements || statements.length === 0) {
-      setActiveSegmentIndex(-1);
-      setActiveStatementIndex(-1);
-      setActiveParagraphIndex(-1);
-      setActiveSentenceIndex(-1);
-      setActiveWordIndex(-1);
-      return;
-    }
-
-    // Find active segment
-    let newSegmentIdx = -1;
-    for (let i = segments.length - 1; i >= 0; i--) {
-      if (currentTime >= segments[i].timestamp) {
-        newSegmentIdx = i;
-        break;
-      }
-    }
-
-    // Find active statement (scan all statements by time)
-    let newStmtIdx = -1;
-    for (let i = statements.length - 1; i >= 0; i--) {
-      const stmt = statements[i];
-      if (stmt?.paragraphs?.[0]?.sentences?.[0]) {
-        const stmtStart = stmt.paragraphs[0].sentences[0].start / 1000;
-        if (currentTime >= stmtStart) {
-          newStmtIdx = i;
-          break;
-        }
-      }
-    }
-
-    // Find active paragraph within statement
-    let newParaIdx = -1;
-    if (newStmtIdx >= 0) {
-      const stmt = statements[newStmtIdx];
-      if (stmt?.paragraphs) {
-        for (let i = stmt.paragraphs.length - 1; i >= 0; i--) {
-          const para = stmt.paragraphs[i];
-          if (para.sentences?.[0]) {
-            const paraStart = para.sentences[0].start / 1000;
-            if (currentTime >= paraStart) {
-              newParaIdx = i;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    // Find active sentence within paragraph
-    let newSentIdx = -1;
-    if (newStmtIdx >= 0 && newParaIdx >= 0) {
-      const para = statements[newStmtIdx]?.paragraphs?.[newParaIdx];
-      if (para?.sentences) {
-        for (let i = para.sentences.length - 1; i >= 0; i--) {
-          if (currentTime >= para.sentences[i].start / 1000) {
-            newSentIdx = i;
-            break;
-          }
-        }
-      }
-    }
-
-    // Find active word within sentence
-    let newWordIdx = -1;
-    if (newStmtIdx >= 0 && newParaIdx >= 0 && newSentIdx >= 0) {
-      const sentence =
-        statements[newStmtIdx]?.paragraphs?.[newParaIdx]?.sentences?.[
-          newSentIdx
-        ];
-      if (sentence?.words) {
-        for (let i = sentence.words.length - 1; i >= 0; i--) {
-          if (currentTime >= sentence.words[i].start / 1000) {
-            newWordIdx = i;
-            break;
-          }
-        }
-      }
-    }
-
-    // Batch state updates (React will batch these)
-    setActiveSegmentIndex(newSegmentIdx);
-    setActiveStatementIndex(newStmtIdx);
-    setActiveParagraphIndex(newParaIdx);
-    setActiveSentenceIndex(newSentIdx);
-    setActiveWordIndex(newWordIdx);
-  }, [currentTime, segments, statements]);
+  }, [player, segments, statements]);
 
   // Auto-scroll to active paragraph
   const lastScrolledKey = useRef<string | null>(null);
@@ -1171,9 +1146,10 @@ export function TranscriptionPanel({
     const containerHeight = scrollContainer.clientHeight;
 
     // Detect if user jumped (time changed by > 5 seconds in one update)
-    const timeDelta = Math.abs(currentTime - lastTimeRef.current);
+    const time = currentTimeRef.current;
+    const timeDelta = Math.abs(time - lastTimeRef.current);
     const isJump = timeDelta > 5;
-    lastTimeRef.current = currentTime;
+    lastTimeRef.current = time;
 
     // For jumps: always scroll. For normal playback: only if roughly in view
     const relativeTop = elementRect.top - containerRect.top;
@@ -1190,7 +1166,7 @@ export function TranscriptionPanel({
       });
       lastScrolledKey.current = key;
     }
-  }, [activeStatementIndex, activeParagraphIndex, currentTime]);
+  }, [activeStatementIndex, activeParagraphIndex]);
 
   // Handle click outside dropdown
   useEffect(() => {

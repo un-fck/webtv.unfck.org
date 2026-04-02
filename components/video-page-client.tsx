@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { VideoPlayer } from "./video-player";
 import { TranscriptionPanel } from "./transcription-panel";
-import { LiveTranscription } from "./live-transcription";
 import { SiteHeader } from "./site-header";
 import type { Video, VideoMetadata } from "@/lib/un-api";
 
@@ -22,7 +21,6 @@ export function VideoPageClient({
     currentTime: number;
     play: () => void;
   }>();
-  const isLive = video.status === "live";
 
   const [leftPct, setLeftPct] = useState(38);
   useEffect(() => {
@@ -209,16 +207,12 @@ export function VideoPageClient({
         {/* RIGHT COLUMN */}
         <div className="min-h-0 flex-1 overflow-y-auto px-8 pt-5 pb-10">
           <div className="mx-auto max-w-2xl">
-            {isLive ? (
-              <LiveTranscription player={player} />
-            ) : (
-              <TranscriptionPanel
-                kalturaId={kalturaId}
-                player={player}
-                video={video}
-                metadata={metadata}
-              />
-            )}
+            <TranscriptionPanel
+              kalturaId={kalturaId}
+              player={player}
+              video={video}
+              metadata={metadata}
+            />
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import "../lib/load-env";
 import { getTursoClient } from "../lib/turso";
-import { transcribeEntry, pollTranscription } from "../lib/transcription";
+import { submitGeminiTranscription, pollTranscription } from "../lib/transcription";
 import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 
 const usage = `Usage:
@@ -23,7 +23,7 @@ async function resolveEntryId(input: string) {
   return entryId;
 }
 
-async function loadTargets(arg: string) {
+async function loadTargets(arg: string): Promise<string[]> {
   if (arg.toLowerCase() === "all") {
     const client = await getTursoClient();
     const rows = await client.execute({
@@ -36,34 +36,34 @@ async function loadTargets(arg: string) {
 
 async function pollUntilComplete(
   transcriptId: string,
-  entryId: string,
+  label: string,
 ): Promise<void> {
-  const maxAttempts = 120; // 10 minutes max
-  const pollInterval = 5000; // 5 seconds
+  const maxAttempts = 240; // 20 minutes max
+  const pollInterval = 5000;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const result = await pollTranscription(transcriptId);
 
     if (result.stage === "completed") {
-      console.log(`  ✓ Completed ${entryId}`);
+      console.log(`  ✓ Completed ${label}`);
       return;
     } else if (result.stage === "error") {
       throw new Error(
-        `Transcription failed for ${entryId}: ${result.error_message}`,
+        `Transcription failed for ${label}: ${result.error_message}`,
       );
     }
 
-    if (attempt % 6 === 0) {
-      // Every 30s
+    if (attempt % 12 === 0) {
+      // Every 60s
       console.log(
-        `  ⏳ Still processing ${entryId} (${result.stage})... (${attempt * 5}s)`,
+        `  ⏳ Still processing ${label} (${result.stage})... (${Math.round((attempt * pollInterval) / 1000)}s)`,
       );
     }
 
     await new Promise((resolve) => setTimeout(resolve, pollInterval));
   }
 
-  throw new Error(`Timeout polling ${entryId}`);
+  throw new Error(`Timeout polling ${label}`);
 }
 
 async function run() {
@@ -73,7 +73,8 @@ async function run() {
   console.log(`Processing ${total} entry/entries...\n`);
 
   for (const entryId of targets) {
-    const { transcriptId } = await transcribeEntry(entryId, true);
+    // submitGeminiTranscription expects a kalturaId — for entry IDs already resolved, pass directly
+    const { transcriptId } = await submitGeminiTranscription(entryId, { force: true });
     console.log(`✓ Submitted ${entryId} (${transcriptId})`);
     await pollUntilComplete(transcriptId, entryId);
   }

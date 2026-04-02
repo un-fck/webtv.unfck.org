@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import {
   saveTranscript,
   deleteTranscriptsForEntry,
@@ -10,11 +11,17 @@ import {
   type RawParagraph,
 } from "./turso";
 import { identifySpeakers } from "./speaker-identification";
+import type { SpeakerMapping } from "./speakers";
 import {
-  trackAssemblyAIFetch,
+  trackGeminiTranscription,
   UsageOperations,
   UsageStages,
 } from "./usage-tracking";
+import {
+  transcribeAudioWithGemini,
+  type GeminiTranscriptionOptions,
+} from "./gemini-transcription";
+import { setSpeakerMapping } from "./speakers";
 
 export { type TranscriptStatus } from "./turso";
 
@@ -138,73 +145,12 @@ export async function getAvailableAudioLanguages(kalturaId: string) {
   };
 }
 
-export async function submitTranscription(audioUrl: string) {
-  const requestBody = {
-    audio_url: audioUrl,
-    speaker_labels: true,
-    keyterms_prompt: [
-      "UN80",
-      "Carolyn Schwalger",
-      "Brian Wallace",
-      "Guy Ryder",
-    ],
-  };
-  const response = await trackAssemblyAIFetch({
-    stage: UsageStages.transcribing,
-    operation: UsageOperations.assemblySubmit,
-    url: "https://api.assemblyai.com/v2/transcript",
-    init: {
-      method: "POST",
-      headers: {
-        Authorization: process.env.ASSEMBLYAI_API_KEY!,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    },
-    requestMeta: { endpoint: "submit_transcript" },
-    resolveTranscriptId: (responseJson) => {
-      if (!responseJson || typeof responseJson !== "object") return null;
-      const id = (responseJson as Record<string, unknown>).id;
-      return typeof id === "string" ? id : null;
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to submit: ${error}`);
-  }
-
-  const data = await response.json();
-  return data.id as string;
-}
-
-async function fetchAssemblyAIParagraphs(
-  transcriptId: string,
-): Promise<RawParagraph[]> {
-  const response = await trackAssemblyAIFetch({
-    transcriptId,
-    stage: UsageStages.transcribing,
-    operation: UsageOperations.assemblyFetchParagraphs,
-    url: `https://api.assemblyai.com/v2/transcript/${transcriptId}/paragraphs`,
-    init: {
-      headers: { Authorization: process.env.ASSEMBLYAI_API_KEY! },
-    },
-    requestMeta: { endpoint: "fetch_paragraphs" },
-  });
-  if (!response.ok)
-    throw new Error("Failed to fetch paragraphs from AssemblyAI");
-  const data = await response.json();
-  return data.paragraphs;
-}
-
 export async function pollTranscription(
   transcriptId: string,
 ): Promise<PollResult> {
-  // First check our database status
   const transcript = await getTranscriptById(transcriptId);
   if (!transcript) throw new Error("Transcript not found");
 
-  // If already completed, return the data
   if (transcript.status === "completed") {
     return {
       stage: "completed",
@@ -215,7 +161,6 @@ export async function pollTranscription(
     };
   }
 
-  // If error, return error with available data
   if (transcript.status === "error") {
     return {
       stage: "error",
@@ -227,7 +172,6 @@ export async function pollTranscription(
     };
   }
 
-  // If in a later stage, return current progress
   if (
     transcript.status === "identifying_speakers" ||
     transcript.status === "analyzing_topics"
@@ -241,12 +185,10 @@ export async function pollTranscription(
     };
   }
 
-  // If transcribed but pipeline not running, check if we should start it
+  // transcribed but pipeline not running — start it
   if (transcript.status === "transcribed") {
-    // Try to acquire lock and start pipeline
     const acquired = await tryAcquirePipelineLock(transcriptId);
     if (acquired) {
-      // Start pipeline in background (don't await)
       runPipeline(transcriptId, transcript.entry_id).catch((err) => {
         console.error("Pipeline error:", err);
         updateTranscriptStatus(
@@ -263,65 +205,7 @@ export async function pollTranscription(
     };
   }
 
-  // Still transcribing - check AssemblyAI
-  const pollResponse = await trackAssemblyAIFetch({
-    transcriptId,
-    stage: UsageStages.transcribing,
-    operation: UsageOperations.assemblyPoll,
-    url: `https://api.assemblyai.com/v2/transcript/${transcriptId}`,
-    init: {
-      headers: { Authorization: process.env.ASSEMBLYAI_API_KEY! },
-    },
-    requestMeta: { endpoint: "poll_transcript" },
-  });
-  if (!pollResponse.ok) throw new Error("Failed to poll AssemblyAI");
-
-  const assemblyData = await pollResponse.json();
-
-  if (assemblyData.status === "completed") {
-    // Fetch paragraphs and save to DB
-    const rawParagraphs = await fetchAssemblyAIParagraphs(transcriptId);
-    const content: TranscriptContent = {
-      raw_paragraphs: rawParagraphs,
-      statements: [],
-      topics: {},
-    };
-
-    await saveTranscript(
-      transcript.entry_id,
-      transcriptId,
-      transcript.start_time,
-      transcript.end_time,
-      transcript.audio_url,
-      "transcribed",
-      assemblyData.language_code,
-      content,
-    );
-
-    // Try to start the pipeline
-    const acquired = await tryAcquirePipelineLock(transcriptId);
-    if (acquired) {
-      runPipeline(transcriptId, transcript.entry_id).catch((err) => {
-        console.error("Pipeline error:", err);
-        updateTranscriptStatus(
-          transcriptId,
-          "error",
-          err instanceof Error ? err.message : "Pipeline failed",
-        );
-        releasePipelineLock(transcriptId);
-      });
-    }
-
-    return { stage: "identifying_speakers", raw_paragraphs: rawParagraphs };
-  } else if (assemblyData.status === "error") {
-    await updateTranscriptStatus(
-      transcriptId,
-      "error",
-      assemblyData.error || "AssemblyAI transcription failed",
-    );
-    return { stage: "error", error_message: assemblyData.error };
-  }
-
+  // Gemini transcripts run fully in-process — nothing to poll externally
   return { stage: "transcribing" };
 }
 
@@ -329,16 +213,12 @@ async function runPipeline(transcriptId: string, _entryId: string) {
   try {
     await updateTranscriptStatus(transcriptId, "identifying_speakers");
 
-    // Fetch paragraphs from our stored data
     const transcript = await getTranscriptById(transcriptId);
     if (!transcript?.content.raw_paragraphs) {
       throw new Error("No raw paragraphs available");
     }
 
-    // Run speaker identification (this also does topic analysis internally and saves to DB)
     await identifySpeakers(transcript.content.raw_paragraphs, transcriptId);
-
-    // Mark as completed
     await updateTranscriptStatus(transcriptId, "completed");
     await releasePipelineLock(transcriptId);
   } catch (err) {
@@ -353,25 +233,139 @@ async function runPipeline(transcriptId: string, _entryId: string) {
   }
 }
 
-export async function transcribeEntry(kalturaId: string, force = true) {
-  const { entryId, audioUrl } = await getKalturaAudioUrl(kalturaId);
+// ---- Gemini transcription path ----
 
-  if (force) {
+async function runGeminiPipeline(
+  transcriptId: string,
+  entryId: string,
+  audioUrl: string,
+  geminiOptions: GeminiTranscriptionOptions,
+): Promise<void> {
+  try {
+    await updateTranscriptStatus(transcriptId, "transcribing");
+    console.log(
+      `[Gemini pipeline] Starting for transcript ${transcriptId}`,
+    );
+
+    const start = Date.now();
+    const geminiResult = await transcribeAudioWithGemini(audioUrl, {
+      ...geminiOptions,
+      transcriptId,
+    });
+    const durationMs = Date.now() - start;
+
+    console.log(
+      `[Gemini pipeline] Transcription complete: ${geminiResult.paragraphs.length} segments, ${geminiResult.chunked ? `${geminiResult.chunkCount} chunks` : "single call"}`,
+    );
+
+    await trackGeminiTranscription({
+      transcriptId,
+      stage: UsageStages.transcribing,
+      operation: UsageOperations.geminiTranscribe,
+      model: "gemini-3-flash-preview",
+      usageMetadata: geminiResult.usageMetadata,
+      audioSeconds: geminiResult.audioSeconds,
+      durationMs,
+      requestMeta: {
+        chunked: geminiResult.chunked,
+        chunkCount: geminiResult.chunkCount,
+        withThinking: geminiOptions.withThinking ?? false,
+        paragraph_count: geminiResult.paragraphs.length,
+      },
+    });
+
+    const content: TranscriptContent = {
+      raw_paragraphs: geminiResult.paragraphs,
+      statements: [],
+      topics: {},
+    };
+    await saveTranscript(
+      entryId,
+      transcriptId,
+      null,
+      null,
+      audioUrl,
+      "identifying_speakers",
+      null,
+      content,
+    );
+    await setSpeakerMapping(transcriptId, geminiResult.speakerMapping);
+
+    const acquired = await tryAcquirePipelineLock(transcriptId);
+    if (acquired) {
+      runAnalysisPipeline(
+        transcriptId,
+        geminiResult.paragraphs,
+        geminiResult.speakerMapping,
+      ).catch((err) => {
+        console.error("[Gemini pipeline] Analysis error:", err);
+        updateTranscriptStatus(
+          transcriptId,
+          "error",
+          err instanceof Error ? err.message : "Analysis failed",
+        );
+        releasePipelineLock(transcriptId);
+      });
+    }
+  } catch (err) {
+    console.error("[Gemini pipeline] Error:", err);
+    await updateTranscriptStatus(
+      transcriptId,
+      "error",
+      err instanceof Error ? err.message : "Gemini transcription failed",
+    );
+    throw err;
+  }
+}
+
+async function runAnalysisPipeline(
+  transcriptId: string,
+  paragraphs: RawParagraph[],
+  speakerMapping: SpeakerMapping,
+): Promise<void> {
+  try {
+    await updateTranscriptStatus(transcriptId, "identifying_speakers");
+    await identifySpeakers(paragraphs, transcriptId, speakerMapping);
+    await updateTranscriptStatus(transcriptId, "completed");
+    await releasePipelineLock(transcriptId);
+  } catch (err) {
+    await updateTranscriptStatus(
+      transcriptId,
+      "error",
+      err instanceof Error ? err.message : "Analysis pipeline failed",
+    );
+    await releasePipelineLock(transcriptId);
+    throw err;
+  }
+}
+
+/**
+ * Submit a Gemini transcription job and return immediately.
+ * The transcription + analysis runs in the background; clients poll via pollTranscription().
+ */
+export async function submitGeminiTranscription(
+  kalturaId: string,
+  options: GeminiTranscriptionOptions & { force?: boolean } = {},
+): Promise<{ entryId: string; transcriptId: string }> {
+  const { entryId, audioUrl } = await getKalturaAudioUrl(
+    kalturaId,
+    options.language === "fr" ? "french" : "english",
+  );
+
+  if (options.force) {
     await deleteTranscriptsForEntry(entryId);
   }
 
-  const transcriptId = await submitTranscription(audioUrl);
+  const transcriptId = `gemini-${randomUUID()}`;
 
-  await saveTranscript(
-    entryId,
-    transcriptId,
-    null,
-    null,
-    audioUrl,
-    "transcribing",
-    null,
-    { statements: [], topics: {} },
-  );
+  await saveTranscript(entryId, transcriptId, null, null, audioUrl, "transcribing", null, {
+    statements: [],
+    topics: {},
+  });
+
+  runGeminiPipeline(transcriptId, entryId, audioUrl, options).catch((err) => {
+    console.error("[Gemini pipeline] Unhandled error:", err);
+  });
 
   return { entryId, transcriptId };
 }

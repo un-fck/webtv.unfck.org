@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getTranscript,
-  saveTranscript,
   deleteTranscriptsForEntry,
   scheduleTranscript,
 } from "@/lib/turso";
-import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
+import { getKalturaAudioUrl, submitGeminiTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 
 export async function POST(request: NextRequest) {
   try {
-    const { kalturaId, checkOnly, force, startTime, endTime, action, assetId } =
+    const { kalturaId, checkOnly, force, startTime, endTime, action, assetId, withThinking } =
       await request.json();
 
     if (!kalturaId) {
@@ -34,12 +33,7 @@ export async function POST(request: NextRequest) {
     const isSegmentRequest = startTime !== undefined && endTime !== undefined;
 
     // Get audio download URL from Kaltura
-    const {
-      entryId,
-      audioUrl: baseDownloadUrl,
-      flavorParamId,
-      isLiveStream,
-    } = await getKalturaAudioUrl(kalturaId);
+    const { entryId } = await getKalturaAudioUrl(kalturaId);
 
     // Check Turso for existing transcript (unless force=true)
     if (!force) {
@@ -86,9 +80,6 @@ export async function POST(request: NextRequest) {
             console.error("Error triggering speaker identification:", err);
           });
 
-          console.log("✓ Speaker identification triggered");
-
-          // Return the transcript ID so frontend can poll for completion
           return NextResponse.json({
             transcriptId: cached.transcript_id,
             stage: "identifying_speakers",
@@ -107,83 +98,28 @@ export async function POST(request: NextRequest) {
         });
       }
     } else {
-      // Delete existing transcripts when force=true
       await deleteTranscriptsForEntry(entryId);
     }
 
-    // If checkOnly, return early
     if (checkOnly) {
       return NextResponse.json({ cached: false, text: null });
     }
 
-    // Submit new transcript to AssemblyAI
-    // For live streams, download HLS segments and upload to AssemblyAI
-    let audioUrl = baseDownloadUrl;
-
-    if (isLiveStream) {
-      console.log("Live stream detected, downloading HLS segments...");
-
-      const hlsResponse = await fetch(
-        `${request.url.split("/api/transcribe")[0]}/api/download-hls`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            entryId,
-            flavorParamsId: flavorParamId,
-            startTime: isSegmentRequest ? startTime : undefined,
-            endTime: isSegmentRequest ? endTime : undefined,
-          }),
-        },
-      );
-
-      if (!hlsResponse.ok) {
-        const error = await hlsResponse.text();
-        console.error("HLS download error:", error);
-        return NextResponse.json(
-          { error: `Failed to download HLS: ${error}` },
-          { status: 500 },
-        );
-      }
-
-      const hlsData = await hlsResponse.json();
-      audioUrl = hlsData.upload_url;
-      console.log("HLS uploaded to AssemblyAI:", audioUrl);
-    }
-
-    console.log("Submitting to AssemblyAI:", {
-      isSegment: isSegmentRequest,
-      isLiveStream,
-      audioUrl,
-    });
-
-    const transcriptId = await submitTranscription(audioUrl);
+    const { entryId: geminiEntryId, transcriptId: geminiTranscriptId } =
+      await submitGeminiTranscription(kalturaId, {
+        force,
+        withThinking: withThinking === true,
+      });
     console.log(
-      "✓ Submitted transcript:",
-      transcriptId,
+      "✓ Gemini transcription started:",
+      geminiTranscriptId,
       "for entryId:",
-      entryId,
+      geminiEntryId,
     );
-
-    // Save initial transcript record to Turso
-    await saveTranscript(
-      entryId,
-      transcriptId,
-      isSegmentRequest ? startTime : null,
-      isSegmentRequest ? endTime : null,
-      audioUrl,
-      "transcribing",
-      null,
-      { statements: [], topics: {} },
-    );
-    console.log("✓ Saved initial record to Turso");
-
-    // Return transcript ID immediately for client-side polling
     return NextResponse.json({
-      transcriptId,
+      transcriptId: geminiTranscriptId,
       stage: "transcribing",
-      segmentStart: isSegmentRequest ? startTime : undefined,
-      segmentEnd: isSegmentRequest ? endTime : undefined,
+      provider: "gemini",
     });
   } catch (error) {
     console.error("Transcription error:", error);

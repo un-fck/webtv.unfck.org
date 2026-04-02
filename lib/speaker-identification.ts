@@ -1,7 +1,7 @@
 import { AzureOpenAI } from "openai";
 import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { setSpeakerMapping, SpeakerInfo } from "./speakers";
+import { setSpeakerMapping, SpeakerInfo, SpeakerMapping } from "./speakers";
 import {
   getTranscriptById,
   updateTranscriptContent,
@@ -168,7 +168,8 @@ export interface ParagraphInput {
   words: ParagraphWord[];
 }
 
-export type SpeakerMapping = Record<string, SpeakerInfo>;
+// SpeakerMapping is imported from ./speakers and re-exported for consumers
+export type { SpeakerMapping } from './speakers';
 
 function createOpenAIClient() {
   return new AzureOpenAI({
@@ -1154,11 +1155,22 @@ If you determine the CURRENT paragraph should be split, copy the exact text from
 export async function identifySpeakers(
   paragraphs: ParagraphInput[],
   transcriptId?: string,
+  prebuiltMapping?: SpeakerMapping,
 ) {
   if (!paragraphs?.length) {
     throw new Error("No paragraphs provided");
   }
 
+  const client = createOpenAIClient();
+  let finalParagraphs = [...paragraphs];
+  let finalMapping: SpeakerMapping = {};
+
+  if (prebuiltMapping) {
+    // Gemini path: speaker identity already resolved — skip OpenAI speaker ID + resegmentation
+    console.log(`  → Using pre-built speaker mapping for ${paragraphs.length} paragraphs (Gemini path)...`);
+    finalMapping = { ...prebuiltMapping };
+  } else {
+  // AssemblyAI path: identify speakers via OpenAI
   console.log(`  → Analyzing ${paragraphs.length} paragraphs...`);
 
   const transcriptParts = paragraphs.map((para, index) => {
@@ -1166,8 +1178,6 @@ export async function identifySpeakers(
     const assemblySpeaker = para.words?.[0]?.speaker || "Unknown";
     return `[${index}] (AssemblyAI: Speaker ${assemblySpeaker}) ${text}`;
   });
-
-  const client = createOpenAIClient();
 
   const completion = await trackOpenAIChatCompletion({
     client,
@@ -1292,9 +1302,6 @@ ${transcriptParts.join("\n\n")}`,
     .filter((p) => p.has_multiple_speakers)
     .map((p) => p.index);
 
-  let finalParagraphs = [...paragraphs];
-  let finalMapping: SpeakerMapping = {};
-
   // Build initial mapping
   parsed.paragraphs.forEach((para) => {
     finalMapping[para.index.toString()] = {
@@ -1396,6 +1403,8 @@ ${transcriptParts.join("\n\n")}`,
       `  ✓ Rebuilt transcript: ${paragraphs.length} → ${finalParagraphs.length} paragraphs`,
     );
   }
+
+  } // end AssemblyAI path (else block)
 
   // Filter out off-record paragraphs
   const offRecordIndices = Object.keys(finalMapping)

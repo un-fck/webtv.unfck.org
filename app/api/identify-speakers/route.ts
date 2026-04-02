@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get transcript with raw paragraphs
     const transcript = await getTranscriptById(transcriptId);
     if (!transcript) {
       return NextResponse.json(
@@ -27,7 +26,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Try to acquire lock
+    const paragraphs = transcript.content.raw_paragraphs;
+    if (!paragraphs || paragraphs.length === 0) {
+      return NextResponse.json(
+        { error: "No raw paragraphs available" },
+        { status: 400 },
+      );
+    }
+
+
     const acquired = await tryAcquirePipelineLock(transcriptId);
     if (!acquired) {
       return NextResponse.json(
@@ -37,33 +44,11 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Use stored raw paragraphs or fetch from AssemblyAI
-      let paragraphs = transcript.content.raw_paragraphs;
-
-      if (!paragraphs || paragraphs.length === 0) {
-        const response = await fetch(
-          `https://api.assemblyai.com/v2/transcript/${transcriptId}/paragraphs`,
-          {
-            headers: { Authorization: process.env.ASSEMBLYAI_API_KEY! },
-          },
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch paragraphs from AssemblyAI");
-        }
-        const data = await response.json();
-        paragraphs = data.paragraphs;
-      }
-
-      if (!paragraphs || paragraphs.length === 0) {
-        throw new Error("No paragraphs available");
-      }
-
       await updateTranscriptStatus(transcriptId, "identifying_speakers");
       const mapping = await identifySpeakers(paragraphs, transcriptId);
       await updateTranscriptStatus(transcriptId, "completed");
       await releasePipelineLock(transcriptId);
 
-      // Return the updated transcript
       const updated = await getTranscriptById(transcriptId);
       return NextResponse.json({
         mapping,

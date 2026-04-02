@@ -8,8 +8,11 @@ import {
   ASSEMBLYAI_BASE_RATE_PER_HOUR_USD,
   ASSEMBLYAI_FEATURE_RATES_PER_HOUR_USD,
   ASSEMBLYAI_RATE_CARD_VERSION,
+  GEMINI_RATE_CARD_VERSION,
+  GEMINI_MODEL_PRICING,
 } from "./config";
 import { insertProcessingUsageEvent } from "./turso";
+import type { GeminiUsageMetadata } from "./gemini-transcription";
 
 export const UsageStages = {
   transcribing: "transcribing",
@@ -30,6 +33,7 @@ export const UsageOperations = {
   assemblySubmit: "assembly_submit_transcription",
   assemblyPoll: "assembly_poll_transcription",
   assemblyFetchParagraphs: "assembly_fetch_paragraphs",
+  geminiTranscribe: "gemini_transcribe",
 } as const;
 
 function safeJsonStringify(value: unknown): string | null {
@@ -215,6 +219,63 @@ export async function trackOpenAIChatCompletion({
     });
     throw error;
   }
+}
+
+interface GeminiTrackedCallArgs {
+  transcriptId?: string;
+  stage: string;
+  operation: string;
+  model: string;
+  usageMetadata: GeminiUsageMetadata;
+  /** Duration of the audio in seconds, used to populate usage_hours for cost comparison */
+  audioSeconds?: number;
+  durationMs: number;
+  requestMeta?: Record<string, unknown>;
+}
+
+export async function trackGeminiTranscription({
+  transcriptId,
+  stage,
+  operation,
+  model,
+  usageMetadata,
+  audioSeconds,
+  durationMs,
+  requestMeta,
+}: GeminiTrackedCallArgs): Promise<void> {
+  const pricing = GEMINI_MODEL_PRICING[model];
+  const usageHours = audioSeconds ? audioSeconds / 3600 : null;
+
+  // Estimate cost: input + output + thinking tokens
+  let estimatedCostUsd: number | null = null;
+  if (pricing) {
+    const { promptTokenCount, candidatesTokenCount, thoughtsTokenCount } = usageMetadata;
+    estimatedCostUsd =
+      (promptTokenCount * pricing.inputPerM) / 1_000_000 +
+      (candidatesTokenCount * pricing.outputPerM) / 1_000_000 +
+      (thoughtsTokenCount * pricing.thinkingPerM) / 1_000_000;
+  }
+
+  await safeInsertUsageEvent({
+    transcript_id: transcriptId ?? 'unknown',
+    provider: 'gemini',
+    stage,
+    operation,
+    status: 'success',
+    model,
+    input_tokens: usageMetadata.promptTokenCount,
+    output_tokens: usageMetadata.candidatesTokenCount,
+    reasoning_tokens: usageMetadata.thoughtsTokenCount || null,
+    total_tokens: usageMetadata.totalTokenCount,
+    usage_hours: usageHours,
+    usage_seconds: audioSeconds ? Math.round(audioSeconds) : null,
+    usage_quantity_type: audioSeconds ? 'audio_hours' : null,
+    rate_card_version: GEMINI_RATE_CARD_VERSION,
+    base_rate_per_hour_usd: null, // Gemini is token-priced, not hour-priced
+    pricing_meta: safeJsonStringify({ estimated_cost_usd: estimatedCostUsd, pricing }),
+    duration_ms: durationMs,
+    request_meta: safeJsonStringify(requestMeta),
+  });
 }
 
 interface AssemblyTrackedFetchArgs {

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getScheduledTranscripts,
-  saveTranscript,
   updateTranscriptStatus,
 } from "@/lib/turso";
-import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
+import { getKalturaAudioUrl, submitGeminiTranscription } from "@/lib/transcription";
 
 export async function POST(request: NextRequest) {
   // Verify cron secret
@@ -32,8 +31,7 @@ export async function POST(request: NextRequest) {
       const kalturaId = item.entry_id;
 
       // Try to fetch audio — will throw if the recording isn't available yet
-      const { entryId, audioUrl, isLiveStream } =
-        await getKalturaAudioUrl(kalturaId);
+      const { isLiveStream } = await getKalturaAudioUrl(kalturaId);
 
       // Live streams aren't yet supported for scheduled transcription
       if (isLiveStream) {
@@ -41,20 +39,8 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      // Audio is available — submit to AssemblyAI
-      const transcriptId = await submitTranscription(audioUrl);
-
-      // Replace the placeholder record with a real one
-      await saveTranscript(
-        entryId,
-        transcriptId,
-        item.start_time,
-        item.end_time,
-        audioUrl,
-        "transcribing",
-        null,
-        { statements: [], topics: {} },
-      );
+      // Audio is available — submit to Gemini
+      const { transcriptId } = await submitGeminiTranscription(kalturaId);
 
       // Mark the old scheduled record as superseded
       await updateTranscriptStatus(item.transcript_id, "transcribing");

@@ -16,6 +16,7 @@
     "usage-report": "tsx scripts/usage-report.ts",
     "usage-benchmark": "tsx scripts/usage-benchmark.ts",
     "compare-transcribe": "tsx scripts/compare-transcription.ts",
+    "test-gemini": "tsx scripts/test-gemini.ts",
     "eval": "tsx eval/run.ts",
     "hf:upload-corpus": "tsx eval/hf/upload-corpus.ts",
     "hf:push-corpus": "uv run eval/hf/push-corpus.py",
