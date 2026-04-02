@@ -25,7 +25,11 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import os from 'os';
+import { AzureOpenAI } from 'openai';
+import { z } from 'zod';
+import { zodResponseFormat } from 'openai/helpers/zod';
 import { downloadAudioToTemp } from '../eval/utils';
+import { trackOpenAIChatCompletion, UsageOperations, UsageStages } from './usage-tracking';
 import type { RawParagraph } from './turso';
 import type { SpeakerInfo, SpeakerMapping } from './speakers';
 
@@ -443,6 +447,196 @@ async function callGeminiOnFile(
   return { segments: parsed.segments ?? [], usageMetadata, truncated };
 }
 
+// ---- Speaker normalization via Azure OpenAI ----
+
+const OPENAI_API_VERSION = '2025-01-01-preview';
+
+function createOpenAIClient() {
+  return new AzureOpenAI({
+    apiKey: process.env.AZURE_OPENAI_API_KEY,
+    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+    apiVersion: OPENAI_API_VERSION,
+  });
+}
+
+const SpeakerNormalizationSchema = z.object({
+  /** Each entry maps an input speaker key to its canonical speaker key. */
+  mapping: z.array(z.object({
+    from: z.string(),
+    to: z.string(),
+  })),
+  /** The canonical speakers. */
+  canonical: z.array(z.object({
+    key: z.string(),
+    name: z.string().nullable(),
+    function: z.string().nullable(),
+    affiliation: z.string().nullable(),
+    group: z.string().nullable(),
+  })),
+});
+
+async function normalizeSpeakers(
+  speakerMapping: SpeakerMapping,
+  transcriptId?: string,
+): Promise<SpeakerMapping> {
+  // Collect unique speakers
+  const uniqueSpeakers = new Map<string, { indices: string[]; info: SpeakerInfo }>();
+  for (const [idx, info] of Object.entries(speakerMapping)) {
+    const key = JSON.stringify(info);
+    const existing = uniqueSpeakers.get(key);
+    if (existing) {
+      existing.indices.push(idx);
+    } else {
+      uniqueSpeakers.set(key, { indices: [idx], info });
+    }
+  }
+
+  // Nothing to deduplicate with 0–1 unique speakers
+  if (uniqueSpeakers.size <= 1) return speakerMapping;
+
+  const speakerList = Array.from(uniqueSpeakers.entries()).map(([_key, { indices, info }]) => ({
+    key: indices[0], // representative index
+    count: indices.length,
+    ...info,
+  }));
+
+  console.log(`  [Normalize] ${speakerList.length} unique speaker variants, sending to OpenAI...`);
+
+  const client = createOpenAIClient();
+  const request = {
+    model: 'gpt-5-mini',
+    messages: [
+      {
+        role: 'system' as const,
+        content: [
+          'You are a data deduplication tool for United Nations meeting speaker records.',
+          'You receive a list of speaker entries extracted from different chunks of the same audio recording.',
+          'Some entries may refer to the same person with slight variations (accents, spelling, title differences).',
+          '',
+          'Your task:',
+          '1. Identify which entries refer to the same person.',
+          '2. For each cluster, pick or synthesize the most complete/correct canonical version.',
+          '3. Return a mapping from each input key to its canonical key, plus the canonical speaker records.',
+          '',
+          'Rules:',
+          '- Preserve correct Unicode accents (é, ñ, etc.)',
+          '- Use ISO 3166-1 alpha-3 for country affiliations',
+          '- Only merge entries that clearly refer to the same person',
+          '- When in doubt, keep them separate',
+        ].join('\n'),
+      },
+      {
+        role: 'user' as const,
+        content: JSON.stringify(speakerList, null, 2),
+      },
+    ],
+    response_format: zodResponseFormat(SpeakerNormalizationSchema, 'speaker_normalization'),
+  };
+
+  const completion = await trackOpenAIChatCompletion({
+    client,
+    transcriptId,
+    stage: UsageStages.identifyingSpeakers,
+    operation: UsageOperations.openaiNormalizeSpeakers,
+    model: 'gpt-5-mini',
+    request,
+  });
+
+  const content = completion.choices[0]?.message?.content;
+  if (!content) {
+    console.warn('  [Normalize] Empty response, skipping normalization');
+    return speakerMapping;
+  }
+
+  try {
+    const parsed = SpeakerNormalizationSchema.parse(JSON.parse(content));
+
+    // Index the arrays for fast lookup
+    const mappingLookup = new Map(parsed.mapping.map((m) => [m.from, m.to]));
+    const canonicalLookup = new Map(parsed.canonical.map((c) => [c.key, c]));
+
+    // Build normalized mapping: for each original index, look up its canonical speaker
+    const normalized: SpeakerMapping = {};
+    for (const [idx, info] of Object.entries(speakerMapping)) {
+      const key = JSON.stringify(info);
+      const entry = Array.from(uniqueSpeakers.entries()).find(([k]) => k === key);
+      const representativeIdx = entry?.[1].indices[0] ?? idx;
+      const canonicalIdx = mappingLookup.get(representativeIdx) ?? representativeIdx;
+      const canonicalSpeaker = canonicalLookup.get(canonicalIdx);
+      normalized[idx] = canonicalSpeaker ?? info;
+    }
+
+    const originalCount = uniqueSpeakers.size;
+    const canonicalCount = parsed.canonical.length;
+    if (originalCount !== canonicalCount) {
+      console.log(`  [Normalize] Merged ${originalCount} → ${canonicalCount} unique speakers`);
+    }
+
+    return normalized;
+  } catch (e) {
+    console.warn('  [Normalize] Failed to parse response, skipping:', e instanceof Error ? e.message : e);
+    return speakerMapping;
+  }
+}
+
+// ---- Chunk stitching ----
+
+interface ChunkOutput {
+  paragraphs: RawParagraph[];
+  speakerMapping: SpeakerMapping;
+  usageMetadata: GeminiUsageMetadata;
+}
+
+/** Stitch ordered chunk outputs into a single result, merging same-speaker boundaries. */
+function stitchChunks(chunks: ChunkOutput[]): {
+  paragraphs: RawParagraph[];
+  speakerMapping: SpeakerMapping;
+  combinedUsage: GeminiUsageMetadata;
+} {
+  const allParagraphs: RawParagraph[] = [];
+  const allSpeakerMapping: SpeakerMapping = {};
+  const combinedUsage: GeminiUsageMetadata = {
+    promptTokenCount: 0, candidatesTokenCount: 0,
+    thoughtsTokenCount: 0, totalTokenCount: 0,
+  };
+
+  for (const chunk of chunks) {
+    combinedUsage.promptTokenCount += chunk.usageMetadata.promptTokenCount;
+    combinedUsage.candidatesTokenCount += chunk.usageMetadata.candidatesTokenCount;
+    combinedUsage.thoughtsTokenCount += chunk.usageMetadata.thoughtsTokenCount;
+    combinedUsage.totalTokenCount += chunk.usageMetadata.totalTokenCount;
+
+    const { paragraphs: chunkParas, speakerMapping: chunkMap } = chunk;
+
+    // Merge boundary: if last paragraph of accumulated result and first of this chunk
+    // share the same speaker, concatenate them
+    let startIdx = 0;
+    if (allParagraphs.length > 0 && chunkParas.length > 0) {
+      const lastIdx = (allParagraphs.length - 1).toString();
+      const lastSpeaker = allSpeakerMapping[lastIdx];
+      const firstSpeaker = chunkMap['0'];
+      if (lastSpeaker && firstSpeaker && JSON.stringify(lastSpeaker) === JSON.stringify(firstSpeaker)) {
+        const last = allParagraphs[allParagraphs.length - 1];
+        const first = chunkParas[0];
+        last.text = last.text + ' ' + first.text;
+        last.end = first.end;
+        last.words = [...last.words, ...first.words];
+        startIdx = 1;
+      }
+    }
+
+    const indexOffset = allParagraphs.length;
+    for (const [localIdx, speaker] of Object.entries(chunkMap)) {
+      const idx = parseInt(localIdx);
+      if (idx < startIdx) continue;
+      allSpeakerMapping[(indexOffset + idx - startIdx).toString()] = speaker;
+    }
+    allParagraphs.push(...chunkParas.slice(startIdx));
+  }
+
+  return { paragraphs: allParagraphs, speakerMapping: allSpeakerMapping, combinedUsage };
+}
+
 // ---- Main export ----
 
 export async function transcribeAudioWithGemini(
@@ -469,66 +663,44 @@ export async function transcribeAudioWithGemini(
       console.log('  [Gemini] Truncated output, retrying in chunked mode...');
     }
 
-    // --- Chunked mode ---
-    // Use actual duration if known, otherwise estimate from threshold
+    // --- Chunked mode (parallel) ---
     const totalSeconds = audioSeconds > 0 ? audioSeconds : CHUNK_THRESHOLD_SECONDS + 1;
     const numChunks = Math.ceil(totalSeconds / CHUNK_DURATION_SECONDS);
-    console.log(`  [Gemini] Processing in ${numChunks} chunk(s) of ${CHUNK_DURATION_SECONDS / 60}min each...`);
+    console.log(`  [Gemini] Processing ${numChunks} chunk(s) in parallel (${CHUNK_DURATION_SECONDS / 60}min each)...`);
 
-    const allParagraphs: RawParagraph[] = [];
-    const allSpeakerMapping: SpeakerMapping = {};
-    const combinedUsage: GeminiUsageMetadata = { promptTokenCount: 0, candidatesTokenCount: 0, thoughtsTokenCount: 0, totalTokenCount: 0 };
-
+    // 1. Extract all chunks first (sequential ffmpeg, fast)
+    const chunkInfos: Array<{ path: string; offsetMs: number; durationSec: number; index: number }> = [];
     for (let i = 0; i < numChunks; i++) {
       const startSeconds = i * CHUNK_DURATION_SECONDS;
-      const chunkOffsetMs = startSeconds * 1000;
-      // Actual duration of this chunk (last chunk may be shorter)
       const chunkDurationSec = Math.min(CHUNK_DURATION_SECONDS, totalSeconds - startSeconds);
-      console.log(`  [Gemini] Chunk ${i + 1}/${numChunks} (${fmtHHMMSS(startSeconds)}–${fmtHHMMSS(startSeconds + chunkDurationSec)})...`);
-
+      console.log(`  [Gemini] Extracting chunk ${i + 1}/${numChunks} (${fmtHHMMSS(startSeconds)}–${fmtHHMMSS(startSeconds + chunkDurationSec)})...`);
       const chunkPath = await extractAudioChunk(tmpPath, startSeconds, CHUNK_DURATION_SECONDS);
-      try {
-        const chunkResult = await callGeminiOnFile(chunkPath, options, chunkDurationSec);
-
-        combinedUsage.promptTokenCount += chunkResult.usageMetadata.promptTokenCount;
-        combinedUsage.candidatesTokenCount += chunkResult.usageMetadata.candidatesTokenCount;
-        combinedUsage.thoughtsTokenCount += chunkResult.usageMetadata.thoughtsTokenCount;
-        combinedUsage.totalTokenCount += chunkResult.usageMetadata.totalTokenCount;
-
-        const { paragraphs: chunkParagraphs, speakerMapping: chunkMapping } = segmentsToOutput(chunkResult.segments, chunkOffsetMs);
-
-        // Merge boundary: if last paragraph of previous chunk and first of this chunk
-        // share the same speaker, concatenate them into one paragraph
-        let startIdx = 0;
-        if (allParagraphs.length > 0 && chunkParagraphs.length > 0) {
-          const lastIdx = (allParagraphs.length - 1).toString();
-          const lastSpeaker = allSpeakerMapping[lastIdx];
-          const firstSpeaker = chunkMapping['0'];
-          if (lastSpeaker && firstSpeaker && JSON.stringify(lastSpeaker) === JSON.stringify(firstSpeaker)) {
-            const last = allParagraphs[allParagraphs.length - 1];
-            const first = chunkParagraphs[0];
-            last.text = last.text + ' ' + first.text;
-            last.end = first.end;
-            last.words = [...last.words, ...first.words];
-            startIdx = 1; // skip first paragraph of this chunk
-          }
-        }
-
-        const indexOffset = allParagraphs.length;
-        for (const [localIdx, speaker] of Object.entries(chunkMapping)) {
-          const idx = parseInt(localIdx);
-          if (idx < startIdx) continue; // already merged
-          allSpeakerMapping[(indexOffset + idx - startIdx).toString()] = speaker;
-        }
-        allParagraphs.push(...chunkParagraphs.slice(startIdx));
-      } finally {
-        try { fs.unlinkSync(chunkPath); } catch { /* ignore */ }
-      }
+      chunkInfos.push({ path: chunkPath, offsetMs: startSeconds * 1000, durationSec: chunkDurationSec, index: i });
     }
 
+    // 2. Transcribe all chunks in parallel
+    const chunkResults = await Promise.all(
+      chunkInfos.map(async (chunk) => {
+        try {
+          console.log(`  [Gemini] Starting chunk ${chunk.index + 1}/${numChunks}...`);
+          const result = await callGeminiOnFile(chunk.path, options, chunk.durationSec);
+          const { paragraphs, speakerMapping } = segmentsToOutput(result.segments, chunk.offsetMs);
+          return { paragraphs, speakerMapping, usageMetadata: result.usageMetadata };
+        } finally {
+          try { fs.unlinkSync(chunk.path); } catch { /* ignore */ }
+        }
+      }),
+    );
+
+    // 3. Stitch in order
+    const { paragraphs, speakerMapping, combinedUsage } = stitchChunks(chunkResults);
+
+    // 4. Normalize speakers across chunks via OpenAI
+    const normalizedMapping = await normalizeSpeakers(speakerMapping, options.transcriptId);
+
     return {
-      paragraphs: allParagraphs,
-      speakerMapping: allSpeakerMapping,
+      paragraphs,
+      speakerMapping: normalizedMapping,
       usageMetadata: combinedUsage,
       audioSeconds,
       chunked: true,

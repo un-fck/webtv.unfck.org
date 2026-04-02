@@ -34,6 +34,7 @@ export const UsageOperations = {
   assemblyPoll: "assembly_poll_transcription",
   assemblyFetchParagraphs: "assembly_fetch_paragraphs",
   geminiTranscribe: "gemini_transcribe",
+  openaiNormalizeSpeakers: "openai_normalize_speakers",
 } as const;
 
 function safeJsonStringify(value: unknown): string | null {
