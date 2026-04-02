@@ -23,18 +23,20 @@ type Stage =
   | "transcribed"
   | "identifying_speakers"
   | "analyzing_topics"
+  | "analyzing_propositions"
   | "completed"
   | "error";
 type ViewMode = "transcript" | "analysis";
 
 const STAGES: { key: Stage; label: string }[] = [
   { key: "transcribing", label: "Transcribing audio" },
-  { key: "identifying_speakers", label: "Identifying speakers" },
   { key: "analyzing_topics", label: "Analyzing topics" },
+  { key: "analyzing_propositions", label: "Analyzing positions" },
 ];
 
 function getStageIndex(stage: Stage): number {
-  if (stage === "transcribed") return 0; // Just finished transcribing
+  // transcribed and identifying_speakers are transient — map to "just finished transcribing"
+  if (stage === "transcribed" || stage === "identifying_speakers") return 0;
   return STAGES.findIndex((s) => s.key === stage);
 }
 

@@ -531,6 +531,7 @@ async function normalizeSpeakers(
       },
     ],
     response_format: zodResponseFormat(SpeakerNormalizationSchema, 'speaker_normalization'),
+    reasoning_effort: 'minimal' as const,
   };
 
   const completion = await trackOpenAIChatCompletion({

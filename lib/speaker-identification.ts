@@ -1505,6 +1505,7 @@ ${transcriptParts.join("\n\n")}`,
   let taggedStatements = statementsWithSentences;
 
   if (statementsWithSentences.length > 0 && transcriptId) {
+    // --- Stage: Analyzing topics ---
     await updateTranscriptStatus(transcriptId, "analyzing_topics");
     console.log(`  → Analyzing topics...`);
 
@@ -1523,8 +1524,29 @@ ${transcriptParts.join("\n\n")}`,
         transcriptId,
       );
 
-      // Analyze propositions in parallel with saving topics
-      console.log(`  → Analyzing propositions...`);
+      // Save topics immediately so the frontend can show them while propositions are analyzed
+      const transcriptForTopics = await getTranscriptById(transcriptId);
+      if (transcriptForTopics) {
+        await updateTranscriptContent(transcriptId, {
+          raw_paragraphs: transcriptForTopics.content.raw_paragraphs,
+          statements: taggedStatements,
+          topics,
+        });
+        console.log(`  ✓ Saved topics`);
+      }
+    } catch (error) {
+      console.warn(
+        `  ⚠ Failed to analyze topics:`,
+        error instanceof Error ? error.message : error,
+      );
+      // Keep the statements without topics — still continue to propositions
+    }
+
+    // --- Stage: Analyzing propositions ---
+    await updateTranscriptStatus(transcriptId, "analyzing_propositions");
+    console.log(`  → Analyzing propositions...`);
+
+    try {
       const propositions = await analyzePropositions(
         finalParagraphs,
         finalMapping,
@@ -1532,28 +1554,24 @@ ${transcriptParts.join("\n\n")}`,
         transcriptId,
       );
 
-      // Save final result with topics and propositions
-      const transcript = await getTranscriptById(transcriptId);
-      if (transcript) {
+      const transcriptForProps = await getTranscriptById(transcriptId);
+      if (transcriptForProps) {
         await updateTranscriptContent(transcriptId, {
-          raw_paragraphs: transcript.content.raw_paragraphs,
+          raw_paragraphs: transcriptForProps.content.raw_paragraphs,
           statements: taggedStatements,
           topics,
           propositions,
         });
-        console.log(`  ✓ Saved topics and propositions`);
+        console.log(`  ✓ Saved propositions`);
       }
-
-      // Mark as completed
-      await updateTranscriptStatus(transcriptId, "completed");
     } catch (error) {
       console.warn(
-        `  ⚠ Failed to analyze topics/propositions:`,
+        `  ⚠ Failed to analyze propositions:`,
         error instanceof Error ? error.message : error,
       );
-      // Keep the statements without topics - still mark as completed
-      await updateTranscriptStatus(transcriptId, "completed");
     }
+
+    await updateTranscriptStatus(transcriptId, "completed");
   }
 
   return finalMapping;

@@ -174,7 +174,8 @@ export async function pollTranscription(
 
   if (
     transcript.status === "identifying_speakers" ||
-    transcript.status === "analyzing_topics"
+    transcript.status === "analyzing_topics" ||
+    transcript.status === "analyzing_propositions"
   ) {
     return {
       stage: transcript.status,

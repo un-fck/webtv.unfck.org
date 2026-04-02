@@ -7,6 +7,7 @@ export type TranscriptStatus =
   | "transcribed"
   | "identifying_speakers"
   | "analyzing_topics"
+  | "analyzing_propositions"
   | "completed"
   | "error";
 export type ProcessingUsageProvider = "openai" | "assemblyai" | "gemini";
