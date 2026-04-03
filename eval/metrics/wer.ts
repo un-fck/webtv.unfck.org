@@ -62,17 +62,33 @@ export function computeWER(reference: string, hypothesis: string): WERResult {
         : 1
       : (substitutions + insertions + deletions) / refWords.length;
 
-  // CER
+  // CER — skip for very long texts (DP is O(n*m) on characters)
   const refChars = [...reference.replace(/\s+/g, "")];
   const hypChars = [...hypothesis.replace(/\s+/g, "")];
-  const charEdit = editDistance(refChars, hypChars);
-  const cer =
-    refChars.length === 0
-      ? hypChars.length === 0
-        ? 0
-        : 1
-      : (charEdit.substitutions + charEdit.insertions + charEdit.deletions) /
-        refChars.length;
+  const MAX_CER_CHARS = 30_000;
+  let cer: number;
+  if (refChars.length > MAX_CER_CHARS || hypChars.length > MAX_CER_CHARS) {
+    // Sample-based CER: compute on first N chars as an approximation
+    const sRef = refChars.slice(0, MAX_CER_CHARS);
+    const sHyp = hypChars.slice(0, MAX_CER_CHARS);
+    const charEdit = editDistance(sRef, sHyp);
+    cer =
+      sRef.length === 0
+        ? sHyp.length === 0
+          ? 0
+          : 1
+        : (charEdit.substitutions + charEdit.insertions + charEdit.deletions) /
+          sRef.length;
+  } else {
+    const charEdit = editDistance(refChars, hypChars);
+    cer =
+      refChars.length === 0
+        ? hypChars.length === 0
+          ? 0
+          : 1
+        : (charEdit.substitutions + charEdit.insertions + charEdit.deletions) /
+          refChars.length;
+  }
 
   return {
     wer,

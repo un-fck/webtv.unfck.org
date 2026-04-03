@@ -6,10 +6,11 @@ import {
 } from "@/lib/turso";
 import { getKalturaAudioUrl, submitGeminiTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
+import { bcp47ToKalturaName } from "@/lib/languages";
 
 export async function POST(request: NextRequest) {
   try {
-    const { kalturaId, checkOnly, force, startTime, endTime, action, assetId, withThinking } =
+    const { kalturaId, checkOnly, force, startTime, endTime, action, assetId, withThinking, language } =
       await request.json();
 
     if (!kalturaId) {
@@ -18,6 +19,8 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    const lang = language || "en";
 
     // Schedule action: queue transcript for later processing (video still live/upcoming)
     if (action === "schedule") {
@@ -33,7 +36,8 @@ export async function POST(request: NextRequest) {
     const isSegmentRequest = startTime !== undefined && endTime !== undefined;
 
     // Get audio download URL from Kaltura
-    const { entryId } = await getKalturaAudioUrl(kalturaId);
+    const kalturaLang = bcp47ToKalturaName(lang);
+    const { entryId } = await getKalturaAudioUrl(kalturaId, kalturaLang);
 
     // Check Turso for existing transcript (unless force=true)
     if (!force) {
@@ -41,6 +45,8 @@ export async function POST(request: NextRequest) {
         entryId,
         isSegmentRequest ? startTime : undefined,
         isSegmentRequest ? endTime : undefined,
+        true,
+        lang,
       );
 
       console.log(
@@ -98,7 +104,7 @@ export async function POST(request: NextRequest) {
         });
       }
     } else {
-      await deleteTranscriptsForEntry(entryId);
+      await deleteTranscriptsForEntry(entryId, lang);
     }
 
     if (checkOnly) {
@@ -109,6 +115,7 @@ export async function POST(request: NextRequest) {
       await submitGeminiTranscription(kalturaId, {
         force,
         withThinking: withThinking === true,
+        language: lang,
       });
     console.log(
       "✓ Gemini transcription started:",

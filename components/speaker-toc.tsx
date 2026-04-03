@@ -35,7 +35,7 @@ function formatTime(seconds: number): string {
   if (hours > 0) {
     return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }
-  return `${minutes}:${secs.toString().padStart(2, "0")}`;
+  return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
 function segmentHasTopic(

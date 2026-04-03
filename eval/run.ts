@@ -71,6 +71,7 @@ async function evalSession(
   session: SessionConfig,
   providerNames: string[],
   languageFilter?: string[],
+  skipKeys?: Set<string>,
 ) {
   console.log(`\n${"=".repeat(60)}`);
   console.log(`Session: ${session.symbol} (asset: ${session.assetId})`);
@@ -166,15 +167,29 @@ async function evalSession(
       }
     }
 
-    // Download audio once, share across providers
+    // Download audio once, share across providers (cache in corpus-data/audio/)
+    const audioCacheDir = path.join(__dirname, "corpus-data", "audio");
+    const audioCachePath = path.join(
+      audioCacheDir,
+      `${session.symbol.replace(/\//g, "_")}_${lang}.m4a`,
+    );
     let audioFilePath: string | null = null;
-    try {
-      audioFilePath = await downloadAudioToTemp(audioUrl);
-    } catch (err) {
-      console.error(
-        `  Audio download failed: ${err instanceof Error ? err.message : err}`,
-      );
-      continue;
+    if (fs.existsSync(audioCachePath)) {
+      audioFilePath = audioCachePath;
+      console.log(`  Audio: cached (${(fs.statSync(audioCachePath).size / 1024 / 1024).toFixed(0)}MB)`);
+    } else {
+      try {
+        const tmpPath = await downloadAudioToTemp(audioUrl);
+        fs.mkdirSync(audioCacheDir, { recursive: true });
+        fs.copyFileSync(tmpPath, audioCachePath);
+        fs.unlinkSync(tmpPath);
+        audioFilePath = audioCachePath;
+      } catch (err) {
+        console.error(
+          `  Audio download failed: ${err instanceof Error ? err.message : err}`,
+        );
+        continue;
+      }
     }
 
     // Run each provider
@@ -191,7 +206,18 @@ async function evalSession(
 
       // Resume: load from cache if already computed
       if (fs.existsSync(rawFilePath)) {
-        console.log(`  ${providerName}: cached`);
+        const summaryKey = `${session.symbol}|${lang}|${providerName}`;
+        if (skipKeys?.has(summaryKey)) {
+          console.log(`  ${providerName}: cached (metrics already in summary)`);
+          try {
+            const transcript = JSON.parse(
+              fs.readFileSync(rawFilePath, "utf-8"),
+            ) as import("./providers/types").NormalizedTranscript;
+            providerOutputs[providerName] = transcript.fullText;
+          } catch {}
+          continue;
+        }
+        console.log(`  ${providerName}: cached (recomputing metrics)`);
         try {
           const transcript = JSON.parse(
             fs.readFileSync(rawFilePath, "utf-8"),
@@ -319,12 +345,7 @@ async function evalSession(
       }
     }
 
-    // Clean up temp audio file
-    if (audioFilePath) {
-      try {
-        fs.unlinkSync(audioFilePath);
-      } catch {}
-    }
+    // Audio files are cached in corpus-data/audio/, don't delete
   }
 
   return results;
@@ -377,7 +398,7 @@ async function main() {
   const allResults: SessionResult[] = [...existingResults];
 
   for (const session of filteredSessions) {
-    const results = await evalSession(session, providerNames, opts.languages);
+    const results = await evalSession(session, providerNames, opts.languages, existingKeys);
     // Merge new results, deduplicating by symbol+language+provider
     for (const r of results) {
       if (!existingKeys.has(existingKey(r))) {

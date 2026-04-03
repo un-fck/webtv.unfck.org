@@ -2,17 +2,27 @@
 
 import { useEffect, useRef } from "react";
 
+interface AudioTrack {
+  id: number;
+  language: string;
+  label: string;
+  active: boolean;
+}
+
 interface KalturaPlayer {
   currentTime: number;
   play: () => void;
   loadMedia: (mediaInfo: { entryId: string }) => Promise<void>;
   destroy: () => void;
+  getTracks: (type?: string) => AudioTrack[];
+  selectTrack: (track: AudioTrack) => void;
 }
 
 interface VideoPlayerProps {
   kalturaId: string;
   partnerId: number;
   uiConfId: number;
+  audioLanguage?: string;
   onPlayerReady?: (player: KalturaPlayer) => void;
 }
 
@@ -20,10 +30,54 @@ export function VideoPlayer({
   kalturaId,
   partnerId,
   uiConfId,
+  audioLanguage,
   onPlayerReady,
 }: VideoPlayerProps) {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<KalturaPlayer | null>(null);
+
+  // Map our language codes to Kaltura player audio track language codes.
+  // Kaltura uses "ia" (Interlingua) for the floor/original audio channel.
+  const FLOOR_TRACK_CODES = new Set(["ia"]);
+
+  // Switch audio track when audioLanguage prop changes
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player || !audioLanguage) return;
+
+    try {
+      const audioTracks = player.getTracks("audio");
+
+      let target: AudioTrack | undefined;
+
+      if (audioLanguage === "floor") {
+        // Floor channel is labeled "Interlingua" (ia) in Kaltura
+        target = audioTracks.find(
+          (t) => !t.active && FLOOR_TRACK_CODES.has(t.language),
+        );
+        // Fallback: try label-based matching
+        if (!target) {
+          target = audioTracks.find(
+            (t) =>
+              !t.active &&
+              (t.label.toLowerCase().includes("floor") ||
+                t.label.toLowerCase().includes("original") ||
+                t.label.toLowerCase().includes("interlingua")),
+          );
+        }
+      } else {
+        target = audioTracks.find(
+          (t) => t.language === audioLanguage && !t.active,
+        );
+      }
+
+      if (target) {
+        player.selectTrack(target);
+      }
+    } catch (err) {
+      console.log("Failed to switch audio track:", err);
+    }
+  }, [audioLanguage]);
 
   useEffect(() => {
     // Load Kaltura Player script
@@ -71,7 +125,7 @@ export function VideoPlayer({
             uiConfId: uiConfId,
           },
           playback: {
-            audioLanguage: "en",
+            audioLanguage: audioLanguage === "floor" ? "ia" : (audioLanguage || "en"),
           },
           ui: {
             locale: "en",

@@ -6,6 +6,7 @@ import {
   TranscriptionPanel,
   getTopicColor,
   type TranscriptionPanelData,
+  type LanguageOption,
 } from "./transcription-panel";
 import { SpeakerToc } from "./speaker-toc";
 import { SiteHeader } from "./site-header";
@@ -41,6 +42,22 @@ export function VideoPageClient({
   );
   const [topicsOpen, setTopicsOpen] = useState(true);
   const [speakersOpen, setSpeakersOpen] = useState(true);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [availableLanguages, setAvailableLanguages] = useState<LanguageOption[]>([]);
+
+  // Fetch available audio languages
+  const refreshLanguages = useCallback(() => {
+    fetch(`/api/languages?kalturaId=${encodeURIComponent(kalturaId)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.languages) setAvailableLanguages(data.languages);
+      })
+      .catch(() => {});
+  }, [kalturaId]);
+
+  useEffect(() => {
+    refreshLanguages();
+  }, [refreshLanguages]);
 
   // IntersectionObserver: detect when the main video leaves viewport
   useEffect(() => {
@@ -202,11 +219,17 @@ export function VideoPageClient({
 
   return (
     <>
-      <SiteHeader variant="nav" backHref="/" />
+      <SiteHeader />
 
-      <div className="mx-auto max-w-6xl px-4 pb-16">
+      <div className="mx-auto max-w-7xl px-6 pb-16 sm:px-8">
+        <nav className="py-3">
+          <a href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            ← Back to schedule
+          </a>
+        </nav>
+
         {/* Video + metadata row: same column ratio as below */}
-        <div className="flex flex-col gap-6 py-4 lg:flex-row">
+        <div className="flex flex-col gap-6 lg:flex-row">
           {/* Video — left column width */}
           <div
             ref={videoPlaceholderRef}
@@ -220,6 +243,7 @@ export function VideoPageClient({
                 kalturaId={kalturaId}
                 partnerId={2503451}
                 uiConfId={49754663}
+                audioLanguage={selectedLanguage}
                 onPlayerReady={setPlayer}
               />
             </div>
@@ -243,7 +267,7 @@ export function VideoPageClient({
               {video.date && video.scheduledTime && <span>·</span>}
               {video.scheduledTime && (
                 <span>
-                  {new Date(video.scheduledTime).toLocaleTimeString("en-US", {
+                  {new Date(video.scheduledTime).toLocaleTimeString("en-GB", {
                     hour: "2-digit",
                     minute: "2-digit",
                     timeZoneName: "short",
@@ -279,13 +303,17 @@ export function VideoPageClient({
         </div>
 
         {/* Two columns: transcript left, sticky sidebar right */}
-        <div className="flex flex-col gap-6 lg:flex-row">
+        <div className="mt-6 flex flex-col gap-6 lg:flex-row">
           {/* LEFT — transcript */}
           <div className="min-w-0 lg:flex-[3]">
             <TranscriptionPanel
               kalturaId={kalturaId}
               player={player}
               video={video}
+              selectedLanguage={selectedLanguage}
+              onLanguageChange={setSelectedLanguage}
+              availableLanguages={availableLanguages}
+              onLanguagesRefresh={refreshLanguages}
               selectedTopic={selectedTopic}
               onTopicSelect={setSelectedTopic}
               topicCollapsed={topicCollapsed}

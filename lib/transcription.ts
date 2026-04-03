@@ -17,6 +17,7 @@ import {
   UsageOperations,
   UsageStages,
 } from "./usage-tracking";
+import { bcp47ToKalturaName } from "./languages";
 import {
   transcribeAudioWithGemini,
   type GeminiTranscriptionOptions,
@@ -241,6 +242,7 @@ async function runGeminiPipeline(
   entryId: string,
   audioUrl: string,
   geminiOptions: GeminiTranscriptionOptions,
+  languageCode: string,
 ): Promise<void> {
   try {
     await updateTranscriptStatus(transcriptId, "transcribing");
@@ -287,7 +289,7 @@ async function runGeminiPipeline(
       null,
       audioUrl,
       "identifying_speakers",
-      null,
+      languageCode,
       content,
     );
     await setSpeakerMapping(transcriptId, geminiResult.speakerMapping);
@@ -348,23 +350,25 @@ export async function submitGeminiTranscription(
   kalturaId: string,
   options: GeminiTranscriptionOptions & { force?: boolean } = {},
 ): Promise<{ entryId: string; transcriptId: string }> {
+  const lang = options.language || "en";
+  const kalturaLang = bcp47ToKalturaName(lang);
   const { entryId, audioUrl } = await getKalturaAudioUrl(
     kalturaId,
-    options.language === "fr" ? "french" : "english",
+    kalturaLang,
   );
 
   if (options.force) {
-    await deleteTranscriptsForEntry(entryId);
+    await deleteTranscriptsForEntry(entryId, lang);
   }
 
   const transcriptId = `gemini-${randomUUID()}`;
 
-  await saveTranscript(entryId, transcriptId, null, null, audioUrl, "transcribing", null, {
+  await saveTranscript(entryId, transcriptId, null, null, audioUrl, "transcribing", lang, {
     statements: [],
     topics: {},
   });
 
-  runGeminiPipeline(transcriptId, entryId, audioUrl, options).catch((err) => {
+  runGeminiPipeline(transcriptId, entryId, audioUrl, options, lang).catch((err) => {
     console.error("[Gemini pipeline] Unhandled error:", err);
   });
 

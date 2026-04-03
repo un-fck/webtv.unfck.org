@@ -10,9 +10,17 @@ import {
   RotateCcw,
   FileText,
   BarChart3,
+  Globe,
 } from "lucide-react";
 import ExcelJS from "exceljs";
 import type { Proposition } from "@/lib/speaker-identification";
+
+export interface LanguageOption {
+  code: string;
+  name: string;
+  available: boolean;
+  transcriptStatus: string | null;
+}
 
 type Stage =
   | "idle"
@@ -150,6 +158,10 @@ interface TranscriptionPanelProps {
     play: () => void;
   };
   video: Video;
+  selectedLanguage: string;
+  onLanguageChange: (language: string) => void;
+  availableLanguages: LanguageOption[];
+  onLanguagesRefresh?: () => void;
   selectedTopic: string | null;
   onTopicSelect: (topic: string | null) => void;
   topicCollapsed: boolean;
@@ -417,7 +429,7 @@ function AnalysisView({
                                     }
                                     title="Click to jump to video"
                                   >
-                                    <p className="text-sm leading-relaxed text-foreground italic">
+                                    <p dir="auto" className="text-start text-sm leading-relaxed text-foreground italic">
                                       &ldquo;{ev.quote}&rdquo;
                                     </p>
                                   </div>
@@ -443,6 +455,10 @@ export function TranscriptionPanel({
   kalturaId,
   player,
   video,
+  selectedLanguage,
+  onLanguageChange,
+  availableLanguages,
+  onLanguagesRefresh,
   selectedTopic,
   onTopicSelect,
   topicCollapsed,
@@ -471,6 +487,8 @@ export function TranscriptionPanel({
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [propositions, setPropositions] = useState<Proposition[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("transcript");
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const languageButtonRef = useRef<HTMLDivElement>(null);
   const [activeStatementIndex, setActiveStatementIndex] = useState<number>(-1);
   const [activeParagraphIndex, setActiveParagraphIndex] = useState<number>(-1);
   const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(-1);
@@ -700,7 +718,7 @@ export function TranscriptionPanel({
       const response = await fetch("/api/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kalturaId, force }),
+        body: JSON.stringify({ kalturaId, force, language: selectedLanguage }),
       });
 
       if (!response.ok) {
@@ -721,6 +739,7 @@ export function TranscriptionPanel({
           await loadCountryNames(data.speakerMappings);
         }
         setStage("completed");
+        onLanguagesRefresh?.();
         return;
       }
 
@@ -1040,14 +1059,26 @@ export function TranscriptionPanel({
     setShowDownloadMenu(false);
   };
 
-  // Check for cached transcript on mount
+  // Check for cached transcript on mount and when language changes
   useEffect(() => {
+    // Reset state for language switch
+    setSegments(null);
+    setStatements(null);
+    setRawParagraphs(null);
+    setTopics({});
+    setPropositions([]);
+    setSpeakerMappings({});
+    setTranscriptId(null);
+    setErrorMessage(null);
+    setStage("idle");
+    setChecking(true);
+
     const checkCache = async () => {
       try {
         const response = await fetch("/api/transcribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ kalturaId, checkOnly: true }),
+          body: JSON.stringify({ kalturaId, checkOnly: true, language: selectedLanguage }),
         });
 
         if (response.ok) {
@@ -1066,6 +1097,7 @@ export function TranscriptionPanel({
               await loadCountryNames(data.speakerMappings);
             }
             setStage("completed");
+            onLanguagesRefresh?.();
           } else if (data.raw_paragraphs) {
             // Have raw data but pipeline not complete - show intermediate and poll
             setRawParagraphs(data.raw_paragraphs);
@@ -1089,7 +1121,7 @@ export function TranscriptionPanel({
 
     checkCache();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kalturaId, loadCountryNames]);
+  }, [kalturaId, selectedLanguage, loadCountryNames]);
 
   // Poll player time via rAF and compute active indices in-loop.
   // currentTime is kept as a ref (not state) to avoid triggering re-renders on every frame.
@@ -1252,7 +1284,7 @@ export function TranscriptionPanel({
     }
   }, [activeStatementIndex, activeParagraphIndex]);
 
-  // Handle click outside dropdown
+  // Handle click outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -1261,23 +1293,85 @@ export function TranscriptionPanel({
       ) {
         setShowDownloadMenu(false);
       }
+      if (
+        languageButtonRef.current &&
+        !languageButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowLanguageMenu(false);
+      }
     };
 
-    if (showDownloadMenu) {
+    if (showDownloadMenu || showLanguageMenu) {
       document.addEventListener("mousedown", handleClickOutside);
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [showDownloadMenu]);
+  }, [showDownloadMenu, showLanguageMenu]);
+
+  const selectedLangName = availableLanguages.find((l) => l.code === selectedLanguage)?.name
+    ?? (selectedLanguage === "en" ? "English" : selectedLanguage.toUpperCase());
 
   return (
     <div>
-      {/* Single compact toolbar row: title | tabs | actions */}
       <div className="mb-3 flex items-center gap-3">
-        <h2 className="shrink-0 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
           Transcript
         </h2>
 
+        {/* Language selector */}
+        {availableLanguages.length > 0 && (
+          <div className="relative" ref={languageButtonRef}>
+            <button
+              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+              className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
+            >
+              <Globe className="h-3 w-3" />
+              {selectedLangName}
+              <ChevronDown className="h-3 w-3" />
+            </button>
+            {showLanguageMenu && (
+              <div className="absolute left-0 z-10 mt-1 w-52 overflow-hidden rounded-md border border-border bg-background shadow-md">
+                {availableLanguages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    disabled={!lang.available}
+                    onClick={() => {
+                      if (lang.available) {
+                        onLanguageChange(lang.code);
+                        setShowLanguageMenu(false);
+                      }
+                    }}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
+                      !lang.available
+                        ? "cursor-not-allowed text-muted-foreground/40"
+                        : lang.code === selectedLanguage
+                          ? "bg-muted/50 font-medium"
+                          : "hover:bg-muted"
+                    }`}
+                  >
+                    <span className="flex-1">{lang.name}</span>
+                    {!lang.available && (
+                      <span className="text-[10px] text-muted-foreground/40">No audio</span>
+                    )}
+                    {lang.code === selectedLanguage && (
+                      <Check className="h-3 w-3 text-primary" />
+                    )}
+                    {lang.available && lang.transcriptStatus === "completed" && (
+                      <span className="h-2 w-2 rounded-full bg-green-500" title="Transcript available" />
+                    )}
+                    {lang.available && lang.transcriptStatus && lang.transcriptStatus !== "completed" && lang.transcriptStatus !== "error" && (
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" title="In progress" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Toolbar row: tabs | actions */}
+      <div className="mb-3 flex items-center gap-3">
         {/* Tabs — only when there's data */}
         {segments &&
           (propositions.length > 0 || Object.keys(topics).length > 0) && (
@@ -1532,6 +1626,8 @@ export function TranscriptionPanel({
                             return (
                               <p
                                 key={paraIdx}
+                                dir="auto"
+                                className="text-start"
                                 data-paragraph-key={`${stmtIdx}-${paraIdx}`}
                               >
                                 {para.sentences.map((sent, sentIdx) => {
@@ -1685,7 +1781,7 @@ export function TranscriptionPanel({
                     </button>
                   </div>
                 )}
-                <div className="rounded-lg bg-muted/50 p-4 text-sm leading-relaxed">
+                <div dir="auto" className="text-start rounded-lg bg-muted/50 p-4 text-sm leading-relaxed">
                   {para.words.map((word, wIdx) => (
                     <span
                       key={wIdx}

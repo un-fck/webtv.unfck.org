@@ -144,6 +144,29 @@ async function ensureInitialized() {
       }),
   ]);
 
+  // Normalize language codes: tag NULL and legacy codes (e.g. 'en_us') as 'en'
+  await Promise.all([
+    client
+      .execute(
+        `UPDATE transcripts SET language_code = 'en' WHERE language_code IS NULL`,
+      )
+      .catch(() => {}),
+    client
+      .execute(
+        `UPDATE transcripts SET language_code = 'en' WHERE language_code LIKE 'en%' AND language_code != 'en'`,
+      )
+      .catch(() => {}),
+  ]);
+
+  // Composite index for language-filtered lookups
+  await client
+    .execute(
+      `CREATE INDEX IF NOT EXISTS idx_transcripts_entry_lang ON transcripts(entry_id, language_code)`,
+    )
+    .catch(() => {
+      /* index already exists */
+    });
+
   initialized = true;
 }
 
@@ -305,19 +328,22 @@ export async function getTranscript(
   startTime?: number,
   endTime?: number,
   completedOnly = true,
+  languageCode?: string,
 ): Promise<Transcript | null> {
   await ensureInitialized();
 
   let query: string;
   const args: (string | number)[] = [entryId];
   const statusFilter = completedOnly ? "AND status = 'completed'" : "";
+  const langFilter = languageCode ? "AND language_code = ?" : "";
 
   if (startTime !== undefined && endTime !== undefined) {
-    query = `SELECT * FROM transcripts WHERE entry_id = ? AND start_time = ? AND end_time = ? ${statusFilter} ORDER BY updated_at DESC LIMIT 1`;
+    query = `SELECT * FROM transcripts WHERE entry_id = ? AND start_time = ? AND end_time = ? ${statusFilter} ${langFilter} ORDER BY updated_at DESC LIMIT 1`;
     args.push(startTime, endTime);
   } else {
-    query = `SELECT * FROM transcripts WHERE entry_id = ? AND start_time IS NULL AND end_time IS NULL ${statusFilter} ORDER BY updated_at DESC LIMIT 1`;
+    query = `SELECT * FROM transcripts WHERE entry_id = ? AND start_time IS NULL AND end_time IS NULL ${statusFilter} ${langFilter} ORDER BY updated_at DESC LIMIT 1`;
   }
+  if (languageCode) args.push(languageCode);
 
   const result = await client.execute({ sql: query, args });
   if (result.rows.length === 0) return null;
@@ -362,6 +388,29 @@ export async function getAllTranscriptsForEntry(
     error_message: row.error_message as string | null,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
+  }));
+}
+
+export interface TranscriptLanguageInfo {
+  language_code: string | null;
+  status: TranscriptStatus;
+  transcript_id: string;
+}
+
+export async function getTranscriptLanguagesForEntry(
+  entryId: string,
+): Promise<TranscriptLanguageInfo[]> {
+  await ensureInitialized();
+
+  const result = await client.execute({
+    sql: "SELECT language_code, status, transcript_id FROM transcripts WHERE entry_id = ? ORDER BY language_code",
+    args: [entryId],
+  });
+
+  return result.rows.map((row) => ({
+    language_code: row.language_code as string | null,
+    status: row.status as TranscriptStatus,
+    transcript_id: row.transcript_id as string,
   }));
 }
 
@@ -539,18 +588,22 @@ export async function deleteTranscript(transcriptId: string): Promise<void> {
 
 export async function deleteTranscriptsForEntry(
   entryId: string,
+  languageCode?: string,
 ): Promise<void> {
   await ensureInitialized();
 
+  const langFilter = languageCode ? " AND language_code = ?" : "";
+  const args = languageCode ? [entryId, languageCode] : [entryId];
+
   await client.execute({
     sql: `DELETE FROM processing_usage_events WHERE transcript_id IN (
-      SELECT transcript_id FROM transcripts WHERE entry_id = ?
+      SELECT transcript_id FROM transcripts WHERE entry_id = ?${langFilter}
     )`,
-    args: [entryId],
+    args,
   });
   await client.execute({
-    sql: "DELETE FROM transcripts WHERE entry_id = ?",
-    args: [entryId],
+    sql: `DELETE FROM transcripts WHERE entry_id = ?${langFilter}`,
+    args,
   });
 }
 

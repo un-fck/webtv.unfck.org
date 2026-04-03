@@ -32,6 +32,7 @@ import { downloadAudioToTemp } from '../eval/utils';
 import { trackOpenAIChatCompletion, UsageOperations, UsageStages } from './usage-tracking';
 import type { RawParagraph } from './turso';
 import type { SpeakerInfo, SpeakerMapping } from './speakers';
+import { getLanguageFullName } from './languages';
 
 const execFileAsync = promisify(execFile);
 
@@ -184,13 +185,22 @@ function fmtHHMMSS(totalSec: number): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-function buildPrompt(langName: string, chunkDurationSec?: number): string {
+function buildPrompt(langName: string, chunkDurationSec?: number, langCode?: string): string {
   const durationLine = chunkDurationSec != null
     ? `This audio segment is ${fmtHHMMSS(chunkDurationSec)} long. All timestamps must be between 00:00:00 and ${fmtHHMMSS(chunkDurationSec)}.`
     : null;
 
+  // Language-specific instructions to prevent translation
+  let langInstruction: string | null = null;
+  if (langCode === 'floor') {
+    langInstruction = 'CRITICAL: This is the floor/original audio channel. Speakers may use any language. Transcribe exactly what you hear in whatever language is being spoken. Do NOT translate to any other language.';
+  } else if (langCode && langCode !== 'en') {
+    langInstruction = `CRITICAL: This audio is the ${langName} interpretation channel. Transcribe exactly what you hear in ${langName}. Do NOT translate to English or any other language. All transcribed text must be in ${langName}. Speaker names, titles, and country names should use their standard international forms.`;
+  }
+
   return [
     `Transcribe and analyze this United Nations meeting audio recording in ${langName}.`,
+    ...(langInstruction ? [langInstruction] : []),
     ...(durationLine ? [durationLine, ''] : ['']),
     'OUTPUT FORMAT:',
     'Respond with a single JSON object (no markdown, no explanation) with this structure:',
@@ -353,11 +363,8 @@ async function callGeminiOnFile(
   options: GeminiTranscriptionOptions,
   chunkDurationSec?: number,
 ): Promise<GeminiCallResult> {
-  const langMap: Record<string, string> = {
-    en: 'English', fr: 'French', es: 'Spanish',
-    ar: 'Arabic', zh: 'Chinese', ru: 'Russian',
-  };
-  const langName = langMap[options.language ?? 'en'] ?? 'English';
+  const langCode = options.language ?? 'en';
+  const langName = getLanguageFullName(langCode);
 
   console.log('  [Gemini] Uploading audio...');
   const file = await uploadFileToGemini(filePath);
@@ -382,7 +389,7 @@ async function callGeminiOnFile(
     contents: [{
       parts: [
         { fileData: { mimeType: 'audio/mp4', fileUri: file.uri } },
-        { text: buildPrompt(langName, chunkDurationSec) },
+        { text: buildPrompt(langName, chunkDurationSec, langCode) },
       ],
     }],
     generationConfig,

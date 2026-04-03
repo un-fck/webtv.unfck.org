@@ -48,8 +48,9 @@ export async function GET(
       return response;
     }
 
-    // Check Turso for transcript
-    const transcript = await getTranscript(entryId);
+    // Check Turso for transcript (optional language filter)
+    const language = request.nextUrl.searchParams.get("language") || undefined;
+    const transcript = await getTranscript(entryId, undefined, undefined, true, language);
 
     if (!transcript) {
       const response = NextResponse.json({

@@ -5,6 +5,7 @@ import { elevenlabs } from "./elevenlabs";
 import { azureSpeech } from "./azure-speech";
 import { googleChirp } from "./google-chirp";
 import { gemini } from "./gemini";
+import { groqWhisper } from "./groq-whisper";
 
 const providers: Record<string, TranscriptionProvider> = {
   assemblyai,
@@ -13,6 +14,7 @@ const providers: Record<string, TranscriptionProvider> = {
   "azure-speech": azureSpeech,
   "google-chirp": googleChirp,
   gemini,
+  "groq-whisper": groqWhisper,
 };
 
 export function getProvider(name: string): TranscriptionProvider {
