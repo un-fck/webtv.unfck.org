@@ -113,7 +113,7 @@ async function run() {
 
   let completed = 0;
   const tasks = toProcess.map(async ({ row, paragraphs }) => {
-    await identifySpeakers(paragraphs, row.transcript_id);
+    await identifySpeakers(paragraphs, row.transcript_id, undefined, { skipPropositions: true });
     completed++;
     console.log(
       `[${completed}/${total}] ✓ Re-identified ${row.entry_id} (${row.transcript_id})`,

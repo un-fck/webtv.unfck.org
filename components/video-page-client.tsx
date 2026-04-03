@@ -2,8 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { VideoPlayer } from "./video-player";
-import { TranscriptionPanel } from "./transcription-panel";
+import {
+  TranscriptionPanel,
+  getTopicColor,
+  type TranscriptionPanelData,
+} from "./transcription-panel";
+import { SpeakerToc } from "./speaker-toc";
 import { SiteHeader } from "./site-header";
+import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
 
 interface VideoPageClientProps {
@@ -22,63 +28,209 @@ export function VideoPageClient({
     play: () => void;
   }>();
 
-  const [leftPct, setLeftPct] = useState(38);
+  // Video docking: when main video scrolls out, dock into sidebar
+  const [isVideoDocked, setIsVideoDocked] = useState(false);
+  const videoPlaceholderRef = useRef<HTMLDivElement>(null);
+  const landingZoneRef = useRef<HTMLDivElement>(null);
+  const videoWrapperRef = useRef<HTMLDivElement>(null);
+
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [topicCollapsed, setTopicCollapsed] = useState(true);
+  const [panelData, setPanelData] = useState<TranscriptionPanelData | null>(
+    null,
+  );
+  const [topicsOpen, setTopicsOpen] = useState(true);
+  const [speakersOpen, setSpeakersOpen] = useState(true);
+
+  // IntersectionObserver: detect when the main video leaves viewport
   useEffect(() => {
-    const stored = localStorage.getItem("videoPageSplit");
-    if (stored) setLeftPct(Number(stored));
+    const placeholder = videoPlaceholderRef.current;
+    if (!placeholder) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVideoDocked(!entry.isIntersecting),
+      { threshold: 0.1 },
+    );
+    observer.observe(placeholder);
+    return () => observer.disconnect();
   }, []);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    dragging.current = true;
+  // Position video into the sidebar landing zone when docked
+  const updateDockedPosition = useCallback(() => {
+    const videoWrapper = videoWrapperRef.current;
+    const landingZone = landingZoneRef.current;
+    if (!videoWrapper || !landingZone || !isVideoDocked) return;
 
-    const onMouseMove = (e: MouseEvent) => {
-      if (!dragging.current || !containerRef.current) return;
-      const { left, width } = containerRef.current.getBoundingClientRect();
-      const pct = ((e.clientX - left) / width) * 100;
-      const next = Math.min(Math.max(pct, 20), 80);
-      setLeftPct(next);
-      localStorage.setItem("videoPageSplit", String(next));
+    const rect = landingZone.getBoundingClientRect();
+    videoWrapper.style.position = "fixed";
+    videoWrapper.style.top = `${rect.top}px`;
+    videoWrapper.style.left = `${rect.left}px`;
+    videoWrapper.style.width = `${rect.width}px`;
+    videoWrapper.style.height = `${rect.height}px`;
+    videoWrapper.style.zIndex = "40";
+  }, [isVideoDocked]);
+
+  useEffect(() => {
+    const videoWrapper = videoWrapperRef.current;
+    if (!videoWrapper) return;
+
+    if (isVideoDocked) {
+      updateDockedPosition();
+    } else {
+      videoWrapper.style.position = "relative";
+      videoWrapper.style.top = "";
+      videoWrapper.style.left = "";
+      videoWrapper.style.width = "100%";
+      videoWrapper.style.height = "100%";
+      videoWrapper.style.zIndex = "";
+    }
+  }, [isVideoDocked, updateDockedPosition]);
+
+  // Keep docked position fresh on scroll/resize
+  useEffect(() => {
+    if (!isVideoDocked) return;
+
+    const landingZone = landingZoneRef.current;
+    if (!landingZone) return;
+
+    const resizeObs = new ResizeObserver(updateDockedPosition);
+    resizeObs.observe(landingZone);
+
+    window.addEventListener("scroll", updateDockedPosition, true);
+    window.addEventListener("resize", updateDockedPosition);
+
+    return () => {
+      resizeObs.disconnect();
+      window.removeEventListener("scroll", updateDockedPosition, true);
+      window.removeEventListener("resize", updateDockedPosition);
     };
+  }, [isVideoDocked, updateDockedPosition]);
 
-    const onMouseUp = () => {
-      dragging.current = false;
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
+  const seekToTimestamp = useCallback(
+    (seconds: number) => {
+      if (!player) return;
+      player.currentTime = seconds;
+      player.play();
+    },
+    [player],
+  );
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  }, []);
+  const topicPills = (() => {
+    if (!panelData?.topics || Object.keys(panelData.topics).length === 0)
+      return null;
+
+    const allTopicKeys = Object.keys(panelData.topics);
+    const usedTopics = Object.values(panelData.topics);
+    if (usedTopics.length === 0) return null;
+
+    return (
+      <div className="mb-2">
+        <button
+          onClick={() => setTopicsOpen((v) => !v)}
+          className="mb-1 flex w-full items-center gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase"
+        >
+          <ChevronDown
+            className={`h-3 w-3 transition-transform ${topicsOpen ? "" : "-rotate-90"}`}
+          />
+          Topics
+        </button>
+        {topicsOpen && (
+          <>
+            <div className="space-y-0.5">
+              {usedTopics.map((topic) => {
+                const color = getTopicColor(topic.key, allTopicKeys);
+                return (
+                  <button
+                    key={topic.key}
+                    onClick={() => {
+                      const newTopic =
+                        selectedTopic === topic.key ? null : topic.key;
+                      setSelectedTopic(newTopic);
+                      if (!newTopic) setTopicCollapsed(false);
+                    }}
+                    className={`inline-block rounded-full border px-2 py-0.5 text-left text-xs transition-all ${
+                      selectedTopic === topic.key
+                        ? "font-medium"
+                        : "border-transparent font-normal opacity-70 hover:opacity-100"
+                    }`}
+                    style={{
+                      backgroundColor: color + "30",
+                      color: "#374151",
+                      ...(selectedTopic === topic.key && {
+                        backgroundColor: color + "50",
+                        borderColor: color,
+                      }),
+                    }}
+                    title={topic.description}
+                  >
+                    {topic.label}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedTopic && (
+              <div className="mt-2 inline-flex items-center gap-0.5 rounded-md bg-muted p-0.5 text-xs">
+                <button
+                  onClick={() => setTopicCollapsed(true)}
+                  className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${
+                    topicCollapsed
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <FoldVertical className="h-3 w-3" />
+                  <span>Highlights only</span>
+                </button>
+                <button
+                  onClick={() => setTopicCollapsed(false)}
+                  className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${
+                    !topicCollapsed
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <UnfoldVertical className="h-3 w-3" />
+                  <span>All content</span>
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  })();
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <>
       <SiteHeader variant="nav" backHref="/" />
 
-      {/* Mobile: single column. Desktop: resizable two-column */}
-      <div ref={containerRef} className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* LEFT COLUMN */}
-        <div
-          className="flex shrink-0 flex-col overflow-y-auto lg:border-r lg:border-border"
-          style={{ width: `${leftPct}%` }}
-        >
-          <div className="aspect-video w-full shrink-0 bg-black">
-            <VideoPlayer
-              kalturaId={kalturaId}
-              partnerId={2503451}
-              uiConfId={49754663}
-              onPlayerReady={setPlayer}
-            />
+      <div className="mx-auto max-w-6xl px-4 pb-16">
+        {/* Video + metadata row: same column ratio as below */}
+        <div className="flex flex-col gap-6 py-4 lg:flex-row">
+          {/* Video — left column width */}
+          <div
+            ref={videoPlaceholderRef}
+            className="aspect-video min-w-0 bg-black lg:flex-[3]"
+          >
+            <div
+              ref={videoWrapperRef}
+              className="h-full w-full"
+            >
+              <VideoPlayer
+                kalturaId={kalturaId}
+                partnerId={2503451}
+                uiConfId={49754663}
+                onPlayerReady={setPlayer}
+              />
+            </div>
           </div>
 
-          <div className="px-5 py-4">
-            <h1 className="mb-2 text-base leading-snug font-semibold">
+          {/* Metadata — right column width */}
+          <div className="lg:flex-[2]">
+            <h1 className="mb-1 text-base leading-snug font-semibold">
               {video.cleanTitle}
             </h1>
-
-            <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
               {video.date && (
                 <span>
                   {new Date(video.date).toLocaleDateString("en-US", {
@@ -118,104 +270,85 @@ export function VideoPageClient({
                 UN Web TV →
               </a>
             </div>
-
-            <div className="mb-4 border-t border-border" />
-
             {metadata.summary && (
-              <div className="mb-3">
-                <h3 className="mb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  Summary
-                </h3>
-                <p className="text-sm leading-relaxed">{metadata.summary}</p>
-              </div>
-            )}
-
-            {metadata.description && (
-              <div className="mb-3">
-                <h3 className="mb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  Description
-                </h3>
-                <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
-                  {metadata.description}
-                </p>
-              </div>
-            )}
-
-            {metadata.categories.length > 0 && (
-              <div className="mb-3">
-                <h3 className="mb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  Categories
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {metadata.categories.join(" → ")}
-                </p>
-              </div>
-            )}
-
-            {metadata.subjectTopical.length > 0 && (
-              <div className="mb-3">
-                <h3 className="mb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  Topics
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {metadata.subjectTopical.join(", ")}
-                </p>
-              </div>
-            )}
-
-            {metadata.corporateName.length > 0 && (
-              <div className="mb-3">
-                <h3 className="mb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  Organizations
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {metadata.corporateName.join(", ")}
-                </p>
-              </div>
-            )}
-
-            {metadata.relatedDocuments.length > 0 && (
-              <div className="mb-3">
-                <h3 className="mb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  Related Documents
-                </h3>
-                <ul className="space-y-1">
-                  {metadata.relatedDocuments.map((doc, i) => (
-                    <li key={i}>
-                      <a
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline"
-                      >
-                        {doc.title} →
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {metadata.summary}
+              </p>
             )}
           </div>
         </div>
 
-        {/* DRAG HANDLE */}
-        <div
-          onMouseDown={onMouseDown}
-          className="hidden lg:flex w-1 cursor-col-resize items-center justify-center bg-border hover:bg-primary/40 active:bg-primary/60 transition-colors"
-        />
-
-        {/* RIGHT COLUMN */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-8 pt-5 pb-10">
-          <div className="mx-auto max-w-2xl">
+        {/* Two columns: transcript left, sticky sidebar right */}
+        <div className="flex flex-col gap-6 lg:flex-row">
+          {/* LEFT — transcript */}
+          <div className="min-w-0 lg:flex-[3]">
             <TranscriptionPanel
               kalturaId={kalturaId}
               player={player}
               video={video}
-              metadata={metadata}
+              selectedTopic={selectedTopic}
+              onTopicSelect={setSelectedTopic}
+              topicCollapsed={topicCollapsed}
+              onTopicCollapsedChange={setTopicCollapsed}
+              onDataChange={setPanelData}
             />
+          </div>
+
+          {/* RIGHT — sticky sidebar */}
+          <div className="hidden lg:block lg:flex-[2]">
+            <div className="lg:sticky lg:top-4 lg:flex lg:max-h-[calc(100vh-2rem)] lg:flex-col">
+              {/* Landing zone: video docks here when scrolled past */}
+              <div
+                ref={landingZoneRef}
+                className={`shrink-0 overflow-hidden rounded-lg bg-black ${
+                  isVideoDocked ? "mb-4 aspect-video w-full" : "h-0"
+                }`}
+              />
+
+              {/* Topics — not scrolled */}
+              <div className="shrink-0">
+                {topicPills}
+              </div>
+
+              {/* Speakers — collapsible, scrollable */}
+              {panelData?.segments && (
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <button
+                    onClick={() => setSpeakersOpen((v) => !v)}
+                    className="mb-1 flex shrink-0 items-center gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase"
+                  >
+                    <ChevronDown
+                      className={`h-3 w-3 transition-transform ${speakersOpen ? "" : "-rotate-90"}`}
+                    />
+                    Speakers
+                  </button>
+                  {speakersOpen && (
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                      <SpeakerToc
+                        segments={panelData.segments}
+                        speakerMappings={panelData.speakerMappings}
+                        countryNames={panelData.countryNames}
+                        activeSegmentIndex={panelData.activeSegmentIndex}
+                        onSeek={seekToTimestamp}
+                        selectedTopic={selectedTopic}
+                        topicColor={
+                          selectedTopic && panelData.topics
+                            ? getTopicColor(
+                                selectedTopic,
+                                Object.keys(panelData.topics),
+                              )
+                            : null
+                        }
+                        statements={panelData.statements}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { SpeakerMapping } from "@/lib/speakers";
-import type { Video, VideoMetadata } from "@/lib/un-api";
+import type { Video } from "@/lib/un-api";
 import { getCountryName } from "@/lib/country-lookup";
 import {
   ChevronDown,
-  FoldVertical,
-  UnfoldVertical,
   Check,
   RotateCcw,
   FileText,
@@ -31,7 +29,6 @@ type ViewMode = "transcript" | "analysis";
 const STAGES: { key: Stage; label: string }[] = [
   { key: "transcribing", label: "Transcribing audio" },
   { key: "analyzing_topics", label: "Analyzing topics" },
-  { key: "analyzing_propositions", label: "Analyzing positions" },
 ];
 
 function getStageIndex(stage: Stage): number {
@@ -114,7 +111,7 @@ interface RawParagraph {
   words: Array<{ text: string; start: number; end: number; speaker?: string }>;
 }
 
-const TOPIC_COLOR_PALETTE = [
+export const TOPIC_COLOR_PALETTE = [
   "#5b8dc9",
   "#5eb87d",
   "#9b7ac9",
@@ -127,9 +124,23 @@ const TOPIC_COLOR_PALETTE = [
   "#c98d4d",
 ];
 
-function getTopicColor(topicKey: string, allTopicKeys: string[]): string {
+export function getTopicColor(topicKey: string, allTopicKeys: string[]): string {
   const index = allTopicKeys.indexOf(topicKey);
   return TOPIC_COLOR_PALETTE[index % TOPIC_COLOR_PALETTE.length];
+}
+
+export interface TranscriptionPanelData {
+  segments: SpeakerSegment[] | null;
+  statements: Statement[] | null;
+  speakerMappings: SpeakerMapping;
+  countryNames: Map<string, string>;
+  topics: Record<string, { key: string; label: string; description: string }>;
+  activeSegmentIndex: number;
+  hasPropositions: boolean;
+  stage: Stage;
+  checking: boolean;
+  hasSegments: boolean;
+  hasRawParagraphs: boolean;
 }
 
 interface TranscriptionPanelProps {
@@ -139,7 +150,11 @@ interface TranscriptionPanelProps {
     play: () => void;
   };
   video: Video;
-  metadata: VideoMetadata;
+  selectedTopic: string | null;
+  onTopicSelect: (topic: string | null) => void;
+  topicCollapsed: boolean;
+  onTopicCollapsedChange: (collapsed: boolean) => void;
+  onDataChange?: (data: TranscriptionPanelData) => void;
 }
 
 interface Word {
@@ -428,6 +443,11 @@ export function TranscriptionPanel({
   kalturaId,
   player,
   video,
+  selectedTopic,
+  onTopicSelect,
+  topicCollapsed,
+  onTopicCollapsedChange,
+  onDataChange,
 }: TranscriptionPanelProps) {
   const [segments, setSegments] = useState<SpeakerSegment[] | null>(null);
   const [stage, setStage] = useState<Stage>("idle");
@@ -449,8 +469,6 @@ export function TranscriptionPanel({
     null,
   );
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [topicCollapsed, setTopicCollapsed] = useState<boolean>(true);
   const [propositions, setPropositions] = useState<Proposition[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("transcript");
   const [activeStatementIndex, setActiveStatementIndex] = useState<number>(-1);
@@ -657,6 +675,23 @@ export function TranscriptionPanel({
     }
   }, [statements, speakerMappings, groupStatementsBySpeaker]);
 
+  // Pass data up to parent for sidebar rendering
+  useEffect(() => {
+    onDataChange?.({
+      segments,
+      statements,
+      speakerMappings,
+      countryNames,
+      topics,
+      activeSegmentIndex,
+      hasPropositions: propositions.length > 0,
+      stage,
+      checking,
+      hasSegments: !!segments,
+      hasRawParagraphs: !!rawParagraphs,
+    });
+  }, [segments, speakerMappings, countryNames, topics, activeSegmentIndex, propositions, stage, checking, rawParagraphs, onDataChange]);
+
   const handleTranscribe = async (force = false) => {
     setStage("transcribing");
     setErrorMessage(null);
@@ -803,6 +838,33 @@ export function TranscriptionPanel({
       });
     } else {
       handleTranscribe(true);
+    }
+  };
+
+  const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
+
+  const handleRunAnalysis = async () => {
+    if (!transcriptId) return;
+    setAnalyzingPropositions(true);
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcriptId }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Analysis failed");
+      }
+      const data = await response.json();
+      if (data.propositions) {
+        setPropositions(data.propositions);
+      }
+    } catch (err) {
+      console.error("Analysis failed:", err);
+      setErrorMessage(err instanceof Error ? err.message : "Analysis failed");
+    } finally {
+      setAnalyzingPropositions(false);
     }
   };
 
@@ -1138,35 +1200,55 @@ export function TranscriptionPanel({
     );
     if (!element) return;
 
-    const scrollContainer = element.closest(".overflow-y-auto");
-    if (!scrollContainer) return;
-
-    const containerRect = scrollContainer.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-    const elementTopInContainer =
-      elementRect.top - containerRect.top + scrollContainer.scrollTop;
-    const containerHeight = scrollContainer.clientHeight;
-
     // Detect if user jumped (time changed by > 5 seconds in one update)
     const time = currentTimeRef.current;
     const timeDelta = Math.abs(time - lastTimeRef.current);
     const isJump = timeDelta > 5;
     lastTimeRef.current = time;
 
-    // For jumps: always scroll. For normal playback: only if roughly in view
-    const relativeTop = elementRect.top - containerRect.top;
-    const isRoughlyInView =
-      relativeTop > -containerHeight * 1.5 &&
-      relativeTop < containerHeight * 2.5;
+    // Try a scroll container first (overflow-y-auto), fall back to window
+    const scrollContainer = element.closest(".overflow-y-auto");
 
-    if (isJump || isRoughlyInView) {
-      const offset = containerHeight / 3;
-      const targetScroll = elementTopInContainer - offset;
-      scrollContainer.scrollTo({
-        top: targetScroll,
-        behavior: isJump ? "instant" : "smooth",
-      });
-      lastScrolledKey.current = key;
+    if (scrollContainer) {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const elementTopInContainer =
+        elementRect.top - containerRect.top + scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.clientHeight;
+
+      const relativeTop = elementRect.top - containerRect.top;
+      const isRoughlyInView =
+        relativeTop > -containerHeight * 1.5 &&
+        relativeTop < containerHeight * 2.5;
+
+      if (isJump || isRoughlyInView) {
+        const offset = containerHeight / 3;
+        const targetScroll = elementTopInContainer - offset;
+        scrollContainer.scrollTo({
+          top: targetScroll,
+          behavior: isJump ? "instant" : "smooth",
+        });
+        lastScrolledKey.current = key;
+      }
+    } else {
+      // Page-level scroll
+      const elementRect = element.getBoundingClientRect();
+      const absoluteTop = elementRect.top + window.scrollY;
+      const viewportHeight = window.innerHeight;
+
+      const relativeTop = elementRect.top;
+      const isRoughlyInView =
+        relativeTop > -viewportHeight * 1.5 &&
+        relativeTop < viewportHeight * 2.5;
+
+      if (isJump || isRoughlyInView) {
+        const offset = viewportHeight / 3;
+        window.scrollTo({
+          top: absoluteTop - offset,
+          behavior: isJump ? "instant" : "smooth",
+        });
+        lastScrolledKey.current = key;
+      }
     }
   }, [activeStatementIndex, activeParagraphIndex]);
 
@@ -1345,97 +1427,36 @@ export function TranscriptionPanel({
         />
       )}
 
+      {/* Analysis — Run Analysis prompt */}
+      {viewMode === "analysis" && propositions.length === 0 && stage === "completed" && (
+        <div className="mt-8 flex flex-col items-center gap-4 text-center">
+          <BarChart3 className="h-10 w-10 text-muted-foreground/50" />
+          <div>
+            <p className="text-sm font-medium">No analysis yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Identify key propositions and stakeholder positions across the transcript.
+            </p>
+          </div>
+          <button
+            onClick={handleRunAnalysis}
+            disabled={analyzingPropositions}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {analyzingPropositions ? (
+              <span className="flex items-center gap-2">
+                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Analyzing...
+              </span>
+            ) : (
+              "Run Analysis"
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Transcript View */}
-      {viewMode === "transcript" &&
-        segments &&
-        Object.keys(topics).length > 0 &&
-        (() => {
-          // Collect all used topics from statements
-          const usedTopicKeys = new Set<string>();
-          if (statements) {
-            statements.forEach((stmt) => {
-              stmt.paragraphs.forEach((para) => {
-                para.sentences.forEach((sent) => {
-                  sent.topic_keys?.forEach((key) => usedTopicKeys.add(key));
-                });
-              });
-            });
-          }
-
-          const usedTopics = Object.values(topics).filter((topic) =>
-            usedTopicKeys.has(topic.key),
-          );
-
-          if (usedTopics.length === 0) return null;
-
-          const allTopicKeys = Object.keys(topics);
-
-          return (
-            <div className="mb-2 border-b border-border/50 pb-2">
-              <div className="flex flex-wrap gap-1.5">
-                {usedTopics.map((topic) => {
-                  const color = getTopicColor(topic.key, allTopicKeys);
-                  return (
-                    <button
-                      key={topic.key}
-                      onClick={() => {
-                        const newTopic =
-                          selectedTopic === topic.key ? null : topic.key;
-                        setSelectedTopic(newTopic);
-                        if (!newTopic) setTopicCollapsed(false);
-                      }}
-                      className={`rounded-full px-2 py-0.5 text-xs transition-all ${
-                        selectedTopic === topic.key
-                          ? "font-medium ring-1 ring-offset-1"
-                          : "font-normal opacity-70 hover:opacity-100"
-                      }`}
-                      style={{
-                        backgroundColor: color + "50",
-                        color: "#374151",
-                        ...(selectedTopic === topic.key && {
-                          backgroundColor: color + "90",
-                          ringColor: color,
-                        }),
-                      }}
-                      title={topic.description}
-                    >
-                      {topic.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {selectedTopic && (
-                <div className="mt-2 inline-flex items-center gap-0.5 rounded-md bg-muted p-0.5 text-xs">
-                  <button
-                    onClick={() => setTopicCollapsed(true)}
-                    className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${
-                      topicCollapsed
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <FoldVertical className="h-3 w-3" />
-                    <span>Highlights only</span>
-                  </button>
-                  <button
-                    onClick={() => setTopicCollapsed(false)}
-                    className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${
-                      !topicCollapsed
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <UnfoldVertical className="h-3 w-3" />
-                    <span>All content with highlights</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })()}
-
       {viewMode === "transcript" && segments && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {segments.map((segment, segmentIndex) => {
             const isSegmentActive = segmentIndex === activeSegmentIndex;
             const firstStmtIndex = segment.statementIndices[0] ?? 0;
@@ -1458,7 +1479,7 @@ export function TranscriptionPanel({
             return (
               <div
                 key={segmentIndex}
-                className="space-y-2 pt-3"
+                className="space-y-1 pt-2"
                 ref={(el) => {
                   segmentRefs.current[segmentIndex] = el;
                 }}
@@ -1476,13 +1497,13 @@ export function TranscriptionPanel({
                   </button>
                 </div>
                 <div
-                  className={`rounded-lg border p-4 transition-colors duration-200 ${
+                  className={`rounded-lg border p-3 transition-colors duration-200 ${
                     isSegmentActive
                       ? "border-primary/40 bg-primary/5"
                       : "border-transparent bg-muted/40"
                   }`}
                 >
-                  <div className="space-y-3 text-sm leading-loose">
+                  <div className="space-y-2 text-sm leading-relaxed">
                     {segment.statementIndices.map((stmtIdx, indexInSegment) => {
                       const stmt = statements?.[stmtIdx];
 

@@ -1156,6 +1156,7 @@ export async function identifySpeakers(
   paragraphs: ParagraphInput[],
   transcriptId?: string,
   prebuiltMapping?: SpeakerMapping,
+  options?: { skipPropositions?: boolean },
 ) {
   if (!paragraphs?.length) {
     throw new Error("No paragraphs provided");
@@ -1542,33 +1543,37 @@ ${transcriptParts.join("\n\n")}`,
       // Keep the statements without topics — still continue to propositions
     }
 
-    // --- Stage: Analyzing propositions ---
-    await updateTranscriptStatus(transcriptId, "analyzing_propositions");
-    console.log(`  → Analyzing propositions...`);
+    if (!options?.skipPropositions) {
+      // --- Stage: Analyzing propositions ---
+      await updateTranscriptStatus(transcriptId, "analyzing_propositions");
+      console.log(`  → Analyzing propositions...`);
 
-    try {
-      const propositions = await analyzePropositions(
-        finalParagraphs,
-        finalMapping,
-        client,
-        transcriptId,
-      );
+      try {
+        const propositions = await analyzePropositions(
+          finalParagraphs,
+          finalMapping,
+          client,
+          transcriptId,
+        );
 
-      const transcriptForProps = await getTranscriptById(transcriptId);
-      if (transcriptForProps) {
-        await updateTranscriptContent(transcriptId, {
-          raw_paragraphs: transcriptForProps.content.raw_paragraphs,
-          statements: taggedStatements,
-          topics,
-          propositions,
-        });
-        console.log(`  ✓ Saved propositions`);
+        const transcriptForProps = await getTranscriptById(transcriptId);
+        if (transcriptForProps) {
+          await updateTranscriptContent(transcriptId, {
+            raw_paragraphs: transcriptForProps.content.raw_paragraphs,
+            statements: taggedStatements,
+            topics,
+            propositions,
+          });
+          console.log(`  ✓ Saved propositions`);
+        }
+      } catch (error) {
+        console.warn(
+          `  ⚠ Failed to analyze propositions:`,
+          error instanceof Error ? error.message : error,
+        );
       }
-    } catch (error) {
-      console.warn(
-        `  ⚠ Failed to analyze propositions:`,
-        error instanceof Error ? error.message : error,
-      );
+    } else {
+      console.log(`  ℹ Skipping proposition analysis (on-demand)`);
     }
 
     await updateTranscriptStatus(transcriptId, "completed");

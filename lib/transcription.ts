@@ -219,7 +219,7 @@ async function runPipeline(transcriptId: string, _entryId: string) {
       throw new Error("No raw paragraphs available");
     }
 
-    await identifySpeakers(transcript.content.raw_paragraphs, transcriptId);
+    await identifySpeakers(transcript.content.raw_paragraphs, transcriptId, undefined, { skipPropositions: true });
     await updateTranscriptStatus(transcriptId, "completed");
     await releasePipelineLock(transcriptId);
   } catch (err) {
@@ -326,7 +326,7 @@ async function runAnalysisPipeline(
 ): Promise<void> {
   try {
     await updateTranscriptStatus(transcriptId, "identifying_speakers");
-    await identifySpeakers(paragraphs, transcriptId, speakerMapping);
+    await identifySpeakers(paragraphs, transcriptId, speakerMapping, { skipPropositions: true });
     await updateTranscriptStatus(transcriptId, "completed");
     await releasePipelineLock(transcriptId);
   } catch (err) {
