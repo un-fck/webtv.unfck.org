@@ -40,8 +40,12 @@ function main() {
   const sessions: Array<{ symbol: string; assetId: string; notes?: string }> =
     JSON.parse(fs.readFileSync(evalSessionsPath, "utf-8"));
 
-  // Collect unique symbols from results
-  const symbols = [...new Set(results.map((r) => r.symbol))];
+  // Filter results to only sessions listed in eval-sessions.json
+  const evalSymbols = new Set(sessions.map((s) => s.symbol));
+  const filteredResults = results.filter((r) => evalSymbols.has(r.symbol));
+
+  // Collect unique symbols from filtered results
+  const symbols = [...new Set(filteredResults.map((r) => r.symbol))];
 
   // Collect ground truth texts
   const groundTruth: Record<string, Record<string, string>> = {};
@@ -91,7 +95,7 @@ function main() {
   }
 
   const data = {
-    results,
+    results: filteredResults,
     sessions: sessionMeta,
     groundTruth,
     transcriptions,
@@ -103,7 +107,7 @@ function main() {
   const sizeMB = (fs.statSync(OUT).size / 1024 / 1024).toFixed(1);
   console.log(`Wrote ${OUT} (${sizeMB} MB)`);
   console.log(
-    `  ${results.length} results, ${symbols.length} sessions, ${Object.keys(groundTruth).length} GT sessions`,
+    `  ${filteredResults.length}/${results.length} results, ${symbols.length} sessions, ${Object.keys(groundTruth).length} GT sessions`,
   );
 }
 
