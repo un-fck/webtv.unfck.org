@@ -54,10 +54,40 @@ export const PROVIDER_COLORS: Record<string, string> = {
 
 export const PROVIDER_LABELS: Record<string, string> = {
   assemblyai: "AssemblyAI",
-  "azure-openai": "Azure OpenAI",
+  "azure-openai": "OpenAI",
   elevenlabs: "ElevenLabs",
   "azure-speech": "Azure Speech",
-  "google-chirp": "Google Chirp 3",
-  gemini: "Gemini 3 Flash",
-  "groq-whisper": "Whisper v3 (Groq)",
+  "google-chirp": "Google Chirp",
+  gemini: "Gemini",
+  "groq-whisper": "Whisper",
+};
+
+export const PROVIDER_FULL_LABELS: Record<string, string> = {
+  assemblyai: "AssemblyAI Universal-2",
+  "azure-openai": "OpenAI GPT-4o Transcribe Diarize",
+  elevenlabs: "ElevenLabs Scribe v2",
+  "azure-speech": "Azure Cognitive Services Batch",
+  "google-chirp": "Google Cloud Chirp 3",
+  gemini: "Google Gemini 3 Flash Preview",
+  "groq-whisper": "OpenAI Whisper large-v3 (via Groq)",
+};
+
+export interface ProviderMeta {
+  pricing: string;
+  diarization: boolean;
+  prompting: boolean;
+}
+
+export const PROVIDER_META: Record<string, ProviderMeta> = {
+  assemblyai: { pricing: "$0.27/hr", diarization: true, prompting: false },
+  "azure-openai": { pricing: "$0.06/hr", diarization: true, prompting: false },
+  elevenlabs: { pricing: "$0.40/hr", diarization: true, prompting: false },
+  "azure-speech": { pricing: "$0.36/hr", diarization: true, prompting: false },
+  "google-chirp": {
+    pricing: "$0.96/hr",
+    diarization: true,
+    prompting: false,
+  },
+  gemini: { pricing: "$0.01/hr", diarization: true, prompting: true },
+  "groq-whisper": { pricing: "$0.09/hr", diarization: false, prompting: false },
 };

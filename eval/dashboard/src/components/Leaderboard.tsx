@@ -5,6 +5,8 @@ import {
   LANGUAGE_NAMES,
   PROVIDER_COLORS,
   PROVIDER_LABELS,
+  PROVIDER_FULL_LABELS,
+  PROVIDER_META,
 } from "../types";
 
 interface Props {
@@ -148,67 +150,142 @@ export function Leaderboard({ results }: Props) {
         </div>
       </div>
 
-      {/* Provider ranking with CI bars */}
+      {/* Provider ranking table */}
       <div className="card" style={{ marginBottom: "1.5rem" }}>
         <h3>
-          Provider Ranking — Mean {METRIC_LABELS[metric]} (All Languages) with
-          95% CI
+          Provider Ranking — Mean {METRIC_LABELS[metric]} (All Languages)
           <span className="lower-is-better">lower is better</span>
         </h3>
-        <div className="bar-chart">
-          {providerAgg.map(({ provider, mean, ciLow, ciHigh, n }) => {
-            const barPct = (mean / maxVal) * 100;
-            const ciLowPct = (ciLow / maxVal) * 100;
-            const ciHighPct = (ciHigh / maxVal) * 100;
-            return (
-              <div key={provider} className="bar-row">
-                <div className="bar-label">
-                  <span className="provider-badge">
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "0.85rem",
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                borderBottom: "2px solid var(--border)",
+                textAlign: "left",
+              }}
+            >
+              <th style={{ padding: "0.5rem 0.75rem" }}>Provider</th>
+              <th style={{ padding: "0.5rem 0.75rem" }}>Model</th>
+              <th style={{ padding: "0.5rem 0.75rem", minWidth: "200px" }}>
+                {METRIC_LABELS[metric]} (95% CI)
+              </th>
+              <th style={{ padding: "0.5rem 0.75rem", textAlign: "center" }}>
+                Pricing
+              </th>
+              <th style={{ padding: "0.5rem 0.75rem", textAlign: "center" }}>
+                Diarization
+              </th>
+              <th style={{ padding: "0.5rem 0.75rem", textAlign: "center" }}>
+                Custom Instructions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {providerAgg.map(({ provider, mean, ciLow, ciHigh, n }) => {
+              const meta = PROVIDER_META[provider];
+              const barPct = (mean / maxVal) * 100;
+              const ciLowPct = (ciLow / maxVal) * 100;
+              const ciHighPct = (ciHigh / maxVal) * 100;
+              return (
+                <tr
+                  key={provider}
+                  style={{ borderBottom: "1px solid var(--border)" }}
+                >
+                  <td style={{ padding: "0.5rem 0.75rem" }}>
                     <span
-                      className="provider-dot"
-                      style={{
-                        background: PROVIDER_COLORS[provider] || "#666",
-                      }}
-                    />
-                    {PROVIDER_LABELS[provider] || provider}
-                  </span>
-                </div>
-                <div className="bar-track">
-                  <div
-                    className="bar-fill"
+                      className="provider-badge"
+                      title={PROVIDER_FULL_LABELS[provider] || provider}
+                    >
+                      <span
+                        className="provider-dot"
+                        style={{
+                          background: PROVIDER_COLORS[provider] || "#666",
+                        }}
+                      />
+                      {PROVIDER_LABELS[provider] || provider}
+                    </span>
+                  </td>
+                  <td
                     style={{
-                      width: `${Math.min(barPct, 100)}%`,
-                      background: PROVIDER_COLORS[provider] || "#666",
+                      padding: "0.5rem 0.75rem",
+                      fontSize: "0.8rem",
+                      color: "var(--text-muted)",
                     }}
                   >
-                    <span className="bar-value">
-                      {(mean * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  {n >= 2 && (
-                    <div
-                      className="ci-whisker"
-                      style={{
-                        left: `${ciLowPct}%`,
-                        width: `${ciHighPct - ciLowPct}%`,
-                      }}
-                    />
-                  )}
-                </div>
-                <span
-                  style={{
-                    fontSize: "0.7rem",
-                    color: "var(--text-dim)",
-                    width: "80px",
-                    textAlign: "right",
-                  }}
-                >
-                  n={n}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+                    {PROVIDER_FULL_LABELS[provider] || provider}
+                  </td>
+                  <td style={{ padding: "0.5rem 0.75rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div className="bar-track" style={{ height: "22px", flex: 1 }}>
+                        <div
+                          className="bar-fill"
+                          style={{
+                            width: `${Math.min(barPct, 100)}%`,
+                            background: PROVIDER_COLORS[provider] || "#666",
+                          }}
+                        >
+                          <span className="bar-value">
+                            {(mean * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        {n >= 2 && (
+                          <div
+                            className="ci-whisker"
+                            style={{
+                              left: `${ciLowPct}%`,
+                              width: `${ciHighPct - ciLowPct}%`,
+                            }}
+                          />
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "var(--text-dim)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        n={n}
+                      </span>
+                    </div>
+                  </td>
+                  <td
+                    style={{
+                      padding: "0.5rem 0.75rem",
+                      textAlign: "center",
+                      fontFamily: "monospace",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    {meta?.pricing || "—"}
+                  </td>
+                  <td
+                    style={{
+                      padding: "0.5rem 0.75rem",
+                      textAlign: "center",
+                    }}
+                  >
+                    {meta?.diarization ? "Yes" : "No"}
+                  </td>
+                  <td
+                    style={{
+                      padding: "0.5rem 0.75rem",
+                      textAlign: "center",
+                    }}
+                  >
+                    {meta?.prompting ? "Yes" : "No"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       {/* Per-language breakdown charts with CIs */}
@@ -227,7 +304,7 @@ export function Leaderboard({ results }: Props) {
                 return (
                   <div key={provider} className="bar-row">
                     <div className="bar-label">
-                      <span className="provider-badge">
+                      <span className="provider-badge" title={PROVIDER_FULL_LABELS[provider] || provider}>
                         <span
                           className="provider-dot"
                           style={{
