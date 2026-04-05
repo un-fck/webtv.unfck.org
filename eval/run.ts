@@ -262,12 +262,14 @@ async function evalSession(
 
       console.log(`  Running ${providerName}...`);
       const provider = getProvider(providerName);
+      const tProvider = Date.now();
 
       try {
         const transcript = await provider.transcribe(audioUrl, {
           audioFilePath,
           language: lang,
         });
+        console.log(`    Transcription: ${((Date.now() - tProvider) / 1000).toFixed(1)}s`);
 
         providerOutputs[providerName] = transcript.fullText;
 
@@ -287,11 +289,13 @@ async function evalSession(
 
         // Compute WER against ground truth if available
         if (groundTruthText) {
+          const tMetrics = Date.now();
           const metrics = computeMetrics(
             groundTruthText,
             transcript.fullText,
             lang,
           );
+          console.log(`    Metrics: ${((Date.now() - tMetrics) / 1000).toFixed(1)}s (ref ${groundTruthText.length} chars)`);
 
           const result: SessionResult = {
             symbol: session.symbol,

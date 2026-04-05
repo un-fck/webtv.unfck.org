@@ -49,6 +49,7 @@ export const PROVIDER_COLORS: Record<string, string> = {
   "azure-speech": "#DC2626",
   "google-chirp": "#4285F4",
   gemini: "#886FBF",
+  "groq-whisper": "#F55036",
 };
 
 export const PROVIDER_LABELS: Record<string, string> = {
@@ -58,4 +59,5 @@ export const PROVIDER_LABELS: Record<string, string> = {
   "azure-speech": "Azure Speech",
   "google-chirp": "Google Chirp 3",
   gemini: "Gemini 3 Flash",
+  "groq-whisper": "Whisper v3 (Groq)",
 };

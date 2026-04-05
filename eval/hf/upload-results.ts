@@ -68,6 +68,7 @@ See [united-nations/transcription-corpus](https://huggingface.co/datasets/united
 | \`azure-speech\` | Azure Cognitive Services Speech Batch Transcription | ~$0.36/hr |
 | \`gemini\` | Gemini 3 Flash (structured diarization via prompt) | ~$0.01/hr |
 | \`google-chirp\` | Google Cloud Chirp 3 (Speech V2 API) | ~$0.016/min |
+| \`groq-whisper\` | Whisper large-v3 (via Groq) | ~$0.015/min |
 
 ## Schema
 

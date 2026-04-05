@@ -46,14 +46,46 @@ function editDistance(ref: string[], hyp: string[]) {
   return { substitutions, insertions, deletions };
 }
 
+const MAX_WORDS = 3_000;
+const MAX_CHARS = 10_000;
+
+/**
+ * Compute edit distance on long arrays by splitting into chunks,
+ * computing each chunk's edit distance, and summing the results.
+ * This is an approximation but avoids O(n*m) blowup on huge inputs.
+ */
+function chunkedEditDistance(ref: string[], hyp: string[], maxLen: number) {
+  if (ref.length <= maxLen && hyp.length <= maxLen) {
+    return editDistance(ref, hyp);
+  }
+
+  // Split both into proportional chunks
+  const numChunks = Math.ceil(Math.max(ref.length, hyp.length) / maxLen);
+  const refChunkSize = Math.ceil(ref.length / numChunks);
+  const hypChunkSize = Math.ceil(hyp.length / numChunks);
+
+  let totalSub = 0, totalIns = 0, totalDel = 0;
+  for (let i = 0; i < numChunks; i++) {
+    const refChunk = ref.slice(i * refChunkSize, (i + 1) * refChunkSize);
+    const hypChunk = hyp.slice(i * hypChunkSize, (i + 1) * hypChunkSize);
+    const { substitutions, insertions, deletions } = editDistance(refChunk, hypChunk);
+    totalSub += substitutions;
+    totalIns += insertions;
+    totalDel += deletions;
+  }
+
+  return { substitutions: totalSub, insertions: totalIns, deletions: totalDel };
+}
+
 /** Compute WER and CER between reference and hypothesis text */
 export function computeWER(reference: string, hypothesis: string): WERResult {
   const refWords = reference.split(/\s+/).filter(Boolean);
   const hypWords = hypothesis.split(/\s+/).filter(Boolean);
 
-  const { substitutions, insertions, deletions } = editDistance(
+  const { substitutions, insertions, deletions } = chunkedEditDistance(
     refWords,
     hypWords,
+    MAX_WORDS,
   );
   const wer =
     refWords.length === 0
@@ -62,33 +94,17 @@ export function computeWER(reference: string, hypothesis: string): WERResult {
         : 1
       : (substitutions + insertions + deletions) / refWords.length;
 
-  // CER — skip for very long texts (DP is O(n*m) on characters)
+  // CER
   const refChars = [...reference.replace(/\s+/g, "")];
   const hypChars = [...hypothesis.replace(/\s+/g, "")];
-  const MAX_CER_CHARS = 30_000;
-  let cer: number;
-  if (refChars.length > MAX_CER_CHARS || hypChars.length > MAX_CER_CHARS) {
-    // Sample-based CER: compute on first N chars as an approximation
-    const sRef = refChars.slice(0, MAX_CER_CHARS);
-    const sHyp = hypChars.slice(0, MAX_CER_CHARS);
-    const charEdit = editDistance(sRef, sHyp);
-    cer =
-      sRef.length === 0
-        ? sHyp.length === 0
-          ? 0
-          : 1
-        : (charEdit.substitutions + charEdit.insertions + charEdit.deletions) /
-          sRef.length;
-  } else {
-    const charEdit = editDistance(refChars, hypChars);
-    cer =
-      refChars.length === 0
-        ? hypChars.length === 0
-          ? 0
-          : 1
-        : (charEdit.substitutions + charEdit.insertions + charEdit.deletions) /
-          refChars.length;
-  }
+  const charEdit = chunkedEditDistance(refChars, hypChars, MAX_CHARS);
+  const cer =
+    refChars.length === 0
+      ? hypChars.length === 0
+        ? 0
+        : 1
+      : (charEdit.substitutions + charEdit.insertions + charEdit.deletions) /
+        refChars.length;
 
   return {
     wer,

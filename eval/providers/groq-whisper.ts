@@ -109,6 +109,8 @@ export const groqWhisper: TranscriptionProvider = {
       let fullText = "";
       let totalDurationMs = 0;
 
+      const t0 = Date.now();
+
       if (fileSize <= MAX_FILE_SIZE) {
         // Single file upload
         const response = await transcribeFile(tmpPath, opts?.language);
@@ -125,21 +127,25 @@ export const groqWhisper: TranscriptionProvider = {
         console.log(
           `  [Groq] File too large (${(fileSize / 1024 / 1024).toFixed(0)}MB), splitting into chunks...`,
         );
+        const tSplit0 = Date.now();
         const chunks = splitAudio(tmpPath, CHUNK_DURATION_SECS);
-        console.log(`  [Groq] Split into ${chunks.length} chunks, transcribing ${PARALLEL_CHUNKS} at a time...`);
+        console.log(`  [Groq] Split into ${chunks.length} chunks in ${((Date.now() - tSplit0) / 1000).toFixed(1)}s, transcribing ${PARALLEL_CHUNKS} at a time...`);
 
+        const tApi0 = Date.now();
         const chunkResults = await parallelMap(chunks, PARALLEL_CHUNKS, async (chunk, i) => {
           const chunkSize = fs.statSync(chunk.path).size;
-          console.log(
-            `  [Groq] Chunk ${i + 1}/${chunks.length} (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min, ${(chunkSize / 1024 / 1024).toFixed(0)}MB)`,
-          );
+          const tChunk = Date.now();
           const response = await transcribeFile(chunk.path, opts?.language);
+          console.log(
+            `  [Groq] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min, ${(chunkSize / 1024 / 1024).toFixed(0)}MB)`,
+          );
 
           // Clean up chunk immediately
           try { fs.unlinkSync(chunk.path); } catch {}
 
           return { response, offsetMs: chunk.offsetMs };
         });
+        console.log(`  [Groq] All chunks transcribed in ${((Date.now() - tApi0) / 1000).toFixed(1)}s`);
 
         // Reassemble in order
         const textParts: string[] = [];
@@ -174,6 +180,8 @@ export const groqWhisper: TranscriptionProvider = {
           text: seg.text,
         }),
       );
+
+      console.log(`  [Groq] Total transcription time: ${((Date.now() - t0) / 1000).toFixed(1)}s for ${(totalDurationMs / 1000 / 60).toFixed(0)}min audio`);
 
       return {
         provider: "groq-whisper",
