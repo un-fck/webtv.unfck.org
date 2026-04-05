@@ -1313,6 +1313,7 @@ export function TranscriptionPanel({
 
   return (
     <div>
+      {/* Single toolbar row: title | language | tabs | actions */}
       <div className="mb-3 flex items-center gap-3">
         <h2 className="text-lg font-semibold tracking-tight text-foreground">
           Transcript
@@ -1368,10 +1369,7 @@ export function TranscriptionPanel({
             )}
           </div>
         )}
-      </div>
 
-      {/* Toolbar row: tabs | actions */}
-      <div className="mb-3 flex items-center gap-3">
         {/* Tabs — only when there's data */}
         {segments &&
           (propositions.length > 0 || Object.keys(topics).length > 0) && (
