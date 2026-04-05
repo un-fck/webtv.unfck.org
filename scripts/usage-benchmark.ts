@@ -4,7 +4,6 @@ import "../lib/load-env";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { ASSEMBLYAI_BASE_RATE_PER_HOUR_USD } from "../lib/config";
 import { getTursoClient } from "../lib/turso";
 
 const sinceArg = process.argv.find((arg) => arg.startsWith("--since="));
@@ -88,13 +87,13 @@ async function run() {
 
   const overallResult = await client.execute({
     sql: `
-      WITH assembly_per_transcript AS (
+      WITH transcription_per_transcript AS (
         SELECT
           transcript_id,
           MAX(usage_hours) AS usage_hours,
           MAX(usage_seconds) AS usage_seconds
         FROM processing_usage_events
-        WHERE provider = 'assemblyai'
+        WHERE provider IN ('gemini', 'assemblyai')
           AND usage_hours IS NOT NULL
           ${sincePredicate}
         GROUP BY transcript_id
@@ -123,7 +122,7 @@ async function run() {
           COALESCE(o.reasoning_tokens, 0) AS reasoning_tokens,
           COALESCE(o.cached_input_tokens, 0) AS cached_input_tokens,
           COALESCE(o.total_tokens, 0) AS total_tokens
-        FROM assembly_per_transcript a
+        FROM transcription_per_transcript a
         LEFT JOIN openai_per_transcript o ON o.transcript_id = a.transcript_id
         WHERE a.usage_hours > 0
           AND COALESCE(o.total_tokens, 0) > 0
@@ -189,12 +188,12 @@ async function run() {
 
   const stageResult = await client.execute({
     sql: `
-      WITH assembly_per_transcript AS (
+      WITH transcription_per_transcript AS (
         SELECT
           transcript_id,
           MAX(usage_hours) AS usage_hours
         FROM processing_usage_events
-        WHERE provider = 'assemblyai'
+        WHERE provider IN ('gemini', 'assemblyai')
           AND usage_hours IS NOT NULL
           ${sincePredicate}
         GROUP BY transcript_id
@@ -211,7 +210,7 @@ async function run() {
       ),
       eligible_transcripts AS (
         SELECT a.transcript_id, a.usage_hours
-        FROM assembly_per_transcript a
+        FROM transcription_per_transcript a
         LEFT JOIN openai_per_transcript o ON o.transcript_id = a.transcript_id
         WHERE a.usage_hours > 0
           AND COALESCE(o.total_tokens, 0) > 0
@@ -315,13 +314,13 @@ async function run() {
 
   const perVideoResult = await client.execute({
     sql: `
-      WITH assembly_per_transcript AS (
+      WITH transcription_per_transcript AS (
         SELECT
           transcript_id,
           MAX(usage_hours) AS usage_hours,
           MAX(usage_seconds) AS usage_seconds
         FROM processing_usage_events
-        WHERE provider = 'assemblyai'
+        WHERE provider IN ('gemini', 'assemblyai')
           AND usage_hours IS NOT NULL
           ${sincePredicate}
         GROUP BY transcript_id
@@ -355,7 +354,7 @@ async function run() {
         CASE WHEN a.usage_hours > 0 THEN COALESCE(o.reasoning_tokens, 0) / a.usage_hours ELSE 0 END AS reasoning_tokens_per_hour,
         CASE WHEN a.usage_hours > 0 THEN COALESCE(o.cached_input_tokens, 0) / a.usage_hours ELSE 0 END AS cached_input_tokens_per_hour,
         CASE WHEN a.usage_hours > 0 THEN COALESCE(o.total_tokens, 0) / a.usage_hours ELSE 0 END AS total_tokens_per_hour
-      FROM assembly_per_transcript a
+      FROM transcription_per_transcript a
       LEFT JOIN openai_per_transcript o ON o.transcript_id = a.transcript_id
       LEFT JOIN transcripts t ON t.transcript_id = a.transcript_id
       WHERE a.usage_hours > 0
@@ -407,20 +406,15 @@ async function run() {
   const yearlyRows: Array<{
     body: string;
     hours_per_day: number;
-    assemblyai_cost_per_day: number;
-    assemblyai_cost_per_year: number;
     openai_cost_per_day: number;
     openai_cost_per_year: number;
   }> = [];
 
   for (const [body, hoursPerDay] of hoursPerDayByBody.entries()) {
-    const assemblyCostDay = hoursPerDay * ASSEMBLYAI_BASE_RATE_PER_HOUR_USD;
     const openaiCostDay = hoursPerDay * openaiCostPerHour;
     yearlyRows.push({
       body,
       hours_per_day: Number(hoursPerDay.toFixed(2)),
-      assemblyai_cost_per_day: Number(assemblyCostDay.toFixed(2)),
-      assemblyai_cost_per_year: Number((assemblyCostDay * 365).toFixed(2)),
       openai_cost_per_day: Number(openaiCostDay.toFixed(2)),
       openai_cost_per_year: Number((openaiCostDay * 365).toFixed(2)),
     });
@@ -431,8 +425,6 @@ async function run() {
   const totals = yearlyRows.reduce(
     (acc, rowBody) => {
       acc.hours_per_day += rowBody.hours_per_day;
-      acc.assemblyai_cost_per_day += rowBody.assemblyai_cost_per_day;
-      acc.assemblyai_cost_per_year += rowBody.assemblyai_cost_per_year;
       acc.openai_cost_per_day += rowBody.openai_cost_per_day;
       acc.openai_cost_per_year += rowBody.openai_cost_per_year;
       return acc;
@@ -440,8 +432,6 @@ async function run() {
     {
       body: "Total",
       hours_per_day: 0,
-      assemblyai_cost_per_day: 0,
-      assemblyai_cost_per_year: 0,
       openai_cost_per_day: 0,
       openai_cost_per_year: 0,
     },
@@ -450,10 +440,6 @@ async function run() {
   yearlyRows.push({
     ...totals,
     hours_per_day: Number(totals.hours_per_day.toFixed(2)),
-    assemblyai_cost_per_day: Number(totals.assemblyai_cost_per_day.toFixed(2)),
-    assemblyai_cost_per_year: Number(
-      totals.assemblyai_cost_per_year.toFixed(2),
-    ),
     openai_cost_per_day: Number(totals.openai_cost_per_day.toFixed(2)),
     openai_cost_per_year: Number(totals.openai_cost_per_year.toFixed(2)),
   });

@@ -93,8 +93,8 @@ export type Proposition = z.infer<typeof PropositionSchema>;
 const API_VERSION = "2025-01-01-preview";
 
 const IDENTIFICATION_RULES = `IDENTIFICATION RULES:
-- Use AssemblyAI labels as HINTS for speaker changes (label change often = new speaker), but verify with text
-- AssemblyAI may incorrectly group different speakers under same label, or split one speaker across labels
+- Use ASR speaker labels as HINTS for speaker changes (label change often = new speaker), but verify with text
+- ASR may incorrectly group different speakers under same label, or split one speaker across labels
 - Extract both personal names AND official functions when available
 - For country representatives, provide ISO 3166-1 alpha-3 country codes (e.g., PRY, USA, CHN)
 - For UN bodies/agencies, use standard abbreviations (e.g., ACABQ, UNICEF, UNDP, OHCHR, 5th Committee)
@@ -938,7 +938,7 @@ async function resegmentParagraph(
           content: `You are an expert at correcting speaker segmentation errors in UN proceedings transcripts.
 
 BACKGROUND:
-This transcript was created by automatic speech recognition (AssemblyAI), which divided the audio into paragraphs. However, the automatic paragraph boundaries are sometimes incorrect - a paragraph may contain the end of one speaker's remarks followed by the beginning of another speaker's remarks, all incorrectly grouped together.
+This transcript was created by automatic speech recognition, which divided the audio into paragraphs. However, the automatic paragraph boundaries are sometimes incorrect - a paragraph may contain the end of one speaker's remarks followed by the beginning of another speaker's remarks, all incorrectly grouped together.
 
 In an initial identification pass, we detected that the CURRENT paragraph likely contains speech from multiple different speakers mixed together (e.g., the last few sentences of one speaker followed by the first sentences of the next speaker).
 
@@ -1171,13 +1171,13 @@ export async function identifySpeakers(
     console.log(`  → Using pre-built speaker mapping for ${paragraphs.length} paragraphs (Gemini path)...`);
     finalMapping = { ...prebuiltMapping };
   } else {
-  // AssemblyAI path: identify speakers via OpenAI
+  // Legacy path: identify speakers via OpenAI (for transcripts without pre-built mapping)
   console.log(`  → Analyzing ${paragraphs.length} paragraphs...`);
 
   const transcriptParts = paragraphs.map((para, index) => {
     const text = para.words.map((word) => word.text).join(" ");
-    const assemblySpeaker = para.words?.[0]?.speaker || "Unknown";
-    return `[${index}] (AssemblyAI: Speaker ${assemblySpeaker}) ${text}`;
+    const asrSpeaker = para.words?.[0]?.speaker || "Unknown";
+    return `[${index}] (ASR: Speaker ${asrSpeaker}) ${text}`;
   });
 
   const completion = await trackOpenAIChatCompletion({
@@ -1198,8 +1198,8 @@ CRITICAL: Identify WHO IS ACTUALLY SPEAKING each paragraph, NOT who is being int
 
 TASK:
 - Each paragraph is numbered [0], [1], [2], etc.
-- Each paragraph has an AssemblyAI speaker label (A, B, C, etc.) - these are HINTS from automatic diarization
-- WARNING: AssemblyAI labels may be incorrect or inconsistent - use them as hints, not facts
+- Each paragraph has an ASR speaker label (A, B, C, etc.) - these are HINTS from automatic diarization
+- WARNING: ASR labels may be incorrect or inconsistent - use them as hints, not facts
 - For each paragraph, identify the ACTUAL SPEAKER (person saying those words) based on the text content
 - IMPORTANT: If a paragraph contains "I invite X" or "X has the floor", the speaker is the person doing the inviting/giving the floor (usually the Chair), NOT X
 - X will speak in SUBSEQUENT paragraphs
@@ -1224,7 +1224,7 @@ Helpful indicators (but not hard rules):
   - Shift from one person's remarks to another person's procedural language
   - Topic/tone/perspective changes midway through paragraph
   - First-person speech mixed with third-person procedural descriptions
-  - AssemblyAI speaker labels changing within the paragraph
+  - ASR speaker labels changing within the paragraph
   - Phrases like "I give/invite/call upon [Name]" followed by more text
 
 NOT mixed speakers:
@@ -1405,7 +1405,7 @@ ${transcriptParts.join("\n\n")}`,
     );
   }
 
-  } // end AssemblyAI path (else block)
+  } // end legacy path (else block)
 
   // Filter out off-record paragraphs
   const offRecordIndices = Object.keys(finalMapping)

@@ -10,7 +10,7 @@ export type TranscriptStatus =
   | "analyzing_propositions"
   | "completed"
   | "error";
-export type ProcessingUsageProvider = "openai" | "assemblyai" | "gemini";
+export type ProcessingUsageProvider = "openai" | "gemini";
 export type ProcessingUsageStatus = "success" | "error";
 
 const REQUIRED_VARS = ["TURSO_DB", "TURSO_TOKEN"] as const;

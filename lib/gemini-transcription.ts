@@ -1,7 +1,7 @@
 /**
  * Gemini-based transcription + speaker identification for UN proceedings.
  *
- * Replaces stages 1-3 (AssemblyAI transcription + OpenAI initial speaker mapping
+ * Replaces the legacy transcription pipeline (external ASR + OpenAI speaker mapping
  * + OpenAI resegmentation) with a single Gemini call that:
  *   - Transcribes the audio verbatim (full turn text required)
  *   - Identifies speakers by name/function/affiliation/group from audio context
