@@ -54,33 +54,44 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Eval system only:** `ASSEMBLYAI_API_KEY`, `AZURE_SPEECH_KEY`, `AZURE_SPEECH_ENDPOINT`, `ELEVENLABS_API_KEY`, `GROQ_API_KEY`, `DASHSCOPE_API_KEY`, `DEEPGRAM_API_KEY`, `MISTRAL_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`.
 
+## Documentation
+
+Detailed docs live in `docs/` — read these before working on the relevant subsystem:
+
+- `docs/ai.md` — AI pipeline: models used, pipeline stages (transcription → speaker normalization → identification → resegmentation → topics → propositions → PV alignment)
+- `docs/webtv.md` — UN Web TV scraping, Kaltura two-ID system, schedule scraping, per-video metadata, what gets stored
+- `docs/eval.md` — Evaluation system: ground truth from PV documents, 10 STT providers, metrics (WER/CER), corpus, dashboard, HuggingFace datasets
+- `docs/official-transcripts.md` — Which UN organs produce PV vs SR records, document symbol patterns
+
 ## Architecture
+
+For detailed architecture, see the `docs/` files above. Summary:
 
 ### Data Flow
 
-UN Web TV has no public API — `lib/un-api.ts` scrapes HTML directly. On page load, videos are fetched for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`, default 14 days), cached for 5 minutes. All scraped videos are persisted into Turso via `scripts/sync-videos.ts`.
+UN Web TV has no public API — `lib/un-api.ts` scrapes HTML directly. See `docs/webtv.md` for full details on scraping, Kaltura ID resolution, and what gets stored.
+
+On page load, videos are fetched for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`, default 14 days), cached for 5 minutes. All scraped videos are persisted into Turso via `scripts/sync-videos.ts`.
 
 For search beyond the rolling window, the frontend calls `/api/search` which queries Turso directly.
 
-Videos are hosted on Kaltura (partner ID: `2503451`). Two ID systems exist:
-
-- **Asset ID** — visible in UN Web TV URLs, used as primary key in `videos` table
-- **Kaltura entry ID** — needed for player embed and audio URL; `lib/kaltura.ts` extracts it from various formats, `lib/kaltura-helpers.ts` resolves asset ID → entry ID via Kaltura API
-
 ### Transcription Pipeline
+
+See `docs/ai.md` for the full 8-stage pipeline with model details and design decisions.
 
 Triggered from the video page UI or via scheduled processing:
 
-1. **Start**: `app/api/transcribe/route.ts` — accepts `kalturaId`, resolves to Kaltura `entryId` + audio URL via `lib/transcription.ts`
-2. **Transcribe**: `lib/gemini-transcription.ts` — uploads audio to Gemini, transcribes with speaker identification in a single call
-3. **Poll**: `app/api/transcribe/poll/route.ts` — client polls until transcription completes; result stored in Turso
-4. **Speaker normalization**: `lib/speaker-identification.ts` — uses Azure OpenAI to normalize speaker names/affiliations. Mappings stored via `lib/speakers.ts`
-5. **Storage**: Results in Turso (`lib/turso.ts`) with pipeline lock to prevent duplicate processing
+1. **Transcribe**: `lib/gemini-transcription.ts` — uploads audio to Gemini, transcribes with speaker identification
+2. **Speaker normalization**: cross-chunk deduplication via GPT-5-mini (only for chunked audio)
+3. **Speaker identification**: legacy path for non-Gemini transcripts
+4. **Resegmentation**: splits paragraphs with multiple speakers
+5. **Topic definition + tagging**: identifies policy topics, tags sentences
+6. **Proposition analysis**: on-demand stakeholder position mapping
+7. **PV alignment**: aligns official verbatim records with audio timestamps
 
 **Segmented transcription**: Long sessions can be split into time ranges (`startTime`/`endTime`) via `app/api/transcribe/segments/route.ts`.
 
 **Scheduled transcription**: Videos can be queued for transcription before audio is available. `lib/turso.ts:scheduleTranscript()` creates a `scheduled` status record. The Vercel cron job (`/api/cron/process-scheduled`, every 5 min) picks these up and starts transcription once audio is available.
-
 
 ### Database (Turso / libSQL)
 
@@ -133,9 +144,9 @@ Triggered from the video page UI or via scheduled processing:
 
 ### Eval System
 
-`eval/` is a fully independent evaluation harness — separate `tsconfig`, excluded from root type-check. The dashboard (`eval/dashboard/`) is a standalone Vite + React app using npm (not pnpm). See `eval/README.md` for full details.
+`eval/` is a fully independent evaluation harness — separate `tsconfig`, excluded from root type-check. The dashboard (`eval/dashboard/`) is a standalone Vite + React app using npm (not pnpm). See `docs/eval.md` for full details and `eval/README.md` for running instructions.
 
-Benchmarks 6 STT providers against UN verbatim records (PV documents) as ground truth across all 6 UN languages.
+Benchmarks 10 STT providers against UN verbatim records (PV documents) as ground truth across all 6 UN languages.
 
 ## Conventions
 

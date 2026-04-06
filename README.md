@@ -22,6 +22,15 @@ This app scrapes [UN Web TV](https://webtv.un.org/en/schedule) (which has no pub
 - **Metadata extraction** from titles (UN body, event code, session number, etc.)
 - **API cost tracking** per transcript (AssemblyAI hours, OpenAI tokens)
 
+## Documentation
+
+Detailed documentation lives in [`docs/`](docs/):
+
+- [AI Pipeline](docs/ai.md) — models, pipeline stages, design decisions
+- [UN Web TV & Kaltura](docs/webtv.md) — scraping, ID systems, data flow
+- [Evaluation System](docs/eval.md) — STT benchmarking, metrics, dashboard
+- [Official Meeting Records](docs/official-transcripts.md) — PV vs SR records by UN organ
+
 ## Getting Started
 
 ```bash
@@ -133,10 +142,16 @@ scripts/                            # CLI scripts (run via tsx, use lib/load-env
   usage-benchmark.ts                # Benchmark usage tracking
   compare-transcription.ts          # Compare transcription outputs
 
-eval/                               # Independent eval harness (see eval/README.md)
+docs/
+  ai.md                             # AI pipeline: models, stages, design decisions
+  webtv.md                          # UN Web TV scraping & Kaltura integration
+  eval.md                           # Eval system: providers, metrics, corpus, dashboard
+  official-transcripts.md           # PV vs SR records by UN organ
+
+eval/                               # Independent eval harness (see docs/eval.md)
   eval/dashboard/                   # Standalone Vite + React dashboard (npm, not pnpm)
 ```
 
 ## Eval System
 
-The `eval/` directory is an independent benchmarking harness for transcription providers. It has its own `tsconfig`, is excluded from the root type-check, and the dashboard uses npm (not pnpm). See [eval/README.md](eval/README.md) for full documentation.
+The `eval/` directory is an independent benchmarking harness for transcription providers. It has its own `tsconfig`, is excluded from the root type-check, and the dashboard uses npm (not pnpm). See [docs/eval.md](docs/eval.md) for full details and [eval/README.md](eval/README.md) for running instructions.
