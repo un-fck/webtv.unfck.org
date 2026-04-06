@@ -77,7 +77,7 @@ function aggregate(values: number[]): {
 }
 
 export function Leaderboard({ results }: Props) {
-  const [metric, setMetric] = useState<MetricKey>("normalizedWer");
+  const [metric, setMetric] = useState<MetricKey>("normalizedCer");
 
   const languages = useMemo(
     () => [...new Set(results.map((r) => r.language))].sort(),
