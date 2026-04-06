@@ -23,7 +23,8 @@
     "hf:build-gadebate": "tsx eval/hf/build-gadebate.ts",
     "hf:push-gadebate": "uv run eval/hf/push-gadebate.py",
     "hf:discover-corpus": "tsx eval/corpus/discover-corpus.ts",
-    "hf:upload-results": "tsx eval/hf/upload-results.ts"
+    "hf:upload-results": "tsx eval/hf/upload-results.ts",
+    "hf:push-dashboard": "uv run eval/hf/push-dashboard.py"
   },
   "dependencies": {
     "@huggingface/hub": "^2.11.0",
