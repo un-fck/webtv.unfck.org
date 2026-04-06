@@ -45,14 +45,14 @@ export const LANGUAGE_NAMES: Record<string, string> = {
 export const PROVIDER_COLORS: Record<string, string> = {
   assemblyai: "#4F46E5",
   "azure-openai": "#059669",
-  elevenlabs: "#D97706",
+  elevenlabs: "#06B6D4",
   "azure-speech": "#DC2626",
   "google-chirp": "#4285F4",
   gemini: "#886FBF",
   "groq-whisper": "#F55036",
   alibaba: "#FF6A00",
   deepgram: "#13EF93",
-  mistral: "#FF7000",
+  mistral: "#D97706",
 };
 
 export const PROVIDER_LABELS: Record<string, string> = {

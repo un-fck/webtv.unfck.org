@@ -1,6 +1,6 @@
 ---
 title: UN Transcription Benchmark
-emoji: 🇺🇳
+emoji: 🌐
 colorFrom: blue
 colorTo: blue
 sdk: docker
