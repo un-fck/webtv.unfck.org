@@ -72,46 +72,64 @@ export async function trackOpenAIChatCompletion({
   request,
   requestMeta,
 }: OpenAITrackedCallArgs): Promise<ChatCompletion> {
-  const start = Date.now();
-  try {
-    const completion: ChatCompletion =
-      await client.chat.completions.create(request);
-    const durationMs = Date.now() - start;
-    const usage = completion.usage;
+  const maxRetries = 5;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const start = Date.now();
+    try {
+      const completion: ChatCompletion =
+        await client.chat.completions.create(request);
+      const durationMs = Date.now() - start;
+      const usage = completion.usage;
 
-    await safeInsertUsageEvent({
-      transcript_id: transcriptId ?? "unknown",
-      provider: "openai",
-      stage,
-      operation,
-      status: "success",
-      model,
-      input_tokens: usage?.prompt_tokens ?? null,
-      output_tokens: usage?.completion_tokens ?? null,
-      reasoning_tokens:
-        usage?.completion_tokens_details?.reasoning_tokens ?? null,
-      cached_input_tokens: usage?.prompt_tokens_details?.cached_tokens ?? null,
-      total_tokens: usage?.total_tokens ?? null,
-      duration_ms: durationMs,
-      request_meta: safeJsonStringify(requestMeta),
-    });
+      await safeInsertUsageEvent({
+        transcript_id: transcriptId ?? "unknown",
+        provider: "openai",
+        stage,
+        operation,
+        status: "success",
+        model,
+        input_tokens: usage?.prompt_tokens ?? null,
+        output_tokens: usage?.completion_tokens ?? null,
+        reasoning_tokens:
+          usage?.completion_tokens_details?.reasoning_tokens ?? null,
+        cached_input_tokens:
+          usage?.prompt_tokens_details?.cached_tokens ?? null,
+        total_tokens: usage?.total_tokens ?? null,
+        duration_ms: durationMs,
+        request_meta: safeJsonStringify(requestMeta),
+      });
 
-    return completion;
-  } catch (error) {
-    const durationMs = Date.now() - start;
-    await safeInsertUsageEvent({
-      transcript_id: transcriptId ?? "unknown",
-      provider: "openai",
-      stage,
-      operation,
-      status: "error",
-      model,
-      duration_ms: durationMs,
-      request_meta: safeJsonStringify(requestMeta),
-      error_message: error instanceof Error ? error.message : String(error),
-    });
-    throw error;
+      return completion;
+    } catch (error) {
+      const durationMs = Date.now() - start;
+      // Retry on 429 rate limit errors
+      const status = (error as { status?: number }).status;
+      if (status === 429 && attempt < maxRetries) {
+        const retryAfterMs =
+          Number(
+            (error as { headers?: Headers }).headers?.get("retry-after-ms"),
+          ) || 1000 * 2 ** attempt;
+        console.warn(
+          `  ⏳ Rate limited, retrying in ${retryAfterMs}ms (attempt ${attempt + 1}/${maxRetries})`,
+        );
+        await new Promise((r) => setTimeout(r, retryAfterMs));
+        continue;
+      }
+      await safeInsertUsageEvent({
+        transcript_id: transcriptId ?? "unknown",
+        provider: "openai",
+        stage,
+        operation,
+        status: "error",
+        model,
+        duration_ms: durationMs,
+        request_meta: safeJsonStringify(requestMeta),
+        error_message: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
+  throw new Error("Unreachable");
 }
 
 interface GeminiTrackedCallArgs {

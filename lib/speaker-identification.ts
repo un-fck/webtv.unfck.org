@@ -16,6 +16,24 @@ import "./load-env";
 // @ts-expect-error - no types available for sbd
 import sbd from "sbd";
 
+/** Run async tasks with a concurrency limit */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let idx = 0;
+  async function worker() {
+    while (idx < items.length) {
+      const i = idx++;
+      results[i] = await fn(items[i]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  return results;
+}
+
 const ParagraphSpeakerMapping = z.object({
   paragraphs: z.array(
     z.object({
@@ -573,7 +591,10 @@ async function _tagParagraphsWithTopics(
     .map((key) => `- ${key}: ${topics[key].description}`)
     .join("\n");
 
-  const taggingTasks = paragraphs.map(async (para, idx) => {
+  const taggingResults = await mapWithConcurrency(
+    paragraphs.map((para, idx) => ({ para, idx })),
+    10,
+    async ({ para, idx }) => {
     const speaker = speakerMapping[idx.toString()];
 
     // Skip chair/moderator statements
@@ -670,16 +691,15 @@ ${contextParts.join("\n\n")}`,
       );
       return { paragraph_index: idx, topic_keys: [] };
     }
-  });
-
-  const results = await Promise.all(taggingTasks);
+  },
+  );
 
   const paragraphTopics: Record<string, string[]> = {};
-  results.forEach(({ paragraph_index, topic_keys }) => {
+  taggingResults.forEach(({ paragraph_index, topic_keys }) => {
     paragraphTopics[paragraph_index.toString()] = topic_keys;
   });
 
-  const taggedCount = results.filter((r) => r.topic_keys.length > 0).length;
+  const taggedCount = taggingResults.filter((r) => r.topic_keys.length > 0).length;
   console.log(
     `  ✓ Tagged ${taggedCount}/${paragraphs.length} paragraphs with topics`,
   );
@@ -752,7 +772,9 @@ async function tagSentencesWithTopics(
     topic_keys: z.array(z.string()),
   });
 
-  const tasks = taggableSentences.map(
+  const taggedSentences = await mapWithConcurrency(
+    taggableSentences,
+    20,
     async ({ index: globalIdx, sentence: sent }) => {
       // Context: 2 sentences before and after from all sentences
       const contextBefore = allSentences.slice(
@@ -834,8 +856,6 @@ ${numberedSentences}`,
       }
     },
   );
-
-  const taggedSentences = await Promise.all(tasks);
 
   // Apply topic tags back to statements
   const updatedStatements: StatementWithSentences[] = statements.map(
@@ -1322,7 +1342,7 @@ ${transcriptParts.join("\n\n")}`,
 
     const CONTEXT_SIZE = 3; // Number of paragraphs before and after
 
-    const resegmentTasks = toResegment.map(async (idx) => {
+    const resegmented = await mapWithConcurrency(toResegment, 10, async (idx) => {
       const para = paragraphs[idx];
       const speaker = finalMapping[idx.toString()];
 
@@ -1370,8 +1390,6 @@ ${transcriptParts.join("\n\n")}`,
         transcriptId,
       ).then((result) => ({ index: idx, ...result }));
     });
-
-    const resegmented = await Promise.all(resegmentTasks);
     console.log(`  ✓ Resegmentation and speaker identification complete`);
     console.log(`  → Rebuilding transcript with split paragraphs...`);
 

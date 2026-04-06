@@ -686,14 +686,26 @@ export async function transcribeAudioWithGemini(
       chunkInfos.push({ path: chunkPath, offsetMs: startSeconds * 1000, durationSec: chunkDurationSec, index: i });
     }
 
-    // 2. Transcribe all chunks in parallel
+    // 2. Transcribe all chunks in parallel (with retry on transient failures)
     const chunkResults = await Promise.all(
       chunkInfos.map(async (chunk) => {
+        const maxRetries = 2;
         try {
-          console.log(`  [Gemini] Starting chunk ${chunk.index + 1}/${numChunks}...`);
-          const result = await callGeminiOnFile(chunk.path, options, chunk.durationSec);
-          const { paragraphs, speakerMapping } = segmentsToOutput(result.segments, chunk.offsetMs);
-          return { paragraphs, speakerMapping, usageMetadata: result.usageMetadata };
+          for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+              console.log(`  [Gemini] Starting chunk ${chunk.index + 1}/${numChunks}${attempt > 0 ? ` (retry ${attempt})` : ''}...`);
+              const result = await callGeminiOnFile(chunk.path, options, chunk.durationSec);
+              const { paragraphs, speakerMapping } = segmentsToOutput(result.segments, chunk.offsetMs);
+              return { paragraphs, speakerMapping, usageMetadata: result.usageMetadata };
+            } catch (error) {
+              if (attempt < maxRetries) {
+                console.warn(`  [Gemini] Chunk ${chunk.index + 1}/${numChunks} failed (attempt ${attempt + 1}), retrying: ${error instanceof Error ? error.message : error}`);
+                continue;
+              }
+              throw error;
+            }
+          }
+          throw new Error('Unreachable');
         } finally {
           try { fs.unlinkSync(chunk.path); } catch { /* ignore */ }
         }
