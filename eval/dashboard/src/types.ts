@@ -50,6 +50,9 @@ export const PROVIDER_COLORS: Record<string, string> = {
   "google-chirp": "#4285F4",
   gemini: "#886FBF",
   "groq-whisper": "#F55036",
+  alibaba: "#FF6A00",
+  deepgram: "#13EF93",
+  mistral: "#FF7000",
 };
 
 export const PROVIDER_LABELS: Record<string, string> = {
@@ -60,6 +63,9 @@ export const PROVIDER_LABELS: Record<string, string> = {
   "google-chirp": "Google Chirp",
   gemini: "Gemini",
   "groq-whisper": "Whisper",
+  alibaba: "Alibaba",
+  deepgram: "Deepgram",
+  mistral: "Mistral",
 };
 
 export const PROVIDER_FULL_LABELS: Record<string, string> = {
@@ -70,6 +76,9 @@ export const PROVIDER_FULL_LABELS: Record<string, string> = {
   "google-chirp": "Google Cloud Chirp 3",
   gemini: "Google Gemini 3 Flash Preview",
   "groq-whisper": "OpenAI Whisper large-v3 (via Groq)",
+  alibaba: "Alibaba Qwen3-ASR-Flash",
+  deepgram: "Deepgram Nova-3",
+  mistral: "Mistral Voxtral Mini Transcribe",
 };
 
 export interface ProviderMeta {
@@ -90,4 +99,7 @@ export const PROVIDER_META: Record<string, ProviderMeta> = {
   },
   gemini: { pricing: "$0.01/hr", diarization: true, prompting: true },
   "groq-whisper": { pricing: "$0.09/hr", diarization: false, prompting: false },
+  alibaba: { pricing: "$0.11/hr", diarization: true, prompting: false },
+  deepgram: { pricing: "$0.15/hr", diarization: true, prompting: false },
+  mistral: { pricing: "$0.06/hr", diarization: true, prompting: false },
 };

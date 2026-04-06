@@ -73,6 +73,7 @@ async function evalSession(
   languageFilter?: string[],
   skipKeys?: Set<string>,
 ) {
+  const tSession = Date.now();
   console.log(`\n${"=".repeat(60)}`);
   console.log(`Session: ${session.symbol} (asset: ${session.assetId})`);
   console.log("=".repeat(60));
@@ -192,7 +193,7 @@ async function evalSession(
       }
     }
 
-    // Run each provider
+    // Run providers in parallel
     const providerOutputs: Record<string, string> = {};
     const rawDir = path.join(
       RESULTS_DIR,
@@ -201,21 +202,24 @@ async function evalSession(
     );
     fs.mkdirSync(rawDir, { recursive: true });
 
-    for (const providerName of providerNames) {
+    const tLang = Date.now();
+
+    // Build tasks for each provider
+    const runProvider = async (providerName: string) => {
       const rawFilePath = path.join(rawDir, `${providerName}_${lang}.json`);
 
       // Resume: load from cache if already computed
       if (fs.existsSync(rawFilePath)) {
         const summaryKey = `${session.symbol}|${lang}|${providerName}`;
         if (skipKeys?.has(summaryKey)) {
-          console.log(`  ${providerName}: cached (metrics already in summary)`);
+          console.log(`  ${providerName}: cached`);
           try {
             const transcript = JSON.parse(
               fs.readFileSync(rawFilePath, "utf-8"),
             ) as import("./providers/types").NormalizedTranscript;
             providerOutputs[providerName] = transcript.fullText;
           } catch {}
-          continue;
+          return null;
         }
         console.log(`  ${providerName}: cached (recomputing metrics)`);
         try {
@@ -229,7 +233,7 @@ async function evalSession(
               transcript.fullText,
               lang,
             );
-            results.push({
+            const r: SessionResult = {
               symbol: session.symbol,
               assetId: session.assetId,
               language: lang,
@@ -245,22 +249,21 @@ async function evalSession(
               hypLength: metrics.normalizedWer.hypLength,
               durationMs: transcript.durationMs,
               timestamp: new Date().toISOString(),
-            });
-            const r = results[results.length - 1];
+            };
             console.log(
-              `    WER: ${(r.wer * 100).toFixed(1)}% | Normalized WER: ${(r.normalizedWer * 100).toFixed(1)}% | CER: ${(r.cer * 100).toFixed(1)}%`,
+              `    ${providerName}: WER ${(r.wer * 100).toFixed(1)}% | Norm ${(r.normalizedWer * 100).toFixed(1)}%`,
             );
+            return r;
           }
         } catch (err) {
           console.warn(
-            `    Cache load failed, will re-run: ${err instanceof Error ? err.message : err}`,
+            `    ${providerName}: cache load failed, re-running`,
           );
-          fs.unlinkSync(rawFilePath); // delete corrupt cache
+          fs.unlinkSync(rawFilePath);
         }
-        continue;
+        return null;
       }
 
-      console.log(`  Running ${providerName}...`);
       const provider = getProvider(providerName);
       const tProvider = Date.now();
 
@@ -269,11 +272,11 @@ async function evalSession(
           audioFilePath,
           language: lang,
         });
-        console.log(`    Transcription: ${((Date.now() - tProvider) / 1000).toFixed(1)}s`);
+        const elapsed = ((Date.now() - tProvider) / 1000).toFixed(1);
 
         providerOutputs[providerName] = transcript.fullText;
 
-        // Save raw transcript JSON + plain text for inspection
+        // Save raw transcript JSON + plain text
         fs.writeFileSync(rawFilePath, JSON.stringify(transcript, null, 2));
         fs.writeFileSync(
           path.join(rawDir, `${providerName}_${lang}.txt`),
@@ -287,17 +290,13 @@ async function evalSession(
             : transcript.fullText,
         );
 
-        // Compute WER against ground truth if available
         if (groundTruthText) {
-          const tMetrics = Date.now();
           const metrics = computeMetrics(
             groundTruthText,
             transcript.fullText,
             lang,
           );
-          console.log(`    Metrics: ${((Date.now() - tMetrics) / 1000).toFixed(1)}s (ref ${groundTruthText.length} chars)`);
-
-          const result: SessionResult = {
+          const r: SessionResult = {
             symbol: session.symbol,
             assetId: session.assetId,
             language: lang,
@@ -314,44 +313,35 @@ async function evalSession(
             durationMs: transcript.durationMs,
             timestamp: new Date().toISOString(),
           };
-
-          results.push(result);
           console.log(
-            `    WER: ${(result.wer * 100).toFixed(1)}% | Normalized WER: ${(result.normalizedWer * 100).toFixed(1)}% | CER: ${(result.cer * 100).toFixed(1)}%`,
+            `    ${providerName}: ${elapsed}s → WER ${(r.wer * 100).toFixed(1)}% | Norm ${(r.normalizedWer * 100).toFixed(1)}%`,
           );
+          return r;
         } else {
           console.log(
-            `    Transcription complete (${transcript.fullText.length} chars), no ground truth to compare`,
+            `    ${providerName}: ${elapsed}s → ${transcript.fullText.length} chars (no ground truth)`,
           );
         }
       } catch (err) {
         console.error(
-          `    ${providerName} failed: ${err instanceof Error ? err.message : err}`,
+          `    ${providerName}: FAILED (${((Date.now() - tProvider) / 1000).toFixed(1)}s) ${err instanceof Error ? err.message : err}`,
         );
       }
+      return null;
+    };
+
+    // Run all providers in parallel
+    const providerResults = await Promise.all(providerNames.map(runProvider));
+    for (const r of providerResults) {
+      if (r) results.push(r);
     }
 
-    // Pairwise WER between providers
-    const providerPairs = Object.keys(providerOutputs);
-    if (providerPairs.length >= 2) {
-      console.log("\n  Pairwise provider comparison:");
-      for (let i = 0; i < providerPairs.length; i++) {
-        for (let j = i + 1; j < providerPairs.length; j++) {
-          const pairMetrics = computePairwiseMetrics(
-            providerOutputs[providerPairs[i]],
-            providerOutputs[providerPairs[j]],
-            lang,
-          );
-          console.log(
-            `    ${providerPairs[i]} vs ${providerPairs[j]}: WER ${(pairMetrics.normalizedWer.wer * 100).toFixed(1)}%`,
-          );
-        }
-      }
-    }
+    console.log(`  ${lang} done in ${((Date.now() - tLang) / 1000).toFixed(1)}s`);
 
     // Audio files are cached in corpus-data/audio/, don't delete
   }
 
+  console.log(`\n  Session ${session.symbol} done in ${((Date.now() - tSession) / 1000).toFixed(1)}s`);
   return results;
 }
 
@@ -382,6 +372,7 @@ async function main() {
     process.exit(1);
   }
 
+  const tMain = Date.now();
   const providerNames = opts.providers || getProviderNames();
   console.log(`Providers: ${providerNames.join(", ")}`);
   console.log(`Sessions: ${filteredSessions.length}`);
@@ -414,7 +405,8 @@ async function main() {
 
   // Write merged summary
   fs.writeFileSync(summaryPath, JSON.stringify(allResults, null, 2));
-  console.log(`\nResults written to ${summaryPath}`);
+  const totalSec = ((Date.now() - tMain) / 1000).toFixed(1);
+  console.log(`\nDone in ${totalSec}s. Results written to ${summaryPath}`);
 
   // Print summary table
   if (allResults.length > 0) {
