@@ -496,7 +496,7 @@ export function VideoTable({
           const isScheduled = info.row.original.status === "scheduled";
           const isLive = info.row.original.status === "live";
           const hasTranscript = info.row.original.hasTranscript;
-          const hasPV = !!info.row.original.pvSymbol;
+          const hasPV = info.row.original.pvAvailable;
           return (
             <a
               href={`/video/${encodedId}`}
@@ -793,7 +793,7 @@ export function VideoTable({
                       transcribed
                     </span>
                   )}
-                  {video.pvSymbol && (
+                  {video.pvAvailable && (
                     <span className="ml-2 inline-block rounded bg-amber-500/10 px-1.5 py-px text-[10px] font-medium text-amber-700 align-middle">
                       PV
                     </span>

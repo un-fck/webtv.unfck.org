@@ -144,12 +144,18 @@ async function ensureInitialized() {
       }),
   ]);
 
-  // Add pv_symbol column to videos table
-  await client
-    .execute(`ALTER TABLE videos ADD COLUMN pv_symbol TEXT`)
-    .catch(() => {
-      /* column already exists */
-    });
+  // Add PV document columns to videos table
+  await Promise.all([
+    client
+      .execute(`ALTER TABLE videos ADD COLUMN pv_symbol TEXT`)
+      .catch(() => {}),
+    client
+      .execute(`ALTER TABLE videos ADD COLUMN pv_available INTEGER`)
+      .catch(() => {}),
+    client
+      .execute(`ALTER TABLE videos ADD COLUMN pv_checked_at TEXT`)
+      .catch(() => {}),
+  ]);
 
   // Normalize language codes: tag NULL and legacy codes (e.g. 'en_us') as 'en'
   await Promise.all([
@@ -763,6 +769,8 @@ export interface VideoRecord {
   session_number: string | null;
   part_number: string | null;
   pv_symbol: string | null;
+  pv_available: number | null; // 0 = checked but missing, 1 = confirmed available
+  pv_checked_at: string | null;
   last_seen: string;
   created_at: string;
   updated_at: string;
@@ -850,6 +858,8 @@ export async function getVideoByAssetId(
     session_number: row.session_number as string | null,
     part_number: row.part_number as string | null,
     pv_symbol: (row.pv_symbol as string | null) ?? null,
+    pv_available: (row.pv_available as number | null) ?? null,
+    pv_checked_at: (row.pv_checked_at as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -886,6 +896,8 @@ export async function getRecentVideos(
     session_number: row.session_number as string | null,
     part_number: row.part_number as string | null,
     pv_symbol: (row.pv_symbol as string | null) ?? null,
+    pv_available: (row.pv_available as number | null) ?? null,
+    pv_checked_at: (row.pv_checked_at as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -933,6 +945,8 @@ export async function searchVideos(
     session_number: row.session_number as string | null,
     part_number: row.part_number as string | null,
     pv_symbol: (row.pv_symbol as string | null) ?? null,
+    pv_available: (row.pv_available as number | null) ?? null,
+    pv_checked_at: (row.pv_checked_at as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -1074,6 +1088,8 @@ export async function getVideosPage(
     session_number: row.session_number as string | null,
     part_number: row.part_number as string | null,
     pv_symbol: (row.pv_symbol as string | null) ?? null,
+    pv_available: (row.pv_available as number | null) ?? null,
+    pv_checked_at: (row.pv_checked_at as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -1123,6 +1139,53 @@ export async function getFilterOptions(
     bodies: bodiesResult.rows.map((row) => row.body as string),
     categories: categoriesResult.rows.map((row) => row.category as string),
   };
+}
+
+export async function updatePVAvailability(
+  assetId: string,
+  available: boolean,
+): Promise<void> {
+  await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE videos SET pv_available = ?, pv_checked_at = ?, updated_at = ? WHERE asset_id = ?",
+    args: [available ? 1 : 0, new Date().toISOString(), new Date().toISOString(), assetId],
+  });
+}
+
+export async function getVideosNeedingPVCheck(
+  maxAgeDays: number = 90,
+  recheckAfterDays: number = 7,
+): Promise<Array<{ asset_id: string; pv_symbol: string }>> {
+  await ensureInitialized();
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
+  const dateCutoff = cutoffDate.toISOString().split("T")[0];
+
+  const recheckCutoff = new Date();
+  recheckCutoff.setDate(recheckCutoff.getDate() - recheckAfterDays);
+  const recheckTs = recheckCutoff.toISOString();
+
+  // Videos with a symbol that either:
+  // 1. Have never been checked (pv_checked_at IS NULL)
+  // 2. Were checked but not available, and last check was > recheckAfterDays ago
+  // Only for meetings within the last maxAgeDays
+  const result = await client.execute({
+    sql: `SELECT asset_id, pv_symbol FROM videos
+          WHERE pv_symbol IS NOT NULL
+            AND date >= ?
+            AND (
+              pv_checked_at IS NULL
+              OR (pv_available = 0 AND pv_checked_at < ?)
+            )
+          ORDER BY date DESC`,
+    args: [dateCutoff, recheckTs],
+  });
+
+  return result.rows.map((row) => ({
+    asset_id: row.asset_id as string,
+    pv_symbol: row.pv_symbol as string,
+  }));
 }
 
 export const db = client;

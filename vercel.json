@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/sync-videos",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/check-pv",
+      "schedule": "0 */6 * * *"
     }
   ]
 }

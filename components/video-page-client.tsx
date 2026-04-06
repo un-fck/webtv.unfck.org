@@ -291,7 +291,7 @@ export function VideoPageClient({
               >
                 UN Web TV →
               </a>
-              {video.pvSymbol && (
+              {video.pvSymbol && video.pvAvailable && (
                 <a
                   href={getPVDocumentUrl(video.pvSymbol)}
                   target="_blank"

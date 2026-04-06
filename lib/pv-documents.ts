@@ -52,3 +52,31 @@ export function parseMeetingSymbol(
 export function getPVDocumentUrl(symbol: string, lang: string = "en"): string {
   return `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}&l=${encodeURIComponent(lang)}`;
 }
+
+/**
+ * Check whether a PV document actually exists at documents.un.org.
+ *
+ * Fetches the PDF and validates that it contains the expected symbol string,
+ * since the API occasionally returns a nearby document instead.
+ */
+export async function pvDocumentExists(
+  symbol: string,
+  lang: string = "en",
+): Promise<boolean> {
+  try {
+    const url = getPVDocumentUrl(symbol, lang);
+    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return false;
+
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("pdf")) return false;
+
+    // Validate: the PDF must contain the expected symbol to guard against
+    // the API returning a nearby/wrong document.
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const pdfText = buffer.toString("latin1");
+    return pdfText.includes(symbol);
+  } catch {
+    return false;
+  }
+}

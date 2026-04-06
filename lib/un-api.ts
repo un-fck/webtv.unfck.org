@@ -17,6 +17,7 @@ export interface Video {
   sessionNumber: string | null;
   partNumber: number | null;
   pvSymbol: string | null;
+  pvAvailable: boolean;
   hasTranscript: boolean;
 }
 
@@ -72,6 +73,8 @@ export function videoToRecord(
     session_number: video.sessionNumber,
     part_number: video.partNumber !== null ? String(video.partNumber) : null,
     pv_symbol: parseMeetingSymbol(video.title, video.category),
+    pv_available: null,
+    pv_checked_at: null,
     last_seen: new Date().toISOString().split("T")[0],
   };
 }
@@ -107,6 +110,7 @@ export function recordToVideo(
     partNumber:
       record.part_number !== null ? parseInt(record.part_number) : null,
     pvSymbol: record.pv_symbol ?? null,
+    pvAvailable: record.pv_available === 1,
     hasTranscript,
   };
 }
@@ -317,6 +321,7 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
       status,
       ...titleMetadata,
       pvSymbol: parseMeetingSymbol(rawTitle, categoryText),
+      pvAvailable: false, // Determined by cron check
       hasTranscript: false, // Will be updated later
     });
   }
