@@ -9,6 +9,7 @@ import {
   type LanguageOption,
 } from "./transcription-panel";
 import { SpeakerToc } from "./speaker-toc";
+import { PVSpeakerToc } from "./pv-panel";
 import { SiteHeader } from "./site-header";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
@@ -43,7 +44,16 @@ export function VideoPageClient({
   );
   const [topicsOpen, setTopicsOpen] = useState(true);
   const [speakersOpen, setSpeakersOpen] = useState(true);
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("selectedLanguage") || "en";
+    }
+    return "en";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("selectedLanguage", selectedLanguage);
+  }, [selectedLanguage]);
   const [availableLanguages, setAvailableLanguages] = useState<LanguageOption[]>([]);
 
   // Fetch available audio languages
@@ -327,6 +337,7 @@ export function VideoPageClient({
               topicCollapsed={topicCollapsed}
               onTopicCollapsedChange={setTopicCollapsed}
               onDataChange={setPanelData}
+              pvSymbol={video.pvAvailable && video.pvSymbol ? video.pvSymbol : undefined}
             />
           </div>
 
@@ -346,8 +357,9 @@ export function VideoPageClient({
                 {topicPills}
               </div>
 
-              {/* Speakers — collapsible, scrollable */}
-              {panelData?.segments && (
+              {/* Speakers — collapsible, scrollable. Shows speakers for the active tab only. */}
+              {((panelData?.viewMode === "pv" && panelData?.pvSpeakers) ||
+                (panelData?.viewMode === "transcript" && panelData?.segments)) && (
                 <div className="flex min-h-0 flex-1 flex-col">
                   <button
                     onClick={() => setSpeakersOpen((v) => !v)}
@@ -360,23 +372,31 @@ export function VideoPageClient({
                   </button>
                   {speakersOpen && (
                     <div className="min-h-0 flex-1 overflow-y-auto">
-                      <SpeakerToc
-                        segments={panelData.segments}
-                        speakerMappings={panelData.speakerMappings}
-                        countryNames={panelData.countryNames}
-                        activeSegmentIndex={panelData.activeSegmentIndex}
-                        onSeek={seekToTimestamp}
-                        selectedTopic={selectedTopic}
-                        topicColor={
-                          selectedTopic && panelData.topics
-                            ? getTopicColor(
-                                selectedTopic,
-                                Object.keys(panelData.topics),
-                              )
-                            : null
-                        }
-                        statements={panelData.statements}
-                      />
+                      {panelData?.viewMode === "pv" && panelData?.pvSpeakers ? (
+                        <PVSpeakerToc
+                          speakers={panelData.pvSpeakers}
+                          activeTurnIndex={panelData.pvActiveTurnIndex ?? -1}
+                          onSeek={(ms) => seekToTimestamp(ms / 1000)}
+                        />
+                      ) : panelData?.viewMode === "transcript" && panelData?.segments ? (
+                        <SpeakerToc
+                          segments={panelData.segments}
+                          speakerMappings={panelData.speakerMappings}
+                          countryNames={panelData.countryNames}
+                          activeSegmentIndex={panelData.activeSegmentIndex}
+                          onSeek={seekToTimestamp}
+                          selectedTopic={selectedTopic}
+                          topicColor={
+                            selectedTopic && panelData.topics
+                              ? getTopicColor(
+                                  selectedTopic,
+                                  Object.keys(panelData.topics),
+                                )
+                              : null
+                          }
+                          statements={panelData.statements}
+                        />
+                      ) : null}
                     </div>
                   )}
                 </div>

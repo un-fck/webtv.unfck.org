@@ -22,7 +22,7 @@ export interface ServerParams {
   date?: string;
   body?: string[];
   category?: string[];
-  hasTranscript?: boolean;
+  text?: string[]; // "transcript" | "pv" | "sr"
   q?: string;
 }
 
@@ -52,13 +52,16 @@ function parseSearchParams(
     typeof raw.category === "string" && raw.category
       ? raw.category.split(",").filter(Boolean)
       : undefined;
-  const hasTranscript = raw.hasTranscript === "1" ? true : undefined;
+  const text =
+    typeof raw.text === "string" && raw.text
+      ? raw.text.split(",").filter((d) => ["transcript", "pv", "sr"].includes(d))
+      : undefined;
   const q =
     typeof raw.q === "string" && raw.q.trim().length >= 2
       ? raw.q.trim()
       : undefined;
 
-  return { page, pageSize, sort, status, date, body, category, hasTranscript, q };
+  return { page, pageSize, sort, status, date, body, category, text: text?.length ? text : undefined, q };
 }
 
 export default async function Home({
@@ -103,12 +106,12 @@ export default async function Home({
     bodies: params.body,
     categories: params.category,
     status: params.status,
-    hasTranscript: params.hasTranscript,
+    docs: params.text,
     sortBy,
     sortDir,
     page: params.page,
     pageSize: params.pageSize,
-    transcriptedEntryIds: params.hasTranscript ? transcriptedEntries : undefined,
+    transcriptedEntryIds: params.text?.includes("transcript") ? transcriptedEntries : undefined,
   };
 
   const [{ records, total }, availableDates, filterOptions] = await Promise.all(

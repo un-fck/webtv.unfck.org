@@ -72,7 +72,7 @@ export function videoToRecord(
     event_type: video.eventType,
     session_number: video.sessionNumber,
     part_number: video.partNumber !== null ? String(video.partNumber) : null,
-    pv_symbol: parseMeetingSymbol(video.title, video.category),
+    pv_symbol: parseMeetingSymbol(video.title, video.category, video.date),
     pv_available: null,
     pv_checked_at: null,
     last_seen: new Date().toISOString().split("T")[0],
@@ -320,7 +320,7 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
       scheduledTime,
       status,
       ...titleMetadata,
-      pvSymbol: parseMeetingSymbol(rawTitle, categoryText),
+      pvSymbol: parseMeetingSymbol(rawTitle, categoryText, date),
       pvAvailable: false, // Determined by cron check
       hasTranscript: false, // Will be updated later
     });

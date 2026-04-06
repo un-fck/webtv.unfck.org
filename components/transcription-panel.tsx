@@ -11,7 +11,9 @@ import {
   FileText,
   BarChart3,
   Globe,
+  BookOpen,
 } from "lucide-react";
+import { PVPanel, type PVSpeakerEntry } from "@/components/pv-panel";
 import ExcelJS from "exceljs";
 import type { Proposition } from "@/lib/speaker-identification";
 
@@ -32,7 +34,7 @@ type Stage =
   | "analyzing_propositions"
   | "completed"
   | "error";
-type ViewMode = "transcript" | "analysis";
+type ViewMode = "transcript" | "analysis" | "pv";
 
 const STAGES: { key: Stage; label: string }[] = [
   { key: "transcribing", label: "Transcribing audio" },
@@ -149,6 +151,9 @@ export interface TranscriptionPanelData {
   checking: boolean;
   hasSegments: boolean;
   hasRawParagraphs: boolean;
+  pvSpeakers?: PVSpeakerEntry[] | null;
+  pvActiveTurnIndex?: number;
+  viewMode?: string;
 }
 
 interface TranscriptionPanelProps {
@@ -167,6 +172,7 @@ interface TranscriptionPanelProps {
   topicCollapsed: boolean;
   onTopicCollapsedChange: (collapsed: boolean) => void;
   onDataChange?: (data: TranscriptionPanelData) => void;
+  pvSymbol?: string;
 }
 
 interface Word {
@@ -464,6 +470,7 @@ export function TranscriptionPanel({
   topicCollapsed,
   onTopicCollapsedChange,
   onDataChange,
+  pvSymbol,
 }: TranscriptionPanelProps) {
   const [segments, setSegments] = useState<SpeakerSegment[] | null>(null);
   const [stage, setStage] = useState<Stage>("idle");
@@ -485,6 +492,8 @@ export function TranscriptionPanel({
     null,
   );
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
+  const [pvSpeakers, setPvSpeakers] = useState<PVSpeakerEntry[] | null>(null);
+  const [pvActiveTurnIndex, setPvActiveTurnIndex] = useState<number>(-1);
   const [propositions, setPropositions] = useState<Proposition[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("transcript");
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
@@ -495,6 +504,11 @@ export function TranscriptionPanel({
   const [activeWordIndex, setActiveWordIndex] = useState<number>(-1);
   const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const downloadButtonRef = useRef<HTMLDivElement>(null);
+
+  const handlePvSpeakersChange = useCallback((speakers: PVSpeakerEntry[], activeIdx: number) => {
+    setPvSpeakers(speakers);
+    setPvActiveTurnIndex(activeIdx);
+  }, []);
 
   const isLoading =
     stage !== "idle" &&
@@ -707,8 +721,11 @@ export function TranscriptionPanel({
       checking,
       hasSegments: !!segments,
       hasRawParagraphs: !!rawParagraphs,
+      pvSpeakers,
+      pvActiveTurnIndex,
+      viewMode,
     });
-  }, [segments, speakerMappings, countryNames, topics, activeSegmentIndex, propositions, stage, checking, rawParagraphs, onDataChange]);
+  }, [segments, speakerMappings, countryNames, topics, activeSegmentIndex, propositions, stage, checking, rawParagraphs, onDataChange, pvSpeakers, pvActiveTurnIndex, viewMode]);
 
   const handleTranscribe = async (force = false) => {
     setStage("transcribing");
@@ -1370,9 +1387,10 @@ export function TranscriptionPanel({
           </div>
         )}
 
-        {/* Tabs — only when there's data */}
-        {segments &&
-          (propositions.length > 0 || Object.keys(topics).length > 0) && (
+        {/* Tabs — when there's transcript data or PV available */}
+        {(pvSymbol ||
+          (segments &&
+            (propositions.length > 0 || Object.keys(topics).length > 0))) && (
             <div className="flex gap-1 rounded-md bg-muted p-0.5">
               <button
                 onClick={() => setViewMode("transcript")}
@@ -1402,6 +1420,19 @@ export function TranscriptionPanel({
                 <BarChart3 className="h-3 w-3" />
                 Analysis
               </button>
+              {pvSymbol && (
+                <button
+                  onClick={() => setViewMode("pv")}
+                  className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${
+                    viewMode === "pv"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <BookOpen className="h-3 w-3" />
+                  {pvSymbol?.includes("/SR.") ? "Summary Record" : "Verbatim Record"}
+                </button>
+              )}
             </div>
           )}
 
@@ -1544,6 +1575,17 @@ export function TranscriptionPanel({
             )}
           </button>
         </div>
+      )}
+
+      {/* PV View */}
+      {viewMode === "pv" && pvSymbol && (
+        <PVPanel
+          pvSymbol={pvSymbol}
+          language={selectedLanguage}
+          player={player}
+          kalturaId={kalturaId}
+          onSpeakersChange={handlePvSpeakersChange}
+        />
       )}
 
       {/* Transcript View */}
@@ -1796,7 +1838,7 @@ export function TranscriptionPanel({
         </div>
       )}
 
-      {!segments && !rawParagraphs && stage === "idle" && !checking && (
+      {!segments && !rawParagraphs && stage === "idle" && !checking && viewMode !== "pv" && (
         <div className="mt-2 rounded-lg border border-border bg-muted/30 px-5 py-6">
           <p className="mb-1 text-sm font-medium text-foreground">
             No transcript available yet

@@ -52,6 +52,7 @@ function parseArgs() {
     corpus?: string;
     providers?: string[];
     languages?: string[];
+    cachedOnly?: boolean;
   } = {};
 
   for (const arg of args) {
@@ -63,6 +64,7 @@ function parseArgs() {
       opts.providers = arg.slice("--providers=".length).split(",");
     if (arg.startsWith("--languages="))
       opts.languages = arg.slice("--languages=".length).split(",");
+    if (arg === "--cached-only") opts.cachedOnly = true;
   }
   return opts;
 }
@@ -72,6 +74,7 @@ async function evalSession(
   providerNames: string[],
   languageFilter?: string[],
   skipKeys?: Set<string>,
+  cachedOnly?: boolean,
 ) {
   const tSession = Date.now();
   console.log(`\n${"=".repeat(60)}`);
@@ -264,6 +267,11 @@ async function evalSession(
         return null;
       }
 
+      if (cachedOnly) {
+        console.log(`  ${providerName}: skipped (no cache, --cached-only)`);
+        return null;
+      }
+
       const provider = getProvider(providerName);
       const tProvider = Date.now();
 
@@ -393,7 +401,7 @@ async function main() {
   const allResults: SessionResult[] = [...existingResults];
 
   for (const session of filteredSessions) {
-    const results = await evalSession(session, providerNames, opts.languages, existingKeys);
+    const results = await evalSession(session, providerNames, opts.languages, existingKeys, opts.cachedOnly);
     // Merge new results, deduplicating by symbol+language+provider
     for (const r of results) {
       if (!existingKeys.has(existingKey(r))) {

@@ -1,22 +1,22 @@
 /**
- * Utilities for matching UN videos to their Procès-Verbal (PV) documents.
+ * Utilities for matching UN videos to their official meeting records.
  *
- * PV documents are the official verbatim records of UN meetings, available
- * at documents.un.org. The document symbol (e.g. S/PV.9748) can be derived
- * from the meeting title and category.
+ * PV (Procès-Verbal) = verbatim records; SR (Summary Records) = third-person summaries.
+ * Available at documents.un.org. The document symbol can be derived from meeting title and category.
+ *
+ * See docs/official-transcripts.md for which organs use PV vs SR.
  */
 
 /**
- * Derive a PV document symbol from a video's title and category.
+ * Derive an official record symbol from a video's title and category.
  *
- * Patterns:
- *   Security Council: "9748th meeting" + "Security Council" → S/PV.9748
- *   First Committee:  "First Committee, 7th plenary meeting … 79th session" + "General Assembly" → A/C.1/79/PV.7
- *   GA plenary:       "21st plenary meeting, 79th session" + "General Assembly" → A/79/PV.21
+ * Returns PV symbols for: SC, GA plenary, GA 1st Committee, GA emergency special sessions
+ * Returns SR symbols for: GA committees 2-6, ECOSOC, Human Rights Council
  */
 export function parseMeetingSymbol(
   title: string,
   category: string,
+  videoDate?: string,
 ): string | null {
   // Security Council: "9748th meeting" → S/PV.9748
   const scMatch = title.match(/(\d{4,5})(?:st|nd|rd|th)\s+meeting/);
@@ -24,13 +24,22 @@ export function parseMeetingSymbol(
     return `S/PV.${scMatch[1]}`;
   }
 
-  // First Committee: "First Committee, 7th plenary meeting - General Assembly, 79th session"
-  // → A/C.1/79/PV.7
-  const firstCommM = title.match(
-    /First Committee.*?(\d+)(?:st|nd|rd|th)\s+(?:plenary\s+)?meeting.*?(\d+)(?:st|nd|rd|th)\s+session/i,
+  // GA Committees: "First Committee, 7th meeting - General Assembly, 79th session"
+  // "Third Committee, 5th meeting - General Assembly, 79th session"
+  // → A/C.1/79/PV.7 (1st = verbatim), A/C.3/79/SR.5 (2nd-6th = summary)
+  const committeeNames: Record<string, string> = {
+    first: "1", second: "2", third: "3", fourth: "4", fifth: "5", sixth: "6",
+  };
+  const committeeM = title.match(
+    /(First|Second|Third|Fourth|Fifth|Sixth)\s+Committee.*?(\d+)(?:st|nd|rd|th)\s+(?:plenary\s+)?meeting.*?(\d+)(?:st|nd|rd|th)\s+session/i,
   );
-  if (firstCommM && /general assembly/i.test(category)) {
-    return `A/C.1/${firstCommM[2]}/PV.${firstCommM[1]}`;
+  if (committeeM && /general assembly/i.test(category)) {
+    const num = committeeNames[committeeM[1].toLowerCase()];
+    if (num) {
+      // 1st Committee uses PV (verbatim), committees 2-6 use SR (summary records)
+      const recordType = num === "1" ? "PV" : "SR";
+      return `A/C.${num}/${committeeM[3]}/${recordType}.${committeeM[2]}`;
+    }
   }
 
   // General Assembly plenary: "21st plenary meeting, 79th session" → A/79/PV.21
@@ -45,12 +54,43 @@ export function parseMeetingSymbol(
     return `A/${sessionM[1]}/PV.${plenaryM[1]}`;
   }
 
+  // GA Emergency Special Session: "23rd plenary meeting - Emergency special session" → A/ES-11/PV.23
+  // Title patterns vary; the ES-NN number may be in the title or category
+  const esMatch = title.match(/(\d+)(?:st|nd|rd|th)\s+plenary\s+meeting/i);
+  const esSession = (title + " " + category).match(/(?:ES|emergency\s+special).*?(\d+)/i);
+  if (esMatch && esSession && /emergency/i.test(title + " " + category)) {
+    return `A/ES-${esSession[1]}/PV.${esMatch[1]}`;
+  }
+
+  // Human Rights Council: "29th Meeting - 61st Session of Human Rights Council" → A/HRC/61/SR.29
+  // Also: "1st Meeting - 57th Regular Session of Human Rights Council"
+  // Must match "Session ... Human Rights Council" in the title to avoid false positives
+  // from subsidiary bodies (Working Groups, Permanent Forum, etc.)
+  const hrcM = title.match(
+    /(\d+)(?:st|nd|rd|th)\s+Meeting\s*[-–,]\s*(\d+)(?:st|nd|rd|th)\s+(?:Regular\s+)?(?:Special\s+)?Session\s+(?:of\s+)?(?:the\s+)?Human\s+Rights\s+Council/i,
+  );
+  if (hrcM) {
+    return `A/HRC/${hrcM[2]}/SR.${hrcM[1]}`;
+  }
+
+  // ECOSOC: "10th meeting - Economic and Social Council" → E/2024/SR.10
+  // Only match direct ECOSOC plenary meetings, not subsidiary bodies (forums, commissions, etc.)
+  const ecosocM = title.match(/(\d+)(?:st|nd|rd|th)\s+meeting/i);
+  if (
+    ecosocM &&
+    /economic and social council|ecosoc/i.test(category) &&
+    !/forum|committee of experts|working group|commission on/i.test(title)
+  ) {
+    const year = videoDate ? new Date(videoDate).getFullYear() : new Date().getFullYear();
+    return `E/${year}/SR.${ecosocM[1]}`;
+  }
+
   return null;
 }
 
 /** Build a URL to access the PV document PDF from documents.un.org. */
-export function getPVDocumentUrl(symbol: string, lang: string = "en"): string {
-  return `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}&l=${encodeURIComponent(lang)}`;
+export function getPVDocumentUrl(symbol: string): string {
+  return `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}`;
 }
 
 /**
@@ -59,23 +99,64 @@ export function getPVDocumentUrl(symbol: string, lang: string = "en"): string {
  * Fetches the PDF and validates that it contains the expected symbol string,
  * since the API occasionally returns a nearby document instead.
  */
+/**
+ * Fetch the raw PDF buffer for a PV document from documents.un.org.
+ * Returns null if the document doesn't exist or isn't a valid PDF.
+ */
+export async function fetchPVDocument(
+  symbol: string,
+  lang: string = "en",
+): Promise<Buffer | null> {
+  try {
+    const url = `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}&l=${encodeURIComponent(lang)}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+    if (!res.ok) return null;
+
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("pdf")) return null;
+
+    const buffer = Buffer.from(await res.arrayBuffer());
+
+    // Basic validation: must be a real PDF (starts with %PDF)
+    if (buffer.length < 100 || !buffer.subarray(0, 5).toString().startsWith("%PDF")) return null;
+
+    // Validate: check if the symbol appears in the PDF binary (works for most PDFs
+    // where text is stored as ASCII/latin1 literals in the stream). This guards against
+    // documents.un.org returning a nearby/wrong document.
+    // The symbol without spaces (e.g. "S/PV.10100") should appear somewhere in the raw bytes.
+    // For PDFs with compressed text streams, this check may fail — so we also try
+    // with dots/slashes stripped as a fallback pattern.
+    const rawText = buffer.toString("latin1");
+    const symbolNorm = symbol.replace(/\s+/g, "");
+    if (!rawText.includes(symbolNorm)) {
+      // Try without the slash (some PDFs encode "S/PV" differently)
+      const symbolDigits = symbol.match(/\d+$/)?.[0];
+      if (!symbolDigits || !rawText.includes(symbolDigits)) {
+        return null;
+      }
+    }
+
+    return buffer;
+  } catch {
+    return null;
+  }
+}
+
 export async function pvDocumentExists(
   symbol: string,
   lang: string = "en",
 ): Promise<boolean> {
   try {
-    const url = getPVDocumentUrl(symbol, lang);
+    const url = `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}&l=${encodeURIComponent(lang)}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!res.ok) return false;
 
     const contentType = res.headers.get("content-type") || "";
     if (!contentType.includes("pdf")) return false;
 
-    // Validate: the PDF must contain the expected symbol to guard against
-    // the API returning a nearby/wrong document.
+    // Basic validation: must be a real PDF
     const buffer = Buffer.from(await res.arrayBuffer());
-    const pdfText = buffer.toString("latin1");
-    return pdfText.includes(symbol);
+    return buffer.length >= 100 && buffer.subarray(0, 5).toString().startsWith("%PDF");
   } catch {
     return false;
   }

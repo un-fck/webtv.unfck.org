@@ -157,6 +157,18 @@ async function ensureInitialized() {
       .catch(() => {}),
   ]);
 
+  // Create PV contents table for parsed PV documents
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS pv_contents (
+      pv_symbol TEXT NOT NULL,
+      language TEXT NOT NULL DEFAULT 'en',
+      content TEXT NOT NULL,
+      fetched_at TEXT NOT NULL,
+      parsed_at TEXT NOT NULL,
+      PRIMARY KEY (pv_symbol, language)
+    )
+  `);
+
   // Normalize language codes: tag NULL and legacy codes (e.g. 'en_us') as 'en'
   await Promise.all([
     client
@@ -961,7 +973,7 @@ export interface VideosPageParams {
   bodies?: string[];
   categories?: string[];
   status?: "past" | "scheduled";
-  hasTranscript?: boolean;
+  docs?: string[]; // "transcript" | "pv" | "sr"
   sortBy?: "date" | "title";
   sortDir?: "asc" | "desc";
   page?: number; // 1-indexed
@@ -985,7 +997,7 @@ export async function getVideosPage(
     bodies,
     categories,
     status,
-    hasTranscript,
+    docs,
     sortBy = "date",
     sortDir = "desc",
     page = 1,
@@ -1029,15 +1041,32 @@ export async function getVideosPage(
     );
   }
 
-  if (hasTranscript && transcriptedEntryIds) {
-    if (transcriptedEntryIds.length === 0) {
-      // No transcripts exist — return empty
+  if (docs && docs.length > 0) {
+    const docConditions: string[] = [];
+    if (docs.includes("transcript")) {
+      if (transcriptedEntryIds) {
+        if (transcriptedEntryIds.length === 0 && docs.length === 1) {
+          return { records: [], total: 0 };
+        }
+        if (transcriptedEntryIds.length > 0) {
+          docConditions.push(
+            `entry_id IN (${transcriptedEntryIds.map(() => "?").join(", ")})`,
+          );
+          args.push(...transcriptedEntryIds);
+        }
+      }
+    }
+    if (docs.includes("pv")) {
+      docConditions.push("(pv_available = 1 AND (pv_symbol IS NULL OR pv_symbol NOT LIKE '%/SR.%'))");
+    }
+    if (docs.includes("sr")) {
+      docConditions.push("(pv_available = 1 AND pv_symbol LIKE '%/SR.%')");
+    }
+    if (docConditions.length > 0) {
+      conditions.push(`(${docConditions.join(" OR ")})`);
+    } else if (docs.includes("transcript") && (!transcriptedEntryIds || transcriptedEntryIds.length === 0)) {
       return { records: [], total: 0 };
     }
-    conditions.push(
-      `entry_id IN (${transcriptedEntryIds.map(() => "?").join(", ")})`,
-    );
-    args.push(...transcriptedEntryIds);
   }
 
   const where = conditions.join(" AND ");
@@ -1117,7 +1146,12 @@ export async function getAvailableDates(
 
 export async function getFilterOptions(
   daysBack: number = 365,
-): Promise<{ bodies: string[]; categories: string[] }> {
+): Promise<{
+  bodies: string[];
+  categories: string[];
+  bodyCounts: Record<string, number>;
+  categoryCounts: Record<string, number>;
+}> {
   await ensureInitialized();
 
   const cutoffDate = new Date();
@@ -1126,18 +1160,25 @@ export async function getFilterOptions(
 
   const [bodiesResult, categoriesResult] = await Promise.all([
     client.execute({
-      sql: "SELECT DISTINCT body FROM videos WHERE last_seen >= ? AND body IS NOT NULL ORDER BY body",
+      sql: "SELECT body, COUNT(*) as cnt FROM videos WHERE last_seen >= ? AND body IS NOT NULL GROUP BY body ORDER BY body",
       args: [cutoff],
     }),
     client.execute({
-      sql: "SELECT DISTINCT category FROM videos WHERE last_seen >= ? AND category IS NOT NULL ORDER BY category",
+      sql: "SELECT category, COUNT(*) as cnt FROM videos WHERE last_seen >= ? AND category IS NOT NULL GROUP BY category ORDER BY category",
       args: [cutoff],
     }),
   ]);
 
+  const bodyCounts: Record<string, number> = {};
+  const categoryCounts: Record<string, number> = {};
+  for (const row of bodiesResult.rows) bodyCounts[row.body as string] = Number(row.cnt);
+  for (const row of categoriesResult.rows) categoryCounts[row.category as string] = Number(row.cnt);
+
   return {
-    bodies: bodiesResult.rows.map((row) => row.body as string),
-    categories: categoriesResult.rows.map((row) => row.category as string),
+    bodies: Object.keys(bodyCounts),
+    categories: Object.keys(categoryCounts),
+    bodyCounts,
+    categoryCounts,
   };
 }
 
@@ -1186,6 +1227,42 @@ export async function getVideosNeedingPVCheck(
     asset_id: row.asset_id as string,
     pv_symbol: row.pv_symbol as string,
   }));
+}
+
+// ── PV Content CRUD ────────────────────────────────────────────────────
+
+export async function getPVContent(
+  pvSymbol: string,
+  language: string = "en",
+): Promise<{ content: string; fetchedAt: string; parsedAt: string } | null> {
+  await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT content, fetched_at, parsed_at FROM pv_contents WHERE pv_symbol = ? AND language = ?",
+    args: [pvSymbol, language],
+  });
+  if (result.rows.length === 0) return null;
+  const row = result.rows[0];
+  return {
+    content: row.content as string,
+    fetchedAt: row.fetched_at as string,
+    parsedAt: row.parsed_at as string,
+  };
+}
+
+export async function savePVContent(
+  pvSymbol: string,
+  language: string,
+  content: string,
+): Promise<void> {
+  await ensureInitialized();
+  const now = new Date().toISOString();
+  await client.execute({
+    sql: `INSERT INTO pv_contents (pv_symbol, language, content, fetched_at, parsed_at)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT (pv_symbol, language)
+          DO UPDATE SET content = excluded.content, parsed_at = excluded.parsed_at`,
+    args: [pvSymbol, language, content, now, now],
+  });
 }
 
 export const db = client;

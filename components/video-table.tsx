@@ -8,7 +8,12 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { ChevronUp, ChevronDown, Filter, X, CalendarIcon } from "lucide-react";
+import { ChevronUp, ChevronDown, Filter, X, CalendarIcon, Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
@@ -25,6 +30,25 @@ declare module "@tanstack/react-table" {
 }
 
 const columnHelper = createColumnHelper<Video>();
+
+const BODY_ORDER: Record<string, number> = {
+  "General Assembly": 0,
+  "Security Council": 1,
+  "Economic and Social Council": 2,
+  "Trusteeship Council": 3,
+  "First Committee": 4,
+  "Second Committee": 5,
+  "Third Committee": 6,
+  "Fourth Committee": 7,
+  "Fifth Committee": 8,
+  "Sixth Committee": 9,
+};
+
+function sortBodies(bodies: string[]): string[] {
+  return [...bodies].sort(
+    (a, b) => (BODY_ORDER[a] ?? 99) - (BODY_ORDER[b] ?? 99),
+  );
+}
 
 // Helper to get date at local midnight for comparison
 function getLocalMidnight(date: Date): Date {
@@ -157,10 +181,16 @@ function MultiFilterPopover({
   options,
   selected,
   onChange,
+  counts,
+  labels,
+  tooltips,
 }: {
   options: string[];
   selected: string[];
   onChange: (values: string[]) => void;
+  counts?: Record<string, number>;
+  labels?: Record<string, string>;
+  tooltips?: Record<string, string>;
 }) {
   const isActive = selected.length > 0;
   const toggle = (value: string) => {
@@ -192,18 +222,35 @@ function MultiFilterPopover({
               <X className="h-3 w-3" /> Clear {selected.length} selected
             </button>
           )}
-          <div className="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto">
+          <div className="flex flex-wrap gap-1.5">
             {options.map((opt) => (
               <button
                 key={opt}
                 onClick={() => toggle(opt)}
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium transition-colors whitespace-nowrap ${
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors whitespace-nowrap ${
                   selected.includes(opt)
                     ? "bg-primary text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                {opt}
+                {labels?.[opt] ?? opt}
+                {counts?.[opt] !== undefined && (
+                  <span className="ml-1 opacity-50">{counts[opt]}</span>
+                )}
+                {tooltips?.[opt] && (
+                  <Tooltip>
+                    <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Info className={`h-3 w-3 shrink-0 cursor-help ${
+                        selected.includes(opt)
+                          ? "opacity-60 hover:opacity-100"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`} />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-56 text-xs">
+                      {tooltips[opt]}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </button>
             ))}
           </div>
@@ -235,24 +282,40 @@ function SortArrow({
   );
 }
 
+const DOCS_LABELS: Record<string, string> = {
+  transcript: "Transcript",
+  pv: "Verbatim Record",
+  sr: "Summary Record",
+};
+
+const DOCS_TOOLTIPS: Record<string, string> = {
+  transcript: "AI-generated transcript from the audio recording",
+  pv: "Official word-for-word record of the meeting, produced by the UN Secretariat",
+  sr: "Official condensed record of the meeting, produced by the UN Secretariat",
+};
+
 // Active filter pills display
 function ActiveFilters({
   dateFilter,
   bodyFilter,
   categoryFilter,
+  textFilter,
   onClearDate,
   onClearBody,
   onClearCategory,
+  onClearDocs,
 }: {
   dateFilter: string | undefined;
   bodyFilter: string[];
   categoryFilter: string[];
+  textFilter: string[];
   onClearDate: () => void;
   onClearBody: (value: string) => void;
   onClearCategory: (value: string) => void;
+  onClearDocs: (value: string) => void;
 }) {
   const hasAny =
-    !!dateFilter || bodyFilter.length > 0 || categoryFilter.length > 0;
+    !!dateFilter || bodyFilter.length > 0 || categoryFilter.length > 0 || textFilter.length > 0;
   if (!hasAny) return null;
 
   return (
@@ -293,6 +356,20 @@ function ActiveFilters({
           </button>
         </span>
       ))}
+      {textFilter.map((d) => (
+        <span
+          key={d}
+          className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+        >
+          {DOCS_LABELS[d] || d}
+          <button
+            onClick={() => onClearDocs(d)}
+            className="hover:text-primary/70"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      ))}
     </div>
   );
 }
@@ -302,7 +379,12 @@ interface VideoTableProps {
   totalCount: number;
   serverParams: ServerParams;
   availableDates: string[];
-  filterOptions: { bodies: string[]; categories: string[] };
+  filterOptions: {
+    bodies: string[];
+    categories: string[];
+    bodyCounts: Record<string, number>;
+    categoryCounts: Record<string, number>;
+  };
 }
 
 export function VideoTable({
@@ -314,6 +396,8 @@ export function VideoTable({
 }: VideoTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const sortedBodies = useMemo(() => sortBodies(filterOptions.bodies), [filterOptions.bodies]);
 
   // Search state (client-side, uses /api/search)
   const [inputValue, setInputValue] = useState(serverParams.q || "");
@@ -342,7 +426,7 @@ export function VideoTable({
       if (next.date) sp.set("date", next.date);
       if (next.body?.length) sp.set("body", next.body.join(","));
       if (next.category?.length) sp.set("category", next.category.join(","));
-      if (next.hasTranscript) sp.set("hasTranscript", "1");
+      if (next.text?.length) sp.set("text", next.text.join(","));
       if (next.q) sp.set("q", next.q);
 
       router.push(sp.toString() ? `?${sp}` : "/", { scroll: false });
@@ -495,8 +579,6 @@ export function VideoTable({
           const encodedId = encodeURIComponent(info.row.original.id);
           const isScheduled = info.row.original.status === "scheduled";
           const isLive = info.row.original.status === "live";
-          const hasTranscript = info.row.original.hasTranscript;
-          const hasPV = info.row.original.pvAvailable;
           return (
             <a
               href={`/video/${encodedId}`}
@@ -504,16 +586,6 @@ export function VideoTable({
             >
               {isLive && (
                 <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500 align-middle" />
-              )}
-              {hasTranscript && (
-                <span className="mr-2 inline-block rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary align-middle">
-                  TRANSCRIBED
-                </span>
-              )}
-              {hasPV && (
-                <span className="mr-2 inline-block rounded bg-amber-500/10 px-1.5 py-px text-[10px] font-medium text-amber-700 align-middle">
-                  PV
-                </span>
               )}
               {info.getValue()}
             </a>
@@ -537,6 +609,34 @@ export function VideoTable({
             {info.getValue() || "—"}
           </span>
         ),
+        size: 140,
+      }),
+      columnHelper.display({
+        id: "docs",
+        header: "Text",
+        cell: (info) => {
+          const hasTranscript = info.row.original.hasTranscript;
+          const hasPV = info.row.original.pvAvailable;
+          const isSR = info.row.original.pvSymbol?.includes("/SR.");
+          return (
+            <div className="flex flex-wrap gap-1">
+              {hasTranscript && (
+                <span className="inline-block rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary">
+                  TRANSCRIPT
+                </span>
+              )}
+              {hasPV && (
+                <span className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${
+                  isSR
+                    ? "bg-violet-500/10 text-violet-700"
+                    : "bg-amber-500/10 text-amber-700"
+                }`}>
+                  {isSR ? "SUMMARY" : "VERBATIM"}
+                </span>
+              )}
+            </div>
+          );
+        },
         size: 140,
       }),
     ],
@@ -596,26 +696,6 @@ export function VideoTable({
             Scheduled
           </button>
         </div>
-        <div className="flex rounded-full border border-border bg-background p-0.5 text-xs font-medium shadow-xs">
-          <button
-            onClick={() =>
-              serverParams.hasTranscript &&
-              updateParams({ hasTranscript: undefined })
-            }
-            className={`rounded-full px-4 py-1.5 transition-all ${!serverParams.hasTranscript ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            All
-          </button>
-          <button
-            onClick={() =>
-              !serverParams.hasTranscript &&
-              updateParams({ hasTranscript: true })
-            }
-            className={`rounded-full px-4 py-1.5 transition-all ${serverParams.hasTranscript ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Transcribed
-          </button>
-        </div>
         <div className="ml-auto text-sm whitespace-nowrap text-muted-foreground">
           {isSearching
             ? "Searching…"
@@ -634,6 +714,7 @@ export function VideoTable({
         dateFilter={serverParams.date}
         bodyFilter={serverParams.body ?? []}
         categoryFilter={serverParams.category ?? []}
+        textFilter={serverParams.text ?? []}
         onClearDate={() => updateParams({ date: undefined })}
         onClearBody={(v) =>
           updateParams({
@@ -643,6 +724,11 @@ export function VideoTable({
         onClearCategory={(v) =>
           updateParams({
             category: (serverParams.category ?? []).filter((c) => c !== v),
+          })
+        }
+        onClearDocs={(v) =>
+          updateParams({
+            text: (serverParams.text ?? []).filter((d) => d !== v),
           })
         }
       />
@@ -695,7 +781,7 @@ export function VideoTable({
             className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
             <option value="">All Bodies</option>
-            {filterOptions.bodies.map((body) => (
+            {sortedBodies.map((body) => (
               <option key={body} value={body}>
                 {body}
               </option>
@@ -719,19 +805,18 @@ export function VideoTable({
           </select>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
-            <input
-              type="checkbox"
-              checked={!!serverParams.hasTranscript}
-              onChange={(e) =>
-                updateParams({
-                  hasTranscript: e.target.checked ? true : undefined,
-                })
-              }
-              className="h-4 w-4 rounded border-gray-300 accent-primary"
-            />
-            <span className="text-muted-foreground">With transcript</span>
-          </label>
+          <select
+            value={(serverParams.text ?? [])[0] || ""}
+            onChange={(e) =>
+              updateParams({ text: e.target.value ? [e.target.value] : undefined })
+            }
+            className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
+          >
+            <option value="">All Text</option>
+            <option value="transcript">Transcript</option>
+            <option value="pv">Verbatim Record</option>
+            <option value="sr">Summary Record</option>
+          </select>
           <div className="flex rounded-md bg-muted p-0.5 text-xs font-medium">
             <button
               onClick={() =>
@@ -784,21 +869,31 @@ export function VideoTable({
               className={`block rounded-lg border p-4 transition-colors hover:bg-muted/50 ${isScheduled ? "opacity-50" : ""}`}
             >
               <div className="flex items-start justify-between gap-3">
-                <span
-                  className={`text-sm leading-tight ${isScheduled ? "text-muted-foreground" : "text-primary"}`}
-                >
-                  {video.cleanTitle}
-                  {video.hasTranscript && (
-                    <span className="ml-2 inline-block rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary align-middle">
-                      transcribed
-                    </span>
+                <div className="space-y-1">
+                  <span
+                    className={`text-sm leading-tight ${isScheduled ? "text-muted-foreground" : "text-primary"}`}
+                  >
+                    {video.cleanTitle}
+                  </span>
+                  {(video.hasTranscript || video.pvAvailable) && (
+                    <div className="flex gap-1">
+                      {video.hasTranscript && (
+                        <span className="inline-block rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary">
+                          transcript
+                        </span>
+                      )}
+                      {video.pvAvailable && (
+                        <span className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${
+                          video.pvSymbol?.includes("/SR.")
+                            ? "bg-violet-500/10 text-violet-700"
+                            : "bg-amber-500/10 text-amber-700"
+                        }`}>
+                          {video.pvSymbol?.includes("/SR.") ? "summary" : "verbatim"}
+                        </span>
+                      )}
+                    </div>
                   )}
-                  {video.pvAvailable && (
-                    <span className="ml-2 inline-block rounded bg-amber-500/10 px-1.5 py-px text-[10px] font-medium text-amber-700 align-middle">
-                      PV
-                    </span>
-                  )}
-                </span>
+                </div>
                 <div className="flex flex-shrink-0 items-center gap-2">
                   {isLive ? (
                     <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />
@@ -879,11 +974,12 @@ export function VideoTable({
                   <div className="flex items-center gap-1">
                     <span>Body</span>
                     <MultiFilterPopover
-                      options={filterOptions.bodies}
+                      options={sortedBodies}
                       selected={serverParams.body ?? []}
                       onChange={(vals) =>
                         updateParams({ body: vals.length ? vals : undefined })
                       }
+                      counts={filterOptions.bodyCounts}
                     />
                   </div>
                 </th>
@@ -902,6 +998,25 @@ export function VideoTable({
                           category: vals.length ? vals : undefined,
                         })
                       }
+                      counts={filterOptions.categoryCounts}
+                    />
+                  </div>
+                </th>
+                {/* Text */}
+                <th
+                  className="px-4 py-2 text-left text-[10px] font-medium tracking-wider text-gray-400 uppercase"
+                  style={{ width: 140, minWidth: 140, maxWidth: 140 }}
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Text</span>
+                    <MultiFilterPopover
+                      options={["transcript", "pv", "sr"]}
+                      selected={serverParams.text ?? []}
+                      onChange={(vals) =>
+                        updateParams({ text: vals.length ? vals : undefined })
+                      }
+                      labels={DOCS_LABELS}
+                      tooltips={DOCS_TOOLTIPS}
                     />
                   </div>
                 </th>
