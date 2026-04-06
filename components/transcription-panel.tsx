@@ -1672,7 +1672,7 @@ export function TranscriptionPanel({
                                                 }
                                                 className="cursor-pointer hover:opacity-70"
                                                 style={{
-                                                  textDecoration: isActiveWord
+                                                  textDecorationLine: isActiveWord
                                                     ? "underline"
                                                     : "none",
                                                   textDecorationColor:
@@ -1703,7 +1703,7 @@ export function TranscriptionPanel({
                                           }
                                           className="cursor-pointer hover:opacity-70"
                                           style={{
-                                            textDecoration: isActiveWord
+                                            textDecorationLine: isActiveWord
                                               ? "underline"
                                               : "none",
                                             textDecorationColor: isActiveWord
