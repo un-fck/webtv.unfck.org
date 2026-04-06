@@ -1,17 +1,12 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   useReactTable,
   getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
   flexRender,
   createColumnHelper,
-  type ColumnFiltersState,
-  type SortingState,
 } from "@tanstack/react-table";
 import { ChevronUp, ChevronDown, Filter, X, CalendarIcon } from "lucide-react";
 import {
@@ -21,6 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Video } from "@/lib/un-api";
+import type { ServerParams } from "@/app/page";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData, TValue> {
@@ -84,29 +80,37 @@ function formatDuration(duration: string): string | null {
 // --- Filter popovers ---
 
 function DateFilterPopover({
-  videoDates,
+  availableDates,
   selectedDate,
   onChange,
 }: {
-  videoDates: Date[];
-  selectedDate: Date | undefined;
-  onChange: (date: Date | undefined) => void;
+  availableDates: string[];
+  selectedDate: string | undefined;
+  onChange: (date: string | undefined) => void;
 }) {
   const isActive = !!selectedDate;
 
   // Build set of day timestamps that have videos
   const availableDays = useMemo(() => {
     const s = new Set<number>();
-    videoDates.forEach((d) => s.add(getLocalMidnight(d).getTime()));
+    availableDates.forEach((d) => s.add(getLocalMidnight(new Date(d + "T00:00:00")).getTime()));
     return s;
-  }, [videoDates]);
+  }, [availableDates]);
 
   // Only enable days that have videos
   const disabledMatcher = (date: Date) =>
     !availableDays.has(getLocalMidnight(date).getTime());
 
-  // Default month to show: selected date, or most recent video date
-  const defaultMonth = selectedDate ?? videoDates[0];
+  // Default month to show: selected date, or most recent available date
+  const defaultMonth = selectedDate
+    ? new Date(selectedDate + "T00:00:00")
+    : availableDates[0]
+      ? new Date(availableDates[0] + "T00:00:00")
+      : undefined;
+
+  const selectedDateObj = selectedDate
+    ? new Date(selectedDate + "T00:00:00")
+    : undefined;
 
   return (
     <Popover>
@@ -130,8 +134,17 @@ function DateFilterPopover({
         )}
         <Calendar
           mode="single"
-          selected={selectedDate}
-          onSelect={(day) => onChange(day ?? undefined)}
+          selected={selectedDateObj}
+          onSelect={(day) => {
+            if (day) {
+              const yyyy = day.getFullYear();
+              const mm = String(day.getMonth() + 1).padStart(2, "0");
+              const dd = String(day.getDate()).padStart(2, "0");
+              onChange(`${yyyy}-${mm}-${dd}`);
+            } else {
+              onChange(undefined);
+            }
+          }}
           defaultMonth={defaultMonth}
           disabled={disabledMatcher}
         />
@@ -201,17 +214,19 @@ function MultiFilterPopover({
 }
 
 function SortArrow({
-  isSorted,
+  active,
+  direction,
   onClick,
 }: {
-  isSorted: false | "asc" | "desc";
-  onClick: ((event: unknown) => void) | undefined;
+  active: boolean;
+  direction: "asc" | "desc";
+  onClick: () => void;
 }) {
   return (
     <button onClick={onClick} className="transition-colors hover:text-gray-600">
-      {isSorted === "asc" ? (
+      {active && direction === "asc" ? (
         <ChevronUp className="h-3.5 w-3.5 text-primary" />
-      ) : isSorted === "desc" ? (
+      ) : active && direction === "desc" ? (
         <ChevronDown className="h-3.5 w-3.5 text-primary" />
       ) : (
         <ChevronDown className="h-3.5 w-3.5 opacity-40" />
@@ -229,7 +244,7 @@ function ActiveFilters({
   onClearBody,
   onClearCategory,
 }: {
-  dateFilter: Date | undefined;
+  dateFilter: string | undefined;
   bodyFilter: string[];
   categoryFilter: string[];
   onClearDate: () => void;
@@ -244,7 +259,7 @@ function ActiveFilters({
     <div className="flex flex-wrap items-center gap-1.5">
       {dateFilter && (
         <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-          {getDateLabel(dateFilter)}
+          {getDateLabel(new Date(dateFilter + "T00:00:00"))}
           <button onClick={onClearDate} className="hover:text-primary/70">
             <X className="h-3 w-3" />
           </button>
@@ -282,56 +297,68 @@ function ActiveFilters({
   );
 }
 
-export function VideoTable({ videos }: { videos: Video[] }) {
-  const searchParams = useSearchParams();
+interface VideoTableProps {
+  videos: Video[];
+  totalCount: number;
+  serverParams: ServerParams;
+  availableDates: string[];
+  filterOptions: { bodies: string[]; categories: string[] };
+}
+
+export function VideoTable({
+  videos,
+  totalCount,
+  serverParams,
+  availableDates,
+  filterOptions,
+}: VideoTableProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Multi-select filters managed outside TanStack (body, category)
-  const [bodyFilter, setBodyFilter] = useState<string[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
-  const [transcriptFilter, setTranscriptFilter] = useState(false);
-
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
-    { id: "status", value: "hide_scheduled" }, // Hide scheduled by default
-  ]);
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "status", desc: false }, // Live first, then finished
-    { id: "date", desc: true },
-  ]);
-  const [inputValue, setInputValue] = useState(searchParams.get("q") || "");
-  const [globalFilter, setGlobalFilter] = useState(searchParams.get("q") || "");
-  const [showScheduled, setShowScheduled] = useState(false);
-  const [searchResults, setSearchResults] = useState<Video[] | null>(null);
+  // Search state (client-side, uses /api/search)
+  const [inputValue, setInputValue] = useState(serverParams.q || "");
+  const [searchResults, setSearchResults] = useState<Video[] | null>(
+    serverParams.q ? null : null, // will be populated by effect if q is set
+  );
   const [isSearching, setIsSearching] = useState(false);
   const [searchOffset, setSearchOffset] = useState(0);
   const [hasMoreResults, setHasMoreResults] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Sync inputs from URL (back/forward navigation)
+  // URL-driven param updater
+  const updateParams = useCallback(
+    (updates: Partial<ServerParams> & { resetPage?: boolean }) => {
+      const { resetPage = true, ...paramUpdates } = updates;
+      const next = { ...serverParams, ...paramUpdates };
+      if (resetPage && !("page" in paramUpdates)) {
+        next.page = 1;
+      }
+
+      const sp = new URLSearchParams();
+      if (next.page > 1) sp.set("page", String(next.page));
+      if (next.pageSize !== 50) sp.set("pageSize", String(next.pageSize));
+      if (next.sort !== "date_desc") sp.set("sort", next.sort);
+      if (next.status !== "past") sp.set("status", next.status);
+      if (next.date) sp.set("date", next.date);
+      if (next.body?.length) sp.set("body", next.body.join(","));
+      if (next.category?.length) sp.set("category", next.category.join(","));
+      if (next.hasTranscript) sp.set("hasTranscript", "1");
+      if (next.q) sp.set("q", next.q);
+
+      router.push(sp.toString() ? `?${sp}` : "/", { scroll: false });
+    },
+    [serverParams, router],
+  );
+
+  // Sync search input from URL changes (back/forward)
   useEffect(() => {
     const urlQuery = searchParams.get("q") || "";
     setInputValue(urlQuery);
-    setGlobalFilter(urlQuery);
   }, [searchParams]);
 
-  // Sync submitted query to URL
+  // Fetch search results when q param is set
   useEffect(() => {
-    const currentQuery = searchParams.get("q") || "";
-    if (globalFilter !== currentQuery) {
-      const params = new URLSearchParams(searchParams.toString());
-      if (globalFilter) {
-        params.set("q", globalFilter);
-      } else {
-        params.delete("q");
-      }
-      const newUrl = params.toString() ? `?${params.toString()}` : "/";
-      router.replace(newUrl, { scroll: false });
-    }
-  }, [globalFilter, searchParams, router]);
-
-  // Fetch search results when submitted query changes
-  useEffect(() => {
-    if (!globalFilter || globalFilter.length < 2) {
+    if (!serverParams.q) {
       setSearchResults(null);
       setSearchOffset(0);
       setHasMoreResults(false);
@@ -340,7 +367,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
 
     setIsSearching(true);
     setSearchOffset(0);
-    fetch(`/api/search?q=${encodeURIComponent(globalFilter)}`)
+    fetch(`/api/search?q=${encodeURIComponent(serverParams.q)}`)
       .then((res) => res.json())
       .then((data) => {
         setSearchResults(data.videos);
@@ -349,13 +376,13 @@ export function VideoTable({ videos }: { videos: Video[] }) {
       })
       .catch(() => setSearchResults(null))
       .finally(() => setIsSearching(false));
-  }, [globalFilter]);
+  }, [serverParams.q]);
 
   const loadMore = () => {
-    if (!globalFilter || isLoadingMore) return;
+    if (!serverParams.q || isLoadingMore) return;
     setIsLoadingMore(true);
     fetch(
-      `/api/search?q=${encodeURIComponent(globalFilter)}&offset=${searchOffset}`,
+      `/api/search?q=${encodeURIComponent(serverParams.q)}&offset=${searchOffset}`,
     )
       .then((res) => res.json())
       .then((data) => {
@@ -370,64 +397,47 @@ export function VideoTable({ videos }: { videos: Video[] }) {
   const submitSearch = (value: string) => {
     const trimmed = value.trim();
     setInputValue(trimmed);
-    setGlobalFilter(trimmed);
-    if (!trimmed) setSearchResults(null);
+    if (trimmed) {
+      updateParams({ q: trimmed });
+    } else {
+      // Clear search — remove q param, go back to normal view
+      updateParams({ q: undefined });
+      setSearchResults(null);
+    }
   };
 
+  // Data: use search results when searching, otherwise server-provided videos
   const tableData = searchResults ?? videos;
+  const isSearchMode = !!serverParams.q;
 
-  const uniqueBodies = useMemo(
-    () =>
-      Array.from(
-        new Set(tableData.map((v) => v.body).filter(Boolean) as string[]),
-      ).sort(),
-    [tableData],
-  );
+  // Parse current sort state
+  const [currentSortBy, currentSortDir] = serverParams.sort.split("_") as [
+    string,
+    "asc" | "desc",
+  ];
 
-  const uniqueCategories = useMemo(
-    () =>
-      Array.from(
-        new Set(tableData.map((v) => v.category).filter(Boolean) as string[]),
-      ).sort(),
-    [tableData],
-  );
+  const toggleSort = (column: "date" | "title") => {
+    if (currentSortBy === column) {
+      updateParams({
+        sort: `${column}_${currentSortDir === "desc" ? "asc" : "desc"}`,
+      });
+    } else {
+      updateParams({
+        sort: `${column}_${column === "date" ? "desc" : "asc"}`,
+      });
+    }
+  };
 
-  const videoDates = useMemo(() => {
-    const dates: Date[] = [];
-    tableData.forEach((v) => {
-      const time = v.scheduledTime;
-      if (!time) return;
-      dates.push(parseUNTimestamp(time));
-    });
-    return dates;
-  }, [tableData]);
-
-  // Unique date options for mobile select
+  // Mobile date options from availableDates
   const mobileDateOptions = useMemo(() => {
-    const seen = new Map<number, string>();
-    videoDates.forEach((d) => {
-      const ts = getLocalMidnight(d).getTime();
-      if (!seen.has(ts)) seen.set(ts, getDateLabel(d));
-    });
-    return Array.from(seen, ([timestamp, label]) => ({ timestamp, label }));
-  }, [videoDates]);
+    return availableDates.map((dateStr) => ({
+      value: dateStr,
+      label: getDateLabel(new Date(dateStr + "T00:00:00")),
+    }));
+  }, [availableDates]);
 
-  // Sync multi-select filters into TanStack column filters
-  useEffect(() => {
-    setColumnFilters((prev) => {
-      const base = prev.filter(
-        (f) => f.id !== "body" && f.id !== "category" && f.id !== "hasTranscript",
-      );
-      if (bodyFilter.length > 0) base.push({ id: "body", value: bodyFilter });
-      if (categoryFilter.length > 0)
-        base.push({ id: "category", value: categoryFilter });
-      if (transcriptFilter) base.push({ id: "hasTranscript", value: true });
-      return base;
-    });
-  }, [bodyFilter, categoryFilter, transcriptFilter]);
-
-  const dateFilterValue = columnFilters.find((f) => f.id === "date")
-    ?.value as Date | undefined;
+  // Pagination
+  const pageCount = Math.max(1, Math.ceil(totalCount / serverParams.pageSize));
 
   const columns = useMemo(
     () => [
@@ -442,29 +452,6 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           return getDateLabel(date);
         },
         size: 120,
-        enableColumnFilter: true,
-        sortingFn: (rowA, rowB) => {
-          const timeA = rowA.original.scheduledTime;
-          const timeB = rowB.original.scheduledTime;
-          const dateA = timeA
-            ? parseUNTimestamp(timeA)
-            : new Date(rowA.original.date);
-          const dateB = timeB
-            ? parseUNTimestamp(timeB)
-            : new Date(rowB.original.date);
-          const dayA = getLocalMidnight(dateA).getTime();
-          const dayB = getLocalMidnight(dateB).getTime();
-          if (dayA !== dayB) return dayA - dayB;
-          return dateA.getTime() - dateB.getTime();
-        },
-        filterFn: (row, _columnId, filterValue: Date) => {
-          const time = row.original.scheduledTime;
-          if (!time) return false;
-          return (
-            getLocalMidnight(parseUNTimestamp(time)).getTime() ===
-            getLocalMidnight(filterValue).getTime()
-          );
-        },
       }),
       columnHelper.accessor("scheduledTime", {
         id: "time",
@@ -483,8 +470,6 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           );
         },
         size: 70,
-        enableColumnFilter: false,
-        enableSorting: false,
       }),
       columnHelper.accessor("duration", {
         header: "Duration",
@@ -504,24 +489,6 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           align: "right" as const,
         },
       }),
-      columnHelper.accessor("status", {
-        header: () => null,
-        cell: () => null,
-        size: 0,
-        sortingFn: (rowA, rowB) => {
-          const order = { live: 0, finished: 1, scheduled: 2 };
-          return order[rowA.original.status] - order[rowB.original.status];
-        },
-        enableColumnFilter: true,
-        filterFn: (row, _columnId, filterValue) => {
-          if (filterValue === "hide_scheduled")
-            return row.original.status !== "scheduled";
-          if (filterValue === "show_only_scheduled")
-            return row.original.status === "scheduled";
-          return true;
-        },
-        enableHiding: true,
-      }),
       columnHelper.accessor("cleanTitle", {
         header: "Title",
         cell: (info) => {
@@ -529,6 +496,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           const isScheduled = info.row.original.status === "scheduled";
           const isLive = info.row.original.status === "live";
           const hasTranscript = info.row.original.hasTranscript;
+          const hasPV = !!info.row.original.pvSymbol;
           return (
             <a
               href={`/video/${encodedId}`}
@@ -542,13 +510,16 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                   TRANSCRIBED
                 </span>
               )}
+              {hasPV && (
+                <span className="mr-2 inline-block rounded bg-amber-500/10 px-1.5 py-px text-[10px] font-medium text-amber-700 align-middle">
+                  PV
+                </span>
+              )}
               {info.getValue()}
             </a>
           );
         },
         size: 400,
-        enableColumnFilter: true,
-        filterFn: "includesString",
       }),
       columnHelper.accessor("body", {
         header: "Body",
@@ -558,12 +529,6 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           </span>
         ),
         size: 140,
-        enableColumnFilter: true,
-        filterFn: (row, _columnId, filterValue: string[]) => {
-          const val = row.original.body;
-          if (!val) return false;
-          return filterValue.includes(val);
-        },
       }),
       columnHelper.accessor("category", {
         header: "Category",
@@ -573,23 +538,6 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           </span>
         ),
         size: 140,
-        enableColumnFilter: true,
-        filterFn: (row, _columnId, filterValue: string[]) => {
-          const val = row.original.category;
-          if (!val) return false;
-          return filterValue.includes(val);
-        },
-      }),
-      columnHelper.accessor("hasTranscript", {
-        header: () => null,
-        cell: () => null,
-        size: 0,
-        enableColumnFilter: true,
-        filterFn: (row, _columnId, filterValue) => {
-          if (filterValue === true) return row.original.hasTranscript === true;
-          return true;
-        },
-        enableHiding: true,
       }),
     ],
     [],
@@ -598,60 +546,8 @@ export function VideoTable({ videos }: { videos: Video[] }) {
   const table = useReactTable({
     data: tableData,
     columns,
-    state: {
-      columnFilters,
-      sorting,
-      globalFilter: searchResults ? "" : globalFilter,
-      columnVisibility: { status: false, hasTranscript: false },
-    },
-    onColumnFiltersChange: setColumnFilters,
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 50,
-      },
-    },
   });
-
-  // When search activates: show all results (no pagination). When cleared: restore pagination.
-  useEffect(() => {
-    if (searchResults) {
-      table.setPageSize(1000);
-    } else {
-      table.setPageSize(50);
-    }
-    table.setPageIndex(0);
-  }, [searchResults]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Toggle between Past and Scheduled tabs
-  const toggleScheduled = () => {
-    const newValue = !showScheduled;
-    setShowScheduled(newValue);
-    if (newValue) {
-      setColumnFilters((prev) => [
-        ...prev.filter((f) => f.id !== "status"),
-        { id: "status", value: "show_only_scheduled" },
-      ]);
-      setSorting([{ id: "date", desc: false }]);
-    } else {
-      setColumnFilters((prev) => [
-        ...prev.filter((f) => f.id !== "status"),
-        { id: "status", value: "hide_scheduled" },
-      ]);
-      setSorting([
-        { id: "status", desc: false },
-        { id: "date", desc: true },
-      ]);
-    }
-  };
-
-  const dateCol = table.getColumn("date");
-  const titleCol = table.getColumn("cleanTitle");
 
   return (
     <div className="space-y-4">
@@ -682,28 +578,40 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         </div>
         <div className="flex rounded-full border border-border bg-background p-0.5 text-xs font-medium shadow-xs">
           <button
-            onClick={() => showScheduled && toggleScheduled()}
-            className={`rounded-full px-4 py-1.5 transition-all ${!showScheduled ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            onClick={() =>
+              serverParams.status !== "past" &&
+              updateParams({ status: "past" })
+            }
+            className={`rounded-full px-4 py-1.5 transition-all ${serverParams.status !== "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             Past
           </button>
           <button
-            onClick={() => !showScheduled && toggleScheduled()}
-            className={`rounded-full px-4 py-1.5 transition-all ${showScheduled ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            onClick={() =>
+              serverParams.status !== "scheduled" &&
+              updateParams({ status: "scheduled", sort: "date_asc" })
+            }
+            className={`rounded-full px-4 py-1.5 transition-all ${serverParams.status === "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             Scheduled
           </button>
         </div>
         <div className="flex rounded-full border border-border bg-background p-0.5 text-xs font-medium shadow-xs">
           <button
-            onClick={() => setTranscriptFilter(false)}
-            className={`rounded-full px-4 py-1.5 transition-all ${!transcriptFilter ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            onClick={() =>
+              serverParams.hasTranscript &&
+              updateParams({ hasTranscript: undefined })
+            }
+            className={`rounded-full px-4 py-1.5 transition-all ${!serverParams.hasTranscript ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             All
           </button>
           <button
-            onClick={() => setTranscriptFilter(true)}
-            className={`rounded-full px-4 py-1.5 transition-all ${transcriptFilter ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            onClick={() =>
+              !serverParams.hasTranscript &&
+              updateParams({ hasTranscript: true })
+            }
+            className={`rounded-full px-4 py-1.5 transition-all ${serverParams.hasTranscript ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             Transcribed
           </button>
@@ -711,32 +619,31 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         <div className="ml-auto text-sm whitespace-nowrap text-muted-foreground">
           {isSearching
             ? "Searching…"
-            : searchResults !== null
+            : isSearchMode && searchResults !== null
               ? hasMoreResults
                 ? `Showing ${searchResults.length} meetings`
                 : `${searchResults.length} meetings in total`
-              : globalFilter ||
-                  columnFilters.some(
-                    (f) => f.id !== "status" && f.id !== "hasTranscript",
-                  ) ||
-                  bodyFilter.length > 0 ||
-                  categoryFilter.length > 0
-                ? `${table.getFilteredRowModel().rows.length} meetings`
+              : totalCount > 0
+                ? `${totalCount} meetings`
                 : null}
         </div>
       </div>
 
       {/* Active filter pills */}
       <ActiveFilters
-        dateFilter={dateFilterValue}
-        bodyFilter={bodyFilter}
-        categoryFilter={categoryFilter}
-        onClearDate={() =>
-          setColumnFilters((prev) => prev.filter((f) => f.id !== "date"))
+        dateFilter={serverParams.date}
+        bodyFilter={serverParams.body ?? []}
+        categoryFilter={serverParams.category ?? []}
+        onClearDate={() => updateParams({ date: undefined })}
+        onClearBody={(v) =>
+          updateParams({
+            body: (serverParams.body ?? []).filter((b) => b !== v),
+          })
         }
-        onClearBody={(v) => setBodyFilter((prev) => prev.filter((b) => b !== v))}
         onClearCategory={(v) =>
-          setCategoryFilter((prev) => prev.filter((c) => c !== v))
+          updateParams({
+            category: (serverParams.category ?? []).filter((c) => c !== v),
+          })
         }
       />
 
@@ -767,47 +674,44 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <select
-            value={dateFilterValue ? getLocalMidnight(dateFilterValue).getTime().toString() : ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              setColumnFilters((prev) => {
-                const base = prev.filter((f) => f.id !== "date");
-                if (val) base.push({ id: "date", value: new Date(Number(val)) });
-                return base;
-              });
-            }}
+            value={serverParams.date ?? ""}
+            onChange={(e) =>
+              updateParams({ date: e.target.value || undefined })
+            }
             className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
             <option value="">All Dates</option>
-            {mobileDateOptions.map(({ label, timestamp }) => (
-              <option key={timestamp} value={timestamp.toString()}>
+            {mobileDateOptions.map(({ value, label }) => (
+              <option key={value} value={value}>
                 {label}
               </option>
             ))}
           </select>
           <select
-            value={bodyFilter[0] || ""}
+            value={(serverParams.body ?? [])[0] || ""}
             onChange={(e) =>
-              setBodyFilter(e.target.value ? [e.target.value] : [])
+              updateParams({ body: e.target.value ? [e.target.value] : undefined })
             }
             className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
             <option value="">All Bodies</option>
-            {uniqueBodies.map((body) => (
+            {filterOptions.bodies.map((body) => (
               <option key={body} value={body}>
                 {body}
               </option>
             ))}
           </select>
           <select
-            value={categoryFilter[0] || ""}
+            value={(serverParams.category ?? [])[0] || ""}
             onChange={(e) =>
-              setCategoryFilter(e.target.value ? [e.target.value] : [])
+              updateParams({
+                category: e.target.value ? [e.target.value] : undefined,
+              })
             }
             className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
             <option value="">All Categories</option>
-            {uniqueCategories.map((cat) => (
+            {filterOptions.categories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>
@@ -818,22 +722,32 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
             <input
               type="checkbox"
-              checked={transcriptFilter}
-              onChange={(e) => setTranscriptFilter(e.target.checked)}
+              checked={!!serverParams.hasTranscript}
+              onChange={(e) =>
+                updateParams({
+                  hasTranscript: e.target.checked ? true : undefined,
+                })
+              }
               className="h-4 w-4 rounded border-gray-300 accent-primary"
             />
             <span className="text-muted-foreground">With transcript</span>
           </label>
           <div className="flex rounded-md bg-muted p-0.5 text-xs font-medium">
             <button
-              onClick={() => showScheduled && toggleScheduled()}
-              className={`rounded px-3 py-1.5 transition-colors ${!showScheduled ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() =>
+                serverParams.status !== "past" &&
+                updateParams({ status: "past" })
+              }
+              className={`rounded px-3 py-1.5 transition-colors ${serverParams.status !== "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             >
               Past
             </button>
             <button
-              onClick={() => !showScheduled && toggleScheduled()}
-              className={`rounded px-3 py-1.5 transition-colors ${showScheduled ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() =>
+                serverParams.status !== "scheduled" &&
+                updateParams({ status: "scheduled", sort: "date_asc" })
+              }
+              className={`rounded px-3 py-1.5 transition-colors ${serverParams.status === "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             >
               Scheduled
             </button>
@@ -842,7 +756,7 @@ export function VideoTable({ videos }: { videos: Video[] }) {
       </div>
 
       {/* "Back to recent" banner */}
-      {searchResults !== null && (
+      {isSearchMode && (
         <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground">
           <span>Showing historical results</span>
           <button
@@ -877,6 +791,11 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                   {video.hasTranscript && (
                     <span className="ml-2 inline-block rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary align-middle">
                       transcribed
+                    </span>
+                  )}
+                  {video.pvSymbol && (
+                    <span className="ml-2 inline-block rounded bg-amber-500/10 px-1.5 py-px text-[10px] font-medium text-amber-700 align-middle">
+                      PV
                     </span>
                   )}
                 </span>
@@ -916,19 +835,14 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                   <div className="flex items-center gap-1">
                     <span>Date</span>
                     <DateFilterPopover
-                      videoDates={videoDates}
-                      selectedDate={dateFilterValue}
-                      onChange={(val) =>
-                        setColumnFilters((prev) => {
-                          const base = prev.filter((f) => f.id !== "date");
-                          if (val) base.push({ id: "date", value: val });
-                          return base;
-                        })
-                      }
+                      availableDates={availableDates}
+                      selectedDate={serverParams.date}
+                      onChange={(val) => updateParams({ date: val })}
                     />
                     <SortArrow
-                      isSorted={dateCol?.getIsSorted() || false}
-                      onClick={dateCol?.getToggleSortingHandler()}
+                      active={currentSortBy === "date"}
+                      direction={currentSortBy === "date" ? currentSortDir : "desc"}
+                      onClick={() => toggleSort("date")}
                     />
                   </div>
                 </th>
@@ -951,8 +865,9 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                   <div className="flex items-center gap-1">
                     <span>Title</span>
                     <SortArrow
-                      isSorted={titleCol?.getIsSorted() || false}
-                      onClick={titleCol?.getToggleSortingHandler()}
+                      active={currentSortBy === "title"}
+                      direction={currentSortBy === "title" ? currentSortDir : "asc"}
+                      onClick={() => toggleSort("title")}
                     />
                   </div>
                 </th>
@@ -964,9 +879,11 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                   <div className="flex items-center gap-1">
                     <span>Body</span>
                     <MultiFilterPopover
-                      options={uniqueBodies}
-                      selected={bodyFilter}
-                      onChange={setBodyFilter}
+                      options={filterOptions.bodies}
+                      selected={serverParams.body ?? []}
+                      onChange={(vals) =>
+                        updateParams({ body: vals.length ? vals : undefined })
+                      }
                     />
                   </div>
                 </th>
@@ -978,9 +895,13 @@ export function VideoTable({ videos }: { videos: Video[] }) {
                   <div className="flex items-center gap-1">
                     <span>Category</span>
                     <MultiFilterPopover
-                      options={uniqueCategories}
-                      selected={categoryFilter}
-                      onChange={setCategoryFilter}
+                      options={filterOptions.categories}
+                      selected={serverParams.category ?? []}
+                      onChange={(vals) =>
+                        updateParams({
+                          category: vals.length ? vals : undefined,
+                        })
+                      }
                     />
                   </div>
                 </th>
@@ -1016,8 +937,8 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         </div>
       </div>
 
-      {/* Load more */}
-      {searchResults !== null && hasMoreResults && (
+      {/* Load more (search mode) */}
+      {isSearchMode && searchResults !== null && hasMoreResults && (
         <div className="flex justify-center pt-2">
           <button
             onClick={loadMore}
@@ -1029,33 +950,46 @@ export function VideoTable({ videos }: { videos: Video[] }) {
         </div>
       )}
 
-      {searchResults === null && (
+      {/* Pagination (non-search mode) */}
+      {!isSearchMode && (
         <div className="flex items-center justify-between pt-1">
           <div className="flex gap-0.5">
             <button
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
+              onClick={() => updateParams({ page: 1, resetPage: false })}
+              disabled={serverParams.page <= 1}
               className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
             >
               ««
             </button>
             <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              onClick={() =>
+                updateParams({
+                  page: serverParams.page - 1,
+                  resetPage: false,
+                })
+              }
+              disabled={serverParams.page <= 1}
               className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
             >
               «
             </button>
             <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              onClick={() =>
+                updateParams({
+                  page: serverParams.page + 1,
+                  resetPage: false,
+                })
+              }
+              disabled={serverParams.page >= pageCount}
               className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
             >
               »
             </button>
             <button
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
+              onClick={() =>
+                updateParams({ page: pageCount, resetPage: false })
+              }
+              disabled={serverParams.page >= pageCount}
               className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
             >
               »»
@@ -1063,13 +997,14 @@ export function VideoTable({ videos }: { videos: Video[] }) {
           </div>
 
           <div className="text-sm text-muted-foreground">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+            Page {serverParams.page} of {pageCount}
           </div>
 
           <select
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => table.setPageSize(Number(e.target.value))}
+            value={serverParams.pageSize}
+            onChange={(e) =>
+              updateParams({ pageSize: Number(e.target.value) })
+            }
             className="rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm text-muted-foreground focus:border-primary/50 focus:outline-none"
           >
             {[25, 50, 100, 200].map((pageSize) => (

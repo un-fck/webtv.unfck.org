@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { getScheduleVideos, videoToRecord } from "../lib/un-api";
+import { scrapeVideos, videoToRecord } from "../lib/un-api";
 import { saveVideo, getVideoByAssetId, updateVideoEntryId } from "../lib/turso";
 import { extractKalturaId } from "../lib/kaltura";
 
@@ -74,8 +74,8 @@ async function main() {
     `Syncing videos from last ${DAYS_TO_SYNC} day${DAYS_TO_SYNC === 1 ? "" : "s"}...`,
   );
 
-  // Force scraping to get fresh data
-  const videos = await getScheduleVideos(DAYS_TO_SYNC, false);
+  // Scrape fresh data from UN Web TV
+  const videos = await scrapeVideos(DAYS_TO_SYNC);
 
   console.log(`Found ${videos.length} videos to sync`);
 

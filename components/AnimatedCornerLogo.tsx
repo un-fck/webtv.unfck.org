@@ -23,11 +23,17 @@ const styles = `
 export function AnimatedCornerLogo() {
   const pathname = usePathname();
 
+  const [visible, setVisible] = useState(false);
   const [cornerClass, setCornerClass] = useState("corner-slide-hidden");
   const [spriteClass, setSpriteClass] = useState("un-two-zero-roll-hidden");
 
   useEffect(() => {
-    if (pathname !== "/") return;
+    if (pathname !== "/") {
+      setVisible(false);
+      return;
+    }
+
+    setVisible(true);
 
     const cornerTimer = setTimeout(
       () => setCornerClass("corner-slide-entrance"),
@@ -44,7 +50,7 @@ export function AnimatedCornerLogo() {
     };
   }, [pathname]);
 
-  if (pathname !== "/") return null;
+  if (!visible) return null;
 
   return (
     <>
@@ -53,7 +59,7 @@ export function AnimatedCornerLogo() {
         href="https://un-two-zero.network/"
         target="_blank"
         rel="noopener noreferrer"
-        className={`fixed bottom-0 left-0 z-30 hidden cursor-pointer transition-opacity hover:opacity-80 md:block ${cornerClass}`}
+        className={`fixed bottom-0 left-0 z-30 hidden cursor-pointer transition-opacity hover:opacity-80 md:block [clip-path:polygon(0_0,0_100%,100%_100%)] ${cornerClass}`}
         aria-label="Visit UN 2.0 Network"
       >
         <Image

@@ -1,5 +1,5 @@
 import { getVideoByAssetId, saveVideo, type VideoRecord } from "./turso";
-import { resolveEntryId } from "./kaltura-helpers";
+import { parseMeetingSymbol } from "./pv-documents";
 
 export interface Video {
   id: string;
@@ -16,6 +16,7 @@ export interface Video {
   body: string | null; // UN body (committee, council, assembly, etc.)
   sessionNumber: string | null;
   partNumber: number | null;
+  pvSymbol: string | null;
   hasTranscript: boolean;
 }
 
@@ -34,7 +35,7 @@ function extractTextContent(html: string): string {
     .replace(/&nbsp;/g, " ");
 }
 
-function formatDate(date: Date): string {
+export function formatDate(date: Date): string {
   return date.toISOString().split("T")[0];
 }
 
@@ -70,6 +71,7 @@ export function videoToRecord(
     event_type: video.eventType,
     session_number: video.sessionNumber,
     part_number: video.partNumber !== null ? String(video.partNumber) : null,
+    pv_symbol: parseMeetingSymbol(video.title, video.category),
     last_seen: new Date().toISOString().split("T")[0],
   };
 }
@@ -104,6 +106,7 @@ export function recordToVideo(
     sessionNumber: record.session_number,
     partNumber:
       record.part_number !== null ? parseInt(record.part_number) : null,
+    pvSymbol: record.pv_symbol ?? null,
     hasTranscript,
   };
 }
@@ -229,7 +232,7 @@ function extractMetadataFromTitle(title: string, category?: string) {
   return metadata;
 }
 
-async function fetchVideosForDate(date: string): Promise<Video[]> {
+export async function fetchVideosForDate(date: string): Promise<Video[]> {
   const today = formatDate(new Date());
   const yesterday = formatDate(new Date(Date.now() - 86400000));
   const revalidate = date >= today ? 300 : date === yesterday ? 3600 : 86400;
@@ -313,6 +316,7 @@ async function fetchVideosForDate(date: string): Promise<Video[]> {
       scheduledTime,
       status,
       ...titleMetadata,
+      pvSymbol: parseMeetingSymbol(rawTitle, categoryText),
       hasTranscript: false, // Will be updated later
     });
   }
@@ -370,114 +374,28 @@ export async function getVideoById(
 }
 
 export async function getScheduleVideos(
-  days: number = 7,
-  useCacheFirst: boolean = true,
+  days: number = 365,
 ): Promise<Video[]> {
-  let allVideos: Video[] = [];
-  const recentDaysToAlwaysScrape = 3; // Always scrape last 3 days for new videos
+  const { getRecentVideos, getAllTranscriptedEntries } = await import("./turso");
+  const [records, transcriptedEntries] = await Promise.all([
+    getRecentVideos(days),
+    getAllTranscriptedEntries(),
+  ]);
+  const transcriptedSet = new Set(transcriptedEntries);
 
-  // Step 1: Try Turso cache if enabled (but always scrape recent days)
-  if (useCacheFirst) {
-    try {
-      const { getRecentVideos } = await import("./turso");
-      const cachedRecords = await getRecentVideos(days);
+  return records.map((record) =>
+    recordToVideo(
+      record,
+      record.entry_id ? transcriptedSet.has(record.entry_id) : false,
+    ),
+  );
+}
 
-      if (cachedRecords.length > 0) {
-        console.log(`Loaded ${cachedRecords.length} videos from cache`);
-        const { getAllTranscriptedEntries } = await import("./turso");
-        const transcriptedEntries = await getAllTranscriptedEntries();
-        const transcriptedSet = new Set(transcriptedEntries);
-
-        allVideos = cachedRecords.map((record) =>
-          recordToVideo(
-            record,
-            record.entry_id ? transcriptedSet.has(record.entry_id) : false,
-          ),
-        );
-
-        // Always scrape recent days to catch new videos
-        const recentDates: string[] = [];
-        const today = new Date();
-
-        // Fetch tomorrow's videos
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        recentDates.push(formatDate(tomorrow));
-
-        // Fetch last N days
-        for (let i = 0; i < recentDaysToAlwaysScrape; i++) {
-          const date = new Date(today);
-          date.setDate(date.getDate() - i);
-          recentDates.push(formatDate(date));
-        }
-
-        console.log(
-          `Scraping ${recentDates.length} recent days for new videos`,
-        );
-        const recentResults = await Promise.all(
-          recentDates.map(fetchVideosForDate),
-        );
-        const recentVideos = recentResults.flat();
-
-        // Merge with cached videos (recent videos take precedence)
-        const videoMap = new Map(allVideos.map((v) => [v.id, v]));
-        for (const video of recentVideos) {
-          videoMap.set(video.id, video);
-        }
-        allVideos = Array.from(videoMap.values());
-
-        // Build a map of already-resolved entry IDs from Turso records
-        const cachedEntryIdMap = new Map(
-          cachedRecords
-            .filter((r) => r.entry_id)
-            .map((r) => [r.asset_id, r.entry_id!]),
-        );
-
-        // Resolve entry IDs and save new videos to cache
-        const entryIdResolutions = await Promise.all(
-          recentVideos.map(async (video) => {
-            // Reuse cached entry_id if already stored in Turso — avoids Kaltura API call
-            const entryId = await resolveEntryId(
-              video.id,
-              cachedEntryIdMap.get(video.id),
-            );
-
-            if (entryId) {
-              const record = videoToRecord(video);
-              record.entry_id = entryId;
-              saveVideo(record).catch((err) =>
-                console.warn("Failed to cache video:", video.id, err),
-              );
-            } else {
-              saveVideo(videoToRecord(video)).catch((err) =>
-                console.warn("Failed to cache video:", video.id, err),
-              );
-            }
-
-            return { videoId: video.id, entryId };
-          }),
-        );
-
-        // Update hasTranscript for all videos
-        const entryIdMap = new Map(
-          entryIdResolutions.map((r) => [r.videoId, r.entryId]),
-        );
-        allVideos.forEach((video) => {
-          const entryId = entryIdMap.get(video.id);
-          if (entryId) {
-            video.hasTranscript = transcriptedSet.has(entryId);
-          }
-        });
-
-        // Sort by date descending
-        return allVideos.sort((a, b) => b.date.localeCompare(a.date));
-      }
-    } catch (error) {
-      console.warn("Cache lookup failed, falling back to scraping:", error);
-    }
-  }
-
-  // Step 2: Fallback - scrape from UN Web TV
+/**
+ * Scrape UN Web TV for the given number of days and return Video[].
+ * Used by CLI scripts (sync-videos, fetch-video-metadata) that need fresh data from the web.
+ */
+export async function scrapeVideos(days: number): Promise<Video[]> {
   const dates: string[] = [];
   const today = new Date();
 
@@ -493,64 +411,11 @@ export async function getScheduleVideos(
     dates.push(formatDate(date));
   }
 
-  // Fetch all dates in parallel
   const results = await Promise.all(dates.map(fetchVideosForDate));
-  allVideos = results.flat();
+  const allVideos = results.flat();
 
   // Remove duplicates by ID
-  const uniqueVideos = Array.from(
-    new Map(allVideos.map((v) => [v.id, v])).values(),
-  );
-
-  // Resolve entry IDs and save to cache (in parallel, but use cache first)
-  // This will use cached entry IDs when available, only calling Kaltura API for new videos
-  const entryIdResolutions = await Promise.all(
-    uniqueVideos.map(async (video) => {
-      const entryId = await resolveEntryId(video.id);
-
-      // Save video with resolved entry_id to cache (background)
-      if (entryId) {
-        const record = videoToRecord(video);
-        record.entry_id = entryId;
-        saveVideo(record).catch((err) =>
-          console.warn("Failed to cache video:", video.id, err),
-        );
-      } else {
-        // Save without entry_id
-        saveVideo(videoToRecord(video)).catch((err) =>
-          console.warn("Failed to cache video:", video.id, err),
-        );
-      }
-
-      return { videoId: video.id, entryId };
-    }),
-  );
-
-  // Check which videos have transcripts
-  try {
-    const { getAllTranscriptedEntries } = await import("@/lib/turso");
-    const transcriptedEntryIds = await getAllTranscriptedEntries();
-    const transcriptedSet = new Set(transcriptedEntryIds);
-
-    // Map entry IDs to videos
-    const entryIdMap = new Map(
-      entryIdResolutions.map((r) => [r.videoId, r.entryId]),
-    );
-
-    uniqueVideos.forEach((video) => {
-      const entryId = entryIdMap.get(video.id);
-      video.hasTranscript = entryId ? transcriptedSet.has(entryId) : false;
-    });
-  } catch (err) {
-    console.log("Failed to check transcripts from Turso:", err);
-    // Set all to false on error
-    uniqueVideos.forEach((video) => {
-      video.hasTranscript = false;
-    });
-  }
-
-  // Sort by date descending (newest first)
-  return uniqueVideos.sort((a, b) => b.date.localeCompare(a.date));
+  return Array.from(new Map(allVideos.map((v) => [v.id, v])).values());
 }
 
 export interface VideoMetadata {

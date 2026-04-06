@@ -12,6 +12,7 @@ import { SpeakerToc } from "./speaker-toc";
 import { SiteHeader } from "./site-header";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
+import { getPVDocumentUrl } from "@/lib/pv-documents";
 
 interface VideoPageClientProps {
   kalturaId: string;
@@ -280,11 +281,8 @@ export function VideoPageClient({
               {video.category && <span>{video.category}</span>}
               {video.category && video.duration && <span>·</span>}
               {video.duration && <span>{video.duration}</span>}
-              {(video.duration ||
-                video.category ||
-                video.body ||
-                video.scheduledTime ||
-                video.date) && <span>·</span>}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               <a
                 href={video.url}
                 target="_blank"
@@ -293,6 +291,16 @@ export function VideoPageClient({
               >
                 UN Web TV →
               </a>
+              {video.pvSymbol && (
+                <a
+                  href={getPVDocumentUrl(video.pvSymbol)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  {video.pvSymbol} (PDF) →
+                </a>
+              )}
             </div>
             {metadata.summary && (
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

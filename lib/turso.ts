@@ -144,6 +144,13 @@ async function ensureInitialized() {
       }),
   ]);
 
+  // Add pv_symbol column to videos table
+  await client
+    .execute(`ALTER TABLE videos ADD COLUMN pv_symbol TEXT`)
+    .catch(() => {
+      /* column already exists */
+    });
+
   // Normalize language codes: tag NULL and legacy codes (e.g. 'en_us') as 'en'
   await Promise.all([
     client
@@ -755,6 +762,7 @@ export interface VideoRecord {
   event_type: string | null;
   session_number: string | null;
   part_number: string | null;
+  pv_symbol: string | null;
   last_seen: string;
   created_at: string;
   updated_at: string;
@@ -772,8 +780,8 @@ export async function saveVideo(
       INSERT INTO videos (
         asset_id, entry_id, title, clean_title, date, scheduled_time,
         duration, url, body, category, event_code, event_type,
-        session_number, part_number, last_seen, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        session_number, part_number, pv_symbol, last_seen, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(asset_id) DO UPDATE SET
         entry_id = COALESCE(excluded.entry_id, entry_id),
         title = excluded.title,
@@ -786,6 +794,7 @@ export async function saveVideo(
         event_type = excluded.event_type,
         session_number = excluded.session_number,
         part_number = excluded.part_number,
+        pv_symbol = COALESCE(excluded.pv_symbol, pv_symbol),
         last_seen = excluded.last_seen,
         updated_at = excluded.updated_at
     `,
@@ -804,6 +813,7 @@ export async function saveVideo(
       video.event_type,
       video.session_number,
       video.part_number,
+      video.pv_symbol,
       video.last_seen,
       now,
       now,
@@ -839,6 +849,7 @@ export async function getVideoByAssetId(
     event_type: row.event_type as string | null,
     session_number: row.session_number as string | null,
     part_number: row.part_number as string | null,
+    pv_symbol: (row.pv_symbol as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -874,6 +885,7 @@ export async function getRecentVideos(
     event_type: row.event_type as string | null,
     session_number: row.session_number as string | null,
     part_number: row.part_number as string | null,
+    pv_symbol: (row.pv_symbol as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -920,10 +932,197 @@ export async function searchVideos(
     event_type: row.event_type as string | null,
     session_number: row.session_number as string | null,
     part_number: row.part_number as string | null,
+    pv_symbol: (row.pv_symbol as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
   }));
+}
+
+// --- Server-side pagination ---
+
+export interface VideosPageParams {
+  daysBack?: number;
+  date?: string; // YYYY-MM-DD exact match
+  bodies?: string[];
+  categories?: string[];
+  status?: "past" | "scheduled";
+  hasTranscript?: boolean;
+  sortBy?: "date" | "title";
+  sortDir?: "asc" | "desc";
+  page?: number; // 1-indexed
+  pageSize?: number;
+  transcriptedEntryIds?: string[];
+}
+
+export interface VideosPage {
+  records: VideoRecord[];
+  total: number;
+}
+
+export async function getVideosPage(
+  params: VideosPageParams,
+): Promise<VideosPage> {
+  await ensureInitialized();
+
+  const {
+    daysBack = 365,
+    date,
+    bodies,
+    categories,
+    status,
+    hasTranscript,
+    sortBy = "date",
+    sortDir = "desc",
+    page = 1,
+    pageSize = 50,
+    transcriptedEntryIds,
+  } = params;
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+  const cutoff = cutoffDate.toISOString().split("T")[0];
+
+  const conditions: string[] = ["last_seen >= ?"];
+  const args: (string | number)[] = [cutoff];
+
+  if (date) {
+    conditions.push("date = ?");
+    args.push(date);
+  }
+
+  if (bodies && bodies.length > 0) {
+    conditions.push(
+      `body IN (${bodies.map(() => "?").join(", ")})`,
+    );
+    args.push(...bodies);
+  }
+
+  if (categories && categories.length > 0) {
+    conditions.push(
+      `category IN (${categories.map(() => "?").join(", ")})`,
+    );
+    args.push(...categories);
+  }
+
+  if (status === "past") {
+    conditions.push(
+      "(scheduled_time IS NULL OR substr(scheduled_time, 1, 19) < strftime('%Y-%m-%dT%H:%M:%S', 'now'))",
+    );
+  } else if (status === "scheduled") {
+    conditions.push(
+      "(scheduled_time IS NOT NULL AND substr(scheduled_time, 1, 19) >= strftime('%Y-%m-%dT%H:%M:%S', 'now'))",
+    );
+  }
+
+  if (hasTranscript && transcriptedEntryIds) {
+    if (transcriptedEntryIds.length === 0) {
+      // No transcripts exist — return empty
+      return { records: [], total: 0 };
+    }
+    conditions.push(
+      `entry_id IN (${transcriptedEntryIds.map(() => "?").join(", ")})`,
+    );
+    args.push(...transcriptedEntryIds);
+  }
+
+  const where = conditions.join(" AND ");
+
+  // Build ORDER BY
+  let orderBy: string;
+  if (sortBy === "title") {
+    orderBy = `clean_title ${sortDir === "asc" ? "ASC" : "DESC"}, date DESC`;
+  } else {
+    // Default: date sort with live-first pinning for "past" status
+    if (status === "past" || !status) {
+      orderBy = `CASE WHEN scheduled_time IS NOT NULL AND substr(scheduled_time, 1, 19) >= strftime('%Y-%m-%dT%H:%M:%S', 'now') THEN 0 ELSE 1 END ASC, date ${sortDir === "asc" ? "ASC" : "DESC"}, scheduled_time ${sortDir === "asc" ? "ASC" : "DESC"}`;
+    } else {
+      orderBy = `date ${sortDir === "asc" ? "ASC" : "DESC"}, scheduled_time ${sortDir === "asc" ? "ASC" : "DESC"}`;
+    }
+  }
+
+  const offset = (page - 1) * pageSize;
+
+  const countArgs = [...args];
+  const dataArgs = [...args, pageSize, offset];
+
+  const [countResult, dataResult] = await Promise.all([
+    client.execute({
+      sql: `SELECT COUNT(*) AS total FROM videos WHERE ${where}`,
+      args: countArgs,
+    }),
+    client.execute({
+      sql: `SELECT * FROM videos WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+      args: dataArgs,
+    }),
+  ]);
+
+  const total = (countResult.rows[0]?.total as number) ?? 0;
+  const records = dataResult.rows.map((row) => ({
+    asset_id: row.asset_id as string,
+    entry_id: row.entry_id as string | null,
+    title: row.title as string,
+    clean_title: row.clean_title as string | null,
+    date: row.date as string,
+    scheduled_time: row.scheduled_time as string | null,
+    duration: row.duration as number | null,
+    url: row.url as string,
+    body: row.body as string | null,
+    category: row.category as string | null,
+    event_code: row.event_code as string | null,
+    event_type: row.event_type as string | null,
+    session_number: row.session_number as string | null,
+    part_number: row.part_number as string | null,
+    pv_symbol: (row.pv_symbol as string | null) ?? null,
+    last_seen: row.last_seen as string,
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+  }));
+
+  return { records, total };
+}
+
+export async function getAvailableDates(
+  daysBack: number = 365,
+): Promise<string[]> {
+  await ensureInitialized();
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+  const cutoff = cutoffDate.toISOString().split("T")[0];
+
+  const result = await client.execute({
+    sql: "SELECT DISTINCT date FROM videos WHERE last_seen >= ? ORDER BY date DESC",
+    args: [cutoff],
+  });
+
+  return result.rows.map((row) => row.date as string);
+}
+
+export async function getFilterOptions(
+  daysBack: number = 365,
+): Promise<{ bodies: string[]; categories: string[] }> {
+  await ensureInitialized();
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+  const cutoff = cutoffDate.toISOString().split("T")[0];
+
+  const [bodiesResult, categoriesResult] = await Promise.all([
+    client.execute({
+      sql: "SELECT DISTINCT body FROM videos WHERE last_seen >= ? AND body IS NOT NULL ORDER BY body",
+      args: [cutoff],
+    }),
+    client.execute({
+      sql: "SELECT DISTINCT category FROM videos WHERE last_seen >= ? AND category IS NOT NULL ORDER BY category",
+      args: [cutoff],
+    }),
+  ]);
+
+  return {
+    bodies: bodiesResult.rows.map((row) => row.body as string),
+    categories: categoriesResult.rows.map((row) => row.category as string),
+  };
 }
 
 export const db = client;
