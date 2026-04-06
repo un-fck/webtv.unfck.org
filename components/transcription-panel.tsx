@@ -1392,10 +1392,10 @@ export function TranscriptionPanel({
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
-                disabled={propositions.length === 0}
+                disabled={stage !== "completed" && propositions.length === 0}
                 title={
-                  propositions.length === 0
-                    ? "No propositions analyzed yet"
+                  stage !== "completed" && propositions.length === 0
+                    ? "Transcription must complete before analysis"
                     : undefined
                 }
               >
