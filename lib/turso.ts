@@ -154,6 +154,9 @@ async function ensureInitialized() {
     client
       .execute(`ALTER TABLE videos ADD COLUMN pv_checked_at TEXT`)
       .catch(() => {}),
+    client
+      .execute(`ALTER TABLE videos ADD COLUMN slug TEXT`)
+      .catch(() => {}),
   ]);
 
   // Create PV contents table for parsed PV documents
@@ -167,6 +170,13 @@ async function ensureInitialized() {
       PRIMARY KEY (pv_symbol, language)
     )
   `);
+
+  // Slug unique index
+  await client
+    .execute(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_slug ON videos(slug)`,
+    )
+    .catch(() => {});
 
   // Normalize language codes: tag NULL and legacy codes (e.g. 'en_us') as 'en'
   await Promise.all([
@@ -782,6 +792,7 @@ export interface VideoRecord {
   pv_symbol: string | null;
   pv_available: number | null; // 0 = checked but missing, 1 = confirmed available
   pv_checked_at: string | null;
+  slug: string | null;
   last_seen: string;
   created_at: string;
   updated_at: string;
@@ -799,8 +810,8 @@ export async function saveVideo(
       INSERT INTO videos (
         asset_id, entry_id, title, clean_title, date, scheduled_time,
         duration, url, body, category, event_code, event_type,
-        session_number, part_number, pv_symbol, last_seen, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        session_number, part_number, pv_symbol, slug, last_seen, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(asset_id) DO UPDATE SET
         entry_id = COALESCE(excluded.entry_id, entry_id),
         title = excluded.title,
@@ -814,6 +825,7 @@ export async function saveVideo(
         session_number = excluded.session_number,
         part_number = excluded.part_number,
         pv_symbol = COALESCE(excluded.pv_symbol, pv_symbol),
+        slug = COALESCE(excluded.slug, slug),
         last_seen = excluded.last_seen,
         updated_at = excluded.updated_at
     `,
@@ -833,6 +845,7 @@ export async function saveVideo(
       video.session_number,
       video.part_number,
       video.pv_symbol,
+      video.slug,
       video.last_seen,
       now,
       now,
@@ -871,6 +884,45 @@ export async function getVideoByAssetId(
     pv_symbol: (row.pv_symbol as string | null) ?? null,
     pv_available: (row.pv_available as number | null) ?? null,
     pv_checked_at: (row.pv_checked_at as string | null) ?? null,
+    slug: (row.slug as string | null) ?? null,
+    last_seen: row.last_seen as string,
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+  };
+}
+
+export async function getVideoBySlug(
+  slug: string,
+): Promise<VideoRecord | null> {
+  await ensureInitialized();
+
+  const result = await client.execute({
+    sql: "SELECT * FROM videos WHERE slug = ?",
+    args: [slug],
+  });
+
+  if (result.rows.length === 0) return null;
+
+  const row = result.rows[0];
+  return {
+    asset_id: row.asset_id as string,
+    entry_id: row.entry_id as string | null,
+    title: row.title as string,
+    clean_title: row.clean_title as string | null,
+    date: row.date as string,
+    scheduled_time: row.scheduled_time as string | null,
+    duration: row.duration as number | null,
+    url: row.url as string,
+    body: row.body as string | null,
+    category: row.category as string | null,
+    event_code: row.event_code as string | null,
+    event_type: row.event_type as string | null,
+    session_number: row.session_number as string | null,
+    part_number: row.part_number as string | null,
+    pv_symbol: (row.pv_symbol as string | null) ?? null,
+    pv_available: (row.pv_available as number | null) ?? null,
+    pv_checked_at: (row.pv_checked_at as string | null) ?? null,
+    slug: (row.slug as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -909,6 +961,7 @@ export async function getRecentVideos(
     pv_symbol: (row.pv_symbol as string | null) ?? null,
     pv_available: (row.pv_available as number | null) ?? null,
     pv_checked_at: (row.pv_checked_at as string | null) ?? null,
+    slug: (row.slug as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -958,6 +1011,7 @@ export async function searchVideos(
     pv_symbol: (row.pv_symbol as string | null) ?? null,
     pv_available: (row.pv_available as number | null) ?? null,
     pv_checked_at: (row.pv_checked_at as string | null) ?? null,
+    slug: (row.slug as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -1118,6 +1172,7 @@ export async function getVideosPage(
     pv_symbol: (row.pv_symbol as string | null) ?? null,
     pv_available: (row.pv_available as number | null) ?? null,
     pv_checked_at: (row.pv_checked_at as string | null) ?? null,
+    slug: (row.slug as string | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,

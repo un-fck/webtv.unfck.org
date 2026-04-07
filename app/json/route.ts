@@ -13,10 +13,12 @@ export async function GET() {
       count: videosWithTranscripts.length,
       videos: videosWithTranscripts.map((video) => ({
         id: video.id,
+        slug: video.slug,
         title: video.title,
         clean_title: video.cleanTitle,
         url: video.url,
-        json_url: `/json/${encodeURIComponent(video.id)}`,
+        page_url: `/${video.slug}`,
+        json_url: `/json/${video.slug}`,
         date: video.date,
         scheduled_time: video.scheduledTime,
         status: video.status,

@@ -1504,7 +1504,7 @@ export function TranscriptionPanel({
                     <button
                       onClick={() => {
                         window.open(
-                          `/json/${encodeURIComponent(video.id)}`,
+                          `/json/${video.slug}`,
                           "_blank",
                         );
                         setShowDownloadMenu(false);

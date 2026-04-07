@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getVideoById, getVideoMetadata } from "@/lib/un-api";
-import { getTranscript } from "@/lib/turso";
+import { getVideoBySlug, getTranscript } from "@/lib/turso";
+import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import {
   getSpeakerMapping,
   SpeakerInfo,
@@ -9,33 +9,34 @@ import {
 import { getCountryName } from "@/lib/country-lookup";
 import { resolveEntryId } from "@/lib/kaltura-helpers";
 import { extractKalturaId } from "@/lib/kaltura";
+import { symbolFromSlug } from "@/lib/meeting-slug";
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> },
+  context: { params: Promise<{ meeting: string[] }> },
 ) {
   try {
-    const { id } = await context.params;
-    const decodedId = decodeURIComponent(id);
+    const { meeting } = await context.params;
+    const slug = meeting.map(decodeURIComponent).join("/");
 
-    // Get video info - search backwards from today (fast for recent videos)
-    const video = await getVideoById(decodedId);
+    // Validate pattern
+    const isValidPattern =
+      symbolFromSlug(slug) !== null || slug.startsWith("meeting/");
+    if (!isValidPattern) {
+      return NextResponse.json({ error: "Invalid meeting path" }, { status: 404 });
+    }
 
-    if (!video) {
+    const record = await getVideoBySlug(slug);
+    if (!record) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Extract Kaltura ID for response
-    const kalturaId = extractKalturaId(video.id);
+    const video = recordToVideo(record, false);
+    const kalturaId = extractKalturaId(record.asset_id);
+    const metadata = await getVideoMetadata(record.asset_id);
 
-    // Get video metadata
-    const metadata = await getVideoMetadata(video.id);
-
-    // Resolve entry ID — getVideoById already checked Turso, so video may carry a cached entryId
-    // We pass it through to avoid a redundant Kaltura API call when already known
-    const { getVideoByAssetId } = await import("@/lib/turso");
-    const cachedRecord = await getVideoByAssetId(decodedId);
-    const entryId = await resolveEntryId(video.id, cachedRecord?.entry_id);
+    // Resolve entry ID
+    const entryId = await resolveEntryId(record.asset_id, record.entry_id);
 
     if (!entryId) {
       const response = NextResponse.json({
@@ -125,7 +126,7 @@ export async function GET(
 
     const response = NextResponse.json({
       video: {
-        id: video.id,
+        id: record.asset_id,
         kaltura_id: kalturaId,
         title: video.title,
         clean_title: video.cleanTitle,
@@ -140,6 +141,7 @@ export async function GET(
         event_type: video.eventType,
         session_number: video.sessionNumber,
         part_number: video.partNumber,
+        slug,
       },
       metadata: {
         summary: metadata.summary,
