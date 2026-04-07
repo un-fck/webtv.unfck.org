@@ -132,6 +132,11 @@ interface GeminiSegment {
 
 export const gemini: TranscriptionProvider = {
   name: "gemini",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: false,
+  },
 
   async transcribe(audioUrl, opts) {
     const lang = opts?.language || "en";

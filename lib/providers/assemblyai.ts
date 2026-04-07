@@ -4,6 +4,11 @@ const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;
 
 export const assemblyai: TranscriptionProvider = {
   name: "assemblyai",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: true,
+  },
 
   async transcribe(audioUrl, opts) {
     // Submit

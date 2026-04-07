@@ -31,6 +31,11 @@ interface DeepgramResponse {
 
 export const deepgram: TranscriptionProvider = {
   name: "deepgram",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: true,
+  },
 
   async transcribe(audioUrl, opts) {
     const lang = opts?.language || "en";

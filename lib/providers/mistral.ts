@@ -7,6 +7,11 @@ const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY!;
 
 export const mistral: TranscriptionProvider = {
   name: "mistral",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: false,
+  },
 
   async transcribe(audioUrl, opts) {
     const lang = opts?.language || "en";

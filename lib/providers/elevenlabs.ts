@@ -7,6 +7,11 @@ const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY!;
 
 export const elevenlabs: TranscriptionProvider = {
   name: "elevenlabs",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: true,
+  },
 
   async transcribe(audioUrl, opts) {
     const ownedPath = !opts?.audioFilePath;

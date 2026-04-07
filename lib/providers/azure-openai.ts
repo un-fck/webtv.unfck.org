@@ -5,6 +5,11 @@ import { downloadAudioToTemp } from "./utils";
 
 export const azureOpenai: TranscriptionProvider = {
   name: "azure-openai",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: false,
+  },
 
   async transcribe(audioUrl, opts) {
     // Azure requires a local file upload, not a URL

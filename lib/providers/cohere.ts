@@ -25,6 +25,11 @@ const CO_API_KEY = process.env.CO_API_KEY!;
 
 export const cohere: TranscriptionProvider = {
   name: "cohere",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: true,
+  },
 
   // Cohere Transcribe supports 14 languages: en, fr, de, it, es, pt, el, nl, pl, zh, ja, ko, vi, ar
   supportedLanguages: [

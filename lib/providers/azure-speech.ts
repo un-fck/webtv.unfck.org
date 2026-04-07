@@ -15,6 +15,11 @@ const LANG_MAP: Record<string, string> = {
 
 export const azureSpeech: TranscriptionProvider = {
   name: "azure-speech",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: true,
+  },
 
   async transcribe(audioUrl, opts) {
     const locale = opts?.language

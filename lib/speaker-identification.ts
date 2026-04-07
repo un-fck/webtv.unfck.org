@@ -13,6 +13,7 @@ import {
   UsageStages,
 } from "./usage-tracking";
 import "./load-env";
+import { getAnalysisModel, getAnalysisModelMini } from "./providers/config";
 // @ts-expect-error - no types available for sbd
 import sbd from "sbd";
 
@@ -363,13 +364,13 @@ async function defineTopics(
     transcriptId,
     stage: UsageStages.analyzingTopics,
     operation: UsageOperations.openaiDefineTopics,
-    model: "gpt-5",
+    model: getAnalysisModel(),
     requestMeta: {
       paragraph_count: paragraphs.length,
       substantive_statements: substantiveStatements.length,
     },
     request: {
-      model: "gpt-5",
+      model: getAnalysisModel(),
       messages: [
         {
           role: "system",
@@ -468,13 +469,13 @@ export async function analyzePropositions(
     transcriptId,
     stage: UsageStages.analyzingPropositions,
     operation: UsageOperations.openaiAnalyzePropositions,
-    model: "gpt-5",
+    model: getAnalysisModel(),
     requestMeta: {
       paragraph_count: paragraphs.length,
       substantive_statements: substantiveStatements.length,
     },
     request: {
-      model: "gpt-5",
+      model: getAnalysisModel(),
       messages: [
         {
           role: "system",
@@ -640,13 +641,13 @@ async function _tagParagraphsWithTopics(
         transcriptId,
         stage: UsageStages.analyzingTopics,
         operation: UsageOperations.openaiTagParagraphTopics,
-        model: "gpt-5",
+        model: getAnalysisModel(),
         requestMeta: {
           paragraph_index: idx,
           paragraph_count: paragraphs.length,
         },
         request: {
-          model: "gpt-5",
+          model: getAnalysisModel(),
           messages: [
             {
               role: "system",
@@ -805,13 +806,13 @@ async function tagSentencesWithTopics(
           transcriptId,
           stage: UsageStages.taggingSentences,
           operation: UsageOperations.openaiTagSentenceTopics,
-          model: "gpt-5-mini",
+          model: getAnalysisModelMini(),
           requestMeta: {
             batch_size: batch.length,
             first_global_index: batch[0].index,
           },
           request: {
-            model: "gpt-5-mini",
+            model: getAnalysisModelMini(),
             messages: [
               {
                 role: "system",
@@ -953,13 +954,13 @@ async function resegmentParagraph(
     transcriptId,
     stage: UsageStages.resegmenting,
     operation: UsageOperations.openaiResegmentParagraph,
-    model: "gpt-5",
+    model: getAnalysisModel(),
     requestMeta: {
       paragraph_index: paragraphIndex ?? null,
       context_size: contextParas.length,
     },
     request: {
-      model: "gpt-5",
+      model: getAnalysisModel(),
       messages: [
         {
           role: "system",
@@ -1213,10 +1214,10 @@ export async function identifySpeakers(
     transcriptId,
     stage: UsageStages.identifyingSpeakers,
     operation: UsageOperations.openaiInitialSpeakerMapping,
-    model: "gpt-5",
+    model: getAnalysisModel(),
     requestMeta: { paragraph_count: paragraphs.length },
     request: {
-      model: "gpt-5",
+      model: getAnalysisModel(),
       messages: [
         {
           role: "system",

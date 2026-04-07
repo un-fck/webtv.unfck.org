@@ -18,11 +18,12 @@ import {
   UsageStages,
 } from "./usage-tracking";
 import { bcp47ToKalturaName } from "./languages";
-import {
-  transcribeAudioWithGemini,
-  type GeminiTranscriptionOptions,
-} from "./gemini-transcription";
+import type { GeminiTranscriptionOptions } from "./gemini-transcription";
 import { setSpeakerMapping } from "./speakers";
+import { getSTTProvider } from "./providers/config";
+import { getRichResult } from "./providers/gemini-production";
+import { toRawParagraphs } from "./providers/convert";
+import type { GeminiTranscriptionResult } from "./gemini-transcription";
 
 export { type TranscriptStatus } from "./turso";
 
@@ -193,50 +194,73 @@ export async function pollTranscription(
 
 
 
-// ---- Gemini transcription path ----
+// ---- Provider-agnostic transcription pipeline ----
 
-async function runGeminiPipeline(
+async function runTranscriptionPipeline(
   transcriptId: string,
   entryId: string,
   audioUrl: string,
-  geminiOptions: GeminiTranscriptionOptions,
+  options: GeminiTranscriptionOptions,
   languageCode: string,
 ): Promise<void> {
   try {
+    const provider = getSTTProvider();
     await updateTranscriptStatus(transcriptId, "transcribing");
     console.log(
-      `[Gemini pipeline] Starting for transcript ${transcriptId}`,
+      `[Pipeline] Starting transcription with ${provider.name} for ${transcriptId}`,
     );
 
     const start = Date.now();
-    const geminiResult = await transcribeAudioWithGemini(audioUrl, {
-      ...geminiOptions,
-      transcriptId,
+    const transcript = await provider.transcribe(audioUrl, {
+      language: languageCode,
     });
     const durationMs = Date.now() - start;
 
+    let paragraphs: RawParagraph[];
+    let speakerMapping: SpeakerMapping | undefined;
+
+    if (provider.capabilities.speakerIdentification) {
+      // Rich provider (e.g. production Gemini) — extract full result
+      const richResult = getRichResult();
+      if (richResult) {
+        paragraphs = richResult.paragraphs;
+        speakerMapping = richResult.speakerMapping;
+      } else {
+        // Fallback: convert normalized transcript
+        paragraphs = toRawParagraphs(transcript);
+      }
+
+      // Track Gemini-specific usage if available
+      const rawResult = transcript.raw as GeminiTranscriptionResult | undefined;
+      if (rawResult?.usageMetadata) {
+        await trackGeminiTranscription({
+          transcriptId,
+          stage: UsageStages.transcribing,
+          operation: UsageOperations.geminiTranscribe,
+          model: "gemini-3-flash-preview",
+          usageMetadata: rawResult.usageMetadata,
+          audioSeconds: rawResult.audioSeconds,
+          durationMs,
+          requestMeta: {
+            provider: provider.name,
+            chunked: rawResult.chunked,
+            chunkCount: rawResult.chunkCount,
+            withThinking: options.withThinking ?? false,
+            paragraph_count: paragraphs.length,
+          },
+        });
+      }
+    } else {
+      // Basic STT provider — convert to RawParagraphs, no speaker mapping
+      paragraphs = toRawParagraphs(transcript);
+    }
+
     console.log(
-      `[Gemini pipeline] Transcription complete: ${geminiResult.paragraphs.length} segments, ${geminiResult.chunked ? `${geminiResult.chunkCount} chunks` : "single call"}`,
+      `[Pipeline] Transcription complete: ${paragraphs.length} segments (${provider.name}, ${durationMs}ms)`,
     );
 
-    await trackGeminiTranscription({
-      transcriptId,
-      stage: UsageStages.transcribing,
-      operation: UsageOperations.geminiTranscribe,
-      model: "gemini-3-flash-preview",
-      usageMetadata: geminiResult.usageMetadata,
-      audioSeconds: geminiResult.audioSeconds,
-      durationMs,
-      requestMeta: {
-        chunked: geminiResult.chunked,
-        chunkCount: geminiResult.chunkCount,
-        withThinking: geminiOptions.withThinking ?? false,
-        paragraph_count: geminiResult.paragraphs.length,
-      },
-    });
-
     const content: TranscriptContent = {
-      raw_paragraphs: geminiResult.paragraphs,
+      raw_paragraphs: paragraphs,
       statements: [],
       topics: {},
     };
@@ -250,16 +274,20 @@ async function runGeminiPipeline(
       languageCode,
       content,
     );
-    await setSpeakerMapping(transcriptId, geminiResult.speakerMapping);
+    if (speakerMapping) {
+      await setSpeakerMapping(transcriptId, speakerMapping);
+    }
 
     const acquired = await tryAcquirePipelineLock(transcriptId);
     if (acquired) {
+      // Pass speakerMapping as prebuiltMapping for rich providers;
+      // undefined for basic providers triggers full OpenAI speaker ID
       runAnalysisPipeline(
         transcriptId,
-        geminiResult.paragraphs,
-        geminiResult.speakerMapping,
+        paragraphs,
+        speakerMapping,
       ).catch((err) => {
-        console.error("[Gemini pipeline] Analysis error:", err);
+        console.error("[Pipeline] Analysis error:", err);
         updateTranscriptStatus(
           transcriptId,
           "error",
@@ -269,11 +297,11 @@ async function runGeminiPipeline(
       });
     }
   } catch (err) {
-    console.error("[Gemini pipeline] Error:", err);
+    console.error("[Pipeline] Error:", err);
     await updateTranscriptStatus(
       transcriptId,
       "error",
-      err instanceof Error ? err.message : "Gemini transcription failed",
+      err instanceof Error ? err.message : "Transcription failed",
     );
     throw err;
   }
@@ -282,7 +310,7 @@ async function runGeminiPipeline(
 async function runAnalysisPipeline(
   transcriptId: string,
   paragraphs: RawParagraph[],
-  speakerMapping: SpeakerMapping,
+  speakerMapping?: SpeakerMapping,
 ): Promise<void> {
   try {
     await updateTranscriptStatus(transcriptId, "identifying_speakers");
@@ -326,8 +354,8 @@ export async function submitGeminiTranscription(
     topics: {},
   });
 
-  runGeminiPipeline(transcriptId, entryId, audioUrl, options, lang).catch((err) => {
-    console.error("[Gemini pipeline] Unhandled error:", err);
+  runTranscriptionPipeline(transcriptId, entryId, audioUrl, options, lang).catch((err) => {
+    console.error("[Pipeline] Unhandled error:", err);
   });
 
   return { entryId, transcriptId };

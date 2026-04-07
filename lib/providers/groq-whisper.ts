@@ -96,6 +96,11 @@ async function parallelMap<T, R>(
 
 export const groqWhisper: TranscriptionProvider = {
   name: "groq-whisper",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: false,
+  },
 
   async transcribe(audioUrl, opts) {
     const ownedPath = !opts?.audioFilePath;

@@ -142,6 +142,11 @@ async function parallelMap<T, R>(
 
 export const alibaba: TranscriptionProvider = {
   name: "alibaba",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: false,
+  },
 
   async transcribe(audioUrl, opts) {
     const lang = opts?.language;

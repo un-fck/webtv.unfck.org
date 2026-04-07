@@ -140,6 +140,11 @@ async function ensureBucket(bucket: string, projectId: string): Promise<void> {
 
 export const googleChirp: TranscriptionProvider = {
   name: "google-chirp",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: true,
+  },
 
   async transcribe(audioUrl, opts) {
     const lang = opts?.language || "en";
