@@ -73,6 +73,7 @@ This redirect resolution is necessary because UN asset IDs can reference alias/r
 | `part_number` | Parsed from title | Integer |
 | `pv_symbol` | Parsed from title | Meeting document symbol |
 | `pv_available`, `pv_checked_at` | PV check system | Availability of verbatim record |
+| `slug` | Derived from `pv_symbol` or `asset_id` | Human-readable URL slug (e.g. `sc/9748`, `ga/79/21`) |
 | `last_seen` | Sync date | Used for recency filtering |
 
 The `saveVideo` upsert uses `COALESCE` for `entry_id` and `pv_symbol` to never overwrite resolved values with null.

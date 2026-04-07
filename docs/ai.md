@@ -6,9 +6,11 @@ Overview of how AI models are used in the transcription and analysis pipeline.
 
 | Provider | Model | Used for |
 | --- | --- | --- |
-| Google Gemini | `gemini-3-flash-preview` | Audio transcription, PV document alignment |
-| Azure OpenAI | `gpt-5` | Speaker identification (legacy), resegmentation, topic definition, proposition analysis |
-| Azure OpenAI | `gpt-5-mini` | Cross-chunk speaker normalization, sentence-level topic tagging |
+| Google Gemini | `gemini-3-flash-preview` | Audio transcription (default STT provider), PV document alignment |
+| Azure OpenAI | `gpt-5` (configurable via `STT_ANALYSIS_MODEL`) | Speaker identification (legacy), resegmentation, topic definition, proposition analysis |
+| Azure OpenAI | `gpt-5-mini` (configurable via `STT_ANALYSIS_MODEL_MINI`) | Cross-chunk speaker normalization, sentence-level topic tagging |
+
+The STT provider is configurable via `STT_PROVIDER` env var (default: `gemini`). Available providers are registered in `lib/providers/registry.ts`. Analysis model names are configurable via `STT_ANALYSIS_MODEL` and `STT_ANALYSIS_MODEL_MINI`.
 
 All AI calls are tracked in the `processing_usage_events` table via `lib/usage-tracking.ts`, recording token counts, duration, and estimated cost.
 
@@ -45,7 +47,7 @@ Separately, PV document alignment (step 8) can run independently when an officia
 
 **File:** `lib/gemini-transcription.ts` — `transcribeAudioWithGemini()`
 **Model:** `gemini-3-flash-preview` via Gemini Files API
-**Triggered by:** `POST /api/transcribe`
+**Triggered by:** `POST /api/transcripts`
 
 Audio is downloaded from Kaltura, uploaded to the Gemini Files API, and transcribed with speaker identification in a single call. Supports all 6 UN official languages plus the "floor" (original) channel.
 
@@ -60,7 +62,7 @@ Audio is downloaded from Kaltura, uploaded to the Gemini Files API, and transcri
 - `start_time`, `end_time` — HH:MM:SS timestamps
 - `text` — verbatim transcription including filler words and false starts
 
-Word-level timestamps are derived by uniform interpolation within each segment.
+Word-level timestamps are derived by interpolation within each sentence-level segment. Providers with real word-level timestamps (AssemblyAI, Deepgram, ElevenLabs, Azure Speech, Google Chirp, Cohere) preserve them directly.
 
 **Key design decision:** Free-text JSON output (not constrained decoding) is used because Gemini's constrained JSON mode corrupts non-ASCII characters like `é` due to a tokenizer bug.
 
@@ -120,7 +122,7 @@ Each non-chair sentence is tagged with 0-3 topic keys from the defined topics. E
 ## 7. Proposition analysis (on demand)
 
 **File:** `lib/speaker-identification.ts` — `analyzePropositions()`
-**API route:** `POST /api/analyze`
+**API route:** `POST /api/transcripts/[id]/analysis`
 **Model:** `gpt-5` via Azure OpenAI (structured output)
 **Not part of the automatic pipeline** — must be explicitly triggered.
 

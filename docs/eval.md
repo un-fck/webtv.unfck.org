@@ -31,7 +31,9 @@ Ten STT providers are benchmarked:
 | Alibaba | Qwen3-ASR-Flash | 4-minute chunks, base64 encoded |
 | Mistral | voxtral-mini-latest | File upload |
 
-All providers produce a normalized transcript format: `{provider, language, fullText, utterances[], durationMs}`, where each utterance has a speaker label and start/end timestamps in milliseconds.
+All providers produce a normalized transcript format: `{provider, language, fullText, utterances[], durationMs}`, where each utterance has a speaker label and start/end timestamps in milliseconds. Providers that support word-level timestamps (AssemblyAI, Deepgram, ElevenLabs, Azure Speech, Google Chirp, Cohere) also return `words[]` per utterance with per-word timing.
+
+Provider implementations live in `lib/providers/` and are shared with the main application. The eval runner imports from this shared location.
 
 Gemini is the only provider that accepts custom instructions (a structured JSON schema prompt). Providers that require local files (most of them) receive a downloaded copy; AssemblyAI works directly from the audio URL. Google Chirp requires GCP credentials and a GCS bucket for batch processing. Groq and Alibaba implement chunking logic to handle their respective size/duration limits.
 

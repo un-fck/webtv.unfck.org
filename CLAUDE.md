@@ -51,6 +51,9 @@ Copy `.env.example` → `.env.local` and fill in values.
 **Optional:**
 
 - `NEXT_PUBLIC_BASE_URL` — defaults to `http://localhost:3000`
+- `STT_PROVIDER` — STT provider name (default: `gemini`). See `lib/providers/registry.ts` for available providers
+- `STT_ANALYSIS_MODEL` — Azure OpenAI model for speaker ID, resegmentation, topics, propositions (default: `gpt-5`)
+- `STT_ANALYSIS_MODEL_MINI` — Azure OpenAI model for normalization, sentence tagging (default: `gpt-5-mini`)
 
 **Eval system only:** `ASSEMBLYAI_API_KEY`, `AZURE_SPEECH_KEY`, `AZURE_SPEECH_ENDPOINT`, `ELEVENLABS_API_KEY`, `GROQ_API_KEY`, `DASHSCOPE_API_KEY`, `DEEPGRAM_API_KEY`, `MISTRAL_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`.
 
@@ -62,6 +65,7 @@ Detailed docs live in `docs/` — read these before working on the relevant subs
 - `docs/webtv.md` — UN Web TV scraping, Kaltura two-ID system, schedule scraping, per-video metadata, what gets stored
 - `docs/eval.md` — Evaluation system: ground truth from PV documents, 10 STT providers, metrics (WER/CER), corpus, dashboard, HuggingFace datasets
 - `docs/official-transcripts.md` — Which UN organs produce PV vs SR records, document symbol patterns
+- `docs/api.md` — Public API: URL scheme, JSON endpoints, response shapes
 
 ## Architecture
 
@@ -89,7 +93,7 @@ Triggered from the video page UI or via scheduled processing:
 6. **Proposition analysis**: on-demand stakeholder position mapping
 7. **PV alignment**: aligns official verbatim records with audio timestamps
 
-**Segmented transcription**: Long sessions can be split into time ranges (`startTime`/`endTime`) via `app/api/transcribe/segments/route.ts`.
+The STT provider is configurable via `STT_PROVIDER` env var (default: `gemini`). Analysis model names are configurable via `STT_ANALYSIS_MODEL` and `STT_ANALYSIS_MODEL_MINI`. Provider implementations live in `lib/providers/` (shared with the eval system).
 
 **Scheduled transcription**: Videos can be queued for transcription before audio is available. `lib/turso.ts:scheduleTranscript()` creates a `scheduled` status record. The Vercel cron job (`/api/cron/process-scheduled`, every 5 min) picks these up and starts transcription once audio is available.
 
@@ -99,7 +103,7 @@ Triggered from the video page UI or via scheduled processing:
 
 **Tables:**
 
-- `videos` — scraped video metadata, keyed by `asset_id`. Columns: `entry_id`, `title`, `clean_title`, `date`, `scheduled_time`, `duration`, `url`, `body`, `category`, `event_code`, `event_type`, `session_number`, `part_number`, `last_seen`
+- `videos` — scraped video metadata, keyed by `asset_id`. Columns: `entry_id`, `title`, `clean_title`, `date`, `scheduled_time`, `duration`, `url`, `body`, `category`, `event_code`, `event_type`, `session_number`, `part_number`, `slug`, `last_seen`
 - `transcripts` — transcription results, keyed by `transcript_id`. Status lifecycle: `scheduled → transcribing → transcribed → identifying_speakers → analyzing_topics → completed | error`. Has `pipeline_lock` column for concurrency control (30-min timeout)
 - `speaker_mappings` — AI-resolved speaker info per transcript (name, function, affiliation, group)
 - `processing_usage_events` — per-operation API cost tracking (provider, stage, tokens, hours, rate card)
@@ -110,33 +114,49 @@ Triggered from the video page UI or via scheduled processing:
 
 ### API Routes
 
-| Route                          | Method | Purpose                                                      |
-| ------------------------------ | ------ | ------------------------------------------------------------ |
-| `/api/transcribe`              | POST   | Start transcription for a video                              |
-| `/api/transcribe/poll`         | GET    | Poll transcription status                                    |
-| `/api/transcribe/segments`     | POST   | Segmented transcription (time ranges)                        |
-| `/api/identify-speakers`       | POST   | Run speaker identification on transcript                     |
-| `/api/get-speaker-mapping`     | GET    | Fetch speaker mapping for a transcript                       |
-| `/api/search`                  | GET    | Search video archive (`?q=...&offset=...`)                   |
-| `/api/cron/process-scheduled`  | POST   | Cron: process scheduled transcripts (auth via `CRON_SECRET`) |
-| `/json`                        | GET    | JSON API: all recent videos                                  |
-| `/json/[id]`                   | GET    | JSON API: single video by asset ID                           |
+| Route                               | Method | Purpose                                                      |
+| ------------------------------------ | ------ | ------------------------------------------------------------ |
+| `/api/transcripts/check`            | GET    | Check cache for existing transcript (`?kalturaId=...&language=...`) |
+| `/api/transcripts`                  | POST   | Start or schedule transcription                              |
+| `/api/transcripts/[id]`             | GET    | Poll transcript status / fetch result                        |
+| `/api/transcripts/[id]/analysis`    | POST   | Run proposition analysis on transcript                       |
+| `/api/identify-speakers`            | POST   | Run speaker identification on transcript                     |
+| `/api/search`                       | GET    | Search video archive (`?q=...&offset=...`)                   |
+| `/api/cron/process-scheduled`       | POST   | Cron: process scheduled transcripts (auth via `CRON_SECRET`) |
+| `/json`                             | GET    | JSON API: all recent videos                                  |
+| `/json/[...meeting]`               | GET    | JSON API: single video by meeting slug                       |
 
 ### Frontend
 
 **Pages:**
 
 - `app/page.tsx` — server component; scrapes videos for schedule window, fetches transcripted entries from Turso, renders `VideoTable`
-- `app/video/[id]/page.tsx` — video page; loads transcript from Turso server-side, renders player + transcript panel
+- `app/[...meeting]/page.tsx` — catch-all meeting route; resolves human-readable slug (e.g. `/sc/9748`, `/ga/79/21`) to video, renders player + transcript panel
+
+**URL scheme:** Meeting pages use human-readable slugs derived from UN document symbols:
+- `/sc/{n}` — Security Council (from `S/PV.{n}`)
+- `/ga/{session}/{meeting}` — General Assembly plenary (from `A/{session}/PV.{meeting}`)
+- `/ga/c{n}/{session}/{meeting}` — GA committees
+- `/hrc/{session}/{meeting}` — Human Rights Council
+- `/ecosoc/{year}/{meeting}` — ECOSOC
+- `/meeting/{asset_id}` — fallback for videos without document symbols
+
+Slug logic lives in `lib/meeting-slug.ts` with bidirectional conversion (`slugFromSymbol` / `symbolFromSlug`).
 
 **Components:**
 
 - `components/video-table.tsx` — main table (client component, TanStack Table). Column filters (date dropdown, status dropdown, body dropdown, text search), pagination, active filters display. Includes scheduled-view toggle and search-archive mode
-- `components/transcription-panel.tsx` — manages the transcribe → poll → display lifecycle with speaker mapping display
+- `components/transcription-panel.tsx` — orchestrates the transcribe → poll → display lifecycle
+- `components/stage-progress.tsx` — pipeline progress indicator
+- `components/analysis-view.tsx` — proposition/stakeholder position display
 - `components/video-page-client.tsx` — wraps video page client interactions
 - `components/video-player.tsx` — Kaltura embedded player (loads Kaltura SDK dynamically)
 - `components/site-header.tsx` — header with two variants: `home` (full) and `nav` (compact with back link)
-- `components/AnimatedCornerLogo.tsx` — animated corner logo
+
+**Hooks:**
+
+- `lib/hooks/use-transcript.ts` — transcript state management (statements, segments, speakers, topics, propositions) and API interactions (transcribe, poll, schedule, analyze)
+- `lib/hooks/use-playback-tracking.ts` — rAF-based playback position tracking, computes active segment/statement/paragraph/sentence/word indices
 
 ### Cost Tracking
 
@@ -146,7 +166,7 @@ Triggered from the video page UI or via scheduled processing:
 
 `eval/` is a fully independent evaluation harness — separate `tsconfig`, excluded from root type-check. The dashboard (`eval/dashboard/`) is a standalone Vite + React app using npm (not pnpm). See `docs/eval.md` for full details and `eval/README.md` for running instructions.
 
-Benchmarks 10 STT providers against UN verbatim records (PV documents) as ground truth across all 6 UN languages.
+Benchmarks 10 STT providers against UN verbatim records (PV documents) as ground truth across all 6 UN languages. Provider implementations are shared with the main app via `lib/providers/`.
 
 ## Conventions
 
