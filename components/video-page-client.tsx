@@ -152,10 +152,10 @@ export function VideoPageClient({
     if (usedTopics.length === 0) return null;
 
     return (
-      <div className="mb-2">
+      <div className="mb-4">
         <button
           onClick={() => setTopicsOpen((v) => !v)}
-          className="mb-1 flex w-full items-center gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase"
+          className="mb-1 flex w-full items-center gap-1 text-sm font-semibold tracking-wide text-foreground"
         >
           <ChevronDown
             className={`h-3 w-3 transition-transform ${topicsOpen ? "" : "-rotate-90"}`}
@@ -164,7 +164,7 @@ export function VideoPageClient({
         </button>
         {topicsOpen && (
           <>
-            <div className="space-y-0.5">
+            <div className="flex flex-wrap gap-x-1 gap-y-1.5">
               {usedTopics.map((topic) => {
                 const color = getTopicColor(topic.key, allTopicKeys);
                 return (
@@ -348,12 +348,12 @@ export function VideoPageClient({
               <div
                 ref={landingZoneRef}
                 className={`shrink-0 overflow-hidden rounded-lg bg-black ${
-                  isVideoDocked ? "mb-4 aspect-video w-full" : "h-0"
+                  isVideoDocked ? "mb-2 aspect-video w-full" : "h-0"
                 }`}
               />
 
-              {/* Topics — not scrolled */}
-              <div className="shrink-0">
+              {/* Topics — offset so header aligns with first speaker label, pills align with paragraph box */}
+              <div className={`shrink-0 ${isVideoDocked ? "mt-2" : "mt-[48px]"}`}>
                 {topicPills}
               </div>
 
@@ -363,7 +363,7 @@ export function VideoPageClient({
                 <div className="flex min-h-0 flex-1 flex-col">
                   <button
                     onClick={() => setSpeakersOpen((v) => !v)}
-                    className="mb-1 flex shrink-0 items-center gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase"
+                    className="mb-1 flex shrink-0 items-center gap-1 text-sm font-semibold tracking-wide text-foreground"
                   >
                     <ChevronDown
                       className={`h-3 w-3 transition-transform ${speakersOpen ? "" : "-rotate-90"}`}

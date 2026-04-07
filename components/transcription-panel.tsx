@@ -908,7 +908,7 @@ export function TranscriptionPanel({
     try {
       await navigator.clipboard.writeText(window.location.href);
       setShowCopied(true);
-      setTimeout(() => setShowCopied(false), 2000);
+      setTimeout(() => setShowCopied(false), 4000);
     } catch (err) {
       console.error("Failed to copy URL:", err);
     }
@@ -1341,7 +1341,7 @@ export function TranscriptionPanel({
           <div className="relative" ref={languageButtonRef}>
             <button
               onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-              className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
+              className="flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted/50"
             >
               <Globe className="h-3 w-3" />
               {selectedLangName}
@@ -1391,12 +1391,12 @@ export function TranscriptionPanel({
         {(pvSymbol ||
           (segments &&
             (propositions.length > 0 || Object.keys(topics).length > 0))) && (
-            <div className="flex gap-1 rounded-md bg-muted p-0.5">
+            <div className="flex rounded-md border border-border bg-muted">
               <button
                 onClick={() => setViewMode("transcript")}
-                className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${
+                className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
                   viewMode === "transcript"
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "bg-background text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -1405,9 +1405,9 @@ export function TranscriptionPanel({
               </button>
               <button
                 onClick={() => setViewMode("analysis")}
-                className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${
+                className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
                   viewMode === "analysis"
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "bg-background text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
                 disabled={stage !== "completed" && propositions.length === 0}
@@ -1423,9 +1423,9 @@ export function TranscriptionPanel({
               {pvSymbol && (
                 <button
                   onClick={() => setViewMode("pv")}
-                  className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${
+                  className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
                     viewMode === "pv"
-                      ? "bg-background text-foreground shadow-sm"
+                      ? "bg-background text-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -1442,14 +1442,14 @@ export function TranscriptionPanel({
             <>
               <button
                 onClick={() => handleTranscribe()}
-                className="rounded-md bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
               >
                 Generate
               </button>
               {(video.status === "live" || video.status === "scheduled") && (
                 <button
                   onClick={() => handleSchedule()}
-                  className="rounded-md border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+                  className="rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
                   title="Queue transcript to start automatically when recording ends"
                 >
                   Schedule
@@ -1470,20 +1470,20 @@ export function TranscriptionPanel({
               <div className="relative">
                 <button
                   onClick={handleShare}
-                  className="rounded-md border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+                  className="rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
                 >
                   Share
                 </button>
                 {showCopied && (
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs whitespace-nowrap text-background">
-                    Copied!
+                    Link copied to clipboard!
                   </div>
                 )}
               </div>
               <div className="relative" ref={downloadButtonRef}>
                 <button
                   onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                  className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+                  className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
                 >
                   Download
                   <ChevronDown className="h-3 w-3" />
