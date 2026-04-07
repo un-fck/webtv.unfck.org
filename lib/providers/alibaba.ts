@@ -3,7 +3,7 @@ import { execSync } from "child_process";
 import os from "os";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "../utils";
+import { downloadAudioToTemp } from "./utils";
 
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY!;
 // Use international endpoint; switch to dashscope.aliyuncs.com for China region

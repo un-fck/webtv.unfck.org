@@ -767,32 +767,37 @@ async function tagSentencesWithTopics(
     }
   });
 
-  // Parallel tagging with context
-  const SentenceTopicResponse = z.object({
-    topic_keys: z.array(z.string()),
+  // Batched tagging — group sentences into batches of ~15 to reduce API calls
+  const BATCH_SIZE = 15;
+  const BatchTopicResponse = z.object({
+    results: z.array(z.object({
+      index: z.number(),
+      topic_keys: z.array(z.string()),
+    })),
   });
 
-  const taggedSentences = await mapWithConcurrency(
-    taggableSentences,
-    20,
-    async ({ index: globalIdx, sentence: sent }) => {
-      // Context: 2 sentences before and after from all sentences
-      const contextBefore = allSentences.slice(
-        Math.max(0, globalIdx - 2),
-        globalIdx,
-      );
-      const contextAfter = allSentences.slice(
-        globalIdx + 1,
-        Math.min(allSentences.length, globalIdx + 3),
-      );
+  // Build batches
+  const batches: Array<typeof taggableSentences> = [];
+  for (let i = 0; i < taggableSentences.length; i += BATCH_SIZE) {
+    batches.push(taggableSentences.slice(i, i + BATCH_SIZE));
+  }
 
-      const numberedSentences = [
-        ...contextBefore.map(
-          (s, i) => `[${i - contextBefore.length}] ${s.text}`,
-        ),
-        `[CURRENT] ${sent.text}`,
-        ...contextAfter.map((s, i) => `[+${i + 1}] ${s.text}`),
-      ].join("\n");
+  console.log(`  → Processing ${taggableSentences.length} sentences in ${batches.length} batches...`);
+
+  const batchResults = await mapWithConcurrency(
+    batches,
+    5,
+    async (batch) => {
+      // Build numbered list of sentences for the batch
+      const sentenceList = batch
+        .map(({ index: globalIdx, sentence: sent }, i) => {
+          // Add 1 sentence of context before each sentence for continuity
+          const contextBefore = globalIdx > 0
+            ? `  [context] ${allSentences[globalIdx - 1].text}\n`
+            : "";
+          return `${contextBefore}  [${i}] ${sent.text}`;
+        })
+        .join("\n");
 
       try {
         const completion = await trackOpenAIChatCompletion({
@@ -802,10 +807,8 @@ async function tagSentencesWithTopics(
           operation: UsageOperations.openaiTagSentenceTopics,
           model: "gpt-5-mini",
           requestMeta: {
-            sentence_global_index: globalIdx,
-            statement_index: sent.statementIdx,
-            paragraph_index: sent.paragraphIdx,
-            sentence_index: sent.sentenceIdx,
+            batch_size: batch.length,
+            first_global_index: batch[0].index,
           },
           request: {
             model: "gpt-5-mini",
@@ -818,10 +821,10 @@ AVAILABLE TOPICS:
 ${topicDescriptions}
 
 TASK:
-- Analyze the [CURRENT] sentence
-- Select 0-3 topics that are directly discussed
+- For each numbered sentence, select 0-3 topics that are directly discussed
 - Only tag substantive policy discussions
 - Return empty array if no topics apply or if purely procedural
+- Lines marked [context] are for reference only — do not tag them
 
 RULES:
 - A topic applies if the sentence makes substantive points about it
@@ -831,31 +834,36 @@ RULES:
               },
               {
                 role: "user",
-                content: `Which topics (if any) are discussed in the [CURRENT] sentence?
+                content: `Tag each numbered sentence with relevant topics:
 
-${numberedSentences}`,
+${sentenceList}`,
               },
             ],
             response_format: zodResponseFormat(
-              SentenceTopicResponse,
-              "sentence_topics",
+              BatchTopicResponse,
+              "batch_sentence_topics",
             ),
           },
         });
 
         const result = completion.choices[0]?.message?.content;
-        if (!result) return { ...sent, topic_keys: [] };
+        if (!result) return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
 
-        const parsed = JSON.parse(result) as z.infer<
-          typeof SentenceTopicResponse
-        >;
-        return { ...sent, topic_keys: parsed.topic_keys };
+        const parsed = JSON.parse(result) as z.infer<typeof BatchTopicResponse>;
+        // Map results back to sentences by batch index
+        const resultMap = new Map(parsed.results.map(r => [r.index, r.topic_keys]));
+        return batch.map(({ sentence: sent }, i) => ({
+          ...sent,
+          topic_keys: resultMap.get(i) ?? [],
+        }));
       } catch (error) {
-        console.warn(`  ⚠ Failed to tag sentence:`, error);
-        return { ...sent, topic_keys: [] };
+        console.warn(`  ⚠ Failed to tag batch:`, error);
+        return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
       }
     },
   );
+
+  const taggedSentences = batchResults.flat();
 
   // Apply topic tags back to statements
   const updatedStatements: StatementWithSentences[] = statements.map(

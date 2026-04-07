@@ -4,7 +4,6 @@ import "@/lib/load-env";
 export type TranscriptStatus =
   | "scheduled"
   | "transcribing"
-  | "transcribed"
   | "identifying_speakers"
   | "analyzing_topics"
   | "analyzing_propositions"
@@ -480,7 +479,7 @@ export async function saveTranscript(
   await client.execute({
     sql: `INSERT INTO transcripts (entry_id, transcript_id, start_time, end_time, audio_url, status, language_code, content, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(transcript_id) DO UPDATE SET status = excluded.status, language_code = excluded.language_code, content = excluded.content, updated_at = excluded.updated_at`,
+          ON CONFLICT(transcript_id) DO UPDATE SET entry_id = excluded.entry_id, audio_url = excluded.audio_url, status = excluded.status, language_code = excluded.language_code, content = excluded.content, updated_at = excluded.updated_at`,
     args: [
       entryId,
       transcriptId,

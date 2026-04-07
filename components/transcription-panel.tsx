@@ -28,7 +28,6 @@ type Stage =
   | "idle"
   | "scheduled"
   | "transcribing"
-  | "transcribed"
   | "identifying_speakers"
   | "analyzing_topics"
   | "analyzing_propositions"
@@ -42,8 +41,8 @@ const STAGES: { key: Stage; label: string }[] = [
 ];
 
 function getStageIndex(stage: Stage): number {
-  // transcribed and identifying_speakers are transient — map to "just finished transcribing"
-  if (stage === "transcribed" || stage === "identifying_speakers") return 0;
+  // identifying_speakers is transient — map to "just finished transcribing"
+  if (stage === "identifying_speakers") return 0;
   return STAGES.findIndex((s) => s.key === stage);
 }
 

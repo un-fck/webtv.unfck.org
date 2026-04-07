@@ -3,7 +3,7 @@ import { execSync } from "child_process";
 import os from "os";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "../utils";
+import { downloadAudioToTemp } from "./utils";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY!;
 const MAX_FILE_SIZE = 24 * 1024 * 1024; // 24MB to stay under Groq's 25MB limit

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getScheduledTranscripts,
-  updateTranscriptStatus,
 } from "@/lib/turso";
 import { getKalturaAudioUrl, submitGeminiTranscription } from "@/lib/transcription";
 
@@ -39,11 +38,10 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      // Audio is available — submit to Gemini
-      const { transcriptId } = await submitGeminiTranscription(kalturaId);
-
-      // Mark the old scheduled record as superseded
-      await updateTranscriptStatus(item.transcript_id, "transcribing");
+      // Audio is available — reuse the existing scheduled row
+      const { transcriptId } = await submitGeminiTranscription(kalturaId, {
+        existingTranscriptId: item.transcript_id,
+      });
 
       console.log(
         `✓ Started scheduled transcript for ${kalturaId} → ${transcriptId}`,

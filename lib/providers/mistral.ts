@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "../utils";
+import { downloadAudioToTemp } from "./utils";
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY!;
 

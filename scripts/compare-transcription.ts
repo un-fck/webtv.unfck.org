@@ -2,10 +2,10 @@
 import "../lib/load-env";
 import { resolveEntryId } from "../lib/kaltura-helpers";
 import { getKalturaAudioUrl } from "../lib/transcription";
-import { assemblyai } from "../eval/providers/assemblyai";
-import { azureOpenai } from "../eval/providers/azure-openai";
-import { downloadAudioToTemp, formatTime } from "../eval/utils";
-import type { NormalizedTranscript } from "../eval/providers/types";
+import { assemblyai } from "../lib/providers/assemblyai";
+import { azureOpenai } from "../lib/providers/azure-openai";
+import { downloadAudioToTemp, formatTime } from "../lib/providers/utils";
+import type { NormalizedTranscript } from "../lib/providers/types";
 import fs from "fs";
 import path from "path";
 

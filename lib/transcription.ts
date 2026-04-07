@@ -187,53 +187,11 @@ export async function pollTranscription(
     };
   }
 
-  // transcribed but pipeline not running — start it
-  if (transcript.status === "transcribed") {
-    const acquired = await tryAcquirePipelineLock(transcriptId);
-    if (acquired) {
-      runPipeline(transcriptId, transcript.entry_id).catch((err) => {
-        console.error("Pipeline error:", err);
-        updateTranscriptStatus(
-          transcriptId,
-          "error",
-          err instanceof Error ? err.message : "Pipeline failed",
-        );
-        releasePipelineLock(transcriptId);
-      });
-    }
-    return {
-      stage: "identifying_speakers",
-      raw_paragraphs: transcript.content.raw_paragraphs,
-    };
-  }
-
   // Gemini transcripts run fully in-process — nothing to poll externally
   return { stage: "transcribing" };
 }
 
-async function runPipeline(transcriptId: string, _entryId: string) {
-  try {
-    await updateTranscriptStatus(transcriptId, "identifying_speakers");
 
-    const transcript = await getTranscriptById(transcriptId);
-    if (!transcript?.content.raw_paragraphs) {
-      throw new Error("No raw paragraphs available");
-    }
-
-    await identifySpeakers(transcript.content.raw_paragraphs, transcriptId, undefined, { skipPropositions: true });
-    await updateTranscriptStatus(transcriptId, "completed");
-    await releasePipelineLock(transcriptId);
-  } catch (err) {
-    console.error("Pipeline failed:", err);
-    await updateTranscriptStatus(
-      transcriptId,
-      "error",
-      err instanceof Error ? err.message : "Pipeline failed",
-    );
-    await releasePipelineLock(transcriptId);
-    throw err;
-  }
-}
 
 // ---- Gemini transcription path ----
 
@@ -348,7 +306,7 @@ async function runAnalysisPipeline(
  */
 export async function submitGeminiTranscription(
   kalturaId: string,
-  options: GeminiTranscriptionOptions & { force?: boolean } = {},
+  options: GeminiTranscriptionOptions & { force?: boolean; existingTranscriptId?: string } = {},
 ): Promise<{ entryId: string; transcriptId: string }> {
   const lang = options.language || "en";
   const kalturaLang = bcp47ToKalturaName(lang);
@@ -361,7 +319,7 @@ export async function submitGeminiTranscription(
     await deleteTranscriptsForEntry(entryId, lang);
   }
 
-  const transcriptId = `gemini-${randomUUID()}`;
+  const transcriptId = options.existingTranscriptId ?? `gemini-${randomUUID()}`;
 
   await saveTranscript(entryId, transcriptId, null, null, audioUrl, "transcribing", lang, {
     statements: [],

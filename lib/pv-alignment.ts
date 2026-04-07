@@ -9,24 +9,20 @@
  * audio upload, but with a much simpler prompt focused only on alignment.
  */
 import fs from "fs";
-import https from "https";
-import { execFile } from "child_process";
-import { promisify } from "util";
-import path from "path";
-import os from "os";
 import type { PVDocument, PVTurn } from "./pv-parser";
-import { downloadAudioToTemp } from "../eval/utils";
-
-const execFileAsync = promisify(execFile);
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
-const GEMINI_MODEL = "gemini-3-flash-preview";
-const BASE = "https://generativelanguage.googleapis.com";
-
-// Chunking: 10-min chunks give Gemini the most accurate timestamps.
-// Gemini tends to hallucinate timestamps for longer audio clips.
-const CHUNK_THRESHOLD_SECONDS = 10 * 60;
-const CHUNK_DURATION_SECONDS = 10 * 60;
+import {
+  GEMINI_API_KEY, GEMINI_MODEL, GEMINI_BASE,
+  CHUNK_THRESHOLD_SECONDS, CHUNK_DURATION_SECONDS,
+  httpsPostJson, uploadFileToGemini, waitForGeminiFile, deleteGeminiFile,
+  fmtHHMMSS, parseHHMMSSToSeconds as parseHHMMSS, extractJsonObject,
+  downloadAudioToTemp, getAudioDurationSeconds, extractAudioChunk,
+} from "./gemini-utils";
+import {
+  trackGeminiTranscription,
+  UsageOperations,
+  UsageStages,
+} from "./usage-tracking";
+import type { GeminiUsageMetadata } from "./gemini-transcription";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -64,176 +60,6 @@ export interface AlignmentOptions {
   contentPreviewLength?: number; // default: 100 chars
   requestFirstWords?: boolean; // ask model to return firstWords quotes
   overlapBuffer?: number; // turn overlap between chunks (default: 2)
-}
-
-// ── Gemini API plumbing ────────────────────────────────────────────────
-
-function httpsPostJson(
-  url: string,
-  body: object,
-): Promise<{ status: number; body: string }> {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    const req = https.request(
-      url,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Content-Length": Buffer.byteLength(data),
-        },
-      },
-      (res) => {
-        const chunks: Buffer[] = [];
-        res.on("data", (c) => chunks.push(c));
-        res.on("end", () =>
-          resolve({
-            status: res.statusCode ?? 500,
-            body: Buffer.concat(chunks).toString(),
-          }),
-        );
-      },
-    );
-    req.on("error", reject);
-    req.write(data);
-    req.end();
-  });
-}
-
-async function uploadFileToGemini(
-  filePath: string,
-): Promise<{ name: string; uri: string }> {
-  const fileSize = fs.statSync(filePath).size;
-  const fileData = fs.readFileSync(filePath);
-
-  const startRes = await fetch(
-    `${BASE}/upload/v1beta/files?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: {
-        "X-Goog-Upload-Protocol": "resumable",
-        "X-Goog-Upload-Command": "start",
-        "X-Goog-Upload-Header-Content-Length": String(fileSize),
-        "X-Goog-Upload-Header-Content-Type": "audio/mp4",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        file: { displayName: `pv-align-${Date.now()}` },
-      }),
-    },
-  );
-  if (!startRes.ok)
-    throw new Error(
-      `Gemini upload start failed ${startRes.status}: ${await startRes.text()}`,
-    );
-  const uploadUrl = startRes.headers.get("X-Goog-Upload-URL");
-  if (!uploadUrl) throw new Error("No Gemini upload URL returned");
-
-  const uploadRes = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Length": String(fileSize),
-      "X-Goog-Upload-Offset": "0",
-      "X-Goog-Upload-Command": "upload, finalize",
-    },
-    body: fileData,
-  });
-  if (!uploadRes.ok)
-    throw new Error(
-      `Gemini file upload failed ${uploadRes.status}: ${await uploadRes.text()}`,
-    );
-  const result = (await uploadRes.json()) as {
-    file: { name: string; uri: string };
-  };
-  return result.file;
-}
-
-async function waitForGeminiFile(name: string): Promise<void> {
-  for (let i = 0; ; i++) {
-    const res = await fetch(`${BASE}/v1beta/${name}?key=${GEMINI_API_KEY}`);
-    const file = (await res.json()) as { state: string };
-    if (file.state === "ACTIVE") return;
-    if (file.state === "FAILED")
-      throw new Error("Gemini file processing failed");
-    await new Promise((r) => setTimeout(r, 5000));
-  }
-}
-
-async function deleteGeminiFile(name: string): Promise<void> {
-  await fetch(`${BASE}/v1beta/${name}?key=${GEMINI_API_KEY}`, {
-    method: "DELETE",
-  }).catch(() => {});
-}
-
-// ── Audio utilities ────────────────────────────────────────────────────
-
-async function getAudioDurationSeconds(filePath: string): Promise<number> {
-  try {
-    const { stdout } = await execFileAsync("ffprobe", [
-      "-v",
-      "quiet",
-      "-show_entries",
-      "format=duration",
-      "-of",
-      "default=noprint_wrappers=1:nokey=1",
-      filePath,
-    ]);
-    return parseFloat(stdout.trim()) || 0;
-  } catch {
-    return 0;
-  }
-}
-
-async function extractAudioChunk(
-  filePath: string,
-  startSeconds: number,
-  durationSeconds: number,
-): Promise<string> {
-  const chunkPath = path.join(
-    os.tmpdir(),
-    `pv-align-chunk-${Date.now()}-${startSeconds}.mp4`,
-  );
-  await execFileAsync("ffmpeg", [
-    "-i",
-    filePath,
-    "-ss",
-    String(startSeconds),
-    "-t",
-    String(durationSeconds),
-    "-c",
-    "copy",
-    "-y",
-    chunkPath,
-  ]);
-  return chunkPath;
-}
-
-function fmtHHMMSS(totalSec: number): string {
-  const hh = String(Math.floor(totalSec / 3600)).padStart(2, "0");
-  const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
-  const ss = String(Math.floor(totalSec % 60)).padStart(2, "0");
-  return `${hh}:${mm}:${ss}`;
-}
-
-function parseHHMMSS(time: string): number {
-  const parts = time.split(":").map(Number);
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  return parts[0] || 0;
-}
-
-function extractJsonObject(text: string): string {
-  const start = text.indexOf("{");
-  if (start === -1) throw new Error("No JSON object found in response");
-  let depth = 0;
-  for (let i = start; i < text.length; i++) {
-    if (text[i] === "{") depth++;
-    else if (text[i] === "}") {
-      depth--;
-      if (depth === 0) return text.slice(start, i + 1);
-    }
-  }
-  throw new Error("Unterminated JSON object in response");
 }
 
 // ── Alignment prompt ──────────────────────────────────────────────────
@@ -308,14 +134,19 @@ Rules:
 
 // ── Core alignment ────────────────────────────────────────────────────
 
+interface AlignChunkResult {
+  alignments: AlignmentResult[];
+  usageMetadata: GeminiUsageMetadata;
+}
+
 async function alignChunk(
   filePath: string,
   items: AlignmentItem[],
   chunkDurationSec?: number,
   opts?: AlignmentOptions,
-): Promise<AlignmentResult[]> {
+): Promise<AlignChunkResult> {
   console.log("  [PV Align] Uploading audio chunk...");
-  const file = await uploadFileToGemini(filePath);
+  const file = await uploadFileToGemini(filePath, "pv-align");
   await waitForGeminiFile(file.name);
 
   const prompt = buildAlignmentPrompt(items, chunkDurationSec, opts);
@@ -340,7 +171,7 @@ async function alignChunk(
     generationConfig,
   };
 
-  const apiUrl = `${BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const apiUrl = `${GEMINI_BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
   const result = await httpsPostJson(apiUrl, requestBody);
   await deleteGeminiFile(file.name);
 
@@ -354,6 +185,12 @@ async function alignChunk(
     candidates?: Array<{
       content?: { parts?: Array<{ text?: string }> };
     }>;
+    usageMetadata?: {
+      promptTokenCount?: number;
+      candidatesTokenCount?: number;
+      thoughtsTokenCount?: number;
+      totalTokenCount?: number;
+    };
   };
 
   const responseText = (raw.candidates?.[0]?.content?.parts ?? [])
@@ -367,7 +204,14 @@ async function alignChunk(
     alignments: Array<{ itemIndex: number; startTime: string; endTime: string; firstWords?: string }>;
   };
 
-  return parsed.alignments;
+  const usageMetadata: GeminiUsageMetadata = {
+    promptTokenCount: raw.usageMetadata?.promptTokenCount ?? 0,
+    candidatesTokenCount: raw.usageMetadata?.candidatesTokenCount ?? 0,
+    thoughtsTokenCount: raw.usageMetadata?.thoughtsTokenCount ?? 0,
+    totalTokenCount: raw.usageMetadata?.totalTokenCount ?? 0,
+  };
+
+  return { alignments: parsed.alignments, usageMetadata };
 }
 
 // ── Main alignment function ───────────────────────────────────────────
@@ -394,10 +238,20 @@ export async function alignPVWithAudio(
     );
 
     let allAlignments: AlignmentResult[];
+    const combinedUsage: GeminiUsageMetadata = {
+      promptTokenCount: 0, candidatesTokenCount: 0,
+      thoughtsTokenCount: 0, totalTokenCount: 0,
+    };
+    const startTime = Date.now();
 
     if (totalSeconds <= CHUNK_THRESHOLD_SECONDS) {
       // Short audio — single call
-      allAlignments = await alignChunk(tmpPath, allItems, undefined, opts);
+      const result = await alignChunk(tmpPath, allItems, undefined, opts);
+      allAlignments = result.alignments;
+      combinedUsage.promptTokenCount += result.usageMetadata.promptTokenCount;
+      combinedUsage.candidatesTokenCount += result.usageMetadata.candidatesTokenCount;
+      combinedUsage.thoughtsTokenCount += result.usageMetadata.thoughtsTokenCount;
+      combinedUsage.totalTokenCount += result.usageMetadata.totalTokenCount;
     } else {
       // Long audio — chunk and process in parallel
       const numChunks = Math.ceil(totalSeconds / CHUNK_DURATION_SECONDS);
@@ -432,15 +286,19 @@ export async function alignPVWithAudio(
           const itemIndexOffset = estStart;
 
           try {
-            const results = await alignChunk(
+            const result = await alignChunk(
               chunkPath,
               chunkItems,
               chunkDurationSec,
               opts,
             );
+            combinedUsage.promptTokenCount += result.usageMetadata.promptTokenCount;
+            combinedUsage.candidatesTokenCount += result.usageMetadata.candidatesTokenCount;
+            combinedUsage.thoughtsTokenCount += result.usageMetadata.thoughtsTokenCount;
+            combinedUsage.totalTokenCount += result.usageMetadata.totalTokenCount;
             // Adjust timestamps by chunk offset and item indices.
             const maxTimeSec = chunkDurationSec + 60;
-            return results
+            return result.alignments
               .filter((r) => r.startTime && r.endTime)
               .filter((r) => parseHHMMSS(r.startTime) <= maxTimeSec)
               .map((r) => ({
@@ -471,6 +329,24 @@ export async function alignPVWithAudio(
         }
       }
     }
+
+    // Track usage
+    const durationMs = Date.now() - startTime;
+    await trackGeminiTranscription({
+      transcriptId: pvDoc.symbol,
+      stage: UsageStages.aligningPv,
+      operation: UsageOperations.geminiPvAlignment,
+      model: GEMINI_MODEL,
+      usageMetadata: combinedUsage,
+      audioSeconds: totalSeconds,
+      durationMs,
+      requestMeta: {
+        symbol: pvDoc.symbol,
+        turns: pvDoc.turns.length,
+        paragraphs: totalParas,
+        aligned: allAlignments.length,
+      },
+    });
 
     // Map flat alignment results back to turn/paragraph structure
     // Build a map: itemIndex → alignment

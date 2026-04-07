@@ -20,31 +20,22 @@
  * is told its exact duration in the prompt. Results are stitched with known offsets.
  */
 import fs from 'fs';
-import https from 'https';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
-import os from 'os';
 import { AzureOpenAI } from 'openai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
-import { downloadAudioToTemp } from '../eval/utils';
+import {
+  GEMINI_API_KEY, GEMINI_MODEL, GEMINI_BASE,
+  CHUNK_THRESHOLD_SECONDS, CHUNK_DURATION_SECONDS,
+  httpsPostJson, uploadFileToGemini, waitForGeminiFile, deleteGeminiFile,
+  fmtHHMMSS, parseHHMMSSToMs as parseHHMMSS, extractJsonObject,
+  downloadAudioToTemp, getAudioDurationSeconds, extractAudioChunk,
+} from './gemini-utils';
 import { trackOpenAIChatCompletion, UsageOperations, UsageStages } from './usage-tracking';
 import type { RawParagraph } from './turso';
 import type { SpeakerInfo, SpeakerMapping } from './speakers';
 import { getLanguageFullName } from './languages';
 
-const execFileAsync = promisify(execFile);
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
-export const GEMINI_MODEL = 'gemini-3-flash-preview';
-const BASE = 'https://generativelanguage.googleapis.com';
-
-// Audio longer than this is processed in chunks (10 minutes — empirically the
-// reliable limit before Gemini timestamp hallucination becomes common).
-const CHUNK_THRESHOLD_SECONDS = 10 * 60;
-// Each chunk is 10 minutes
-const CHUNK_DURATION_SECONDS = 10 * 60;
+export { GEMINI_MODEL };
 
 // ---- Schema types ----
 
@@ -87,21 +78,6 @@ export interface GeminiTranscriptionResult {
   audioSeconds: number;
   chunked: boolean;
   chunkCount: number;
-}
-
-// ---- Timestamp utilities ----
-
-/** Parse HH:MM:SS (or HH:MM:SS.mmm) to milliseconds */
-function parseHHMMSS(ts: string): number {
-  if (!ts) return 0;
-  const parts = ts.split(':');
-  if (parts.length === 3) {
-    return (Number(parts[0]) * 3600 + Number(parts[1]) * 60 + parseFloat(parts[2])) * 1000;
-  }
-  if (parts.length === 2) {
-    return (Number(parts[0]) * 60 + Number(parts[1])) * 1000;
-  }
-  return 0;
 }
 
 /**
@@ -159,30 +135,6 @@ function segmentsToOutput(
   }
 
   return { paragraphs, speakerMapping };
-}
-
-// ---- JSON extraction ----
-
-/** Extract the first top-level {...} JSON object from a free-text response. */
-function extractJsonObject(text: string): string {
-  const start = text.indexOf('{');
-  if (start === -1) throw new Error('No JSON object found in response');
-  let depth = 0;
-  for (let i = start; i < text.length; i++) {
-    if (text[i] === '{') depth++;
-    else if (text[i] === '}') {
-      depth--;
-      if (depth === 0) return text.slice(start, i + 1);
-    }
-  }
-  throw new Error('Unterminated JSON object in response');
-}
-
-function fmtHHMMSS(totalSec: number): string {
-  const hh = String(Math.floor(totalSec / 3600)).padStart(2, '0');
-  const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
-  const ss = String(Math.floor(totalSec % 60)).padStart(2, '0');
-  return `${hh}:${mm}:${ss}`;
 }
 
 function buildPrompt(langName: string, chunkDurationSec?: number, langCode?: string): string {
@@ -251,111 +203,6 @@ function buildPrompt(langName: string, chunkDurationSec?: number, langCode?: str
   ].join('\n');
 }
 
-// ---- Gemini Files API helpers ----
-
-function httpsPostJson(url: string, body: object): Promise<{ status: number; body: string }> {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    const req = https.request(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
-      timeout: 600_000,
-    }, (res) => {
-      const chunks: Buffer[] = [];
-      res.on('data', (chunk) => chunks.push(chunk as Buffer));
-      res.on('end', () => resolve({ status: res.statusCode || 0, body: Buffer.concat(chunks).toString() }));
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(new Error('Gemini request timeout')); });
-    req.write(data);
-    req.end();
-  });
-}
-
-async function uploadFileToGemini(filePath: string): Promise<{ name: string; uri: string }> {
-  const fileSize = fs.statSync(filePath).size;
-  const fileData = fs.readFileSync(filePath);
-
-  const startRes = await fetch(`${BASE}/upload/v1beta/files?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: {
-      'X-Goog-Upload-Protocol': 'resumable',
-      'X-Goog-Upload-Command': 'start',
-      'X-Goog-Upload-Header-Content-Length': String(fileSize),
-      'X-Goog-Upload-Header-Content-Type': 'audio/mp4',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ file: { displayName: `un-transcript-${Date.now()}` } }),
-  });
-  if (!startRes.ok) throw new Error(`Gemini upload start failed ${startRes.status}: ${await startRes.text()}`);
-  const uploadUrl = startRes.headers.get('X-Goog-Upload-URL');
-  if (!uploadUrl) throw new Error('No Gemini upload URL returned');
-
-  const uploadRes = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Length': String(fileSize),
-      'X-Goog-Upload-Offset': '0',
-      'X-Goog-Upload-Command': 'upload, finalize',
-    },
-    body: fileData,
-  });
-  if (!uploadRes.ok) throw new Error(`Gemini file upload failed ${uploadRes.status}: ${await uploadRes.text()}`);
-  const result = (await uploadRes.json()) as { file: { name: string; uri: string } };
-  return result.file;
-}
-
-async function waitForGeminiFile(name: string): Promise<void> {
-  for (let i = 0; ; i++) {
-    const res = await fetch(`${BASE}/v1beta/${name}?key=${GEMINI_API_KEY}`);
-    const file = (await res.json()) as { state: string };
-    if (file.state === 'ACTIVE') return;
-    if (file.state === 'FAILED') throw new Error('Gemini file processing failed');
-    if (i % 6 === 5) console.log(`  [Gemini] File still processing... (${(i + 1) * 5}s)`);
-    await new Promise(r => setTimeout(r, 5000));
-  }
-}
-
-async function deleteGeminiFile(name: string): Promise<void> {
-  await fetch(`${BASE}/v1beta/${name}?key=${GEMINI_API_KEY}`, { method: 'DELETE' }).catch(() => {});
-}
-
-// ---- Audio utilities ----
-
-/** Returns 0 if ffprobe is unavailable. */
-async function getAudioDurationSeconds(filePath: string): Promise<number> {
-  try {
-    const { stdout } = await execFileAsync('ffprobe', [
-      '-v', 'quiet',
-      '-show_entries', 'format=duration',
-      '-of', 'default=noprint_wrappers=1:nokey=1',
-      filePath,
-    ]);
-    return parseFloat(stdout.trim()) || 0;
-  } catch {
-    console.warn('  [Gemini] ffprobe unavailable — cannot determine audio duration, assuming single call');
-    return 0;
-  }
-}
-
-/** Extract a time slice of audio using ffmpeg. Returns path to chunk file. */
-async function extractAudioChunk(
-  filePath: string,
-  startSeconds: number,
-  durationSeconds: number,
-): Promise<string> {
-  const chunkPath = path.join(os.tmpdir(), `gemini-chunk-${Date.now()}-${startSeconds}.mp4`);
-  await execFileAsync('ffmpeg', [
-    '-i', filePath,
-    '-ss', String(startSeconds),
-    '-t', String(durationSeconds),
-    '-c', 'copy',
-    '-y',
-    chunkPath,
-  ]);
-  return chunkPath;
-}
-
 // ---- Core Gemini API call ----
 
 interface GeminiCallResult {
@@ -373,9 +220,9 @@ async function callGeminiOnFile(
   const langName = getLanguageFullName(langCode);
 
   console.log('  [Gemini] Uploading audio...');
-  const file = await uploadFileToGemini(filePath);
+  const file = await uploadFileToGemini(filePath, 'un-transcript');
   console.log(`  [Gemini] Uploaded: ${file.name}`);
-  await waitForGeminiFile(file.name);
+  await waitForGeminiFile(file.name, true);
 
   const thinking = options.withThinking ?? false;
   console.log(`  [Gemini] Calling ${GEMINI_MODEL}${thinking ? ' (thinking ON)' : ' (thinking OFF)'}...`);
@@ -401,7 +248,7 @@ async function callGeminiOnFile(
     generationConfig,
   };
 
-  const apiUrl = `${BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const apiUrl = `${GEMINI_BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
   const result = await httpsPostJson(apiUrl, requestBody);
   await deleteGeminiFile(file.name);
 

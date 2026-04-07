@@ -4,7 +4,7 @@ import path from "path";
 import { execSync } from "child_process";
 import { GoogleAuth } from "google-auth-library";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "../utils";
+import { downloadAudioToTemp } from "./utils";
 
 // BCP-47 locale mapping
 const LANG_MAP: Record<string, string> = {

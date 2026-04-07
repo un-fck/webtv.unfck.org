@@ -1,7 +1,7 @@
 import fs from "fs";
 import https from "https";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "../utils";
+import { downloadAudioToTemp } from "./utils";
 
 /** POST JSON via https module (avoids undici headers timeout on long requests) */
 function httpsPostJson(

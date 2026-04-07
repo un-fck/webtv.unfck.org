@@ -1,6 +1,6 @@
 import fs from "fs";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "../utils";
+import { downloadAudioToTemp } from "./utils";
 
 const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY!;
 

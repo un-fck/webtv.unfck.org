@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "../utils";
+import { downloadAudioToTemp } from "./utils";
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY!;
 

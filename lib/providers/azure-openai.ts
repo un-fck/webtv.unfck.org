@@ -1,7 +1,7 @@
 import { AzureOpenAI } from "openai";
 import fs from "fs";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "../utils";
+import { downloadAudioToTemp } from "./utils";
 
 export const azureOpenai: TranscriptionProvider = {
   name: "azure-openai",
