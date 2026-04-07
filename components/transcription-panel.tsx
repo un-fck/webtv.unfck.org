@@ -731,7 +731,7 @@ export function TranscriptionPanel({
     setErrorMessage(null);
 
     try {
-      const response = await fetch("/api/transcribe", {
+      const response = await fetch("/api/transcripts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kalturaId, force, language: selectedLanguage }),
@@ -777,13 +777,13 @@ export function TranscriptionPanel({
 
   const handleSchedule = async () => {
     try {
-      const response = await fetch("/api/transcribe", {
+      const response = await fetch("/api/transcripts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           kalturaId,
           assetId: video.id,
-          action: "schedule",
+          schedule: true,
         }),
       });
       if (!response.ok) {
@@ -808,11 +808,7 @@ export function TranscriptionPanel({
       await new Promise((resolve) => setTimeout(resolve, 3000));
       pollCount++;
 
-      const pollResponse = await fetch("/api/transcribe/poll", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcriptId: tid }),
-      });
+      const pollResponse = await fetch(`/api/transcripts/${encodeURIComponent(tid)}`);
 
       if (!pollResponse.ok) throw new Error("Failed to poll transcript status");
 
@@ -882,10 +878,8 @@ export function TranscriptionPanel({
     if (!transcriptId) return;
     setAnalyzingPropositions(true);
     try {
-      const response = await fetch("/api/analyze", {
+      const response = await fetch(`/api/transcripts/${encodeURIComponent(transcriptId)}/analysis`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcriptId }),
       });
       if (!response.ok) {
         const data = await response.json();
@@ -1091,11 +1085,9 @@ export function TranscriptionPanel({
 
     const checkCache = async () => {
       try {
-        const response = await fetch("/api/transcribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ kalturaId, checkOnly: true, language: selectedLanguage }),
-        });
+        const response = await fetch(
+          `/api/transcripts/check?kalturaId=${encodeURIComponent(kalturaId)}&language=${encodeURIComponent(selectedLanguage)}`,
+        );
 
         if (response.ok) {
           const data = await response.json();

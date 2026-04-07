@@ -10,12 +10,12 @@ import { bcp47ToKalturaName } from "@/lib/languages";
 
 export async function POST(request: NextRequest) {
   try {
-    const { kalturaId, checkOnly, force, startTime, endTime, action, assetId, withThinking, language } =
+    const { kalturaId, force, assetId, language, schedule } =
       await request.json();
 
     if (!kalturaId) {
       return NextResponse.json(
-        { error: "Kaltura ID is required" },
+        { error: "kalturaId is required" },
         { status: 400 },
       );
     }
@@ -23,17 +23,15 @@ export async function POST(request: NextRequest) {
     const lang = language || "en";
 
     // Schedule action: queue transcript for later processing (video still live/upcoming)
-    if (action === "schedule") {
+    if (schedule) {
       const transcriptId = await scheduleTranscript(
         assetId || kalturaId,
         kalturaId,
-        startTime ?? null,
-        endTime ?? null,
+        null,
+        null,
       );
       return NextResponse.json({ transcriptId, stage: "scheduled" });
     }
-
-    const isSegmentRequest = startTime !== undefined && endTime !== undefined;
 
     // Get audio download URL from Kaltura
     const kalturaLang = bcp47ToKalturaName(lang);
@@ -41,26 +39,9 @@ export async function POST(request: NextRequest) {
 
     // Check Turso for existing transcript (unless force=true)
     if (!force) {
-      const cached = await getTranscript(
-        entryId,
-        isSegmentRequest ? startTime : undefined,
-        isSegmentRequest ? endTime : undefined,
-        true,
-        lang,
-      );
-
-      console.log(
-        "Turso check for entryId:",
-        entryId,
-        "cached:",
-        cached
-          ? `found (${cached.status}, ${cached.content.statements?.length || 0} statements)`
-          : "not found",
-      );
+      const cached = await getTranscript(entryId, undefined, undefined, true, lang);
 
       if (cached && cached.status === "completed") {
-        console.log("✓ Using cached transcript:", cached.transcript_id);
-
         if (!cached.content.statements) {
           return NextResponse.json(
             { error: "Transcript uses old format, please retranscribe" },
@@ -68,13 +49,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // If statements array is empty, trigger speaker identification and tell frontend to poll
         if (cached.content.statements.length === 0) {
-          console.log(
-            "Cached transcript has 0 statements, triggering speaker identification",
-          );
-
-          // Trigger speaker identification in background (fire and forget)
           fetch(
             `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/identify-speakers`,
             {
@@ -107,18 +82,13 @@ export async function POST(request: NextRequest) {
       await deleteTranscriptsForEntry(entryId, lang);
     }
 
-    if (checkOnly) {
-      return NextResponse.json({ cached: false, text: null });
-    }
-
     const { entryId: geminiEntryId, transcriptId: geminiTranscriptId } =
       await submitGeminiTranscription(kalturaId, {
         force,
-        withThinking: withThinking === true,
         language: lang,
       });
     console.log(
-      "✓ Gemini transcription started:",
+      "Transcription started:",
       geminiTranscriptId,
       "for entryId:",
       geminiEntryId,
@@ -126,7 +96,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       transcriptId: geminiTranscriptId,
       stage: "transcribing",
-      provider: "gemini",
     });
   } catch (error) {
     console.error("Transcription error:", error);

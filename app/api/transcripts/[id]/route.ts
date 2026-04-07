@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { pollTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 
-export async function POST(request: NextRequest) {
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
   try {
-    const { transcriptId } = await request.json();
+    const { id: transcriptId } = await context.params;
 
     if (!transcriptId) {
       return NextResponse.json(

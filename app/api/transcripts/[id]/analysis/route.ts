@@ -10,13 +10,16 @@ import {
 } from "@/lib/turso";
 import { getSpeakerMapping } from "@/lib/speakers";
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
   try {
-    const { transcriptId } = await request.json();
+    const { id: transcriptId } = await context.params;
 
     if (!transcriptId) {
       return NextResponse.json(
-        { error: "transcriptId required" },
+        { error: "Transcript ID required" },
         { status: 400 },
       );
     }
@@ -70,7 +73,6 @@ export async function POST(request: NextRequest) {
         transcriptId,
       );
 
-      // Update transcript content with propositions
       await updateTranscriptContent(transcriptId, {
         ...transcript.content,
         propositions,
