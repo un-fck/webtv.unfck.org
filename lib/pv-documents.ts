@@ -74,15 +74,19 @@ export function parseMeetingSymbol(
   }
 
   // ECOSOC: "10th meeting - Economic and Social Council" → E/2024/SR.10
-  // Only match direct ECOSOC plenary meetings, not subsidiary bodies (forums, commissions, etc.)
-  const ecosocM = title.match(/(\d+)(?:st|nd|rd|th)\s+meeting/i);
-  if (
-    ecosocM &&
-    /economic and social council|ecosoc/i.test(category) &&
-    !/forum|committee of experts|working group|commission on/i.test(title)
-  ) {
+  // Also: "Economic and Social Council, 14th meeting, 2026 session"
+  // Many subsidiary bodies (UNICEF board, UNDP board, etc.) append
+  // " - Economic and Social Council" as a trailing suffix. To exclude these,
+  // we require either:
+  //   a) "Economic and Social Council" followed by meeting number (within ~20 chars)
+  //   b) meeting number followed by " - Economic and Social Council" directly
+  const ecosocM = title.match(
+    /(?:economic and social council|ecosoc)[,\s]{1,20}(\d+)(?:st|nd|rd|th)\s+meeting|(\d+)(?:st|nd|rd|th)\s+meeting\s*-\s*(?:economic and social council|ecosoc)/i,
+  );
+  if (ecosocM) {
+    const meetingNum = ecosocM[1] || ecosocM[2];
     const year = videoDate ? new Date(videoDate).getFullYear() : new Date().getFullYear();
-    return `E/${year}/SR.${ecosocM[1]}`;
+    return `E/${year}/SR.${meetingNum}`;
   }
 
   return null;

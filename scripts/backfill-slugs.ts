@@ -2,8 +2,9 @@
  * One-time migration: backfill the `slug` column for all existing videos.
  */
 import "../lib/load-env";
-import { getTursoClient, type VideoRecord } from "../lib/turso";
+import { getTursoClient } from "../lib/turso";
 import { meetingSlugFromVideo } from "../lib/meeting-slug";
+import type { InStatement } from "@libsql/client";
 
 async function main() {
   const client = await getTursoClient();
@@ -14,8 +15,16 @@ async function main() {
 
   console.log(`Found ${result.rows.length} videos without slugs`);
 
-  let updated = 0;
-  const slugsSeen = new Set<string>();
+  // Load already-assigned slugs to avoid UNIQUE constraint violations
+  const existing = await client.execute(
+    "SELECT slug FROM videos WHERE slug IS NOT NULL",
+  );
+  const slugsSeen = new Set<string>(
+    existing.rows.map((r) => r.slug as string),
+  );
+  console.log(`${slugsSeen.size} videos already have slugs`);
+
+  const statements: InStatement[] = [];
 
   for (const row of result.rows) {
     const slug = meetingSlugFromVideo({
@@ -24,21 +33,29 @@ async function main() {
       asset_id: row.asset_id as string,
     });
 
-    // Handle duplicate slugs (shouldn't happen, but be safe)
     if (slugsSeen.has(slug)) {
       console.warn(`  Duplicate slug: ${slug} for ${row.asset_id}, skipping`);
       continue;
     }
     slugsSeen.add(slug);
 
-    await client.execute({
+    statements.push({
       sql: "UPDATE videos SET slug = ? WHERE asset_id = ?",
       args: [slug, row.asset_id as string],
     });
-    updated++;
   }
 
-  console.log(`Updated ${updated} videos with slugs`);
+  // Batch in chunks of 200 for efficiency
+  const BATCH_SIZE = 200;
+  let updated = 0;
+  for (let i = 0; i < statements.length; i += BATCH_SIZE) {
+    const batch = statements.slice(i, i + BATCH_SIZE);
+    await client.batch(batch, "write");
+    updated += batch.length;
+    console.log(`  Updated ${updated}/${statements.length}`);
+  }
+
+  console.log(`Done. Updated ${updated} videos with slugs`);
 }
 
 main().catch(console.error);

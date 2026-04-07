@@ -236,9 +236,14 @@ function extractMetadataFromTitle(title: string, category?: string) {
   );
   if (sessionMatch) metadata.sessionNumber = sessionMatch[0];
 
-  // Extract part number
+  // Extract part number from "(Part N)" or "(Resumed)" / "(resumed)"
   const partMatch = title.match(/\(Part (\d+)\)/i);
-  if (partMatch) metadata.partNumber = parseInt(partMatch[1]);
+  if (partMatch) {
+    metadata.partNumber = parseInt(partMatch[1]);
+  } else if (/^\(resumed\)/i.test(title.trim())) {
+    // SC and other resumed meetings: "(Resumed) Title..." → part 2
+    metadata.partNumber = 2;
+  }
 
   return metadata;
 }
