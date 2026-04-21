@@ -4,13 +4,14 @@ import {
   updatePVAvailability,
 } from "@/lib/turso";
 import { pvDocumentExists } from "@/lib/pv-documents";
+import { apiError } from "@/lib/api-error";
 
 const MAX_CHECKS_PER_RUN = 20;
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError(401, "unauthorized", "Unauthorized");
   }
 
   const videos = await getVideosNeedingPVCheck(90, 7);

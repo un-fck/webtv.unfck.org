@@ -407,7 +407,7 @@ export function TranscriptionPanel({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Transcription failed");
+        throw new Error(errorData.error?.message || errorData.error || "Transcription failed");
       }
 
       const data = await response.json();
@@ -456,7 +456,7 @@ export function TranscriptionPanel({
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to schedule transcript");
+        throw new Error(errorData.error?.message || errorData.error || "Failed to schedule transcript");
       }
       setStage("scheduled");
     } catch (err) {
@@ -551,7 +551,7 @@ export function TranscriptionPanel({
       });
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Analysis failed");
+        throw new Error(data.error?.message || data.error || "Analysis failed");
       }
       const data = await response.json();
       if (data.propositions) {

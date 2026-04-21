@@ -7,6 +7,7 @@ import {
 import { getKalturaAudioUrl, submitGeminiTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";
+import { apiError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,10 +15,7 @@ export async function POST(request: NextRequest) {
       await request.json();
 
     if (!kalturaId) {
-      return NextResponse.json(
-        { error: "kalturaId is required" },
-        { status: 400 },
-      );
+      return apiError(400, "missing_parameter", "kalturaId is required");
     }
 
     const lang = language || "en";
@@ -43,10 +41,7 @@ export async function POST(request: NextRequest) {
 
       if (cached && cached.status === "completed") {
         if (!cached.content.statements) {
-          return NextResponse.json(
-            { error: "Transcript uses old format, please retranscribe" },
-            { status: 400 },
-          );
+          return apiError(400, "old_format", "Transcript uses old format, please retranscribe");
         }
 
         if (cached.content.statements.length === 0) {
@@ -99,9 +94,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Transcription error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 },
-    );
+    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
   }
 }

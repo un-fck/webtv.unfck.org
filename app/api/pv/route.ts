@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPVContent, savePVContent } from "@/lib/turso";
 import { fetchPVDocument } from "@/lib/pv-documents";
 import { parsePVDocument } from "@/lib/pv-parser";
+import { apiError } from "@/lib/api-error";
 
 export const maxDuration = 25;
 
@@ -10,10 +11,7 @@ export async function GET(request: NextRequest) {
   const lang = request.nextUrl.searchParams.get("lang") || "en";
 
   if (!symbol) {
-    return NextResponse.json(
-      { error: "Missing required parameter: symbol" },
-      { status: 400 },
-    );
+    return apiError(400, "missing_parameter", "Missing required parameter: symbol");
   }
 
   // Check cache first
@@ -25,10 +23,7 @@ export async function GET(request: NextRequest) {
   // Fetch and parse
   const pdfBuffer = await fetchPVDocument(symbol, lang);
   if (!pdfBuffer) {
-    return NextResponse.json(
-      { error: "PV document not found or not available" },
-      { status: 404 },
-    );
+    return apiError(404, "not_found", "PV document not found or not available");
   }
 
   try {
@@ -41,9 +36,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(pvDoc);
   } catch (err) {
     console.error("Failed to parse PV document:", err);
-    return NextResponse.json(
-      { error: "Failed to parse PV document" },
-      { status: 500 },
-    );
+    return apiError(500, "parse_error", "Failed to parse PV document");
   }
 }

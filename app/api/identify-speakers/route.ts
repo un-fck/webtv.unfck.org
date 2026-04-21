@@ -6,41 +6,29 @@ import {
   tryAcquirePipelineLock,
   releasePipelineLock,
 } from "@/lib/turso";
+import { apiError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
   try {
     const { transcriptId } = await request.json();
 
     if (!transcriptId) {
-      return NextResponse.json(
-        { error: "transcriptId required" },
-        { status: 400 },
-      );
+      return apiError(400, "missing_parameter", "transcriptId required");
     }
 
     const transcript = await getTranscriptById(transcriptId);
     if (!transcript) {
-      return NextResponse.json(
-        { error: "Transcript not found" },
-        { status: 404 },
-      );
+      return apiError(404, "not_found", "Transcript not found");
     }
 
     const paragraphs = transcript.content.raw_paragraphs;
     if (!paragraphs || paragraphs.length === 0) {
-      return NextResponse.json(
-        { error: "No raw paragraphs available" },
-        { status: 400 },
-      );
+      return apiError(400, "missing_data", "No raw paragraphs available");
     }
-
 
     const acquired = await tryAcquirePipelineLock(transcriptId);
     if (!acquired) {
-      return NextResponse.json(
-        { error: "Pipeline already running" },
-        { status: 409 },
-      );
+      return apiError(409, "pipeline_locked", "Pipeline already running");
     }
 
     try {
@@ -66,9 +54,6 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Speaker identification error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 },
-    );
+    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
   }
 }

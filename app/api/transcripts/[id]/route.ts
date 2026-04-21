@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pollTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
+import { apiError } from "@/lib/api-error";
 
 export async function GET(
   _request: NextRequest,
@@ -10,10 +11,7 @@ export async function GET(
     const { id: transcriptId } = await context.params;
 
     if (!transcriptId) {
-      return NextResponse.json(
-        { error: "Transcript ID required" },
-        { status: 400 },
-      );
+      return apiError(400, "missing_parameter", "Transcript ID required");
     }
 
     const result = await pollTranscription(transcriptId);
@@ -30,9 +28,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Poll error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 },
-    );
+    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
   }
 }

@@ -3,6 +3,7 @@ import { getTranscript } from "@/lib/turso";
 import { getKalturaAudioUrl } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";
+import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,10 +12,7 @@ export async function GET(request: NextRequest) {
     const language = searchParams.get("language") || "en";
 
     if (!kalturaId) {
-      return NextResponse.json(
-        { error: "kalturaId query parameter is required" },
-        { status: 400 },
-      );
+      return apiError(400, "missing_parameter", "kalturaId query parameter is required");
     }
 
     const kalturaLang = bcp47ToKalturaName(language);
@@ -27,10 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!cached.content.statements) {
-      return NextResponse.json(
-        { error: "Transcript uses old format, please retranscribe" },
-        { status: 400 },
-      );
+      return apiError(400, "old_format", "Transcript uses old format, please retranscribe");
     }
 
     // If statements array is empty, trigger speaker identification
@@ -64,9 +59,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Transcript check error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 },
-    );
+    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
   }
 }

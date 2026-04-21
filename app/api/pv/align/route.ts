@@ -3,6 +3,7 @@ import { getPVContent, savePVContent } from "@/lib/turso";
 import { getKalturaAudioUrl } from "@/lib/transcription";
 import { alignPVWithAudio } from "@/lib/pv-alignment";
 import type { PVDocument } from "@/lib/pv-parser";
+import { apiError } from "@/lib/api-error";
 
 export const maxDuration = 120;
 
@@ -15,10 +16,7 @@ export async function POST(request: NextRequest) {
   };
 
   if (!pvSymbol || !kalturaId) {
-    return NextResponse.json(
-      { error: "Missing required parameters: pvSymbol, kalturaId" },
-      { status: 400 },
-    );
+    return apiError(400, "missing_parameter", "Missing required parameters: pvSymbol, kalturaId");
   }
 
   // Check if already aligned
@@ -34,10 +32,7 @@ export async function POST(request: NextRequest) {
 
   // Need the parsed PV document
   if (!cached) {
-    return NextResponse.json(
-      { error: "PV document not parsed yet. Fetch /api/pv first." },
-      { status: 400 },
-    );
+    return apiError(400, "missing_data", "PV document not parsed yet. Fetch /api/pv first.");
   }
 
   const pvDoc = JSON.parse(cached.content) as PVDocument;
