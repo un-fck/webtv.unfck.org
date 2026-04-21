@@ -25,7 +25,6 @@ export const UsageOperations = {
   openaiInitialSpeakerMapping: "openai_initial_speaker_mapping",
   openaiResegmentParagraph: "openai_resegment_paragraph",
   openaiDefineTopics: "openai_define_topics",
-  openaiTagParagraphTopics: "openai_tag_paragraph_topics",
   openaiTagSentenceTopics: "openai_tag_sentence_topics",
   openaiAnalyzePropositions: "openai_analyze_propositions",
   geminiTranscribe: "gemini_transcribe",
