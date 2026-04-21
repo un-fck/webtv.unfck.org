@@ -1301,7 +1301,7 @@ ${transcriptParts.join("\n\n")}`,
 
   // Filter out off-record paragraphs
   const offRecordIndices = Object.keys(finalMapping)
-    .filter((idx) => finalMapping[idx].is_off_record)
+    .filter((idx) => finalMapping[idx]?.is_off_record)
     .map((idx) => parseInt(idx));
 
   if (offRecordIndices.length > 0) {
@@ -1315,7 +1315,7 @@ ${transcriptParts.join("\n\n")}`,
     let newIndex = 0;
 
     for (let i = 0; i < finalParagraphs.length; i++) {
-      if (!finalMapping[i.toString()].is_off_record) {
+      if (!finalMapping[i.toString()]?.is_off_record) {
         filteredParagraphs.push(finalParagraphs[i]);
         const speaker = { ...finalMapping[i.toString()] };
         delete speaker.is_off_record; // Remove flag from final output
