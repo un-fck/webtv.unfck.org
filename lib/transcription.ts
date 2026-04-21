@@ -25,7 +25,6 @@ import { bcp47ToKalturaName } from "./languages";
 import type { GeminiTranscriptionOptions } from "./gemini-transcription";
 import { setSpeakerMapping } from "./speakers";
 import { getSTTProvider } from "./providers/config";
-import { getRichResult } from "./providers/gemini-production";
 import { toRawParagraphs } from "./providers/convert";
 import type { GeminiTranscriptionResult } from "./gemini-transcription";
 
@@ -238,43 +237,28 @@ async function runTranscriptionPipeline(
     });
     const durationMs = Date.now() - start;
 
-    let paragraphs: RawParagraph[];
-    let speakerMapping: SpeakerMapping | undefined;
+    const paragraphs: RawParagraph[] = toRawParagraphs(transcript);
+    const speakerMapping: SpeakerMapping | undefined = undefined;
 
-    if (provider.capabilities.speakerIdentification) {
-      // Rich provider (e.g. production Gemini) — extract full result
-      const richResult = getRichResult();
-      if (richResult) {
-        paragraphs = richResult.paragraphs;
-        speakerMapping = richResult.speakerMapping;
-      } else {
-        // Fallback: convert normalized transcript
-        paragraphs = toRawParagraphs(transcript);
-      }
-
-      // Track Gemini-specific usage if available
-      const rawResult = transcript.raw as GeminiTranscriptionResult | undefined;
-      if (rawResult?.usageMetadata) {
-        await trackGeminiTranscription({
-          transcriptId,
-          stage: UsageStages.transcribing,
-          operation: UsageOperations.geminiTranscribe,
-          model: "gemini-3-flash-preview",
-          usageMetadata: rawResult.usageMetadata,
-          audioSeconds: rawResult.audioSeconds,
-          durationMs,
-          requestMeta: {
-            provider: provider.name,
-            chunked: rawResult.chunked,
-            chunkCount: rawResult.chunkCount,
-            withThinking: options.withThinking ?? false,
-            paragraph_count: paragraphs.length,
-          },
-        });
-      }
-    } else {
-      // Basic STT provider — convert to RawParagraphs, no speaker mapping
-      paragraphs = toRawParagraphs(transcript);
+    // Track Gemini-specific usage if available
+    const rawResult = transcript.raw as GeminiTranscriptionResult | undefined;
+    if (rawResult?.usageMetadata) {
+      await trackGeminiTranscription({
+        transcriptId,
+        stage: UsageStages.transcribing,
+        operation: UsageOperations.geminiTranscribe,
+        model: "gemini-3-flash-preview",
+        usageMetadata: rawResult.usageMetadata,
+        audioSeconds: rawResult.audioSeconds,
+        durationMs,
+        requestMeta: {
+          provider: provider.name,
+          chunked: rawResult.chunked,
+          chunkCount: rawResult.chunkCount,
+          withThinking: options.withThinking ?? false,
+          paragraph_count: paragraphs.length,
+        },
+      });
     }
 
     plog(`[Pipeline] Transcription complete: ${paragraphs.length} segments (${provider.name}, ${durationMs}ms)`);
