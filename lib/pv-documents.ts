@@ -19,7 +19,7 @@ export function parseMeetingSymbol(
   videoDate?: string,
 ): string | null {
   // Security Council: "9748th meeting" → S/PV.9748
-  const scMatch = title.match(/(\d{4,5})(?:st|nd|rd|th)\s+meeting/);
+  const scMatch = title.match(/(\d{4,5})(?:st|nd|rd|th)\s+meeting/i);
   if (scMatch && /security council/i.test(category)) {
     return `S/PV.${scMatch[1]}`;
   }
@@ -43,8 +43,8 @@ export function parseMeetingSymbol(
   }
 
   // General Assembly plenary: "21st plenary meeting, 79th session" → A/79/PV.21
-  const sessionM = title.match(/(\d+)(?:st|nd|rd|th)\s+session/);
-  const plenaryM = title.match(/(\d+)(?:st|nd|rd|th)\s+plenary\s+meeting/);
+  const sessionM = title.match(/(\d+)(?:st|nd|rd|th)\s+session/i);
+  const plenaryM = title.match(/(\d+)(?:st|nd|rd|th)\s+plenary\s+meeting/i);
   if (
     sessionM &&
     plenaryM &&
@@ -81,7 +81,7 @@ export function parseMeetingSymbol(
   //   a) "Economic and Social Council" followed by meeting number (within ~20 chars)
   //   b) meeting number followed by " - Economic and Social Council" directly
   const ecosocM = title.match(
-    /(?:economic and social council|ecosoc)[,\s]{1,20}(\d+)(?:st|nd|rd|th)\s+meeting|(\d+)(?:st|nd|rd|th)\s+meeting\s*-\s*(?:economic and social council|ecosoc)/i,
+    /(?:economic and social council|ecosoc)[,:\s]{1,20}(\d+)(?:st|nd|rd|th)\s+(?:plenary\s+)?meeting|(\d+)(?:st|nd|rd|th)\s+(?:plenary\s+)?meeting\s*-\s*(?:economic and social council|ecosoc)/i,
   );
   if (ecosocM) {
     const meetingNum = ecosocM[1] || ecosocM[2];
