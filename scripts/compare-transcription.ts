@@ -2,27 +2,29 @@
 import "../lib/load-env";
 import { resolveEntryId } from "../lib/kaltura-helpers";
 import { getKalturaAudioUrl } from "../lib/transcription";
-import { assemblyai } from "../eval/providers/assemblyai";
-import { azureOpenai } from "../eval/providers/azure-openai";
-import { downloadAudioToTemp, formatTime } from "../eval/utils";
-import type { NormalizedTranscript } from "../eval/providers/types";
+import { getProvider } from "../lib/providers/registry";
+import { downloadAudioToTemp, formatTime } from "../lib/providers/utils";
+import type { NormalizedTranscript } from "../lib/providers/types";
 import fs from "fs";
 import path from "path";
 
 const usage = `Usage:
-  npm run compare-transcribe -- <asset-id|entry-id>
+  pnpm compare-transcribe -- <asset-id|entry-id> [provider]
 
-Runs both Azure OpenAI gpt-4o-transcribe-diarize and AssemblyAI on the same
-UN Web TV video, writing results to two .txt files for easy diff comparison.`;
+Transcribes a UN Web TV video with a single provider and saves the result
+to transcription-comparisons/<entryId>/<provider>.txt (and _raw.json).
+Run multiple times with different providers to compare side-by-side.
 
-const rawArg = process.argv[2];
+Provider defaults to "gemini". Available providers: gemini, gemini-eval,
+assemblyai, azure-openai, elevenlabs, azure-speech, google-chirp,
+groq-whisper, alibaba, deepgram, mistral, cohere`;
+
+const [rawArg, providerName = "gemini"] = process.argv.slice(2);
 if (!rawArg) {
   console.error(usage);
   process.exit(1);
 }
 const decodedArg = decodeURIComponent(rawArg.trim());
-
-const outputDir = path.join(process.cwd(), "transcription-comparisons");
 
 function transcriptToText(t: NormalizedTranscript): string {
   if (t.utterances.length > 0) {
@@ -37,43 +39,36 @@ function transcriptToText(t: NormalizedTranscript): string {
 }
 
 async function main() {
+  const provider = getProvider(providerName);
+
   const entryId = await resolveEntryId(decodedArg);
   if (!entryId)
     throw new Error(`Could not resolve entry ID for: ${decodedArg}`);
 
-  console.log(`Entry ID: ${entryId}`);
+  console.log(`Entry ID:  ${entryId}`);
+  console.log(`Provider:  ${providerName}`);
+
   const { audioUrl } = await getKalturaAudioUrl(entryId);
   console.log(`Audio URL: ${audioUrl}\n`);
 
+  const outputDir = path.join(process.cwd(), "transcription-comparisons", entryId);
   fs.mkdirSync(outputDir, { recursive: true });
 
-  // Download audio once, shared between providers
   const tmpPath = await downloadAudioToTemp(audioUrl);
 
   try {
-    const [azureTranscript, assemblyTranscript] = await Promise.all([
-      azureOpenai.transcribe(audioUrl, { audioFilePath: tmpPath }),
-      assemblyai.transcribe(audioUrl),
-    ]);
+    const transcript = await provider.transcribe(audioUrl, { audioFilePath: tmpPath });
 
-    // Save raw JSON for debugging
+    const safeProvider = providerName.replace(/[^a-z0-9-]/gi, "_");
     fs.writeFileSync(
-      path.join(outputDir, `${entryId}_azure_raw.json`),
-      JSON.stringify(azureTranscript.raw, null, 2),
+      path.join(outputDir, `${safeProvider}_raw.json`),
+      JSON.stringify(transcript.raw, null, 2),
     );
-    fs.writeFileSync(
-      path.join(outputDir, `${entryId}_assemblyai_raw.json`),
-      JSON.stringify(assemblyTranscript.raw, null, 2),
-    );
+    const txtFile = path.join(outputDir, `${safeProvider}.txt`);
+    fs.writeFileSync(txtFile, transcriptToText(transcript));
 
-    const azureFile = path.join(outputDir, `${entryId}_azure.txt`);
-    const assemblyFile = path.join(outputDir, `${entryId}_assemblyai.txt`);
-    fs.writeFileSync(azureFile, transcriptToText(azureTranscript));
-    fs.writeFileSync(assemblyFile, transcriptToText(assemblyTranscript));
-
-    console.log(`\n✓ Results written to:`);
-    console.log(`  Azure:      ${azureFile}`);
-    console.log(`  AssemblyAI: ${assemblyFile}`);
+    console.log(`✓ Results written to:`);
+    console.log(`  ${txtFile}`);
   } finally {
     try {
       fs.unlinkSync(tmpPath);

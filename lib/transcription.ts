@@ -1,4 +1,8 @@
 import { randomUUID } from "crypto";
+
+const ts = () => new Date().toTimeString().slice(0, 8);
+const plog = (...args: unknown[]) => console.log(`[${ts()}]`, ...args);
+const perr = (...args: unknown[]) => console.error(`[${ts()}]`, ...args);
 import {
   saveTranscript,
   deleteTranscriptsForEntry,
@@ -18,11 +22,12 @@ import {
   UsageStages,
 } from "./usage-tracking";
 import { bcp47ToKalturaName } from "./languages";
-import {
-  transcribeAudioWithGemini,
-  type GeminiTranscriptionOptions,
-} from "./gemini-transcription";
+import type { GeminiTranscriptionOptions } from "./gemini-transcription";
 import { setSpeakerMapping } from "./speakers";
+import { getSTTProvider } from "./providers/config";
+import { getRichResult } from "./providers/gemini-production";
+import { toRawParagraphs } from "./providers/convert";
+import type { GeminiTranscriptionResult } from "./gemini-transcription";
 
 export { type TranscriptStatus } from "./turso";
 
@@ -178,6 +183,26 @@ export async function pollTranscription(
     transcript.status === "analyzing_topics" ||
     transcript.status === "analyzing_propositions"
   ) {
+    // Try to restart stuck stages by re-acquiring a stale lock
+    const paragraphs = transcript.content.raw_paragraphs;
+    if (paragraphs && paragraphs.length > 0) {
+      const acquired = await tryAcquirePipelineLock(transcriptId);
+      if (acquired) {
+        plog(`[Pipeline] Re-entering stuck stage ${transcript.status} for ${transcriptId}`);
+        runAnalysisPipeline(transcriptId, paragraphs, undefined).catch(
+          (err) => {
+            perr("[Pipeline] Re-entry error:", err);
+            updateTranscriptStatus(
+              transcriptId,
+              "error",
+              err instanceof Error ? err.message : "Re-entry failed",
+            );
+            releasePipelineLock(transcriptId);
+          },
+        );
+      }
+    }
+
     return {
       stage: transcript.status,
       raw_paragraphs: transcript.content.raw_paragraphs,
@@ -187,98 +212,75 @@ export async function pollTranscription(
     };
   }
 
-  // transcribed but pipeline not running — start it
-  if (transcript.status === "transcribed") {
-    const acquired = await tryAcquirePipelineLock(transcriptId);
-    if (acquired) {
-      runPipeline(transcriptId, transcript.entry_id).catch((err) => {
-        console.error("Pipeline error:", err);
-        updateTranscriptStatus(
-          transcriptId,
-          "error",
-          err instanceof Error ? err.message : "Pipeline failed",
-        );
-        releasePipelineLock(transcriptId);
-      });
-    }
-    return {
-      stage: "identifying_speakers",
-      raw_paragraphs: transcript.content.raw_paragraphs,
-    };
-  }
-
   // Gemini transcripts run fully in-process — nothing to poll externally
   return { stage: "transcribing" };
 }
 
-async function runPipeline(transcriptId: string, _entryId: string) {
-  try {
-    await updateTranscriptStatus(transcriptId, "identifying_speakers");
 
-    const transcript = await getTranscriptById(transcriptId);
-    if (!transcript?.content.raw_paragraphs) {
-      throw new Error("No raw paragraphs available");
-    }
 
-    await identifySpeakers(transcript.content.raw_paragraphs, transcriptId, undefined, { skipPropositions: true });
-    await updateTranscriptStatus(transcriptId, "completed");
-    await releasePipelineLock(transcriptId);
-  } catch (err) {
-    console.error("Pipeline failed:", err);
-    await updateTranscriptStatus(
-      transcriptId,
-      "error",
-      err instanceof Error ? err.message : "Pipeline failed",
-    );
-    await releasePipelineLock(transcriptId);
-    throw err;
-  }
-}
+// ---- Provider-agnostic transcription pipeline ----
 
-// ---- Gemini transcription path ----
-
-async function runGeminiPipeline(
+async function runTranscriptionPipeline(
   transcriptId: string,
   entryId: string,
   audioUrl: string,
-  geminiOptions: GeminiTranscriptionOptions,
+  options: GeminiTranscriptionOptions,
   languageCode: string,
 ): Promise<void> {
   try {
+    const provider = getSTTProvider();
     await updateTranscriptStatus(transcriptId, "transcribing");
-    console.log(
-      `[Gemini pipeline] Starting for transcript ${transcriptId}`,
-    );
+    plog(`[Pipeline] Starting transcription with ${provider.name} for ${transcriptId}`);
 
     const start = Date.now();
-    const geminiResult = await transcribeAudioWithGemini(audioUrl, {
-      ...geminiOptions,
-      transcriptId,
+    const transcript = await provider.transcribe(audioUrl, {
+      language: languageCode,
     });
     const durationMs = Date.now() - start;
 
-    console.log(
-      `[Gemini pipeline] Transcription complete: ${geminiResult.paragraphs.length} segments, ${geminiResult.chunked ? `${geminiResult.chunkCount} chunks` : "single call"}`,
-    );
+    let paragraphs: RawParagraph[];
+    let speakerMapping: SpeakerMapping | undefined;
 
-    await trackGeminiTranscription({
-      transcriptId,
-      stage: UsageStages.transcribing,
-      operation: UsageOperations.geminiTranscribe,
-      model: "gemini-3-flash-preview",
-      usageMetadata: geminiResult.usageMetadata,
-      audioSeconds: geminiResult.audioSeconds,
-      durationMs,
-      requestMeta: {
-        chunked: geminiResult.chunked,
-        chunkCount: geminiResult.chunkCount,
-        withThinking: geminiOptions.withThinking ?? false,
-        paragraph_count: geminiResult.paragraphs.length,
-      },
-    });
+    if (provider.capabilities.speakerIdentification) {
+      // Rich provider (e.g. production Gemini) — extract full result
+      const richResult = getRichResult();
+      if (richResult) {
+        paragraphs = richResult.paragraphs;
+        speakerMapping = richResult.speakerMapping;
+      } else {
+        // Fallback: convert normalized transcript
+        paragraphs = toRawParagraphs(transcript);
+      }
+
+      // Track Gemini-specific usage if available
+      const rawResult = transcript.raw as GeminiTranscriptionResult | undefined;
+      if (rawResult?.usageMetadata) {
+        await trackGeminiTranscription({
+          transcriptId,
+          stage: UsageStages.transcribing,
+          operation: UsageOperations.geminiTranscribe,
+          model: "gemini-3-flash-preview",
+          usageMetadata: rawResult.usageMetadata,
+          audioSeconds: rawResult.audioSeconds,
+          durationMs,
+          requestMeta: {
+            provider: provider.name,
+            chunked: rawResult.chunked,
+            chunkCount: rawResult.chunkCount,
+            withThinking: options.withThinking ?? false,
+            paragraph_count: paragraphs.length,
+          },
+        });
+      }
+    } else {
+      // Basic STT provider — convert to RawParagraphs, no speaker mapping
+      paragraphs = toRawParagraphs(transcript);
+    }
+
+    plog(`[Pipeline] Transcription complete: ${paragraphs.length} segments (${provider.name}, ${durationMs}ms)`);
 
     const content: TranscriptContent = {
-      raw_paragraphs: geminiResult.paragraphs,
+      raw_paragraphs: paragraphs,
       statements: [],
       topics: {},
     };
@@ -292,16 +294,20 @@ async function runGeminiPipeline(
       languageCode,
       content,
     );
-    await setSpeakerMapping(transcriptId, geminiResult.speakerMapping);
+    if (speakerMapping) {
+      await setSpeakerMapping(transcriptId, speakerMapping);
+    }
 
     const acquired = await tryAcquirePipelineLock(transcriptId);
     if (acquired) {
+      // Pass speakerMapping as prebuiltMapping for rich providers;
+      // undefined for basic providers triggers full OpenAI speaker ID
       runAnalysisPipeline(
         transcriptId,
-        geminiResult.paragraphs,
-        geminiResult.speakerMapping,
+        paragraphs,
+        speakerMapping,
       ).catch((err) => {
-        console.error("[Gemini pipeline] Analysis error:", err);
+        perr("[Pipeline] Analysis error:", err);
         updateTranscriptStatus(
           transcriptId,
           "error",
@@ -311,11 +317,11 @@ async function runGeminiPipeline(
       });
     }
   } catch (err) {
-    console.error("[Gemini pipeline] Error:", err);
+    perr("[Pipeline] Error:", err);
     await updateTranscriptStatus(
       transcriptId,
       "error",
-      err instanceof Error ? err.message : "Gemini transcription failed",
+      err instanceof Error ? err.message : "Transcription failed",
     );
     throw err;
   }
@@ -324,7 +330,7 @@ async function runGeminiPipeline(
 async function runAnalysisPipeline(
   transcriptId: string,
   paragraphs: RawParagraph[],
-  speakerMapping: SpeakerMapping,
+  speakerMapping?: SpeakerMapping,
 ): Promise<void> {
   try {
     await updateTranscriptStatus(transcriptId, "identifying_speakers");
@@ -346,9 +352,9 @@ async function runAnalysisPipeline(
  * Submit a Gemini transcription job and return immediately.
  * The transcription + analysis runs in the background; clients poll via pollTranscription().
  */
-export async function submitGeminiTranscription(
+export async function submitTranscription(
   kalturaId: string,
-  options: GeminiTranscriptionOptions & { force?: boolean } = {},
+  options: GeminiTranscriptionOptions & { force?: boolean; existingTranscriptId?: string } = {},
 ): Promise<{ entryId: string; transcriptId: string }> {
   const lang = options.language || "en";
   const kalturaLang = bcp47ToKalturaName(lang);
@@ -361,15 +367,16 @@ export async function submitGeminiTranscription(
     await deleteTranscriptsForEntry(entryId, lang);
   }
 
-  const transcriptId = `gemini-${randomUUID()}`;
+  const provider = getSTTProvider();
+  const transcriptId = options.existingTranscriptId ?? `${provider.name}-${randomUUID()}`;
 
   await saveTranscript(entryId, transcriptId, null, null, audioUrl, "transcribing", lang, {
     statements: [],
     topics: {},
   });
 
-  runGeminiPipeline(transcriptId, entryId, audioUrl, options, lang).catch((err) => {
-    console.error("[Gemini pipeline] Unhandled error:", err);
+  runTranscriptionPipeline(transcriptId, entryId, audioUrl, options, lang).catch((err) => {
+    perr("[Pipeline] Unhandled error:", err);
   });
 
   return { entryId, transcriptId };

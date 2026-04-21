@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+
+const ts = () => new Date().toTimeString().slice(0, 8);
 import {
   getScheduledTranscripts,
-  updateTranscriptStatus,
 } from "@/lib/turso";
-import { getKalturaAudioUrl, submitGeminiTranscription } from "@/lib/transcription";
+import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
+import { apiError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
-  // Verify cron secret
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError(401, "unauthorized", "Unauthorized");
   }
 
   const scheduled = await getScheduledTranscripts();
@@ -39,15 +40,12 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      // Audio is available — submit to Gemini
-      const { transcriptId } = await submitGeminiTranscription(kalturaId);
+      // Audio is available — reuse the existing scheduled row
+      const { transcriptId } = await submitTranscription(kalturaId, {
+        existingTranscriptId: item.transcript_id,
+      });
 
-      // Mark the old scheduled record as superseded
-      await updateTranscriptStatus(item.transcript_id, "transcribing");
-
-      console.log(
-        `✓ Started scheduled transcript for ${kalturaId} → ${transcriptId}`,
-      );
+      console.log(`[${ts()}] ✓ Started scheduled transcript for ${kalturaId} → ${transcriptId}`);
       started++;
     } catch (err) {
       // Audio not available yet — leave as scheduled, try again next run

@@ -6,9 +6,12 @@ Overview of how AI models are used in the transcription and analysis pipeline.
 
 | Provider | Model | Used for |
 | --- | --- | --- |
-| Google Gemini | `gemini-3-flash-preview` | Audio transcription, PV document alignment |
-| Azure OpenAI | `gpt-5` | Speaker identification (legacy), resegmentation, topic definition, proposition analysis |
-| Azure OpenAI | `gpt-5-mini` | Cross-chunk speaker normalization, sentence-level topic tagging |
+| Google Gemini | `gemini-3-flash-preview` | Audio transcription (default STT provider), PV document alignment |
+| Azure OpenAI | `gpt-5.4` (configurable via `STT_ANALYSIS_MODEL`) | Speaker identification (legacy), resegmentation, topic definition, proposition analysis |
+| Azure OpenAI | `gpt-5.4-mini` (configurable via `STT_ANALYSIS_MODEL_MINI`) | Cross-chunk speaker normalization |
+| Azure OpenAI | `gpt-5.4-nano` (configurable via `STT_ANALYSIS_MODEL_NANO`) | Sentence-level topic tagging (reasoning disabled) |
+
+The STT provider is configurable via `STT_PROVIDER` env var (default: `gemini`). Available providers are registered in `lib/providers/registry.ts`. Analysis model names are configurable via `STT_ANALYSIS_MODEL`, `STT_ANALYSIS_MODEL_MINI`, and `STT_ANALYSIS_MODEL_NANO`.
 
 All AI calls are tracked in the `processing_usage_events` table via `lib/usage-tracking.ts`, recording token counts, duration, and estimated cost.
 
@@ -20,21 +23,21 @@ Kaltura audio URL
        ▼
  1. Transcription (Gemini)
        │
-       ├── [if chunked] 2. Speaker normalization (GPT-5-mini)
+       ├── [if chunked] 2. Speaker normalization (GPT-5.4-mini)
        │
        ▼
- 3. Speaker identification (GPT-5, legacy path only)
+ 3. Speaker identification (GPT-5.4, legacy path only)
        │
-       ├── [if mixed speakers] 4. Resegmentation (GPT-5)
-       │
-       ▼
- 5. Topic definition (GPT-5)
+       ├── [if mixed speakers] 4. Resegmentation (GPT-5.4)
        │
        ▼
- 6. Sentence topic tagging (GPT-5-mini, parallel)
+ 5. Topic definition (GPT-5.4)
+       │
+       ▼
+ 6. Sentence topic tagging (GPT-5.4-nano, batched)
        │
        ▼ (on demand only)
- 7. Proposition analysis (GPT-5)
+ 7. Proposition analysis (GPT-5.4)
 ```
 
 Separately, PV document alignment (step 8) can run independently when an official verbatim record is available.
@@ -45,7 +48,7 @@ Separately, PV document alignment (step 8) can run independently when an officia
 
 **File:** `lib/gemini-transcription.ts` — `transcribeAudioWithGemini()`
 **Model:** `gemini-3-flash-preview` via Gemini Files API
-**Triggered by:** `POST /api/transcribe`
+**Triggered by:** `POST /api/transcripts`
 
 Audio is downloaded from Kaltura, uploaded to the Gemini Files API, and transcribed with speaker identification in a single call. Supports all 6 UN official languages plus the "floor" (original) channel.
 
@@ -60,7 +63,7 @@ Audio is downloaded from Kaltura, uploaded to the Gemini Files API, and transcri
 - `start_time`, `end_time` — HH:MM:SS timestamps
 - `text` — verbatim transcription including filler words and false starts
 
-Word-level timestamps are derived by uniform interpolation within each segment.
+Word-level timestamps are derived by interpolation within each sentence-level segment. Providers with real word-level timestamps (AssemblyAI, Deepgram, ElevenLabs, Azure Speech, Google Chirp, Cohere) preserve them directly.
 
 **Key design decision:** Free-text JSON output (not constrained decoding) is used because Gemini's constrained JSON mode corrupts non-ASCII characters like `é` due to a tokenizer bug.
 
@@ -69,7 +72,7 @@ Word-level timestamps are derived by uniform interpolation within each segment.
 ## 2. Speaker normalization (cross-chunk)
 
 **File:** `lib/gemini-transcription.ts` — `normalizeSpeakers()`
-**Model:** `gpt-5-mini` via Azure OpenAI (structured output)
+**Model:** `gpt-5.4-mini` via Azure OpenAI (structured output)
 **Only runs after chunked transcription.**
 
 When audio is split into chunks, the same speaker may appear with slight variations across chunks (different spellings, titles, accents). This step deduplicates them.
@@ -82,7 +85,7 @@ Uses `reasoning_effort: 'minimal'`.
 ## 3. Speaker identification (legacy)
 
 **File:** `lib/speaker-identification.ts` — `identifySpeakers()`
-**Model:** `gpt-5` via Azure OpenAI (structured output)
+**Model:** `gpt-5.4` via Azure OpenAI (structured output)
 **Only runs for non-Gemini transcripts** (Gemini already produces speaker mappings).
 
 Identifies who is actually speaking each paragraph (not who is being mentioned or introduced). Uses ASR diarization labels as hints.
@@ -92,7 +95,7 @@ Identifies who is actually speaking each paragraph (not who is being mentioned o
 ## 4. Resegmentation
 
 **File:** `lib/speaker-identification.ts` — `resegmentParagraph()`
-**Model:** `gpt-5` via Azure OpenAI (structured output)
+**Model:** `gpt-5.4` via Azure OpenAI (structured output)
 **Only runs for paragraphs flagged as `has_multiple_speakers`.**
 
 ASR sometimes places a speaker boundary incorrectly, merging two speakers into one paragraph. This step splits them. Each flagged paragraph is processed in parallel with surrounding context.
@@ -102,7 +105,7 @@ Low-confidence splits are discarded.
 ## 5. Topic definition
 
 **File:** `lib/speaker-identification.ts` — `defineTopics()`
-**Model:** `gpt-5` via Azure OpenAI (structured output)
+**Model:** `gpt-5.4` via Azure OpenAI (structured output)
 **Runs automatically after speaker identification.**
 
 Identifies 5-10 substantive policy topics discussed in the transcript. Each topic must appear in at least 2 different statements by different speakers. Chair/President/Moderator paragraphs are excluded from the input.
@@ -112,16 +115,16 @@ Identifies 5-10 substantive policy topics discussed in the transcript. Each topi
 ## 6. Sentence-level topic tagging
 
 **File:** `lib/speaker-identification.ts` — `tagSentencesWithTopics()`
-**Model:** `gpt-5-mini` via Azure OpenAI (structured output)
-**Runs immediately after topic definition, fully parallelized.**
+**Model:** `gpt-5.4-nano` via Azure OpenAI (structured output, `reasoning_effort: "none"`)
+**Runs immediately after topic definition, batched with rate-limited concurrency.**
 
-Each non-chair sentence is tagged with 0-3 topic keys from the defined topics. Each call receives 2 sentences of surrounding context.
+Sentences are grouped into batches of 15 and tagged in parallel (up to 20 concurrent requests, rate-limited to 10/sec via Bottleneck). Each non-chair sentence is tagged with 0-3 topic keys from the defined topics.
 
 ## 7. Proposition analysis (on demand)
 
 **File:** `lib/speaker-identification.ts` — `analyzePropositions()`
-**API route:** `POST /api/analyze`
-**Model:** `gpt-5` via Azure OpenAI (structured output)
+**API route:** `POST /api/transcripts/[id]/analysis`
+**Model:** `gpt-5.4` via Azure OpenAI (structured output)
 **Not part of the automatic pipeline** — must be explicitly triggered.
 
 Identifies 3-8 concrete propositions (not generic topics) and maps stakeholder positions on each.

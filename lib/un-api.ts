@@ -1,5 +1,6 @@
 import { getVideoByAssetId, saveVideo, type VideoRecord } from "./turso";
 import { parseMeetingSymbol } from "./pv-documents";
+import { meetingSlugFromVideo } from "./meeting-slug";
 
 export interface Video {
   id: string;
@@ -18,6 +19,7 @@ export interface Video {
   partNumber: number | null;
   pvSymbol: string | null;
   pvAvailable: boolean;
+  slug: string;
   hasTranscript: boolean;
 }
 
@@ -57,6 +59,9 @@ export function videoToRecord(
     }
   }
 
+  const pv_symbol = parseMeetingSymbol(video.title, video.category, video.date);
+  const part_number = video.partNumber !== null ? String(video.partNumber) : null;
+
   return {
     asset_id: video.id,
     entry_id: null, // Will be resolved later
@@ -71,10 +76,11 @@ export function videoToRecord(
     event_code: video.eventCode,
     event_type: video.eventType,
     session_number: video.sessionNumber,
-    part_number: video.partNumber !== null ? String(video.partNumber) : null,
-    pv_symbol: parseMeetingSymbol(video.title, video.category, video.date),
+    part_number,
+    pv_symbol,
     pv_available: null,
     pv_checked_at: null,
+    slug: meetingSlugFromVideo({ pv_symbol, part_number, asset_id: video.id }),
     last_seen: new Date().toISOString().split("T")[0],
   };
 }
@@ -111,6 +117,7 @@ export function recordToVideo(
       record.part_number !== null ? parseInt(record.part_number) : null,
     pvSymbol: record.pv_symbol ?? null,
     pvAvailable: record.pv_available === 1,
+    slug: record.slug ?? meetingSlugFromVideo(record),
     hasTranscript,
   };
 }
@@ -229,9 +236,14 @@ function extractMetadataFromTitle(title: string, category?: string) {
   );
   if (sessionMatch) metadata.sessionNumber = sessionMatch[0];
 
-  // Extract part number
+  // Extract part number from "(Part N)" or "(Resumed)" / "(resumed)"
   const partMatch = title.match(/\(Part (\d+)\)/i);
-  if (partMatch) metadata.partNumber = parseInt(partMatch[1]);
+  if (partMatch) {
+    metadata.partNumber = parseInt(partMatch[1]);
+  } else if (/^\(resumed\)/i.test(title.trim())) {
+    // SC and other resumed meetings: "(Resumed) Title..." → part 2
+    metadata.partNumber = 2;
+  }
 
   return metadata;
 }
@@ -309,6 +321,8 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
       ? "live"
       : calculateStatus(scheduledTime, duration);
 
+    const pvSymbol = parseMeetingSymbol(rawTitle, categoryText, date);
+    const partNumber = titleMetadata.partNumber;
     videos.push({
       id: assetId,
       url: `https://webtv.un.org/en/asset/${assetId}`,
@@ -320,8 +334,13 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
       scheduledTime,
       status,
       ...titleMetadata,
-      pvSymbol: parseMeetingSymbol(rawTitle, categoryText, date),
+      pvSymbol,
       pvAvailable: false, // Determined by cron check
+      slug: meetingSlugFromVideo({
+        pv_symbol: pvSymbol,
+        part_number: partNumber !== null ? String(partNumber) : null,
+        asset_id: assetId,
+      }),
       hasTranscript: false, // Will be updated later
     });
   }

@@ -13,6 +13,8 @@ import {
   UsageStages,
 } from "./usage-tracking";
 import "./load-env";
+import { getAnalysisModel, getAnalysisModelMini, getAnalysisModelNano } from "./providers/config";
+import Bottleneck from "bottleneck";
 // @ts-expect-error - no types available for sbd
 import sbd from "sbd";
 
@@ -71,11 +73,6 @@ const TopicDefinitions = z.object({
       description: z.string(),
     }),
   ),
-});
-
-const ParagraphTopicTags = z.object({
-  paragraph_index: z.number(),
-  topic_keys: z.array(z.string()),
 });
 
 // Proposition analysis schemas
@@ -363,13 +360,13 @@ async function defineTopics(
     transcriptId,
     stage: UsageStages.analyzingTopics,
     operation: UsageOperations.openaiDefineTopics,
-    model: "gpt-5",
+    model: getAnalysisModel(),
     requestMeta: {
       paragraph_count: paragraphs.length,
       substantive_statements: substantiveStatements.length,
     },
     request: {
-      model: "gpt-5",
+      model: getAnalysisModel(),
       messages: [
         {
           role: "system",
@@ -468,13 +465,13 @@ export async function analyzePropositions(
     transcriptId,
     stage: UsageStages.analyzingPropositions,
     operation: UsageOperations.openaiAnalyzePropositions,
-    model: "gpt-5",
+    model: getAnalysisModel(),
     requestMeta: {
       paragraph_count: paragraphs.length,
       substantive_statements: substantiveStatements.length,
     },
     request: {
-      model: "gpt-5",
+      model: getAnalysisModel(),
       messages: [
         {
           role: "system",
@@ -572,141 +569,6 @@ ${transcriptParts.join("\n\n")}`,
   return verified;
 }
 
-async function _tagParagraphsWithTopics(
-  paragraphs: ParagraphInput[],
-  topics: Record<string, { key: string; description: string; color: string }>,
-  speakerMapping: SpeakerMapping,
-  client: AzureOpenAI,
-  transcriptId?: string,
-): Promise<Record<string, string[]>> {
-  console.log(`  → Tagging paragraphs with topics...`);
-
-  const topicKeys = Object.keys(topics);
-  if (topicKeys.length === 0) {
-    console.log(`  ℹ No topics defined, skipping tagging`);
-    return {};
-  }
-
-  const topicDescriptions = topicKeys
-    .map((key) => `- ${key}: ${topics[key].description}`)
-    .join("\n");
-
-  const taggingResults = await mapWithConcurrency(
-    paragraphs.map((para, idx) => ({ para, idx })),
-    10,
-    async ({ para, idx }) => {
-    const speaker = speakerMapping[idx.toString()];
-
-    // Skip chair/moderator statements
-    const isChair =
-      speaker?.function?.toLowerCase().includes("chair") ||
-      speaker?.function?.toLowerCase().includes("president") ||
-      speaker?.function?.toLowerCase().includes("moderator");
-
-    if (isChair) {
-      return { paragraph_index: idx, topic_keys: [] };
-    }
-
-    // Build context
-    const contextParts: string[] = [];
-
-    // Previous paragraph
-    if (idx > 0) {
-      const prevSpeaker = speakerMapping[(idx - 1).toString()];
-      const prevLabel =
-        prevSpeaker?.name || prevSpeaker?.affiliation || "Unknown";
-      contextParts.push(
-        `PREVIOUS: ${prevLabel}: ${paragraphs[idx - 1].text.substring(0, 200)}...`,
-      );
-    }
-
-    // Current paragraph
-    const currentLabel = speaker?.name || speaker?.affiliation || "Unknown";
-    contextParts.push(`CURRENT: ${currentLabel}: ${para.text}`);
-
-    // Next paragraph
-    if (idx < paragraphs.length - 1) {
-      const nextSpeaker = speakerMapping[(idx + 1).toString()];
-      const nextLabel =
-        nextSpeaker?.name || nextSpeaker?.affiliation || "Unknown";
-      contextParts.push(
-        `NEXT: ${nextLabel}: ${paragraphs[idx + 1].text.substring(0, 200)}...`,
-      );
-    }
-
-    try {
-      const completion = await trackOpenAIChatCompletion({
-        client,
-        transcriptId,
-        stage: UsageStages.analyzingTopics,
-        operation: UsageOperations.openaiTagParagraphTopics,
-        model: "gpt-5",
-        requestMeta: {
-          paragraph_index: idx,
-          paragraph_count: paragraphs.length,
-        },
-        request: {
-          model: "gpt-5",
-          messages: [
-            {
-              role: "system",
-              content: `You are tagging UN proceeding statements with relevant topics.
-
-AVAILABLE TOPICS:
-${topicDescriptions}
-
-TASK:
-- Analyze the CURRENT statement
-- Select 0-3 topics that are directly discussed
-- Only tag substantive policy discussions
-- Return empty array if no topics apply or if statement is purely procedural
-
-RULES:
-- A topic applies if the statement makes substantive points about it
-- Brief mentions don't count - the statement must engage with the topic
-- When uncertain, don't tag`,
-            },
-            {
-              role: "user",
-              content: `Which topics (if any) are discussed in this statement?
-
-${contextParts.join("\n\n")}`,
-            },
-          ],
-          response_format: zodResponseFormat(ParagraphTopicTags, "tags"),
-        },
-      });
-
-      const result = completion.choices[0]?.message?.content;
-      if (!result) {
-        return { paragraph_index: idx, topic_keys: [] };
-      }
-
-      const parsed = JSON.parse(result) as z.infer<typeof ParagraphTopicTags>;
-      return { paragraph_index: idx, topic_keys: parsed.topic_keys };
-    } catch (error) {
-      console.warn(
-        `  ⚠ Failed to tag paragraph ${idx}:`,
-        error instanceof Error ? error.message : error,
-      );
-      return { paragraph_index: idx, topic_keys: [] };
-    }
-  },
-  );
-
-  const paragraphTopics: Record<string, string[]> = {};
-  taggingResults.forEach(({ paragraph_index, topic_keys }) => {
-    paragraphTopics[paragraph_index.toString()] = topic_keys;
-  });
-
-  const taggedCount = taggingResults.filter((r) => r.topic_keys.length > 0).length;
-  console.log(
-    `  ✓ Tagged ${taggedCount}/${paragraphs.length} paragraphs with topics`,
-  );
-
-  return paragraphTopics;
-}
-
 async function tagSentencesWithTopics(
   statements: StatementWithSentences[],
   topics: Record<string, { key: string; label: string; description: string }>,
@@ -767,95 +629,105 @@ async function tagSentencesWithTopics(
     }
   });
 
-  // Parallel tagging with context
-  const SentenceTopicResponse = z.object({
-    topic_keys: z.array(z.string()),
+  // Batched tagging with rate-limited concurrency
+  const BATCH_SIZE = 15;
+  const BatchTopicResponse = z.object({
+    results: z.array(z.object({
+      index: z.number(),
+      topic_keys: z.array(z.string()),
+    })),
   });
 
-  const taggedSentences = await mapWithConcurrency(
-    taggableSentences,
-    20,
-    async ({ index: globalIdx, sentence: sent }) => {
-      // Context: 2 sentences before and after from all sentences
-      const contextBefore = allSentences.slice(
-        Math.max(0, globalIdx - 2),
-        globalIdx,
-      );
-      const contextAfter = allSentences.slice(
-        globalIdx + 1,
-        Math.min(allSentences.length, globalIdx + 3),
-      );
+  const batches: Array<typeof taggableSentences> = [];
+  for (let i = 0; i < taggableSentences.length; i += BATCH_SIZE) {
+    batches.push(taggableSentences.slice(i, i + BATCH_SIZE));
+  }
 
-      const numberedSentences = [
-        ...contextBefore.map(
-          (s, i) => `[${i - contextBefore.length}] ${s.text}`,
-        ),
-        `[CURRENT] ${sent.text}`,
-        ...contextAfter.map((s, i) => `[+${i + 1}] ${s.text}`),
-      ].join("\n");
+  console.log(`  → Processing ${taggableSentences.length} sentences in ${batches.length} batches...`);
 
-      try {
-        const completion = await trackOpenAIChatCompletion({
-          client,
-          transcriptId,
-          stage: UsageStages.taggingSentences,
-          operation: UsageOperations.openaiTagSentenceTopics,
-          model: "gpt-5-mini",
-          requestMeta: {
-            sentence_global_index: globalIdx,
-            statement_index: sent.statementIdx,
-            paragraph_index: sent.paragraphIdx,
-            sentence_index: sent.sentenceIdx,
-          },
-          request: {
-            model: "gpt-5-mini",
-            messages: [
-              {
-                role: "system",
-                content: `You are categorizing UN proceeding sentences by topic.
+  const limiter = new Bottleneck({
+    maxConcurrent: 20,
+    minTime: 100,
+  });
+
+  const batchResults = await Promise.all(
+    batches.map((batch) =>
+      limiter.schedule(async () => {
+        const sentenceList = batch
+          .map(({ index: globalIdx, sentence: sent }, i) => {
+            const contextBefore = globalIdx > 0
+              ? `  [context] ${allSentences[globalIdx - 1].text}\n`
+              : "";
+            return `${contextBefore}  [${i}] ${sent.text}`;
+          })
+          .join("\n");
+
+        try {
+          const completion = await trackOpenAIChatCompletion({
+            client,
+            transcriptId,
+            stage: UsageStages.taggingSentences,
+            operation: UsageOperations.openaiTagSentenceTopics,
+            model: getAnalysisModelNano(),
+            requestMeta: {
+              batch_size: batch.length,
+              first_global_index: batch[0].index,
+            },
+            request: {
+              model: getAnalysisModelNano(),
+              reasoning_effort: "none" as const,
+              messages: [
+                {
+                  role: "system",
+                  content: `You are categorizing UN proceeding sentences by topic.
 
 AVAILABLE TOPICS:
 ${topicDescriptions}
 
 TASK:
-- Analyze the [CURRENT] sentence
-- Select 0-3 topics that are directly discussed
+- For each numbered sentence, select 0-3 topics that are directly discussed
 - Only tag substantive policy discussions
 - Return empty array if no topics apply or if purely procedural
+- Lines marked [context] are for reference only — do not tag them
 
 RULES:
 - A topic applies if the sentence makes substantive points about it
 - Brief mentions don't count
 - When uncertain, don't tag
 - Return only topic keys, not labels or descriptions`,
-              },
-              {
-                role: "user",
-                content: `Which topics (if any) are discussed in the [CURRENT] sentence?
+                },
+                {
+                  role: "user",
+                  content: `Tag each numbered sentence with relevant topics:
 
-${numberedSentences}`,
-              },
-            ],
-            response_format: zodResponseFormat(
-              SentenceTopicResponse,
-              "sentence_topics",
-            ),
-          },
-        });
+${sentenceList}`,
+                },
+              ],
+              response_format: zodResponseFormat(
+                BatchTopicResponse,
+                "batch_sentence_topics",
+              ),
+            },
+          });
 
-        const result = completion.choices[0]?.message?.content;
-        if (!result) return { ...sent, topic_keys: [] };
+          const result = completion.choices[0]?.message?.content;
+          if (!result) return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
 
-        const parsed = JSON.parse(result) as z.infer<
-          typeof SentenceTopicResponse
-        >;
-        return { ...sent, topic_keys: parsed.topic_keys };
-      } catch (error) {
-        console.warn(`  ⚠ Failed to tag sentence:`, error);
-        return { ...sent, topic_keys: [] };
-      }
-    },
+          const parsed = JSON.parse(result) as z.infer<typeof BatchTopicResponse>;
+          const resultMap = new Map(parsed.results.map(r => [r.index, r.topic_keys]));
+          return batch.map(({ sentence: sent }, i) => ({
+            ...sent,
+            topic_keys: resultMap.get(i) ?? [],
+          }));
+        } catch (error) {
+          console.warn(`  ⚠ Failed to tag batch:`, error);
+          return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
+        }
+      }),
+    ),
   );
+
+  const taggedSentences = batchResults.flat();
 
   // Apply topic tags back to statements
   const updatedStatements: StatementWithSentences[] = statements.map(
@@ -945,13 +817,13 @@ async function resegmentParagraph(
     transcriptId,
     stage: UsageStages.resegmenting,
     operation: UsageOperations.openaiResegmentParagraph,
-    model: "gpt-5",
+    model: getAnalysisModel(),
     requestMeta: {
       paragraph_index: paragraphIndex ?? null,
       context_size: contextParas.length,
     },
     request: {
-      model: "gpt-5",
+      model: getAnalysisModel(),
       messages: [
         {
           role: "system",
@@ -1205,10 +1077,10 @@ export async function identifySpeakers(
     transcriptId,
     stage: UsageStages.identifyingSpeakers,
     operation: UsageOperations.openaiInitialSpeakerMapping,
-    model: "gpt-5",
+    model: getAnalysisModel(),
     requestMeta: { paragraph_count: paragraphs.length },
     request: {
-      model: "gpt-5",
+      model: getAnalysisModel(),
       messages: [
         {
           role: "system",

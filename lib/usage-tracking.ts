@@ -18,16 +18,17 @@ export const UsageStages = {
   analyzingTopics: "analyzing_topics",
   taggingSentences: "tagging_sentences",
   analyzingPropositions: "analyzing_propositions",
+  aligningPv: "aligning_pv",
 } as const;
 
 export const UsageOperations = {
   openaiInitialSpeakerMapping: "openai_initial_speaker_mapping",
   openaiResegmentParagraph: "openai_resegment_paragraph",
   openaiDefineTopics: "openai_define_topics",
-  openaiTagParagraphTopics: "openai_tag_paragraph_topics",
   openaiTagSentenceTopics: "openai_tag_sentence_topics",
   openaiAnalyzePropositions: "openai_analyze_propositions",
   geminiTranscribe: "gemini_transcribe",
+  geminiPvAlignment: "gemini_pv_alignment",
   openaiNormalizeSpeakers: "openai_normalize_speakers",
 } as const;
 

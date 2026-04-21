@@ -21,14 +21,15 @@ type Pricing = {
 };
 
 const OPENAI_MODEL_PRICING: Record<string, Pricing> = {
-  "gpt-5": { inputPerM: 1.25, cachedInputPerM: 0.125, outputPerM: 10 },
-  "gpt-5-mini": { inputPerM: 0.25, cachedInputPerM: 0.025, outputPerM: 2 },
+  "gpt-5.4": { inputPerM: 1.25, cachedInputPerM: 0.125, outputPerM: 10 },
+  "gpt-5.4-mini": { inputPerM: 0.25, cachedInputPerM: 0.025, outputPerM: 2 },
+  "gpt-5.4-nano": { inputPerM: 0.05, cachedInputPerM: 0.005, outputPerM: 0.4 },
 };
 
 function assumedModelForStage(
   stage: string,
 ): keyof typeof OPENAI_MODEL_PRICING {
-  return stage === "tagging_sentences" ? "gpt-5-mini" : "gpt-5";
+  return stage === "tagging_sentences" ? "gpt-5.4-nano" : "gpt-5.4";
 }
 
 type MetadataRow = {

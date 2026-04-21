@@ -14,9 +14,9 @@ import {
   getProvider,
   getAllProviders,
   getProviderNames,
-} from "./providers/registry";
+} from "../lib/providers/registry";
 import { UN_LANGUAGES } from "./config";
-import { downloadAudioToTemp, formatTime as msToHMS } from "./utils";
+import { downloadAudioToTemp, formatTime as msToHMS } from "../lib/providers/utils";
 
 interface SessionConfig {
   symbol: string;
