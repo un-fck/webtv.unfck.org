@@ -179,6 +179,28 @@ export async function pollTranscription(
     transcript.status === "analyzing_topics" ||
     transcript.status === "analyzing_propositions"
   ) {
+    // Try to restart stuck stages by re-acquiring a stale lock
+    const paragraphs = transcript.content.raw_paragraphs;
+    if (paragraphs && paragraphs.length > 0) {
+      const acquired = await tryAcquirePipelineLock(transcriptId);
+      if (acquired) {
+        console.log(
+          `[Pipeline] Re-entering stuck stage ${transcript.status} for ${transcriptId}`,
+        );
+        runAnalysisPipeline(transcriptId, paragraphs, undefined).catch(
+          (err) => {
+            console.error("[Pipeline] Re-entry error:", err);
+            updateTranscriptStatus(
+              transcriptId,
+              "error",
+              err instanceof Error ? err.message : "Re-entry failed",
+            );
+            releasePipelineLock(transcriptId);
+          },
+        );
+      }
+    }
+
     return {
       stage: transcript.status,
       raw_paragraphs: transcript.content.raw_paragraphs,

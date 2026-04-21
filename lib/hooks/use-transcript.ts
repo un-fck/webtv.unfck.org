@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { SpeakerMapping } from "@/lib/speakers";
 import { getCountryName } from "@/lib/country-lookup";
 import type { Proposition } from "@/lib/speaker-identification";
@@ -121,6 +121,16 @@ export function useTranscript(
   const [propositions, setPropositions] = useState<Proposition[]>([]);
   const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const visibilityPausedRef = useRef(false);
+
+  // Abort polling on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
   const loadCountryNames = useCallback(async (mapping: SpeakerMapping) => {
     const names = new Map<string, string>();
     const iso3Codes = new Set<string>();
@@ -166,38 +176,92 @@ export function useTranscript(
 
   const pollForCompletion = useCallback(
     async (tid: string) => {
+      // Cancel any existing poll
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       let pollCount = 0;
       const maxTranscriptionPolls = 200;
+      let errorBackoff = 3000;
+      let lastStage = "";
 
-      while (true) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        pollCount++;
+      // Pause/resume on visibility change
+      const handleVisibility = () => {
+        visibilityPausedRef.current = document.hidden;
+      };
+      document.addEventListener("visibilitychange", handleVisibility);
 
-        const pollResponse = await fetch(`/api/transcripts/${encodeURIComponent(tid)}`);
-        if (!pollResponse.ok) throw new Error("Failed to poll transcript status");
+      try {
+        while (!controller.signal.aborted) {
+          // Wait before polling (with backoff on errors)
+          await new Promise((resolve) => {
+            const timer = setTimeout(resolve, errorBackoff);
+            controller.signal.addEventListener("abort", () => {
+              clearTimeout(timer);
+              resolve(undefined);
+            }, { once: true });
+          });
 
-        const data = await pollResponse.json();
+          if (controller.signal.aborted) break;
 
-        if (data.stage) setStage(data.stage);
-        if (data.raw_paragraphs && !rawParagraphs) setRawParagraphs(data.raw_paragraphs);
+          // Skip poll while tab is hidden
+          if (visibilityPausedRef.current) continue;
 
-        if (data.statements?.length > 0) {
-          setStatements(data.statements);
-          if (data.speakerMappings && Object.keys(data.speakerMappings).length > 0) {
-            setSpeakerMappings(data.speakerMappings);
-            setSegments(groupStatementsBySpeaker(data.statements, data.speakerMappings));
-            await loadCountryNames(data.speakerMappings);
+          pollCount++;
+
+          let pollResponse: Response;
+          try {
+            pollResponse = await fetch(
+              `/api/transcripts/${encodeURIComponent(tid)}`,
+              { signal: controller.signal },
+            );
+          } catch (err) {
+            if (controller.signal.aborted) break;
+            // Network error — exponential backoff (3s → 6s → 12s → 30s cap)
+            errorBackoff = Math.min(errorBackoff * 2, 30000);
+            continue;
+          }
+
+          if (!pollResponse.ok) {
+            errorBackoff = Math.min(errorBackoff * 2, 30000);
+            continue;
+          }
+
+          // Successful poll — reset backoff
+          errorBackoff = 3000;
+
+          const data = await pollResponse.json();
+
+          // Reset poll count on stage transitions
+          if (data.stage && data.stage !== lastStage) {
+            lastStage = data.stage;
+            pollCount = 0;
+          }
+
+          if (data.stage) setStage(data.stage);
+          if (data.raw_paragraphs && !rawParagraphs) setRawParagraphs(data.raw_paragraphs);
+
+          if (data.statements?.length > 0) {
+            setStatements(data.statements);
+            if (data.speakerMappings && Object.keys(data.speakerMappings).length > 0) {
+              setSpeakerMappings(data.speakerMappings);
+              setSegments(groupStatementsBySpeaker(data.statements, data.speakerMappings));
+              await loadCountryNames(data.speakerMappings);
+            }
+          }
+
+          if (data.topics && Object.keys(data.topics).length > 0) setTopics(data.topics);
+          if (data.propositions && data.propositions.length > 0) setPropositions(data.propositions);
+
+          if (data.stage === "completed") break;
+          if (data.stage === "error") throw new Error(data.error_message || "Pipeline failed");
+          if (data.stage === "transcribing" && pollCount >= maxTranscriptionPolls) {
+            throw new Error("Transcription timeout - audio processing took too long");
           }
         }
-
-        if (data.topics && Object.keys(data.topics).length > 0) setTopics(data.topics);
-        if (data.propositions && data.propositions.length > 0) setPropositions(data.propositions);
-
-        if (data.stage === "completed") break;
-        if (data.stage === "error") throw new Error(data.error_message || "Pipeline failed");
-        if (data.stage === "transcribing" && pollCount >= maxTranscriptionPolls) {
-          throw new Error("Transcription timeout - audio processing took too long");
-        }
+      } finally {
+        document.removeEventListener("visibilitychange", handleVisibility);
       }
     },
     [loadCountryNames, rawParagraphs],

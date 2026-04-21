@@ -14,12 +14,11 @@ export type Stage =
 
 export const STAGES: { key: Stage; label: string }[] = [
   { key: "transcribing", label: "Transcribing audio" },
+  { key: "identifying_speakers", label: "Identifying speakers" },
   { key: "analyzing_topics", label: "Analyzing topics" },
 ];
 
 export function getStageIndex(stage: Stage): number {
-  // identifying_speakers is transient — map to "just finished transcribing"
-  if (stage === "identifying_speakers") return 0;
   return STAGES.findIndex((s) => s.key === stage);
 }
 
