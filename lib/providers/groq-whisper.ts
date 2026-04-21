@@ -1,38 +1,13 @@
 import fs from "fs";
-import { execSync } from "child_process";
-import os from "os";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "./utils";
+import { downloadAudioToTemp, splitAudio, parallelMap } from "./utils";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY!;
 const MAX_FILE_SIZE = 24 * 1024 * 1024; // 24MB to stay under Groq's 25MB limit
 const CHUNK_DURATION_SECS = 600; // 10 min chunks
 const PARALLEL_CHUNKS = 10; // concurrent Groq API calls
 
-/** Split an audio file into chunks using ffmpeg */
-function splitAudio(
-  inputPath: string,
-  chunkDurationSecs: number,
-): { path: string; offsetMs: number }[] {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "groq-chunks-"));
-  const pattern = path.join(tmpDir, "chunk_%03d.mp3");
-
-  // Re-encode to mono 16kHz MP3 to keep chunk sizes well under 25MB
-  execSync(
-    `ffmpeg -i "${inputPath}" -f segment -segment_time ${chunkDurationSecs} -ac 1 -ar 16000 -b:a 48k -reset_timestamps 1 "${pattern}" -y 2>/dev/null`,
-  );
-
-  const files = fs
-    .readdirSync(tmpDir)
-    .filter((f) => f.startsWith("chunk_"))
-    .sort();
-
-  return files.map((f, i) => ({
-    path: path.join(tmpDir, f),
-    offsetMs: i * chunkDurationSecs * 1000,
-  }));
-}
 
 /** Call Groq transcription API with file upload, with retry on rate limit */
 async function transcribeFile(
@@ -74,25 +49,6 @@ async function transcribeFile(
   throw new Error("Groq API: max retries exceeded (rate limit)");
 }
 
-/** Run promises in parallel with concurrency limit */
-async function parallelMap<T, R>(
-  items: T[],
-  concurrency: number,
-  fn: (item: T, index: number) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-
-  async function worker() {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i], i);
-    }
-  }
-
-  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
-  return results;
-}
 
 export const groqWhisper: TranscriptionProvider = {
   name: "groq-whisper",
@@ -133,7 +89,7 @@ export const groqWhisper: TranscriptionProvider = {
           `  [Groq] File too large (${(fileSize / 1024 / 1024).toFixed(0)}MB), splitting into chunks...`,
         );
         const tSplit0 = Date.now();
-        const chunks = splitAudio(tmpPath, CHUNK_DURATION_SECS);
+        const chunks = splitAudio(tmpPath, CHUNK_DURATION_SECS, "groq-chunks-");
         console.log(`  [Groq] Split into ${chunks.length} chunks in ${((Date.now() - tSplit0) / 1000).toFixed(1)}s, transcribing ${PARALLEL_CHUNKS} at a time...`);
 
         const tApi0 = Date.now();
