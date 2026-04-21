@@ -44,24 +44,28 @@ function parseSearchParams(
     typeof raw.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.date)
       ? raw.date
       : undefined;
-  const body =
-    typeof raw.body === "string" && raw.body
-      ? raw.body.split(",").filter(Boolean)
+  const body = Array.isArray(raw.body)
+    ? raw.body.filter(Boolean)
+    : typeof raw.body === "string" && raw.body
+      ? [raw.body]
       : undefined;
-  const category =
-    typeof raw.category === "string" && raw.category
-      ? raw.category.split(",").filter(Boolean)
+  const category = Array.isArray(raw.category)
+    ? raw.category.filter(Boolean)
+    : typeof raw.category === "string" && raw.category
+      ? [raw.category]
       : undefined;
-  const text =
-    typeof raw.text === "string" && raw.text
-      ? raw.text.split(",").filter((d) => ["transcript", "pv", "sr"].includes(d))
-      : undefined;
+  const textRaw = Array.isArray(raw.text)
+    ? raw.text
+    : typeof raw.text === "string" && raw.text
+      ? [raw.text]
+      : [];
+  const text = textRaw.filter((d) => ["transcript", "pv", "sr"].includes(d));
   const q =
     typeof raw.q === "string" && raw.q.trim().length >= 2
       ? raw.q.trim()
       : undefined;
 
-  return { page, pageSize, sort, status, date, body, category, text: text?.length ? text : undefined, q };
+  return { page, pageSize, sort, status, date, body: body?.length ? body : undefined, category: category?.length ? category : undefined, text: text.length ? text : undefined, q };
 }
 
 export default async function Home({

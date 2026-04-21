@@ -300,22 +300,26 @@ function ActiveFilters({
   bodyFilter,
   categoryFilter,
   textFilter,
+  searchQuery,
   onClearDate,
   onClearBody,
   onClearCategory,
   onClearDocs,
+  onClearSearch,
 }: {
   dateFilter: string | undefined;
   bodyFilter: string[];
   categoryFilter: string[];
   textFilter: string[];
+  searchQuery?: string;
   onClearDate: () => void;
   onClearBody: (value: string) => void;
   onClearCategory: (value: string) => void;
   onClearDocs: (value: string) => void;
+  onClearSearch: () => void;
 }) {
   const hasAny =
-    !!dateFilter || bodyFilter.length > 0 || categoryFilter.length > 0 || textFilter.length > 0;
+    !!dateFilter || bodyFilter.length > 0 || categoryFilter.length > 0 || textFilter.length > 0 || !!searchQuery;
   if (!hasAny) return null;
 
   return (
@@ -370,6 +374,14 @@ function ActiveFilters({
           </button>
         </span>
       ))}
+      {searchQuery && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+          &ldquo;{searchQuery}&rdquo;
+          <button onClick={onClearSearch} className="hover:text-primary/70">
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      )}
     </div>
   );
 }
@@ -424,9 +436,9 @@ export function VideoTable({
       if (next.sort !== "date_desc") sp.set("sort", next.sort);
       if (next.status !== "past") sp.set("status", next.status);
       if (next.date) sp.set("date", next.date);
-      if (next.body?.length) sp.set("body", next.body.join(","));
-      if (next.category?.length) sp.set("category", next.category.join(","));
-      if (next.text?.length) sp.set("text", next.text.join(","));
+      next.body?.forEach((v) => sp.append("body", v));
+      next.category?.forEach((v) => sp.append("category", v));
+      next.text?.forEach((v) => sp.append("text", v));
       if (next.q) sp.set("q", next.q);
 
       router.push(sp.toString() ? `?${sp}` : "/", { scroll: false });
@@ -613,7 +625,7 @@ export function VideoTable({
       }),
       columnHelper.display({
         id: "docs",
-        header: "Text",
+        header: "Transcripts",
         cell: (info) => {
           const hasTranscript = info.row.original.hasTranscript;
           const hasPV = info.row.original.pvAvailable;
@@ -684,7 +696,7 @@ export function VideoTable({
             }
             className={`rounded-full px-4 py-1.5 transition-all ${serverParams.status !== "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
-            Past
+            Recent
           </button>
           <button
             onClick={() =>
@@ -715,6 +727,7 @@ export function VideoTable({
         bodyFilter={serverParams.body ?? []}
         categoryFilter={serverParams.category ?? []}
         textFilter={serverParams.text ?? []}
+        searchQuery={serverParams.q}
         onClearDate={() => updateParams({ date: undefined })}
         onClearBody={(v) =>
           updateParams({
@@ -731,6 +744,7 @@ export function VideoTable({
             text: (serverParams.text ?? []).filter((d) => d !== v),
           })
         }
+        onClearSearch={() => submitSearch("")}
       />
 
       {/* Mobile: All filters grouped */}
@@ -825,7 +839,7 @@ export function VideoTable({
               }
               className={`rounded px-3 py-1.5 transition-colors ${serverParams.status !== "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             >
-              Past
+              Recent
             </button>
             <button
               onClick={() =>
@@ -840,18 +854,6 @@ export function VideoTable({
         </div>
       </div>
 
-      {/* "Back to recent" banner */}
-      {isSearchMode && (
-        <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground">
-          <span>Showing historical results</span>
-          <button
-            onClick={() => submitSearch("")}
-            className="text-primary hover:underline"
-          >
-            Clear to return to recent meetings
-          </button>
-        </div>
-      )}
 
       {/* Mobile Card View */}
       <div className="grid gap-3 lg:hidden">
@@ -1002,13 +1004,13 @@ export function VideoTable({
                     />
                   </div>
                 </th>
-                {/* Text */}
+                {/* Transcripts */}
                 <th
                   className="px-4 py-2 text-left text-[10px] font-medium tracking-wider text-gray-400 uppercase"
                   style={{ width: 140, minWidth: 140, maxWidth: 140 }}
                 >
                   <div className="flex items-center gap-1">
-                    <span>Text</span>
+                    <span>Transcripts</span>
                     <MultiFilterPopover
                       options={["transcript", "pv", "sr"]}
                       selected={serverParams.text ?? []}
