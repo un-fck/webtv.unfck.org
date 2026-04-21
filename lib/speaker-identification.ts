@@ -160,7 +160,7 @@ const COMMON_ABBREVIATIONS = `COMMON ABBREVIATIONS
 
 const SCHEMA_DEFINITIONS = `SCHEMA DEFINITIONS:
 
-name: Person name as best as can be identified from the text. Do NOT use world knowledge. Only use what is literally stated. Fix transcription errors. May be given name, surname, or full name. Add "Mr."/"Ms." only if surname-only AND gender explicitly known. E.g., "Yacine Hamzaoui", "Mr. Hamasu", "Dave". Use null if unknown.
+name: The actual personal name (first name, surname, or full name) of the speaker. Do NOT use world knowledge – you do not reliably know who is really in the room and other people may have taken over posts where you have strongly memorized the (now outdated) name. Only use what is literally stated. Fix transcription errors that concern incorrect spelling, but never fix more than that. Add "Mr."/"Ms." only if surname-only AND gender explicitly known. E.g., "Yacine Hamzaoui", "Mr. Hamasu", "Dave". MUST be null if the actual personal name is unknown — NEVER put role descriptions like "Representative of Germany", "Delegate of Kenya", or "Chair" in this field. Those belong in function/affiliation.
 
 function: Function/title. Be concise, use canonical abbreviations. E.g. "SG", "PGA", "Chair", "Representative", "Vice-Chair", "Officer", "Spokesperson", "USG Policy". Use null if unknown.
 
