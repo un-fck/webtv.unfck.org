@@ -1,4 +1,8 @@
 import { randomUUID } from "crypto";
+
+const ts = () => new Date().toTimeString().slice(0, 8);
+const plog = (...args: unknown[]) => console.log(`[${ts()}]`, ...args);
+const perr = (...args: unknown[]) => console.error(`[${ts()}]`, ...args);
 import {
   saveTranscript,
   deleteTranscriptsForEntry,
@@ -184,12 +188,10 @@ export async function pollTranscription(
     if (paragraphs && paragraphs.length > 0) {
       const acquired = await tryAcquirePipelineLock(transcriptId);
       if (acquired) {
-        console.log(
-          `[Pipeline] Re-entering stuck stage ${transcript.status} for ${transcriptId}`,
-        );
+        plog(`[Pipeline] Re-entering stuck stage ${transcript.status} for ${transcriptId}`);
         runAnalysisPipeline(transcriptId, paragraphs, undefined).catch(
           (err) => {
-            console.error("[Pipeline] Re-entry error:", err);
+            perr("[Pipeline] Re-entry error:", err);
             updateTranscriptStatus(
               transcriptId,
               "error",
@@ -228,9 +230,7 @@ async function runTranscriptionPipeline(
   try {
     const provider = getSTTProvider();
     await updateTranscriptStatus(transcriptId, "transcribing");
-    console.log(
-      `[Pipeline] Starting transcription with ${provider.name} for ${transcriptId}`,
-    );
+    plog(`[Pipeline] Starting transcription with ${provider.name} for ${transcriptId}`);
 
     const start = Date.now();
     const transcript = await provider.transcribe(audioUrl, {
@@ -277,9 +277,7 @@ async function runTranscriptionPipeline(
       paragraphs = toRawParagraphs(transcript);
     }
 
-    console.log(
-      `[Pipeline] Transcription complete: ${paragraphs.length} segments (${provider.name}, ${durationMs}ms)`,
-    );
+    plog(`[Pipeline] Transcription complete: ${paragraphs.length} segments (${provider.name}, ${durationMs}ms)`);
 
     const content: TranscriptContent = {
       raw_paragraphs: paragraphs,
@@ -309,7 +307,7 @@ async function runTranscriptionPipeline(
         paragraphs,
         speakerMapping,
       ).catch((err) => {
-        console.error("[Pipeline] Analysis error:", err);
+        perr("[Pipeline] Analysis error:", err);
         updateTranscriptStatus(
           transcriptId,
           "error",
@@ -319,7 +317,7 @@ async function runTranscriptionPipeline(
       });
     }
   } catch (err) {
-    console.error("[Pipeline] Error:", err);
+    perr("[Pipeline] Error:", err);
     await updateTranscriptStatus(
       transcriptId,
       "error",
@@ -354,7 +352,7 @@ async function runAnalysisPipeline(
  * Submit a Gemini transcription job and return immediately.
  * The transcription + analysis runs in the background; clients poll via pollTranscription().
  */
-export async function submitGeminiTranscription(
+export async function submitTranscription(
   kalturaId: string,
   options: GeminiTranscriptionOptions & { force?: boolean; existingTranscriptId?: string } = {},
 ): Promise<{ entryId: string; transcriptId: string }> {
@@ -369,7 +367,8 @@ export async function submitGeminiTranscription(
     await deleteTranscriptsForEntry(entryId, lang);
   }
 
-  const transcriptId = options.existingTranscriptId ?? `gemini-${randomUUID()}`;
+  const provider = getSTTProvider();
+  const transcriptId = options.existingTranscriptId ?? `${provider.name}-${randomUUID()}`;
 
   await saveTranscript(entryId, transcriptId, null, null, audioUrl, "transcribing", lang, {
     statements: [],
@@ -377,7 +376,7 @@ export async function submitGeminiTranscription(
   });
 
   runTranscriptionPipeline(transcriptId, entryId, audioUrl, options, lang).catch((err) => {
-    console.error("[Pipeline] Unhandled error:", err);
+    perr("[Pipeline] Unhandled error:", err);
   });
 
   return { entryId, transcriptId };
