@@ -817,13 +817,14 @@ async function resegmentParagraph(
     transcriptId,
     stage: UsageStages.resegmenting,
     operation: UsageOperations.openaiResegmentParagraph,
-    model: getAnalysisModel(),
+    model: getAnalysisModelMini(),
     requestMeta: {
       paragraph_index: paragraphIndex ?? null,
       context_size: contextParas.length,
     },
     request: {
-      model: getAnalysisModel(),
+      model: getAnalysisModelMini(),
+      reasoning_effort: "low" as const,
       messages: [
         {
           role: "system",
@@ -1077,10 +1078,11 @@ export async function identifySpeakers(
     transcriptId,
     stage: UsageStages.identifyingSpeakers,
     operation: UsageOperations.openaiInitialSpeakerMapping,
-    model: getAnalysisModel(),
+    model: getAnalysisModelMini(),
     requestMeta: { paragraph_count: paragraphs.length },
     request: {
-      model: getAnalysisModel(),
+      model: getAnalysisModelMini(),
+      reasoning_effort: "low" as const,
       messages: [
         {
           role: "system",
@@ -1175,7 +1177,7 @@ ${transcriptParts.join("\n\n")}`,
   });
 
   const result = completion.choices[0]?.message?.content;
-  if (!result) throw new Error("Failed to parse speaker mappings");
+  if (!result) throw new Error("Failed to identify speakers");
 
   const parsed = JSON.parse(result) as z.infer<typeof ParagraphSpeakerMapping>;
   console.log(`  ✓ Initial identification complete`);
