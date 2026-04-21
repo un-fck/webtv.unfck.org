@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import "../lib/load-env";
 import { getTursoClient } from "../lib/turso";
-import { submitGeminiTranscription, pollTranscription } from "../lib/transcription";
+import { submitTranscription, pollTranscription } from "../lib/transcription";
 import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 
 const usage = `Usage:
@@ -73,8 +73,7 @@ async function run() {
   console.log(`Processing ${total} entry/entries...\n`);
 
   for (const entryId of targets) {
-    // submitGeminiTranscription expects a kalturaId — for entry IDs already resolved, pass directly
-    const { transcriptId } = await submitGeminiTranscription(entryId, { force: true });
+    const { transcriptId } = await submitTranscription(entryId, { force: true });
     console.log(`✓ Submitted ${entryId} (${transcriptId})`);
     await pollUntilComplete(transcriptId, entryId);
   }
