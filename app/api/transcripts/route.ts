@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       await deleteTranscriptsForEntry(entryId, lang);
     }
 
-    const { entryId, transcriptId } = await submitTranscription(kalturaId, {
+    const { transcriptId } = await submitTranscription(kalturaId, {
       force,
       language: lang,
     });
