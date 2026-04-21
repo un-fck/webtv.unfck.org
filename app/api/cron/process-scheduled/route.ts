@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+
+const ts = () => new Date().toTimeString().slice(0, 8);
 import {
   getScheduledTranscripts,
 } from "@/lib/turso";
-import { getKalturaAudioUrl, submitGeminiTranscription } from "@/lib/transcription";
+import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
 import { apiError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
@@ -39,13 +41,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Audio is available — reuse the existing scheduled row
-      const { transcriptId } = await submitGeminiTranscription(kalturaId, {
+      const { transcriptId } = await submitTranscription(kalturaId, {
         existingTranscriptId: item.transcript_id,
       });
 
-      console.log(
-        `✓ Started scheduled transcript for ${kalturaId} → ${transcriptId}`,
-      );
+      console.log(`[${ts()}] ✓ Started scheduled transcript for ${kalturaId} → ${transcriptId}`);
       started++;
     } catch (err) {
       // Audio not available yet — leave as scheduled, try again next run

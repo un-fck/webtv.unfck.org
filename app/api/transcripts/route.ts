@@ -4,7 +4,7 @@ import {
   deleteTranscriptsForEntry,
   scheduleTranscript,
 } from "@/lib/turso";
-import { getKalturaAudioUrl, submitGeminiTranscription } from "@/lib/transcription";
+import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";
 import { apiError } from "@/lib/api-error";
@@ -77,19 +77,13 @@ export async function POST(request: NextRequest) {
       await deleteTranscriptsForEntry(entryId, lang);
     }
 
-    const { entryId: geminiEntryId, transcriptId: geminiTranscriptId } =
-      await submitGeminiTranscription(kalturaId, {
-        force,
-        language: lang,
-      });
-    console.log(
-      "Transcription started:",
-      geminiTranscriptId,
-      "for entryId:",
-      geminiEntryId,
-    );
+    const { entryId, transcriptId } = await submitTranscription(kalturaId, {
+      force,
+      language: lang,
+    });
+    console.log("Transcription started:", transcriptId, "for entryId:", entryId);
     return NextResponse.json({
-      transcriptId: geminiTranscriptId,
+      transcriptId,
       stage: "transcribing",
     });
   } catch (error) {
