@@ -13,7 +13,8 @@ import {
   UsageStages,
 } from "./usage-tracking";
 import "./load-env";
-import { getAnalysisModel, getAnalysisModelMini } from "./providers/config";
+import { getAnalysisModel, getAnalysisModelMini, getAnalysisModelNano } from "./providers/config";
+import Bottleneck from "bottleneck";
 // @ts-expect-error - no types available for sbd
 import sbd from "sbd";
 
@@ -768,7 +769,7 @@ async function tagSentencesWithTopics(
     }
   });
 
-  // Batched tagging — group sentences into batches of ~15 to reduce API calls
+  // Batched tagging with rate-limited concurrency
   const BATCH_SIZE = 15;
   const BatchTopicResponse = z.object({
     results: z.array(z.object({
@@ -777,7 +778,6 @@ async function tagSentencesWithTopics(
     })),
   });
 
-  // Build batches
   const batches: Array<typeof taggableSentences> = [];
   for (let i = 0; i < taggableSentences.length; i += BATCH_SIZE) {
     batches.push(taggableSentences.slice(i, i + BATCH_SIZE));
@@ -785,38 +785,41 @@ async function tagSentencesWithTopics(
 
   console.log(`  → Processing ${taggableSentences.length} sentences in ${batches.length} batches...`);
 
-  const batchResults = await mapWithConcurrency(
-    batches,
-    5,
-    async (batch) => {
-      // Build numbered list of sentences for the batch
-      const sentenceList = batch
-        .map(({ index: globalIdx, sentence: sent }, i) => {
-          // Add 1 sentence of context before each sentence for continuity
-          const contextBefore = globalIdx > 0
-            ? `  [context] ${allSentences[globalIdx - 1].text}\n`
-            : "";
-          return `${contextBefore}  [${i}] ${sent.text}`;
-        })
-        .join("\n");
+  const limiter = new Bottleneck({
+    maxConcurrent: 20,
+    minTime: 100,
+  });
 
-      try {
-        const completion = await trackOpenAIChatCompletion({
-          client,
-          transcriptId,
-          stage: UsageStages.taggingSentences,
-          operation: UsageOperations.openaiTagSentenceTopics,
-          model: getAnalysisModelMini(),
-          requestMeta: {
-            batch_size: batch.length,
-            first_global_index: batch[0].index,
-          },
-          request: {
-            model: getAnalysisModelMini(),
-            messages: [
-              {
-                role: "system",
-                content: `You are categorizing UN proceeding sentences by topic.
+  const batchResults = await Promise.all(
+    batches.map((batch) =>
+      limiter.schedule(async () => {
+        const sentenceList = batch
+          .map(({ index: globalIdx, sentence: sent }, i) => {
+            const contextBefore = globalIdx > 0
+              ? `  [context] ${allSentences[globalIdx - 1].text}\n`
+              : "";
+            return `${contextBefore}  [${i}] ${sent.text}`;
+          })
+          .join("\n");
+
+        try {
+          const completion = await trackOpenAIChatCompletion({
+            client,
+            transcriptId,
+            stage: UsageStages.taggingSentences,
+            operation: UsageOperations.openaiTagSentenceTopics,
+            model: getAnalysisModelNano(),
+            requestMeta: {
+              batch_size: batch.length,
+              first_global_index: batch[0].index,
+            },
+            request: {
+              model: getAnalysisModelNano(),
+              reasoning_effort: "none" as const,
+              messages: [
+                {
+                  role: "system",
+                  content: `You are categorizing UN proceeding sentences by topic.
 
 AVAILABLE TOPICS:
 ${topicDescriptions}
@@ -832,36 +835,36 @@ RULES:
 - Brief mentions don't count
 - When uncertain, don't tag
 - Return only topic keys, not labels or descriptions`,
-              },
-              {
-                role: "user",
-                content: `Tag each numbered sentence with relevant topics:
+                },
+                {
+                  role: "user",
+                  content: `Tag each numbered sentence with relevant topics:
 
 ${sentenceList}`,
-              },
-            ],
-            response_format: zodResponseFormat(
-              BatchTopicResponse,
-              "batch_sentence_topics",
-            ),
-          },
-        });
+                },
+              ],
+              response_format: zodResponseFormat(
+                BatchTopicResponse,
+                "batch_sentence_topics",
+              ),
+            },
+          });
 
-        const result = completion.choices[0]?.message?.content;
-        if (!result) return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
+          const result = completion.choices[0]?.message?.content;
+          if (!result) return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
 
-        const parsed = JSON.parse(result) as z.infer<typeof BatchTopicResponse>;
-        // Map results back to sentences by batch index
-        const resultMap = new Map(parsed.results.map(r => [r.index, r.topic_keys]));
-        return batch.map(({ sentence: sent }, i) => ({
-          ...sent,
-          topic_keys: resultMap.get(i) ?? [],
-        }));
-      } catch (error) {
-        console.warn(`  ⚠ Failed to tag batch:`, error);
-        return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
-      }
-    },
+          const parsed = JSON.parse(result) as z.infer<typeof BatchTopicResponse>;
+          const resultMap = new Map(parsed.results.map(r => [r.index, r.topic_keys]));
+          return batch.map(({ sentence: sent }, i) => ({
+            ...sent,
+            topic_keys: resultMap.get(i) ?? [],
+          }));
+        } catch (error) {
+          console.warn(`  ⚠ Failed to tag batch:`, error);
+          return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
+        }
+      }),
+    ),
   );
 
   const taggedSentences = batchResults.flat();

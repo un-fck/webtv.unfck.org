@@ -52,8 +52,9 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 - `NEXT_PUBLIC_BASE_URL` — defaults to `http://localhost:3000`
 - `STT_PROVIDER` — STT provider name (default: `gemini`). See `lib/providers/registry.ts` for available providers
-- `STT_ANALYSIS_MODEL` — Azure OpenAI model for speaker ID, resegmentation, topics, propositions (default: `gpt-5`)
-- `STT_ANALYSIS_MODEL_MINI` — Azure OpenAI model for normalization, sentence tagging (default: `gpt-5-mini`)
+- `STT_ANALYSIS_MODEL` — Azure OpenAI model for speaker ID, resegmentation, topics, propositions (default: `gpt-5.4`)
+- `STT_ANALYSIS_MODEL_MINI` — Azure OpenAI model for normalization (default: `gpt-5.4-mini`)
+- `STT_ANALYSIS_MODEL_NANO` — Azure OpenAI model for sentence tagging (default: `gpt-5.4-nano`)
 
 **Eval system only:** `ASSEMBLYAI_API_KEY`, `AZURE_SPEECH_KEY`, `AZURE_SPEECH_ENDPOINT`, `ELEVENLABS_API_KEY`, `GROQ_API_KEY`, `DASHSCOPE_API_KEY`, `DEEPGRAM_API_KEY`, `MISTRAL_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`.
 

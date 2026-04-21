@@ -34,6 +34,7 @@ import { trackOpenAIChatCompletion, UsageOperations, UsageStages } from './usage
 import type { RawParagraph } from './turso';
 import type { SpeakerInfo, SpeakerMapping } from './speakers';
 import { getLanguageFullName } from './languages';
+import { getAnalysisModelMini } from './providers/config';
 
 export { GEMINI_MODEL };
 
@@ -366,7 +367,7 @@ async function normalizeSpeakers(
 
   const client = createOpenAIClient();
   const request = {
-    model: 'gpt-5-mini',
+    model: getAnalysisModelMini(),
     messages: [
       {
         role: 'system' as const,
@@ -401,7 +402,7 @@ async function normalizeSpeakers(
     transcriptId,
     stage: UsageStages.identifyingSpeakers,
     operation: UsageOperations.openaiNormalizeSpeakers,
-    model: 'gpt-5-mini',
+    model: getAnalysisModelMini(),
     request,
   });
 
