@@ -4,20 +4,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { SpeakerMapping } from "@/lib/speakers";
 import type { Video } from "@/lib/un-api";
 import { getCountryName } from "@/lib/country-lookup";
-import {
-  Check,
-  ChevronDown,
-  FileText,
-  BarChart3,
-  Globe,
-  BookOpen,
-} from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { PVPanel, type PVSpeakerEntry } from "@/components/pv-panel";
 import ExcelJS from "exceljs";
 import type { Proposition } from "@/lib/speaker-identification";
 import { StageProgress, type Stage } from "@/components/stage-progress";
 import { AnalysisView } from "@/components/analysis-view";
 import { usePlaybackTracking } from "@/lib/hooks/use-playback-tracking";
+import { TranscriptToolbar, type ViewMode } from "@/components/transcript-toolbar";
+import { TranscriptView } from "@/components/transcript-view";
+import { RawTranscriptView } from "@/components/raw-transcript-view";
 
 export interface LanguageOption {
   code: string;
@@ -25,8 +21,6 @@ export interface LanguageOption {
   available: boolean;
   transcriptStatus: string | null;
 }
-
-type ViewMode = "transcript" | "analysis" | "pv";
 
 interface RawParagraph {
   text: string;
@@ -92,13 +86,13 @@ interface TranscriptionPanelProps {
 interface Word {
   text: string;
   speaker?: string | null;
-  start: number; // Milliseconds
-  end: number; // Milliseconds
+  start: number;
+  end: number;
 }
 
 interface SpeakerSegment {
-  speaker: string; // Stringified speaker info for identity comparison
-  statementIndices: number[]; // Direct references to statements
+  speaker: string;
+  statementIndices: number[];
   timestamp: number;
 }
 
@@ -106,18 +100,18 @@ interface Statement {
   paragraphs: Array<{
     sentences: Array<{
       text: string;
-      start: number; // Milliseconds
-      end: number; // Milliseconds
+      start: number;
+      end: number;
       topic_keys?: string[];
       words?: Word[];
     }>;
-    start: number; // Milliseconds
-    end: number; // Milliseconds
+    start: number;
+    end: number;
     words: Word[];
   }>;
-  start: number; // Milliseconds - overall statement timing
-  end: number; // Milliseconds - overall statement timing
-  words: Word[]; // All words for the statement
+  start: number;
+  end: number;
+  words: Word[];
 }
 
 export function TranscriptionPanel({
@@ -139,29 +133,20 @@ export function TranscriptionPanel({
   const [stage, setStage] = useState<Stage>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
-  const [showCopied, setShowCopied] = useState(false);
   const [speakerMappings, setSpeakerMappings] = useState<SpeakerMapping>({});
-  const [countryNames, setCountryNames] = useState<Map<string, string>>(
-    new Map(),
-  );
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [countryNames, setCountryNames] = useState<Map<string, string>>(new Map());
   const [topics, setTopics] = useState<
     Record<string, { key: string; label: string; description: string }>
   >({});
   const [statements, setStatements] = useState<Statement[] | null>(null);
-  const [rawParagraphs, setRawParagraphs] = useState<RawParagraph[] | null>(
-    null,
-  );
+  const [rawParagraphs, setRawParagraphs] = useState<RawParagraph[] | null>(null);
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [pvSpeakers, setPvSpeakers] = useState<PVSpeakerEntry[] | null>(null);
   const [pvActiveTurnIndex, setPvActiveTurnIndex] = useState<number>(-1);
   const [propositions, setPropositions] = useState<Proposition[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("transcript");
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-  const languageButtonRef = useRef<HTMLDivElement>(null);
-  const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
 
-  // Playback tracking via rAF — computes active indices for segment/statement/paragraph/sentence/word
   const {
     activeSegmentIndex,
     activeStatementIndex,
@@ -170,12 +155,14 @@ export function TranscriptionPanel({
     activeWordIndex,
     currentTimeRef,
   } = usePlaybackTracking(player, segments, statements);
-  const downloadButtonRef = useRef<HTMLDivElement>(null);
 
-  const handlePvSpeakersChange = useCallback((speakers: PVSpeakerEntry[], activeIdx: number) => {
-    setPvSpeakers(speakers);
-    setPvActiveTurnIndex(activeIdx);
-  }, []);
+  const handlePvSpeakersChange = useCallback(
+    (speakers: PVSpeakerEntry[], activeIdx: number) => {
+      setPvSpeakers(speakers);
+      setPvActiveTurnIndex(activeIdx);
+    },
+    [],
+  );
 
   const isLoading =
     stage !== "idle" &&
@@ -183,14 +170,11 @@ export function TranscriptionPanel({
     stage !== "completed" &&
     stage !== "error";
 
-  // Filter segments by selected topic
-
   const formatTime = (seconds: number | null | undefined): string => {
     if (seconds === null || seconds === undefined || isNaN(seconds)) return "";
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-
     if (hours > 0) {
       return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     }
@@ -198,98 +182,22 @@ export function TranscriptionPanel({
   };
 
   const getSpeakerText = (statementIndex: number | undefined): string => {
-    if (statementIndex === undefined) {
-      return "Speaker";
-    }
-
+    if (statementIndex === undefined) return "Speaker";
     const info = speakerMappings[statementIndex.toString()];
-
-    if (
-      !info ||
-      (!info.affiliation && !info.group && !info.function && !info.name)
-    ) {
+    if (!info || (!info.affiliation && !info.group && !info.function && !info.name)) {
       return `Speaker ${statementIndex + 1}`;
     }
-
     const parts: string[] = [];
-
-    if (info.affiliation) {
-      parts.push(countryNames.get(info.affiliation) || info.affiliation);
-    }
-
-    if (info.group) {
-      parts.push(info.group);
-    }
-
-    // Skip "Representative" as it's not very informative
-    if (info.function && info.function.toLowerCase() !== "representative") {
-      parts.push(info.function);
-    }
-
-    if (info.name) {
-      parts.push(info.name);
-    }
-
+    if (info.affiliation) parts.push(countryNames.get(info.affiliation) || info.affiliation);
+    if (info.group) parts.push(info.group);
+    if (info.function && info.function.toLowerCase() !== "representative") parts.push(info.function);
+    if (info.name) parts.push(info.name);
     return parts.join(" · ");
   };
 
-  const renderSpeakerInfo = (statementIndex: number | undefined) => {
-    if (statementIndex === undefined) {
-      return <span>Speaker</span>;
-    }
-
-    const info = speakerMappings[statementIndex.toString()];
-
-    if (
-      !info ||
-      (!info.affiliation && !info.group && !info.function && !info.name)
-    ) {
-      return <span>Speaker {statementIndex + 1}</span>;
-    }
-
-    return (
-      <div className="flex flex-wrap items-center gap-1.5">
-        {/* Affiliation badge */}
-        {info.affiliation && (
-          <span className="inline-flex items-center rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-            {countryNames.get(info.affiliation) || info.affiliation}
-          </span>
-        )}
-
-        {/* Group badge */}
-        {info.group && (
-          <span className="inline-flex items-center rounded-md bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-            {info.group}
-          </span>
-        )}
-
-        {/* Function (skip if just "Representative") */}
-        {info.function && info.function.toLowerCase() !== "representative" && (
-          <span className="text-sm font-medium text-muted-foreground">
-            {info.function}
-          </span>
-        )}
-
-        {/* Name */}
-        {info.name && (
-          <span className="text-sm font-semibold">{info.name}</span>
-        )}
-      </div>
-    );
-  };
-
-  const speakerHeaderClass =
-    "text-sm font-semibold tracking-wide text-foreground";
-
   const seekToTimestamp = (timestamp: number) => {
-    if (!player) {
-      console.log("Player not ready yet");
-      return;
-    }
-
-    // Use Kaltura Player API directly
+    if (!player) return;
     try {
-      console.log("Seeking to timestamp:", timestamp);
       player.currentTime = timestamp;
       player.play();
     } catch (err) {
@@ -297,84 +205,51 @@ export function TranscriptionPanel({
     }
   };
 
-  // Helper to insert paragraph breaks within a speaker's words
-  // Group statements by consecutive same speaker
   const groupStatementsBySpeaker = useCallback(
-    (
-      statementsData: Statement[],
-      mappings: SpeakerMapping,
-    ): SpeakerSegment[] => {
-      const segments: SpeakerSegment[] = [];
-
-      if (statementsData.length === 0) return segments;
+    (statementsData: Statement[], mappings: SpeakerMapping): SpeakerSegment[] => {
+      const segs: SpeakerSegment[] = [];
+      if (statementsData.length === 0) return segs;
 
       let currentSegment: SpeakerSegment | null = null;
-
       statementsData.forEach((stmt, index) => {
         const speakerInfo = mappings[index.toString()];
-        const speakerId = JSON.stringify(speakerInfo || {}); // Use stringified info as unique ID
-
-        // Get timestamp from first paragraph's first sentence
+        const speakerId = JSON.stringify(speakerInfo || {});
         const timestamp = stmt.paragraphs[0]?.sentences[0]?.start
           ? stmt.paragraphs[0].sentences[0].start / 1000
           : 0;
 
         if (!currentSegment || currentSegment.speaker !== speakerId) {
-          // Start a new segment
-          if (currentSegment) {
-            segments.push(currentSegment);
-          }
-          currentSegment = {
-            speaker: speakerId,
-            statementIndices: [index],
-            timestamp,
-          };
+          if (currentSegment) segs.push(currentSegment);
+          currentSegment = { speaker: speakerId, statementIndices: [index], timestamp };
         } else {
-          // Add to current segment
           currentSegment.statementIndices.push(index);
         }
       });
-
-      // Add final segment
-      if (currentSegment) {
-        segments.push(currentSegment);
-      }
-
-      return segments;
+      if (currentSegment) segs.push(currentSegment);
+      return segs;
     },
     [],
   );
 
   const loadCountryNames = useCallback(async (mapping: SpeakerMapping) => {
     const names = new Map<string, string>();
-
-    // Collect all ISO3 codes
     const iso3Codes = new Set<string>();
     Object.values(mapping).forEach((info) => {
-      if (info.affiliation && info.affiliation.length === 3) {
-        iso3Codes.add(info.affiliation);
-      }
+      if (info.affiliation && info.affiliation.length === 3) iso3Codes.add(info.affiliation);
     });
-
-    // Load country names
     for (const code of iso3Codes) {
       const name = await getCountryName(code);
-      if (name) {
-        names.set(code, name);
-      }
+      if (name) names.set(code, name);
     }
-
     setCountryNames(names);
   }, []);
 
-  // Regenerate segments when speaker mappings or statements change
   useEffect(() => {
     if (statements && Object.keys(speakerMappings).length > 0) {
       setSegments(groupStatementsBySpeaker(statements, speakerMappings));
     }
   }, [statements, speakerMappings, groupStatementsBySpeaker]);
 
-  // Pass data up to parent for sidebar rendering
   useEffect(() => {
     onDataChange?.({
       segments,
@@ -397,23 +272,18 @@ export function TranscriptionPanel({
   const handleTranscribe = async (force = false) => {
     setStage("transcribing");
     setErrorMessage(null);
-
     try {
       const response = await fetch("/api/transcripts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kalturaId, force, language: selectedLanguage }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error?.message || errorData.error || "Transcription failed");
       }
-
       const data = await response.json();
       setTranscriptId(data.transcriptId);
-
-      // If we got statements directly (cached/completed), use them
       if (data.statements && data.statements.length > 0) {
         setStatements(data.statements);
         if (data.topics) setTopics(data.topics);
@@ -426,19 +296,11 @@ export function TranscriptionPanel({
         onLanguagesRefresh?.();
         return;
       }
-
-      // Set initial stage and raw paragraphs if available
       if (data.stage) setStage(data.stage);
       if (data.raw_paragraphs) setRawParagraphs(data.raw_paragraphs);
-
-      // Start polling
-      if (data.transcriptId) {
-        await pollForCompletion(data.transcriptId);
-      }
+      if (data.transcriptId) await pollForCompletion(data.transcriptId);
     } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "Failed to transcribe",
-      );
+      setErrorMessage(err instanceof Error ? err.message : "Failed to transcribe");
       setStage("error");
     }
   };
@@ -448,11 +310,7 @@ export function TranscriptionPanel({
       const response = await fetch("/api/transcripts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kalturaId,
-          assetId: video.id,
-          schedule: true,
-        }),
+        body: JSON.stringify({ kalturaId, assetId: video.id, schedule: true }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -460,9 +318,7 @@ export function TranscriptionPanel({
       }
       setStage("scheduled");
     } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "Failed to schedule transcript",
-      );
+      setErrorMessage(err instanceof Error ? err.message : "Failed to schedule transcript");
       setStage("error");
     }
   };
@@ -471,64 +327,38 @@ export function TranscriptionPanel({
     let pollCount = 0;
     const maxTranscriptionPolls = 200;
 
-
     while (true) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       pollCount++;
 
       const pollResponse = await fetch(`/api/transcripts/${encodeURIComponent(tid)}`);
-
       if (!pollResponse.ok) throw new Error("Failed to poll transcript status");
 
       const data = await pollResponse.json();
-
-      // Update stage
       if (data.stage) setStage(data.stage);
+      if (data.raw_paragraphs && !rawParagraphs) setRawParagraphs(data.raw_paragraphs);
 
-      // Update raw paragraphs as soon as available
-      if (data.raw_paragraphs && !rawParagraphs) {
-        setRawParagraphs(data.raw_paragraphs);
-      }
-
-      // Update statements when available (even before topics)
       if (data.statements?.length > 0) {
         setStatements(data.statements);
-        if (
-          data.speakerMappings &&
-          Object.keys(data.speakerMappings).length > 0
-        ) {
+        if (data.speakerMappings && Object.keys(data.speakerMappings).length > 0) {
           setSpeakerMappings(data.speakerMappings);
           await loadCountryNames(data.speakerMappings);
         }
       }
 
-      // Update topics and propositions when available
-      if (data.topics && Object.keys(data.topics).length > 0) {
-        setTopics(data.topics);
-      }
-      if (data.propositions && data.propositions.length > 0) {
-        setPropositions(data.propositions);
-      }
+      if (data.topics && Object.keys(data.topics).length > 0) setTopics(data.topics);
+      if (data.propositions && data.propositions.length > 0) setPropositions(data.propositions);
 
-      // Check for completion or error
-      if (data.stage === "completed") {
-        break;
-      } else if (data.stage === "error") {
-        throw new Error(data.error_message || "Pipeline failed");
-      } else if (
-        data.stage === "transcribing" &&
-        pollCount >= maxTranscriptionPolls
-      ) {
-        throw new Error(
-          "Transcription timeout - audio processing took too long",
-        );
+      if (data.stage === "completed") break;
+      if (data.stage === "error") throw new Error(data.error_message || "Pipeline failed");
+      if (data.stage === "transcribing" && pollCount >= maxTranscriptionPolls) {
+        throw new Error("Transcription timeout - audio processing took too long");
       }
     }
   };
 
   const handleRetry = () => {
     if (transcriptId) {
-      // Retry from where we left off
       setStage("transcribing");
       setErrorMessage(null);
       pollForCompletion(transcriptId).catch((err) => {
@@ -540,23 +370,20 @@ export function TranscriptionPanel({
     }
   };
 
-  const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
-
   const handleRunAnalysis = async () => {
     if (!transcriptId) return;
     setAnalyzingPropositions(true);
     try {
-      const response = await fetch(`/api/transcripts/${encodeURIComponent(transcriptId)}/analysis`, {
-        method: "POST",
-      });
+      const response = await fetch(
+        `/api/transcripts/${encodeURIComponent(transcriptId)}/analysis`,
+        { method: "POST" },
+      );
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error?.message || data.error || "Analysis failed");
       }
       const data = await response.json();
-      if (data.propositions) {
-        setPropositions(data.propositions);
-      }
+      if (data.propositions) setPropositions(data.propositions);
     } catch (err) {
       console.error("Analysis failed:", err);
       setErrorMessage(err instanceof Error ? err.message : "Analysis failed");
@@ -568,8 +395,6 @@ export function TranscriptionPanel({
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      setShowCopied(true);
-      setTimeout(() => setShowCopied(false), 4000);
     } catch (err) {
       console.error("Failed to copy URL:", err);
     }
@@ -581,7 +406,6 @@ export function TranscriptionPanel({
       .replace(/{/g, "\\{")
       .replace(/}/g, "\\}")
       .replace(/[\u0080-\uffff]/g, (char) => {
-        // Encode Unicode characters as \uN? where N is the decimal code point
         const code = char.charCodeAt(0);
         return `\\u${code}?`;
       });
@@ -589,51 +413,37 @@ export function TranscriptionPanel({
 
   const downloadDocx = () => {
     if (!segments || !statements) return;
-
-    // Simple RTF format (opens in Word)
     let rtf = "{\\rtf1\\ansi\\deff0\n";
     segments.forEach((segment) => {
       const firstStmtIndex = segment.statementIndices[0] ?? 0;
       rtf += `{\\b ${escapeRtf(getSpeakerText(firstStmtIndex))}`;
-      if (segment.timestamp !== null) {
-        rtf += ` [${formatTime(segment.timestamp)}]`;
-      }
+      if (segment.timestamp !== null) rtf += ` [${formatTime(segment.timestamp)}]`;
       rtf += ":}\\line\\line\n";
-
       segment.statementIndices.forEach((stmtIdx) => {
         const stmt = statements[stmtIdx];
         if (stmt) {
           stmt.paragraphs.forEach((para) => {
             const text = para.sentences.map((s) => s.text).join(" ");
-            rtf += escapeRtf(text);
-            rtf += "\\line\\line\n";
+            rtf += escapeRtf(text) + "\\line\\line\n";
           });
         }
       });
     });
     rtf += "}";
-
     const blob = new Blob([rtf], { type: "application/rtf" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    const filename = `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, "_")}.rtf`;
-    a.download = filename;
+    a.download = `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, "_")}.rtf`;
     a.click();
     URL.revokeObjectURL(url);
-    setShowDownloadMenu(false);
   };
 
   const downloadExcel = async () => {
     if (!segments) return;
-
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Transcript");
-
-    // Get all topic labels for column headers
     const topicList = Object.values(topics);
-
-    // Define base columns
     const baseColumns = [
       { header: "Date", key: "date", width: 12 },
       { header: "Source Type", key: "source_type", width: 12 },
@@ -645,47 +455,30 @@ export function TranscriptionPanel({
       { header: "Function", key: "function", width: 20 },
       { header: "Text", key: "text", width: 60 },
     ];
-
-    // Add topic columns
     const topicColumns = topicList.map((topic) => ({
       header: `Topic ${topic.label}`,
       key: `topic_${topic.key}`,
       width: 15,
     }));
-
     worksheet.columns = [...baseColumns, ...topicColumns];
-
-    // Style header row
     const headerRow = worksheet.getRow(1);
     headerRow.font = { bold: true };
-    headerRow.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFD9D9D9" },
-    };
+    headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9D9D9" } };
     headerRow.alignment = { vertical: "middle", horizontal: "left" };
-
-    // Freeze header row
     worksheet.views = [{ state: "frozen", ySplit: 1 }];
 
-    // Add data
     let paragraphNumber = 1;
     segments.forEach((segment) => {
       segment.statementIndices.forEach((stmtIdx) => {
         const info = speakerMappings[stmtIdx.toString()];
         const stmt = statements?.[stmtIdx];
-
         if (stmt) {
           stmt.paragraphs.forEach((para) => {
             const text = para.sentences.map((s) => s.text).join(" ");
-
-            // Collect all topic keys from sentences in this paragraph
             const paragraphTopics = new Set<string>();
             para.sentences.forEach((sent) => {
               sent.topic_keys?.forEach((key) => paragraphTopics.add(key));
             });
-
-            // Build row data with base columns
             const rowData: Record<string, string | number> = {
               date: video.date,
               source_type: "WebTV",
@@ -699,30 +492,18 @@ export function TranscriptionPanel({
               function: info?.function || "",
               text,
             };
-
-            // Add topic columns
             topicList.forEach((topic) => {
-              rowData[`topic_${topic.key}`] = paragraphTopics.has(topic.key)
-                ? "Yes"
-                : "";
+              rowData[`topic_${topic.key}`] = paragraphTopics.has(topic.key) ? "Yes" : "";
             });
-
             const row = worksheet.addRow(rowData);
-
-            // Wrap text in all cells
             row.eachCell((cell) => {
-              cell.alignment = {
-                vertical: "top",
-                horizontal: "left",
-                wrapText: true,
-              };
+              cell.alignment = { vertical: "top", horizontal: "left", wrapText: true };
             });
           });
         }
       });
     });
 
-    // Generate buffer and download
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -730,16 +511,13 @@ export function TranscriptionPanel({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    const filename = `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, "_")}.xlsx`;
-    a.download = filename;
+    a.download = `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, "_")}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
-    setShowDownloadMenu(false);
   };
 
-  // Check for cached transcript on mount and when language changes
+  // Check cache on mount and language change
   useEffect(() => {
-    // Reset state for language switch
     setSegments(null);
     setStatements(null);
     setRawParagraphs(null);
@@ -756,14 +534,9 @@ export function TranscriptionPanel({
         const response = await fetch(
           `/api/transcripts/check?kalturaId=${encodeURIComponent(kalturaId)}&language=${encodeURIComponent(selectedLanguage)}`,
         );
-
         if (response.ok) {
           const data = await response.json();
-
-          // Store transcript ID for potential retry
           if (data.transcriptId) setTranscriptId(data.transcriptId);
-
-          // Load cached transcript if completed
           if (data.statements && data.statements.length > 0) {
             setStatements(data.statements);
             if (data.topics) setTopics(data.topics);
@@ -775,14 +548,11 @@ export function TranscriptionPanel({
             setStage("completed");
             onLanguagesRefresh?.();
           } else if (data.raw_paragraphs) {
-            // Have raw data but pipeline not complete - show intermediate and poll
             setRawParagraphs(data.raw_paragraphs);
             if (data.stage) setStage(data.stage);
             if (data.transcriptId) {
               pollForCompletion(data.transcriptId).catch((err) => {
-                setErrorMessage(
-                  err instanceof Error ? err.message : "Pipeline failed",
-                );
+                setErrorMessage(err instanceof Error ? err.message : "Pipeline failed");
                 setStage("error");
               });
             }
@@ -807,8 +577,6 @@ export function TranscriptionPanel({
     if (activeStatementIndex < 0 || activeParagraphIndex < 0) return;
 
     const key = `${activeStatementIndex}-${activeParagraphIndex}`;
-
-    // Don't scroll if we already scrolled to this paragraph
     if (lastScrolledKey.current === key) return;
 
     const element = document.querySelector<HTMLElement>(
@@ -816,13 +584,11 @@ export function TranscriptionPanel({
     );
     if (!element) return;
 
-    // Detect if user jumped (time changed by > 5 seconds in one update)
     const time = currentTimeRef.current;
     const timeDelta = Math.abs(time - lastTimeRef.current);
     const isJump = timeDelta > 5;
     lastTimeRef.current = time;
 
-    // Try a scroll container first (overflow-y-auto), fall back to window
     const scrollContainer = element.closest(".overflow-y-auto");
 
     if (scrollContainer) {
@@ -834,33 +600,27 @@ export function TranscriptionPanel({
 
       const relativeTop = elementRect.top - containerRect.top;
       const isRoughlyInView =
-        relativeTop > -containerHeight * 1.5 &&
-        relativeTop < containerHeight * 2.5;
+        relativeTop > -containerHeight * 1.5 && relativeTop < containerHeight * 2.5;
 
       if (isJump || isRoughlyInView) {
         const offset = containerHeight / 3;
-        const targetScroll = elementTopInContainer - offset;
         scrollContainer.scrollTo({
-          top: targetScroll,
+          top: elementTopInContainer - offset,
           behavior: isJump ? "instant" : "smooth",
         });
         lastScrolledKey.current = key;
       }
     } else {
-      // Page-level scroll
       const elementRect = element.getBoundingClientRect();
       const absoluteTop = elementRect.top + window.scrollY;
       const viewportHeight = window.innerHeight;
-
       const relativeTop = elementRect.top;
       const isRoughlyInView =
-        relativeTop > -viewportHeight * 1.5 &&
-        relativeTop < viewportHeight * 2.5;
+        relativeTop > -viewportHeight * 1.5 && relativeTop < viewportHeight * 2.5;
 
       if (isJump || isRoughlyInView) {
-        const offset = viewportHeight / 3;
         window.scrollTo({
-          top: absoluteTop - offset,
+          top: absoluteTop - viewportHeight / 3,
           behavior: isJump ? "instant" : "smooth",
         });
         lastScrolledKey.current = key;
@@ -868,226 +628,29 @@ export function TranscriptionPanel({
     }
   }, [activeStatementIndex, activeParagraphIndex]);
 
-  // Handle click outside dropdowns
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        downloadButtonRef.current &&
-        !downloadButtonRef.current.contains(event.target as Node)
-      ) {
-        setShowDownloadMenu(false);
-      }
-      if (
-        languageButtonRef.current &&
-        !languageButtonRef.current.contains(event.target as Node)
-      ) {
-        setShowLanguageMenu(false);
-      }
-    };
-
-    if (showDownloadMenu || showLanguageMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [showDownloadMenu, showLanguageMenu]);
-
-  const selectedLangName = availableLanguages.find((l) => l.code === selectedLanguage)?.name
-    ?? (selectedLanguage === "en" ? "English" : selectedLanguage.toUpperCase());
-
   return (
     <div>
-      {/* Single toolbar row: title | language | tabs | actions */}
-      <div className="mb-3 flex items-center gap-3">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground">
-          Transcript
-        </h2>
-
-        {/* Language selector */}
-        {availableLanguages.length > 0 && (
-          <div className="relative" ref={languageButtonRef}>
-            <button
-              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-              className="flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted/50"
-            >
-              <Globe className="h-3 w-3" />
-              {selectedLangName}
-              <ChevronDown className="h-3 w-3" />
-            </button>
-            {showLanguageMenu && (
-              <div className="absolute left-0 z-10 mt-1 w-52 overflow-hidden rounded-md border border-border bg-background shadow-md">
-                {availableLanguages.map((lang) => (
-                  <button
-                    key={lang.code}
-                    disabled={!lang.available}
-                    onClick={() => {
-                      if (lang.available) {
-                        onLanguageChange(lang.code);
-                        setShowLanguageMenu(false);
-                      }
-                    }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
-                      !lang.available
-                        ? "cursor-not-allowed text-muted-foreground/40"
-                        : lang.code === selectedLanguage
-                          ? "bg-muted/50 font-medium"
-                          : "hover:bg-muted"
-                    }`}
-                  >
-                    <span className="flex-1">{lang.name}</span>
-                    {!lang.available && (
-                      <span className="text-[10px] text-muted-foreground/40">No audio</span>
-                    )}
-                    {lang.code === selectedLanguage && (
-                      <Check className="h-3 w-3 text-primary" />
-                    )}
-                    {lang.available && lang.transcriptStatus === "completed" && (
-                      <span className="h-2 w-2 rounded-full bg-green-500" title="Transcript available" />
-                    )}
-                    {lang.available && lang.transcriptStatus && lang.transcriptStatus !== "completed" && lang.transcriptStatus !== "error" && (
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" title="In progress" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Tabs — when there's transcript data or PV available */}
-        {(pvSymbol ||
-          (segments &&
-            (propositions.length > 0 || Object.keys(topics).length > 0))) && (
-            <div className="flex rounded-md border border-border bg-muted">
-              <button
-                onClick={() => setViewMode("transcript")}
-                className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
-                  viewMode === "transcript"
-                    ? "bg-background text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <FileText className="h-3 w-3" />
-                Transcript
-              </button>
-              <button
-                onClick={() => setViewMode("analysis")}
-                className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
-                  viewMode === "analysis"
-                    ? "bg-background text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                disabled={stage !== "completed" && propositions.length === 0}
-                title={
-                  stage !== "completed" && propositions.length === 0
-                    ? "Transcription must complete before analysis"
-                    : undefined
-                }
-              >
-                <BarChart3 className="h-3 w-3" />
-                Analysis
-              </button>
-              {pvSymbol && (
-                <button
-                  onClick={() => setViewMode("pv")}
-                  className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
-                    viewMode === "pv"
-                      ? "bg-background text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <BookOpen className="h-3 w-3" />
-                  {pvSymbol?.includes("/SR.") ? "Summary Record" : "Verbatim Record"}
-                </button>
-              )}
-            </div>
-          )}
-
-        {/* Actions — pushed to the right */}
-        <div className="ml-auto flex gap-2">
-          {!segments && !rawParagraphs && !checking && stage === "idle" && (
-            <>
-              <button
-                onClick={() => handleTranscribe()}
-                className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
-              >
-                Generate
-              </button>
-              {(video.status === "live" || video.status === "scheduled") && (
-                <button
-                  onClick={() => handleSchedule()}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
-                  title="Queue transcript to start automatically when recording ends"
-                >
-                  Schedule
-                </button>
-              )}
-            </>
-          )}
-          {!segments &&
-            !rawParagraphs &&
-            !checking &&
-            stage === "scheduled" && (
-              <span className="text-xs text-muted-foreground">
-                Transcript scheduled — starts automatically when recording ends
-              </span>
-            )}
-          {(segments || rawParagraphs) && (
-            <>
-              <div className="relative">
-                <button
-                  onClick={handleShare}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
-                >
-                  Share
-                </button>
-                {showCopied && (
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs whitespace-nowrap text-background">
-                    Link copied to clipboard!
-                  </div>
-                )}
-              </div>
-              <div className="relative" ref={downloadButtonRef}>
-                <button
-                  onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                  className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
-                >
-                  Download
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-                {showDownloadMenu && (
-                  <div className="absolute right-0 z-10 mt-1 w-44 overflow-hidden rounded-md border border-border bg-background shadow-md">
-                    <button
-                      onClick={downloadDocx}
-                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
-                    >
-                      Text Document
-                    </button>
-                    <button
-                      onClick={downloadExcel}
-                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
-                    >
-                      Excel Table
-                    </button>
-                    <button
-                      onClick={() => {
-                        window.open(
-                          `/json/${video.slug}`,
-                          "_blank",
-                        );
-                        setShowDownloadMenu(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
-                    >
-                      JSON API
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+      <TranscriptToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        selectedLanguage={selectedLanguage}
+        availableLanguages={availableLanguages}
+        onLanguageChange={onLanguageChange}
+        pvSymbol={pvSymbol}
+        hasSegments={!!segments}
+        hasRawParagraphs={!!rawParagraphs}
+        hasPropositions={propositions.length > 0}
+        hasTopics={Object.keys(topics).length > 0}
+        checking={checking}
+        stage={stage}
+        videoStatus={video.status}
+        videoSlug={video.slug}
+        onTranscribe={() => handleTranscribe()}
+        onSchedule={handleSchedule}
+        onShare={handleShare}
+        onDownloadDocx={downloadDocx}
+        onDownloadExcel={downloadExcel}
+      />
 
       {checking && stage === "idle" && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -1106,7 +669,6 @@ export function TranscriptionPanel({
         />
       )}
 
-      {/* Analysis View */}
       {viewMode === "analysis" && propositions.length > 0 && (
         <AnalysisView
           propositions={propositions}
@@ -1117,7 +679,6 @@ export function TranscriptionPanel({
         />
       )}
 
-      {/* Analysis — Run Analysis prompt */}
       {viewMode === "analysis" && propositions.length === 0 && stage === "completed" && (
         <div className="mt-8 flex flex-col items-center gap-4 text-center">
           <BarChart3 className="h-10 w-10 text-muted-foreground/50" />
@@ -1144,7 +705,6 @@ export function TranscriptionPanel({
         </div>
       )}
 
-      {/* PV View */}
       {viewMode === "pv" && pvSymbol && (
         <PVPanel
           pvSymbol={pvSymbol}
@@ -1155,254 +715,26 @@ export function TranscriptionPanel({
         />
       )}
 
-      {/* Transcript View */}
       {viewMode === "transcript" && segments && (
-        <div className="space-y-3">
-          {segments.map((segment, segmentIndex) => {
-            const isSegmentActive = segmentIndex === activeSegmentIndex;
-            const firstStmtIndex = segment.statementIndices[0] ?? 0;
-
-            // Skip segment if in highlights-only mode and no content would be visible
-            if (topicCollapsed && selectedTopic) {
-              const hasAnyHighlight = segment.statementIndices.some(
-                (stmtIdx) => {
-                  const stmt = statements?.[stmtIdx];
-                  return stmt?.paragraphs.some((para) =>
-                    para.sentences.some((sent) =>
-                      sent.topic_keys?.includes(selectedTopic),
-                    ),
-                  );
-                },
-              );
-              if (!hasAnyHighlight) return null;
-            }
-
-            return (
-              <div
-                key={segmentIndex}
-                className="space-y-1 pt-2"
-                ref={(el) => {
-                  segmentRefs.current[segmentIndex] = el;
-                }}
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className={speakerHeaderClass}>
-                    {renderSpeakerInfo(firstStmtIndex)}
-                  </div>
-                  <button
-                    onClick={() => seekToTimestamp(segment.timestamp)}
-                    className="rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
-                    title="Jump to this timestamp"
-                  >
-                    {formatTime(segment.timestamp)}
-                  </button>
-                </div>
-                <div
-                  className={`rounded-lg border p-3 transition-colors duration-200 ${
-                    isSegmentActive
-                      ? "border-primary/40 bg-primary/5"
-                      : "border-transparent bg-muted/40"
-                  }`}
-                >
-                  <div className="space-y-2 text-sm leading-relaxed">
-                    {segment.statementIndices.map((stmtIdx, indexInSegment) => {
-                      const stmt = statements?.[stmtIdx];
-
-                      if (!stmt) return null;
-
-                      const isStmtActive = stmtIdx === activeStatementIndex;
-                      const allTopicKeys = Object.keys(topics);
-                      const highlightColor = selectedTopic
-                        ? getTopicColor(selectedTopic, allTopicKeys)
-                        : null;
-
-                      return (
-                        <div key={indexInSegment} className="space-y-3">
-                          {stmt.paragraphs.map((para, paraIdx) => {
-                            const isParaActive =
-                              isStmtActive && paraIdx === activeParagraphIndex;
-
-                            // If topic is collapsed, skip paragraphs without highlighted sentences
-                            if (topicCollapsed && selectedTopic) {
-                              const hasHighlight = para.sentences.some((sent) =>
-                                sent.topic_keys?.includes(selectedTopic),
-                              );
-                              if (!hasHighlight) return null;
-                            }
-
-                            return (
-                              <p
-                                key={paraIdx}
-                                dir="auto"
-                                className="text-start"
-                                data-paragraph-key={`${stmtIdx}-${paraIdx}`}
-                              >
-                                {para.sentences.map((sent, sentIdx) => {
-                                  const isSentActive =
-                                    isParaActive &&
-                                    sentIdx === activeSentenceIndex;
-                                  const isHighlighted =
-                                    selectedTopic &&
-                                    sent.topic_keys?.includes(selectedTopic);
-
-                                  // If topic is collapsed, skip non-highlighted sentences
-                                  if (
-                                    topicCollapsed &&
-                                    selectedTopic &&
-                                    !isHighlighted
-                                  ) {
-                                    return null;
-                                  }
-
-                                  // Render words if available
-                                  if (sent.words && sent.words.length > 0) {
-                                    if (isHighlighted && highlightColor) {
-                                      return (
-                                        <span
-                                          key={sentIdx}
-                                          className="rounded-full px-2 py-1"
-                                          style={{
-                                            backgroundColor:
-                                              highlightColor + "30",
-                                            display: "inline",
-                                          }}
-                                        >
-                                          {sent.words.map((word, wordIdx) => {
-                                            const isActiveWord =
-                                              isSentActive &&
-                                              wordIdx === activeWordIndex;
-                                            return (
-                                              <span
-                                                key={wordIdx}
-                                                onClick={() =>
-                                                  seekToTimestamp(
-                                                    word.start / 1000,
-                                                  )
-                                                }
-                                                className="cursor-pointer hover:opacity-70"
-                                                style={{
-                                                  textDecorationLine: isActiveWord
-                                                    ? "underline"
-                                                    : "none",
-                                                  textDecorationColor:
-                                                    isActiveWord
-                                                      ? "hsl(var(--primary))"
-                                                      : "transparent",
-                                                  textDecorationThickness:
-                                                    "2px",
-                                                  textUnderlineOffset: "3px",
-                                                }}
-                                              >
-                                                {word.text}{" "}
-                                              </span>
-                                            );
-                                          })}
-                                        </span>
-                                      );
-                                    }
-                                    return sent.words.map((word, wordIdx) => {
-                                      const isActiveWord =
-                                        isSentActive &&
-                                        wordIdx === activeWordIndex;
-                                      return (
-                                        <span
-                                          key={`${sentIdx}-${wordIdx}`}
-                                          onClick={() =>
-                                            seekToTimestamp(word.start / 1000)
-                                          }
-                                          className="cursor-pointer hover:opacity-70"
-                                          style={{
-                                            textDecorationLine: isActiveWord
-                                              ? "underline"
-                                              : "none",
-                                            textDecorationColor: isActiveWord
-                                              ? "hsl(var(--primary))"
-                                              : "transparent",
-                                            textDecorationThickness: "2px",
-                                            textUnderlineOffset: "3px",
-                                          }}
-                                        >
-                                          {word.text}{" "}
-                                        </span>
-                                      );
-                                    });
-                                  }
-
-                                  // Fallback to text rendering
-                                  return (
-                                    <span
-                                      key={sentIdx}
-                                      className={
-                                        isHighlighted
-                                          ? "rounded-full px-2 py-1"
-                                          : ""
-                                      }
-                                      style={
-                                        isHighlighted && highlightColor
-                                          ? {
-                                              backgroundColor:
-                                                highlightColor + "30",
-                                              display: "inline",
-                                            }
-                                          : undefined
-                                      }
-                                    >
-                                      {sent.text}{" "}
-                                    </span>
-                                  );
-                                })}
-                              </p>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <TranscriptView
+          segments={segments}
+          statements={statements}
+          speakerMappings={speakerMappings}
+          countryNames={countryNames}
+          topics={topics}
+          activeSegmentIndex={activeSegmentIndex}
+          activeStatementIndex={activeStatementIndex}
+          activeParagraphIndex={activeParagraphIndex}
+          activeSentenceIndex={activeSentenceIndex}
+          activeWordIndex={activeWordIndex}
+          selectedTopic={selectedTopic}
+          topicCollapsed={topicCollapsed}
+          onSeek={seekToTimestamp}
+        />
       )}
 
-      {/* Show raw paragraphs while waiting for speaker identification */}
       {!segments && rawParagraphs && rawParagraphs.length > 0 && (
-        <div className="space-y-3">
-          {rawParagraphs.map((para, idx) => {
-            // Group consecutive paragraphs by speaker
-            const speaker = para.words[0]?.speaker || "A";
-            const prevSpeaker =
-              idx > 0 ? rawParagraphs[idx - 1].words[0]?.speaker || "A" : null;
-            const showHeader = speaker !== prevSpeaker;
-
-            return (
-              <div key={idx}>
-                {showHeader && (
-                  <div className="mb-2 pt-3 text-sm font-semibold tracking-wide text-foreground">
-                    Speaker {speaker}
-                    <button
-                      onClick={() => seekToTimestamp(para.start / 1000)}
-                      className="ml-2 text-xs text-muted-foreground hover:text-primary hover:underline"
-                    >
-                      [{formatTime(para.start / 1000)}]
-                    </button>
-                  </div>
-                )}
-                <div dir="auto" className="text-start rounded-lg bg-muted/50 p-4 text-sm leading-relaxed">
-                  {para.words.map((word, wIdx) => (
-                    <span
-                      key={wIdx}
-                      onClick={() => seekToTimestamp(word.start / 1000)}
-                      className="cursor-pointer hover:opacity-70"
-                    >
-                      {word.text}{" "}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <RawTranscriptView rawParagraphs={rawParagraphs} onSeek={seekToTimestamp} />
       )}
 
       {!segments && !rawParagraphs && stage === "idle" && !checking && viewMode !== "pv" && (
