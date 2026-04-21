@@ -41,6 +41,7 @@
     "next": "^16.2.1",
     "openai": "^6.33.0",
     "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "5.4.296",
     "radix-ui": "^1.4.3",
     "react": "^19.2.4",
     "react-day-picker": "^9.14.0",
