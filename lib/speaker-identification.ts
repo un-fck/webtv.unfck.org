@@ -160,7 +160,7 @@ const COMMON_ABBREVIATIONS = `COMMON ABBREVIATIONS
 
 const SCHEMA_DEFINITIONS = `SCHEMA DEFINITIONS:
 
-name: Person name as best as can be identified from the text. Do NOT use world knowledge. Only use what is literally stated. Fix transcription errors. May be given name, surname, or full name. Add "Mr."/"Ms." only if surname-only AND gender explicitly known. E.g., "Yacine Hamzaoui", "Mr. Hamasu", "Dave". Use null if unknown.
+name: The actual personal name (first name, surname, or full name) of the speaker. Do NOT use world knowledge – you do not reliably know who is really in the room and other people may have taken over posts where you have strongly memorized the (now outdated) name. Only use what is literally stated. Fix transcription errors that concern incorrect spelling, but never fix more than that. Add "Mr."/"Ms." only if surname-only AND gender explicitly known. E.g., "Yacine Hamzaoui", "Mr. Hamasu", "Dave". MUST be null if the actual personal name is unknown — NEVER put role descriptions like "Representative of Germany", "Delegate of Kenya", or "Chair" in this field. Those belong in function/affiliation.
 
 function: Function/title. Be concise, use canonical abbreviations. E.g. "SG", "PGA", "Chair", "Representative", "Vice-Chair", "Officer", "Spokesperson", "USG Policy". Use null if unknown.
 
@@ -817,13 +817,14 @@ async function resegmentParagraph(
     transcriptId,
     stage: UsageStages.resegmenting,
     operation: UsageOperations.openaiResegmentParagraph,
-    model: getAnalysisModel(),
+    model: getAnalysisModelMini(),
     requestMeta: {
       paragraph_index: paragraphIndex ?? null,
       context_size: contextParas.length,
     },
     request: {
-      model: getAnalysisModel(),
+      model: getAnalysisModelMini(),
+      reasoning_effort: "low" as const,
       messages: [
         {
           role: "system",
@@ -1077,10 +1078,11 @@ export async function identifySpeakers(
     transcriptId,
     stage: UsageStages.identifyingSpeakers,
     operation: UsageOperations.openaiInitialSpeakerMapping,
-    model: getAnalysisModel(),
+    model: getAnalysisModelMini(),
     requestMeta: { paragraph_count: paragraphs.length },
     request: {
-      model: getAnalysisModel(),
+      model: getAnalysisModelMini(),
+      reasoning_effort: "low" as const,
       messages: [
         {
           role: "system",
@@ -1175,7 +1177,7 @@ ${transcriptParts.join("\n\n")}`,
   });
 
   const result = completion.choices[0]?.message?.content;
-  if (!result) throw new Error("Failed to parse speaker mappings");
+  if (!result) throw new Error("Failed to identify speakers");
 
   const parsed = JSON.parse(result) as z.infer<typeof ParagraphSpeakerMapping>;
   console.log(`  ✓ Initial identification complete`);
@@ -1299,7 +1301,7 @@ ${transcriptParts.join("\n\n")}`,
 
   // Filter out off-record paragraphs
   const offRecordIndices = Object.keys(finalMapping)
-    .filter((idx) => finalMapping[idx].is_off_record)
+    .filter((idx) => finalMapping[idx]?.is_off_record)
     .map((idx) => parseInt(idx));
 
   if (offRecordIndices.length > 0) {
@@ -1313,7 +1315,7 @@ ${transcriptParts.join("\n\n")}`,
     let newIndex = 0;
 
     for (let i = 0; i < finalParagraphs.length; i++) {
-      if (!finalMapping[i.toString()].is_off_record) {
+      if (!finalMapping[i.toString()]?.is_off_record) {
         filteredParagraphs.push(finalParagraphs[i]);
         const speaker = { ...finalMapping[i.toString()] };
         delete speaker.is_off_record; // Remove flag from final output

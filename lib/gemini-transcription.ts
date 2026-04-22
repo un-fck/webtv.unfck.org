@@ -1,17 +1,12 @@
 /**
- * Gemini-based transcription + speaker identification for UN proceedings.
+ * Gemini-based transcription for UN proceedings.
  *
- * Replaces the legacy transcription pipeline (external ASR + OpenAI speaker mapping
- * + OpenAI resegmentation) with a single Gemini call that:
- *   - Transcribes the audio verbatim (full turn text required)
- *   - Identifies speakers by name/function/affiliation/group from audio context
- *   - Word timestamps are interpolated uniformly across each segment's [start, end]
+ * Transcribes audio verbatim with diarization (numeric speaker IDs) and
+ * sentence-level timestamps. Word timestamps are interpolated uniformly
+ * across each segment's [start, end].
  *
- * Note on word-level timestamps: Gemini's constrained decoding fills every required
- * field. For a 30-min session, per-word timestamps (~4500 words × ~12 tokens/word)
- * consume the entire 65K output token budget, causing MAX_TOKENS truncation and
- * invalid JSON. We therefore use segment-level text (very token-efficient) and
- * derive word timestamps by uniform interpolation.
+ * Speaker identification is handled downstream by the OpenAI pipeline,
+ * the same as all other providers.
  *
  * Timestamp accuracy: Gemini hallucinates timestamps on audio-only files for clips
  * longer than ~10 minutes — a well-documented issue across all model versions. The
@@ -20,9 +15,6 @@
  * is told its exact duration in the prompt. Results are stitched with known offsets.
  */
 import fs from 'fs';
-import { AzureOpenAI } from 'openai';
-import { z } from 'zod';
-import { zodResponseFormat } from 'openai/helpers/zod';
 import {
   GEMINI_API_KEY, GEMINI_MODEL, GEMINI_BASE,
   CHUNK_THRESHOLD_SECONDS, CHUNK_DURATION_SECONDS,
@@ -30,25 +22,18 @@ import {
   fmtHHMMSS, parseHHMMSSToMs as parseHHMMSS, extractJsonObject,
   downloadAudioToTemp, getAudioDurationSeconds, extractAudioChunk,
 } from './gemini-utils';
-import { trackOpenAIChatCompletion, UsageOperations, UsageStages } from './usage-tracking';
 import type { RawParagraph } from './turso';
-import type { SpeakerInfo, SpeakerMapping } from './speakers';
 import { getLanguageFullName } from './languages';
-import { getAnalysisModelMini } from './providers/config';
 
 export { GEMINI_MODEL };
 
 // ---- Schema types ----
 
 interface GeminiSegment {
-  speaker_name: string | null;
-  speaker_function: string | null;
-  speaker_affiliation: string | null;
-  speaker_group: string | null;
-  is_off_record: boolean;
-  start_time: string; // HH:MM:SS
-  end_time: string;   // HH:MM:SS
-  text: string;       // Full verbatim text of this turn
+  speaker_id: number;  // 0-based, increments on speaker change
+  start_time: string;  // HH:MM:SS
+  end_time: string;    // HH:MM:SS
+  text: string;        // Full verbatim text of this turn
 }
 
 interface GeminiTranscriptOutput {
@@ -74,7 +59,6 @@ export interface GeminiTranscriptionOptions {
 
 export interface GeminiTranscriptionResult {
   paragraphs: RawParagraph[];
-  speakerMapping: SpeakerMapping;
   usageMetadata: GeminiUsageMetadata;
   audioSeconds: number;
   chunked: boolean;
@@ -103,39 +87,32 @@ function interpolateWords(
   }));
 }
 
-/** Convert Gemini segments to RawParagraph[] + SpeakerMapping */
+/** Convert Gemini segments to RawParagraph[], tagging each word with its numeric speaker_id. */
 function segmentsToOutput(
   segments: GeminiSegment[],
   chunkOffsetMs = 0,
-): { paragraphs: RawParagraph[]; speakerMapping: SpeakerMapping } {
+): RawParagraph[] {
   const paragraphs: RawParagraph[] = [];
-  const speakerMapping: SpeakerMapping = {};
 
   for (const seg of segments) {
     const segStart = parseHHMMSS(seg.start_time) + chunkOffsetMs;
     const segEnd = parseHHMMSS(seg.end_time) + chunkOffsetMs;
 
-    // Interpolate word timestamps uniformly across the segment
     const wordTexts = seg.text.split(/\s+/).filter(Boolean);
     const words = interpolateWords(wordTexts, segStart, segEnd);
 
     if (words.length === 0) continue;
 
-    const text = seg.text;
-    const idx = paragraphs.length;
-    paragraphs.push({ text, start: segStart, end: segEnd, words });
-
-    const speaker: SpeakerInfo = {
-      name: seg.speaker_name ?? null,
-      function: seg.speaker_function ?? null,
-      affiliation: seg.speaker_affiliation ?? null,
-      group: seg.speaker_group ?? null,
-    };
-    if (seg.is_off_record) speaker.is_off_record = true;
-    speakerMapping[idx.toString()] = speaker;
+    const speakerLabel = (seg.speaker_id ?? 0).toString();
+    paragraphs.push({
+      text: seg.text,
+      start: segStart,
+      end: segEnd,
+      words: words.map(w => ({ ...w, speaker: speakerLabel })),
+    });
   }
 
-  return { paragraphs, speakerMapping };
+  return paragraphs;
 }
 
 function buildPrompt(langName: string, chunkDurationSec?: number, langCode?: string): string {
@@ -160,11 +137,7 @@ function buildPrompt(langName: string, chunkDurationSec?: number, langCode?: str
     '{',
     '  "segments": [',
     '    {',
-    '      "speaker_name": "Stéphane Dujarric",  // full name with correct accents, or null',
-    '      "speaker_function": "Spokesperson",    // official title, or null',
-    '      "speaker_affiliation": "UN Secretariat", // ISO 3166-1 alpha-3 or UN body, or null',
-    '      "speaker_group": null,                 // group spoken on behalf of, or null',
-    '      "is_off_record": false,',
+    '      "speaker_id": 0,            // 0-based integer, increment each time a new speaker begins',
     '      "start_time": "00:00:00",',
     '      "end_time": "00:01:23",',
     '      "text": "Verbatim transcript of this speaker turn."',
@@ -176,33 +149,18 @@ function buildPrompt(langName: string, chunkDurationSec?: number, langCode?: str
     '1. Transcribe every word verbatim — do not correct grammar, summarize, or paraphrase.',
     '2. Include filler words, false starts, and repetitions.',
     '3. Each segment should contain a single sentence or short clause, with its own start_time and end_time.',
-    '   A speaker turn may span multiple consecutive segments — keep the same speaker info across them.',
+    '   A speaker turn may span multiple consecutive segments — keep the same speaker_id across them.',
     '   This is critical for accurate word-level timestamp synchronization.',
     '4. Use HH:MM:SS format for all timestamps (e.g. "01:23:45").',
     '5. ONLY transcribe actual speech. Do NOT create segments for silence, background noise, music,',
     '   applause, or other non-speech audio. Simply skip these parts and start the next segment',
     '   when speech resumes. Never output placeholder text like "[Background noise]" or "[Silence]".',
     '',
-    'CRITICAL: Transcribe names EXACTLY as spoken in the audio. Do NOT substitute names based on',
-    'your knowledge of who currently or previously held a position. Your world knowledge about',
-    'personnel may be outdated. Always trust what you hear over what you expect.',
-    '',
-    'SPEAKER IDENTIFICATION:',
-    '- Identify speakers from self-introductions, voice changes, and contextual cues in the audio.',
-    '- speaker_name: Full name as stated, preserving correct spelling and accents (e.g. "Stéphane Dujarric", "Máximo Prévot"). Null if not determinable.',
-    '- speaker_function: Official title. Use "Representative", "Chair", "Co-Chair", "Moderator", "SG", "USG [portfolio]", etc.',
-    '- speaker_affiliation: ISO 3166-1 alpha-3 for countries (e.g. "USA", "FRA", "CHN", "PRY", "KEN").',
-    '  For UN bodies use abbreviations: "IAHWG", "OHCHR", "ACABQ", "UN Secretariat", "GA", "5th Committee".',
-    '- speaker_group: ONLY fill if speaker explicitly says "on behalf of", "speaking for", or "representing" a group.',
-    '  Groups: G77 + China, NAM, EU, WEOG, GRULAC, Africa Group, Asia-Pacific Group, EEG, AOSIS, Arab Group, OIC, BRICS, LDCs, SIDS, and others. When a member speaks on behalf of a group but the group name is incomprehensible, use "Group".',
-    '- Fix transcription errors: "UN80 Initiative" (not "UNAT", "UNA", "UNAT Initiative").',
-    '- "IAHWG" = Informal Ad hoc Working Group on the UN80 initiative / mandate implementation review.',
-    '',
-    'OFF-RECORD DETECTION:',
-    '- Mark is_off_record=true ONLY for content clearly outside the formal meeting',
-    '  (audio tests, "Can you hear me?", pre-meeting chatter, post-meeting informal remarks).',
-    '- Only applies to the very first or last speaker turns. Always false for everything in the middle.',
-    '- When uncertain, use false.',
+    'SPEAKER TRACKING:',
+    '- Assign a numeric speaker_id to each segment (0, 1, 2...).',
+    '- Start at 0. Increment the ID each time a different speaker begins.',
+    '- Keep the same speaker_id for all segments of the same speaker turn.',
+    '- Do NOT try to identify who the speaker is — only track when the speaker changes.',
   ].join('\n');
 }
 
@@ -310,155 +268,20 @@ async function callGeminiOnFile(
   return { segments: parsed.segments ?? [], usageMetadata, truncated };
 }
 
-// ---- Speaker normalization via Azure OpenAI ----
-
-const OPENAI_API_VERSION = '2025-01-01-preview';
-
-function createOpenAIClient() {
-  return new AzureOpenAI({
-    apiKey: process.env.AZURE_OPENAI_API_KEY,
-    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-    apiVersion: OPENAI_API_VERSION,
-  });
-}
-
-const SpeakerNormalizationSchema = z.object({
-  /** Each entry maps an input speaker key to its canonical speaker key. */
-  mapping: z.array(z.object({
-    from: z.string(),
-    to: z.string(),
-  })),
-  /** The canonical speakers. */
-  canonical: z.array(z.object({
-    key: z.string(),
-    name: z.string().nullable(),
-    function: z.string().nullable(),
-    affiliation: z.string().nullable(),
-    group: z.string().nullable(),
-  })),
-});
-
-async function normalizeSpeakers(
-  speakerMapping: SpeakerMapping,
-  transcriptId?: string,
-): Promise<SpeakerMapping> {
-  // Collect unique speakers
-  const uniqueSpeakers = new Map<string, { indices: string[]; info: SpeakerInfo }>();
-  for (const [idx, info] of Object.entries(speakerMapping)) {
-    const key = JSON.stringify(info);
-    const existing = uniqueSpeakers.get(key);
-    if (existing) {
-      existing.indices.push(idx);
-    } else {
-      uniqueSpeakers.set(key, { indices: [idx], info });
-    }
-  }
-
-  // Nothing to deduplicate with 0–1 unique speakers
-  if (uniqueSpeakers.size <= 1) return speakerMapping;
-
-  const speakerList = Array.from(uniqueSpeakers.entries()).map(([_key, { indices, info }]) => ({
-    key: indices[0], // representative index
-    count: indices.length,
-    ...info,
-  }));
-
-  console.log(`  [Normalize] ${speakerList.length} unique speaker variants, sending to OpenAI...`);
-
-  const client = createOpenAIClient();
-  const request = {
-    model: getAnalysisModelMini(),
-    messages: [
-      {
-        role: 'system' as const,
-        content: [
-          'You are a data deduplication tool for United Nations meeting speaker records.',
-          'You receive a list of speaker entries extracted from different chunks of the same audio recording.',
-          'Some entries may refer to the same person with slight variations (accents, spelling, title differences).',
-          '',
-          'Your task:',
-          '1. Identify which entries refer to the same person.',
-          '2. For each cluster, pick or synthesize the most complete/correct canonical version.',
-          '3. Return a mapping from each input key to its canonical key, plus the canonical speaker records.',
-          '',
-          'Rules:',
-          '- Preserve correct Unicode accents (é, ñ, etc.)',
-          '- Use ISO 3166-1 alpha-3 for country affiliations',
-          '- Only merge entries that clearly refer to the same person',
-          '- When in doubt, keep them separate',
-        ].join('\n'),
-      },
-      {
-        role: 'user' as const,
-        content: JSON.stringify(speakerList, null, 2),
-      },
-    ],
-    response_format: zodResponseFormat(SpeakerNormalizationSchema, 'speaker_normalization'),
-    reasoning_effort: 'minimal' as const,
-  };
-
-  const completion = await trackOpenAIChatCompletion({
-    client,
-    transcriptId,
-    stage: UsageStages.identifyingSpeakers,
-    operation: UsageOperations.openaiNormalizeSpeakers,
-    model: getAnalysisModelMini(),
-    request,
-  });
-
-  const content = completion.choices[0]?.message?.content;
-  if (!content) {
-    console.warn('  [Normalize] Empty response, skipping normalization');
-    return speakerMapping;
-  }
-
-  try {
-    const parsed = SpeakerNormalizationSchema.parse(JSON.parse(content));
-
-    // Index the arrays for fast lookup
-    const mappingLookup = new Map(parsed.mapping.map((m) => [m.from, m.to]));
-    const canonicalLookup = new Map(parsed.canonical.map((c) => [c.key, c]));
-
-    // Build normalized mapping: for each original index, look up its canonical speaker
-    const normalized: SpeakerMapping = {};
-    for (const [idx, info] of Object.entries(speakerMapping)) {
-      const key = JSON.stringify(info);
-      const entry = Array.from(uniqueSpeakers.entries()).find(([k]) => k === key);
-      const representativeIdx = entry?.[1].indices[0] ?? idx;
-      const canonicalIdx = mappingLookup.get(representativeIdx) ?? representativeIdx;
-      const canonicalSpeaker = canonicalLookup.get(canonicalIdx);
-      normalized[idx] = canonicalSpeaker ?? info;
-    }
-
-    const originalCount = uniqueSpeakers.size;
-    const canonicalCount = parsed.canonical.length;
-    if (originalCount !== canonicalCount) {
-      console.log(`  [Normalize] Merged ${originalCount} → ${canonicalCount} unique speakers`);
-    }
-
-    return normalized;
-  } catch (e) {
-    console.warn('  [Normalize] Failed to parse response, skipping:', e instanceof Error ? e.message : e);
-    return speakerMapping;
-  }
-}
 
 // ---- Chunk stitching ----
 
 interface ChunkOutput {
   paragraphs: RawParagraph[];
-  speakerMapping: SpeakerMapping;
   usageMetadata: GeminiUsageMetadata;
 }
 
-/** Stitch ordered chunk outputs into a single result, merging same-speaker boundaries. */
+/** Stitch ordered chunk outputs into a single result. */
 function stitchChunks(chunks: ChunkOutput[]): {
   paragraphs: RawParagraph[];
-  speakerMapping: SpeakerMapping;
   combinedUsage: GeminiUsageMetadata;
 } {
   const allParagraphs: RawParagraph[] = [];
-  const allSpeakerMapping: SpeakerMapping = {};
   const combinedUsage: GeminiUsageMetadata = {
     promptTokenCount: 0, candidatesTokenCount: 0,
     thoughtsTokenCount: 0, totalTokenCount: 0,
@@ -469,36 +292,10 @@ function stitchChunks(chunks: ChunkOutput[]): {
     combinedUsage.candidatesTokenCount += chunk.usageMetadata.candidatesTokenCount;
     combinedUsage.thoughtsTokenCount += chunk.usageMetadata.thoughtsTokenCount;
     combinedUsage.totalTokenCount += chunk.usageMetadata.totalTokenCount;
-
-    const { paragraphs: chunkParas, speakerMapping: chunkMap } = chunk;
-
-    // Merge boundary: if last paragraph of accumulated result and first of this chunk
-    // share the same speaker, concatenate them
-    let startIdx = 0;
-    if (allParagraphs.length > 0 && chunkParas.length > 0) {
-      const lastIdx = (allParagraphs.length - 1).toString();
-      const lastSpeaker = allSpeakerMapping[lastIdx];
-      const firstSpeaker = chunkMap['0'];
-      if (lastSpeaker && firstSpeaker && JSON.stringify(lastSpeaker) === JSON.stringify(firstSpeaker)) {
-        const last = allParagraphs[allParagraphs.length - 1];
-        const first = chunkParas[0];
-        last.text = last.text + ' ' + first.text;
-        last.end = first.end;
-        last.words = [...last.words, ...first.words];
-        startIdx = 1;
-      }
-    }
-
-    const indexOffset = allParagraphs.length;
-    for (const [localIdx, speaker] of Object.entries(chunkMap)) {
-      const idx = parseInt(localIdx);
-      if (idx < startIdx) continue;
-      allSpeakerMapping[(indexOffset + idx - startIdx).toString()] = speaker;
-    }
-    allParagraphs.push(...chunkParas.slice(startIdx));
+    allParagraphs.push(...chunk.paragraphs);
   }
 
-  return { paragraphs: allParagraphs, speakerMapping: allSpeakerMapping, combinedUsage };
+  return { paragraphs: allParagraphs, combinedUsage };
 }
 
 // ---- Main export ----
@@ -520,8 +317,8 @@ export async function transcribeAudioWithGemini(
       // --- Single call ---
       const result = await callGeminiOnFile(tmpPath, options);
       if (!result.truncated) {
-        const { paragraphs, speakerMapping } = segmentsToOutput(result.segments);
-        return { paragraphs, speakerMapping, usageMetadata: result.usageMetadata, audioSeconds, chunked: false, chunkCount: 1 };
+        const paragraphs = segmentsToOutput(result.segments);
+        return { paragraphs, usageMetadata: result.usageMetadata, audioSeconds, chunked: false, chunkCount: 1 };
       }
       // Truncated — fall through to chunked mode
       console.log('  [Gemini] Truncated output, retrying in chunked mode...');
@@ -551,8 +348,8 @@ export async function transcribeAudioWithGemini(
             try {
               console.log(`  [Gemini] Starting chunk ${chunk.index + 1}/${numChunks}${attempt > 0 ? ` (retry ${attempt})` : ''}...`);
               const result = await callGeminiOnFile(chunk.path, options, chunk.durationSec);
-              const { paragraphs, speakerMapping } = segmentsToOutput(result.segments, chunk.offsetMs);
-              return { paragraphs, speakerMapping, usageMetadata: result.usageMetadata };
+              const paragraphs = segmentsToOutput(result.segments, chunk.offsetMs);
+              return { paragraphs, usageMetadata: result.usageMetadata };
             } catch (error) {
               if (attempt < maxRetries) {
                 console.warn(`  [Gemini] Chunk ${chunk.index + 1}/${numChunks} failed (attempt ${attempt + 1}), retrying: ${error instanceof Error ? error.message : error}`);
@@ -569,14 +366,10 @@ export async function transcribeAudioWithGemini(
     );
 
     // 3. Stitch in order
-    const { paragraphs, speakerMapping, combinedUsage } = stitchChunks(chunkResults);
-
-    // 4. Normalize speakers across chunks via OpenAI
-    const normalizedMapping = await normalizeSpeakers(speakerMapping, options.transcriptId);
+    const { paragraphs, combinedUsage } = stitchChunks(chunkResults);
 
     return {
       paragraphs,
-      speakerMapping: normalizedMapping,
       usageMetadata: combinedUsage,
       audioSeconds,
       chunked: true,

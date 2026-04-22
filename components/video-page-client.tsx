@@ -14,6 +14,7 @@ import { SiteHeader } from "./site-header";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
 import { getPVDocumentUrl } from "@/lib/pv-documents";
+import { UN_LANGUAGES } from "@/lib/languages";
 
 interface VideoPageClientProps {
   kalturaId: string;
@@ -55,6 +56,39 @@ export function VideoPageClient({
     localStorage.setItem("selectedLanguage", selectedLanguage);
   }, [selectedLanguage]);
   const [availableLanguages, setAvailableLanguages] = useState<LanguageOption[]>([]);
+
+  // Update available languages based on tracks the player actually has
+  const handleAudioTracksReady = useCallback(
+    (tracks: { id: number; language: string; label: string; active: boolean }[]) => {
+      const FLOOR_CODES = new Set(["ia"]);
+      const availableFromPlayer = new Set<string>();
+      for (const track of tracks) {
+        if (FLOOR_CODES.has(track.language)) {
+          availableFromPlayer.add("floor");
+        } else if (track.language) {
+          availableFromPlayer.add(track.language);
+        }
+      }
+      if (availableFromPlayer.size === 0) return;
+
+      setAvailableLanguages((prev) => {
+        const base =
+          prev.length > 0
+            ? prev
+            : UN_LANGUAGES.map((l) => ({
+                code: l.code,
+                name: l.name,
+                available: false,
+                transcriptStatus: null as string | null,
+              }));
+        return base.map((lang) => ({
+          ...lang,
+          available: lang.available || availableFromPlayer.has(lang.code),
+        }));
+      });
+    },
+    [],
+  );
 
   // Fetch available audio languages
   const refreshLanguages = useCallback(() => {
@@ -256,6 +290,7 @@ export function VideoPageClient({
                 uiConfId={49754663}
                 audioLanguage={selectedLanguage}
                 onPlayerReady={setPlayer}
+                onAudioTracksReady={handleAudioTracksReady}
               />
             </div>
           </div>

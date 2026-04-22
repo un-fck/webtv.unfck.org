@@ -24,6 +24,7 @@ interface VideoPlayerProps {
   uiConfId: number;
   audioLanguage?: string;
   onPlayerReady?: (player: KalturaPlayer) => void;
+  onAudioTracksReady?: (tracks: AudioTrack[]) => void;
 }
 
 export function VideoPlayer({
@@ -32,6 +33,7 @@ export function VideoPlayer({
   uiConfId,
   audioLanguage,
   onPlayerReady,
+  onAudioTracksReady,
 }: VideoPlayerProps) {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<KalturaPlayer | null>(null);
@@ -137,6 +139,21 @@ export function VideoPlayer({
         player.loadMedia({ entryId: kalturaId }).then(() => {
           playerRef.current = player;
           onPlayerReady?.(player);
+
+          // Report audio tracks, retrying until the HLS manifest is parsed
+          const tryReportTracks = (retries = 5) => {
+            try {
+              const tracks = player.getTracks("audio");
+              if (tracks.length > 0) {
+                onAudioTracksReady?.(tracks);
+              } else if (retries > 0) {
+                setTimeout(() => tryReportTracks(retries - 1), 1000);
+              }
+            } catch {
+              // ignore
+            }
+          };
+          tryReportTracks();
         });
       } catch (error) {
         console.error("Failed to initialize Kaltura player:", error);
