@@ -896,10 +896,20 @@ export async function getVideoBySlug(
 ): Promise<VideoRecord | null> {
   await ensureInitialized();
 
-  const result = await client.execute({
+  let result = await client.execute({
     sql: "SELECT * FROM videos WHERE slug = ?",
     args: [slug],
   });
+
+  // Fallback: for meeting/{asset_id} slugs, try looking up by asset_id directly
+  if (result.rows.length === 0 && slug.startsWith("meeting/")) {
+    const rest = slug.slice("meeting/".length);
+    const assetId = rest.replace(/-part-\d+$/, "");
+    result = await client.execute({
+      sql: "SELECT * FROM videos WHERE asset_id = ?",
+      args: [assetId],
+    });
+  }
 
   if (result.rows.length === 0) return null;
 

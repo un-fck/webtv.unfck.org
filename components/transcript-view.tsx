@@ -58,7 +58,7 @@ function renderSpeakerInfo(
 
   if (
     !info ||
-    (!info.affiliation && !info.group && !info.function && !info.name)
+    (!info.affiliation && !info.group && !info.function)
   ) {
     return <span>Speaker {statementIndex + 1}</span>;
   }
@@ -79,9 +79,6 @@ function renderSpeakerInfo(
         <span className="text-sm font-medium text-muted-foreground">
           {info.function}
         </span>
-      )}
-      {info.name && (
-        <span className="text-sm font-semibold">{info.name}</span>
       )}
     </div>
   );
