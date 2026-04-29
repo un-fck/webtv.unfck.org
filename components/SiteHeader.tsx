@@ -17,11 +17,12 @@ export function SiteHeader() {
             className="h-8 w-auto shrink-0"
           />
           <div className="h-8 w-px shrink-0 bg-border" />
-          <div className="flex items-center gap-2">
-            <span className="text-base font-bold tracking-tight text-foreground">
-              Web TV Transcripts
+          <div className="flex items-end gap-2">
+            <span className="text-2xl tracking-tight text-foreground">
+              <span className="font-bold">WebTV</span>
+              <span className="font-normal"> Transcripts</span>
             </span>
-            <span className="rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-[9px] font-bold tracking-widest text-un-blue uppercase">
+            <span className="mb-1 self-start rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-xs font-bold tracking-wide text-un-blue uppercase">
               Public Preview
             </span>
           </div>

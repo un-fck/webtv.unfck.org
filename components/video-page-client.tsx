@@ -290,7 +290,7 @@ export function VideoPageClient({
           {/* Video — left column width */}
           <div
             ref={videoPlaceholderRef}
-            className="aspect-video min-w-0 bg-black lg:flex-[3]"
+            className="aspect-video min-w-0 bg-black lg:flex-3"
           >
             <div ref={videoWrapperRef} className="h-full w-full">
               <VideoPlayer
@@ -305,7 +305,7 @@ export function VideoPageClient({
           </div>
 
           {/* Metadata — right column width */}
-          <div className="lg:flex-[2]">
+          <div className="lg:flex-2
             <h1 className="mb-1 text-base leading-snug font-semibold">
               {video.cleanTitle}
             </h1>
