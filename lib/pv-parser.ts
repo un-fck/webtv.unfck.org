@@ -1100,7 +1100,6 @@ export async function parsePVDocument(
   const doc = await pdfjs.getDocument({
     data,
     useWorkerFetch: false,
-    isEvalSupported: false,
     useSystemFonts: true,
   }).promise;
   const pageTexts: string[] = [];
