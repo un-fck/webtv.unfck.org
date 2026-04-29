@@ -162,7 +162,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
       <SiteHeader />
       <div className="mx-auto max-w-7xl px-6 sm:px-8">
         <div className="py-6 pb-24">
-          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+          <Suspense fallback={null}>{children}</Suspense>
         </div>
       </div>
     </main>
