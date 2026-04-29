@@ -19,9 +19,7 @@ async function main() {
   const existing = await client.execute(
     "SELECT slug FROM videos WHERE slug IS NOT NULL",
   );
-  const slugsSeen = new Set<string>(
-    existing.rows.map((r) => r.slug as string),
-  );
+  const slugsSeen = new Set<string>(existing.rows.map((r) => r.slug as string));
   console.log(`${slugsSeen.size} videos already have slugs`);
 
   const statements: InStatement[] = [];

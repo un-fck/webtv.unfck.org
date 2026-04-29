@@ -141,13 +141,12 @@ export function TranscriptToolbar({
                   {lang.code === selectedLanguage && (
                     <Check className="h-3 w-3 text-primary" />
                   )}
-                  {lang.available &&
-                    lang.transcriptStatus === "completed" && (
-                      <span
-                        className="h-2 w-2 rounded-full bg-green-500"
-                        title="Transcript available"
-                      />
-                    )}
+                  {lang.available && lang.transcriptStatus === "completed" && (
+                    <span
+                      className="h-2 w-2 rounded-full bg-green-500"
+                      title="Transcript available"
+                    />
+                  )}
                   {lang.available &&
                     lang.transcriptStatus &&
                     lang.transcriptStatus !== "completed" &&
@@ -164,8 +163,7 @@ export function TranscriptToolbar({
         </div>
       )}
 
-      {(pvSymbol ||
-        (hasSegments && (hasPropositions || hasTopics))) && (
+      {(pvSymbol || (hasSegments && (hasPropositions || hasTopics))) && (
         <div className="flex rounded-md border border-border bg-muted">
           <button
             onClick={() => onViewModeChange("transcript")}

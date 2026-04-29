@@ -28,6 +28,10 @@ export async function GET(
     });
   } catch (error) {
     console.error("Poll error:", error);
-    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
+    return apiError(
+      500,
+      "internal_error",
+      error instanceof Error ? error.message : "Unknown error",
+    );
   }
 }

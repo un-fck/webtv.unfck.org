@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, forwardRef, type ReactNode } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  forwardRef,
+  type ReactNode,
+} from "react";
 import { ChevronDown, ChevronRight, AudioLines } from "lucide-react";
 import type { PVDocument, PVTurn } from "@/lib/pv-parser";
 
@@ -16,7 +23,10 @@ interface PVPanelProps {
   language?: string;
   player?: { currentTime: number; play: () => void } | null;
   kalturaId?: string;
-  onSpeakersChange?: (speakers: PVSpeakerEntry[], activeTurnIndex: number) => void;
+  onSpeakersChange?: (
+    speakers: PVSpeakerEntry[],
+    activeTurnIndex: number,
+  ) => void;
 }
 
 /** Client-side aligned turn — fields optional since turns may not be aligned yet. */
@@ -49,7 +59,8 @@ const REFERENCE_PATTERNS = [
   },
   // Document symbols: S/PV.10124, A/RES/79/1, S/2026/8, A/79/L.1, E/2024/SR.10, A/C.1/79/PV.7, A/ES-11/PV.23
   {
-    regex: /\b([SAEC]\/(?:[\w.-]+\/)*[\w.-]+\.\d+|[SAEC]\/(?:[\w.-]+\/)*\d+(?:\/[\w.-]+)*)\b/g,
+    regex:
+      /\b([SAEC]\/(?:[\w.-]+\/)*[\w.-]+\.\d+|[SAEC]\/(?:[\w.-]+\/)*\d+(?:\/[\w.-]+)*)\b/g,
     url: (match: string) => `https://undocs.org/${match}`,
     label: (match: string) => match,
   },
@@ -57,15 +68,21 @@ const REFERENCE_PATTERNS = [
 
 function linkifyReferences(text: string): ReactNode[] {
   // Build a combined regex from all patterns
-  const allMatches: { start: number; end: number; url: string; label: string }[] = [];
+  const allMatches: {
+    start: number;
+    end: number;
+    url: string;
+    label: string;
+  }[] = [];
 
   for (const pattern of REFERENCE_PATTERNS) {
     let m: RegExpExecArray | null;
     const re = new RegExp(pattern.regex.source, pattern.regex.flags);
     while ((m = re.exec(text)) !== null) {
-      const url = typeof pattern.url === "function"
-        ? pattern.url(m[0], m[1], m[2])
-        : pattern.url;
+      const url =
+        typeof pattern.url === "function"
+          ? pattern.url(m[0], m[1], m[2])
+          : pattern.url;
       allMatches.push({
         start: m.index,
         end: m.index + m[0].length,
@@ -102,7 +119,7 @@ function linkifyReferences(text: string): ReactNode[] {
         className="text-blue-600 underline decoration-blue-300 hover:decoration-blue-600 dark:text-blue-400 dark:decoration-blue-700 dark:hover:decoration-blue-400"
       >
         {m.label}
-      </a>
+      </a>,
     );
     cursor = m.end;
   }
@@ -159,16 +176,19 @@ export function PVPanel({
   // Notify parent of PV speakers for sidebar
   const pvSpeakers = useMemo(() => {
     if (!pvDoc) return null;
-    return pvDoc.turns.map((turn, i): PVSpeakerEntry => ({
-      speaker: turn.speaker,
-      affiliation: turn.affiliation,
-      turnIndex: i,
-      timestampMs: (turn as AlignedTurn).startTime ?? -1,
-    }));
+    return pvDoc.turns.map(
+      (turn, i): PVSpeakerEntry => ({
+        speaker: turn.speaker,
+        affiliation: turn.affiliation,
+        turnIndex: i,
+        timestampMs: (turn as AlignedTurn).startTime ?? -1,
+      }),
+    );
   }, [pvDoc]);
 
   useEffect(() => {
-    if (pvSpeakers && onSpeakersChange) onSpeakersChange(pvSpeakers, activeTurnIndex);
+    if (pvSpeakers && onSpeakersChange)
+      onSpeakersChange(pvSpeakers, activeTurnIndex);
   }, [pvSpeakers, activeTurnIndex, onSpeakersChange]);
 
   // rAF-based time tracking at paragraph level.
@@ -178,16 +198,25 @@ export function PVPanel({
 
     const turns = pvDoc.turns as AlignedTurn[];
     // Build flat list of paragraph timestamps sorted by time
-    const paraEntries: { turnIdx: number; paraIdx: number; startMs: number }[] = [];
+    const paraEntries: { turnIdx: number; paraIdx: number; startMs: number }[] =
+      [];
     for (let ti = 0; ti < turns.length; ti++) {
       const pts = turns[ti].paragraphTimestamps;
       if (pts) {
         for (let pi = 0; pi < pts.length; pi++) {
-          if (pts[pi] >= 0) paraEntries.push({ turnIdx: ti, paraIdx: pi, startMs: pts[pi] });
+          if (pts[pi] >= 0)
+            paraEntries.push({ turnIdx: ti, paraIdx: pi, startMs: pts[pi] });
         }
-      } else if (turns[ti].startTime !== undefined && turns[ti].startTime! >= 0) {
+      } else if (
+        turns[ti].startTime !== undefined &&
+        turns[ti].startTime! >= 0
+      ) {
         // Legacy: turn-level only
-        paraEntries.push({ turnIdx: ti, paraIdx: -1, startMs: turns[ti].startTime! });
+        paraEntries.push({
+          turnIdx: ti,
+          paraIdx: -1,
+          startMs: turns[ti].startTime!,
+        });
       }
     }
     paraEntries.sort((a, b) => a.startMs - b.startMs);
@@ -259,7 +288,10 @@ export function PVPanel({
           containerRect.top +
           scrollContainer.scrollTop -
           containerRect.height * 0.3;
-        scrollContainer.scrollTo({ top: targetScroll, behavior: isJump ? "instant" : "smooth" });
+        scrollContainer.scrollTo({
+          top: targetScroll,
+          behavior: isJump ? "instant" : "smooth",
+        });
       } else {
         // Gentle scroll during playback — keep near top third
         const targetScroll =
@@ -317,7 +349,8 @@ export function PVPanel({
     return (
       <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        Loading {pvSymbol.includes("/SR.") ? "Summary Record" : "Verbatim Record"}...
+        Loading{" "}
+        {pvSymbol.includes("/SR.") ? "Summary Record" : "Verbatim Record"}...
       </div>
     );
   }
@@ -389,7 +422,7 @@ export function PVPanel({
       </div>
 
       {!isSR && showMetadata && (
-        <div className="rounded-lg border bg-muted/30 p-3 text-xs space-y-2">
+        <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-xs">
           {pvDoc.president && (
             <div>
               <span className="font-medium">President:</span>{" "}
@@ -452,10 +485,13 @@ interface PVTurnCardProps {
 }
 
 const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
-  function PVTurnCard({ turn, isActive, activeParaIndex, isAligned, onSeek }, ref) {
-    const hasTimestamp =
-      turn.startTime !== undefined && turn.startTime >= 0;
-    const hasParagraphTimestamps = turn.paragraphTimestamps && turn.paragraphTimestamps.some(t => t >= 0);
+  function PVTurnCard(
+    { turn, isActive, activeParaIndex, isAligned, onSeek },
+    ref,
+  ) {
+    const hasTimestamp = turn.startTime !== undefined && turn.startTime >= 0;
+    const hasParagraphTimestamps =
+      turn.paragraphTimestamps && turn.paragraphTimestamps.some((t) => t >= 0);
 
     return (
       <div
@@ -493,7 +529,7 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
 
         {/* On behalf of preamble */}
         {turn.onBehalfOf && (
-          <p className="text-xs italic text-muted-foreground">
+          <p className="text-xs text-muted-foreground italic">
             {turn.onBehalfOf}
           </p>
         )}
@@ -505,7 +541,9 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
             const paraTs = turn.paragraphTimestamps?.[j];
             const hasParaTs = paraTs !== undefined && paraTs >= 0;
             const isParaClickable = isAligned && hasParaTs;
-            const isActivePara = isActive && (activeParaIndex === j || (activeParaIndex === -1 && j === 0));
+            const isActivePara =
+              isActive &&
+              (activeParaIndex === j || (activeParaIndex === -1 && j === 0));
 
             // Extract paragraph number
             let paraNum: number | undefined;
@@ -536,10 +574,10 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
               >
                 <p
                   dir="auto"
-                  className={`text-start ${isProcedural ? "italic text-muted-foreground" : ""}`}
+                  className={`text-start ${isProcedural ? "text-muted-foreground italic" : ""}`}
                 >
                   {paraNum !== undefined && (
-                    <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-un-blue)] text-[10px] font-semibold text-white align-text-top">
+                    <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-un-blue)] align-text-top text-[10px] font-semibold text-white">
                       {paraNum}
                     </span>
                   )}
@@ -570,12 +608,16 @@ interface PVSpeakerTocProps {
   onSeek: (timestampMs: number) => void;
 }
 
-export function PVSpeakerToc({ speakers, activeTurnIndex, onSeek }: PVSpeakerTocProps) {
+export function PVSpeakerToc({
+  speakers,
+  activeTurnIndex,
+  onSeek,
+}: PVSpeakerTocProps) {
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
     if (activeTurnIndex < 0) return;
-    const idx = speakers.findIndex(s => s.turnIndex === activeTurnIndex);
+    const idx = speakers.findIndex((s) => s.turnIndex === activeTurnIndex);
     const el = idx >= 0 ? itemRefs.current[idx] : null;
     if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [activeTurnIndex, speakers]);
@@ -591,7 +633,9 @@ export function PVSpeakerToc({ speakers, activeTurnIndex, onSeek }: PVSpeakerToc
         return (
           <button
             key={idx}
-            ref={(el) => { itemRefs.current[idx] = el; }}
+            ref={(el) => {
+              itemRefs.current[idx] = el;
+            }}
             onClick={() => hasTimestamp && onSeek(entry.timestampMs)}
             className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs transition-colors hover:bg-muted ${
               isActive ? "bg-primary/10" : ""

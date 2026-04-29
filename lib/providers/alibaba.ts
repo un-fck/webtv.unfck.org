@@ -76,8 +76,7 @@ async function transcribeChunk(
   }
 
   const data = (await res.json()) as AsrResponse;
-  const text =
-    data.output?.choices?.[0]?.message?.content?.[0]?.text || "";
+  const text = data.output?.choices?.[0]?.message?.content?.[0]?.text || "";
 
   if (!text) return [];
 
@@ -173,7 +172,9 @@ export const alibaba: TranscriptionProvider = {
           console.log(
             `  [Alibaba] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (${sentences.length} sentences)`,
           );
-          try { fs.unlinkSync(chunk.path); } catch {}
+          try {
+            fs.unlinkSync(chunk.path);
+          } catch {}
           return { sentences, offsetMs: chunk.offsetMs };
         },
       );
@@ -217,7 +218,9 @@ export const alibaba: TranscriptionProvider = {
       } satisfies NormalizedTranscript;
     } finally {
       if (ownedPath) {
-        try { fs.unlinkSync(filePath); } catch {}
+        try {
+          fs.unlinkSync(filePath);
+        } catch {}
       }
     }
   },

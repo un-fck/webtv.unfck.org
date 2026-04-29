@@ -32,7 +32,9 @@ async function transcribeFile(
     if (res.status === 429) {
       const retryAfter = Number(res.headers.get("retry-after")) || 10;
       const wait = retryAfter * 1000 * (attempt + 1);
-      console.log(`  [Mistral] Rate limited, waiting ${(wait / 1000).toFixed(0)}s...`);
+      console.log(
+        `  [Mistral] Rate limited, waiting ${(wait / 1000).toFixed(0)}s...`,
+      );
       await new Promise((r) => setTimeout(r, wait));
       continue;
     }
@@ -83,7 +85,11 @@ export const mistral: TranscriptionProvider = {
           `  [Mistral] File too large (${(fileSize / 1024 / 1024).toFixed(0)}MB), splitting into chunks...`,
         );
         const tSplit0 = Date.now();
-        const chunks = splitAudio(filePath, CHUNK_DURATION_SECS, "mistral-chunks-");
+        const chunks = splitAudio(
+          filePath,
+          CHUNK_DURATION_SECS,
+          "mistral-chunks-",
+        );
         console.log(
           `  [Mistral] Split into ${chunks.length} chunks in ${((Date.now() - tSplit0) / 1000).toFixed(1)}s, transcribing ${PARALLEL_CHUNKS} at a time...`,
         );
@@ -98,7 +104,9 @@ export const mistral: TranscriptionProvider = {
             console.log(
               `  [Mistral] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min)`,
             );
-            try { fs.unlinkSync(chunk.path); } catch {}
+            try {
+              fs.unlinkSync(chunk.path);
+            } catch {}
             return { raw, offsetMs: chunk.offsetMs };
           },
         );
@@ -149,7 +157,9 @@ export const mistral: TranscriptionProvider = {
       } satisfies NormalizedTranscript;
     } finally {
       if (ownedPath) {
-        try { fs.unlinkSync(filePath); } catch {}
+        try {
+          fs.unlinkSync(filePath);
+        } catch {}
       }
     }
   },

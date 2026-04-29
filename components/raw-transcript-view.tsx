@@ -50,7 +50,7 @@ export function RawTranscriptView({
             )}
             <div
               dir="auto"
-              className="text-start rounded-lg bg-muted/50 p-4 text-sm leading-relaxed"
+              className="rounded-lg bg-muted/50 p-4 text-start text-sm leading-relaxed"
             >
               {para.words.map((word, wIdx) => (
                 <span

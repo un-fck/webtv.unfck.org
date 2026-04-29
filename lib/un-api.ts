@@ -60,7 +60,8 @@ export function videoToRecord(
   }
 
   const pv_symbol = parseMeetingSymbol(video.title, video.category, video.date);
-  const part_number = video.partNumber !== null ? String(video.partNumber) : null;
+  const part_number =
+    video.partNumber !== null ? String(video.partNumber) : null;
 
   return {
     asset_id: video.id,
@@ -156,7 +157,9 @@ function calculateStatus(
   // UN Web TV scraping may be unavailable (bot protection), so we can't get the real duration.
   // Treat as live for up to 8 hours after the scheduled start time as a best-effort fallback.
   const maxLiveFallbackMs = 8 * 60 * 60 * 1000;
-  return now <= new Date(startTime.getTime() + maxLiveFallbackMs) ? "live" : "finished";
+  return now <= new Date(startTime.getTime() + maxLiveFallbackMs)
+    ? "live"
+    : "finished";
 }
 
 function decodeEventCode(code: string): string {
@@ -397,10 +400,9 @@ export async function getVideoById(
   return null;
 }
 
-export async function getScheduleVideos(
-  days: number = 365,
-): Promise<Video[]> {
-  const { getRecentVideos, getAllTranscriptedEntries } = await import("./turso");
+export async function getScheduleVideos(days: number = 365): Promise<Video[]> {
+  const { getRecentVideos, getAllTranscriptedEntries } =
+    await import("./turso");
   const [records, transcriptedEntries] = await Promise.all([
     getRecentVideos(days),
     getAllTranscriptedEntries(),

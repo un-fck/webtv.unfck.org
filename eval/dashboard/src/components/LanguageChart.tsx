@@ -67,7 +67,15 @@ export function LanguageChart({ results, metric }: Props) {
                     textAlign: "left",
                   }}
                 >
-                  <th style={{ padding: "0.35rem 0.5rem", textAlign: "center", width: "1.5rem" }}>#</th>
+                  <th
+                    style={{
+                      padding: "0.35rem 0.5rem",
+                      textAlign: "center",
+                      width: "1.5rem",
+                    }}
+                  >
+                    #
+                  </th>
                   <th style={{ padding: "0.35rem 0.5rem" }}>Provider</th>
                   <th style={{ padding: "0.35rem 0.5rem", minWidth: "120px" }}>
                     {METRIC_LABELS[metric]}
@@ -97,8 +105,7 @@ export function LanguageChart({ results, metric }: Props) {
                           <span
                             className="provider-dot"
                             style={{
-                              background:
-                                PROVIDER_COLORS[provider] || "#666",
+                              background: PROVIDER_COLORS[provider] || "#666",
                             }}
                           />
                           {PROVIDER_LABELS[provider] || provider}
@@ -120,8 +127,7 @@ export function LanguageChart({ results, metric }: Props) {
                               className="bar-fill"
                               style={{
                                 width: `${Math.min(barPct, 100)}%`,
-                                background:
-                                  PROVIDER_COLORS[provider] || "#666",
+                                background: PROVIDER_COLORS[provider] || "#666",
                               }}
                             >
                               <span className="bar-value">

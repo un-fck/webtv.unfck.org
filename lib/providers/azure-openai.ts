@@ -16,7 +16,10 @@ function getClient() {
   });
 }
 
-async function transcribeFile(filePath: string, language?: string): Promise<any> {
+async function transcribeFile(
+  filePath: string,
+  language?: string,
+): Promise<any> {
   const client = getClient();
   return client.audio.transcriptions.create({
     model: "gpt-4o-transcribe-diarize",
@@ -75,39 +78,60 @@ export const azureOpenai: TranscriptionProvider = {
         const raw = await transcribeFile(tmpPath, opts?.language);
         utterances = segmentsToUtterances(raw.segments || []);
         fullText = raw.text || utterances.map((u) => u.text).join(" ");
-        totalDurationMs = utterances.length > 0 ? utterances[utterances.length - 1].end : 0;
+        totalDurationMs =
+          utterances.length > 0 ? utterances[utterances.length - 1].end : 0;
       } else {
         console.log(
           `  [Azure] File too large (${(fileSize / 1024 / 1024).toFixed(0)}MB), splitting into chunks...`,
         );
         const tSplit0 = Date.now();
-        const chunks = splitAudio(tmpPath, CHUNK_DURATION_SECS, "azure-chunks-");
+        const chunks = splitAudio(
+          tmpPath,
+          CHUNK_DURATION_SECS,
+          "azure-chunks-",
+        );
         console.log(
           `  [Azure] Split into ${chunks.length} chunks in ${((Date.now() - tSplit0) / 1000).toFixed(1)}s, transcribing ${PARALLEL_CHUNKS} at a time...`,
         );
 
         const tApi0 = Date.now();
-        const chunkResults = await parallelMap(chunks, PARALLEL_CHUNKS, async (chunk, i) => {
-          const tChunk = Date.now();
-          const raw = await transcribeFile(chunk.path, opts?.language);
-          console.log(
-            `  [Azure] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min)`,
-          );
-          try { fs.unlinkSync(chunk.path); } catch {}
-          return { raw, offsetMs: chunk.offsetMs };
-        });
-        console.log(`  [Azure] All chunks transcribed in ${((Date.now() - tApi0) / 1000).toFixed(1)}s`);
+        const chunkResults = await parallelMap(
+          chunks,
+          PARALLEL_CHUNKS,
+          async (chunk, i) => {
+            const tChunk = Date.now();
+            const raw = await transcribeFile(chunk.path, opts?.language);
+            console.log(
+              `  [Azure] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min)`,
+            );
+            try {
+              fs.unlinkSync(chunk.path);
+            } catch {}
+            return { raw, offsetMs: chunk.offsetMs };
+          },
+        );
+        console.log(
+          `  [Azure] All chunks transcribed in ${((Date.now() - tApi0) / 1000).toFixed(1)}s`,
+        );
 
         const textParts: string[] = [];
         for (const { raw, offsetMs } of chunkResults) {
-          utterances.push(...segmentsToUtterances(raw.segments || [], offsetMs));
+          utterances.push(
+            ...segmentsToUtterances(raw.segments || [], offsetMs),
+          );
           textParts.push(raw.text || "");
           const lastSeg = (raw.segments || []).at(-1);
-          if (lastSeg) totalDurationMs = Math.max(totalDurationMs, lastSeg.end * 1000 + offsetMs);
+          if (lastSeg)
+            totalDurationMs = Math.max(
+              totalDurationMs,
+              lastSeg.end * 1000 + offsetMs,
+            );
         }
         fullText = textParts.join(" ");
 
-        try { fs.rmdirSync(path.dirname(chunks[0].path)); } catch {}
+        try {
+          fs.rmdirSync(path.dirname(chunks[0].path));
+        } catch {}
       }
 
       console.log(
@@ -124,7 +148,9 @@ export const azureOpenai: TranscriptionProvider = {
       } satisfies NormalizedTranscript;
     } finally {
       if (ownedPath) {
-        try { fs.unlinkSync(tmpPath); } catch {}
+        try {
+          fs.unlinkSync(tmpPath);
+        } catch {}
       }
     }
   },

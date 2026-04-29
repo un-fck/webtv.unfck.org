@@ -23,7 +23,10 @@ export async function GET(
     const isValidPattern =
       symbolFromSlug(slug) !== null || slug.startsWith("meeting/");
     if (!isValidPattern) {
-      return NextResponse.json({ error: "Invalid meeting path" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Invalid meeting path" },
+        { status: 404 },
+      );
     }
 
     const record = await getVideoBySlug(slug);
@@ -51,7 +54,13 @@ export async function GET(
 
     // Check Turso for transcript (optional language filter)
     const language = request.nextUrl.searchParams.get("language") || undefined;
-    const transcript = await getTranscript(entryId, undefined, undefined, true, language);
+    const transcript = await getTranscript(
+      entryId,
+      undefined,
+      undefined,
+      true,
+      language,
+    );
 
     if (!transcript) {
       const response = NextResponse.json({

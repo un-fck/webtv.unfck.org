@@ -11,7 +11,10 @@ import type { Proposition } from "@/lib/speaker-identification";
 import { StageProgress, type Stage } from "@/components/stage-progress";
 import { AnalysisView } from "@/components/analysis-view";
 import { usePlaybackTracking } from "@/lib/hooks/use-playback-tracking";
-import { TranscriptToolbar, type ViewMode } from "@/components/transcript-toolbar";
+import {
+  TranscriptToolbar,
+  type ViewMode,
+} from "@/components/transcript-toolbar";
 import { TranscriptView } from "@/components/transcript-view";
 import { RawTranscriptView } from "@/components/raw-transcript-view";
 
@@ -42,7 +45,10 @@ export const TOPIC_COLOR_PALETTE = [
   "#c98d4d",
 ];
 
-export function getTopicColor(topicKey: string, allTopicKeys: string[]): string {
+export function getTopicColor(
+  topicKey: string,
+  allTopicKeys: string[],
+): string {
   const index = allTopicKeys.indexOf(topicKey);
   return TOPIC_COLOR_PALETTE[index % TOPIC_COLOR_PALETTE.length];
 }
@@ -134,12 +140,16 @@ export function TranscriptionPanel({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [speakerMappings, setSpeakerMappings] = useState<SpeakerMapping>({});
-  const [countryNames, setCountryNames] = useState<Map<string, string>>(new Map());
+  const [countryNames, setCountryNames] = useState<Map<string, string>>(
+    new Map(),
+  );
   const [topics, setTopics] = useState<
     Record<string, { key: string; label: string; description: string }>
   >({});
   const [statements, setStatements] = useState<Statement[] | null>(null);
-  const [rawParagraphs, setRawParagraphs] = useState<RawParagraph[] | null>(null);
+  const [rawParagraphs, setRawParagraphs] = useState<RawParagraph[] | null>(
+    null,
+  );
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [pvSpeakers, setPvSpeakers] = useState<PVSpeakerEntry[] | null>(null);
   const [pvActiveTurnIndex, setPvActiveTurnIndex] = useState<number>(-1);
@@ -184,13 +194,18 @@ export function TranscriptionPanel({
   const getSpeakerText = (statementIndex: number | undefined): string => {
     if (statementIndex === undefined) return "Speaker";
     const info = speakerMappings[statementIndex.toString()];
-    if (!info || (!info.affiliation && !info.group && !info.function && !info.name)) {
+    if (
+      !info ||
+      (!info.affiliation && !info.group && !info.function && !info.name)
+    ) {
       return `Speaker ${statementIndex + 1}`;
     }
     const parts: string[] = [];
-    if (info.affiliation) parts.push(countryNames.get(info.affiliation) || info.affiliation);
+    if (info.affiliation)
+      parts.push(countryNames.get(info.affiliation) || info.affiliation);
     if (info.group) parts.push(info.group);
-    if (info.function && info.function.toLowerCase() !== "representative") parts.push(info.function);
+    if (info.function && info.function.toLowerCase() !== "representative")
+      parts.push(info.function);
     if (info.name) parts.push(info.name);
     return parts.join(" · ");
   };
@@ -206,7 +221,10 @@ export function TranscriptionPanel({
   };
 
   const groupStatementsBySpeaker = useCallback(
-    (statementsData: Statement[], mappings: SpeakerMapping): SpeakerSegment[] => {
+    (
+      statementsData: Statement[],
+      mappings: SpeakerMapping,
+    ): SpeakerSegment[] => {
       const segs: SpeakerSegment[] = [];
       if (statementsData.length === 0) return segs;
 
@@ -220,7 +238,11 @@ export function TranscriptionPanel({
 
         if (!currentSegment || currentSegment.speaker !== speakerId) {
           if (currentSegment) segs.push(currentSegment);
-          currentSegment = { speaker: speakerId, statementIndices: [index], timestamp };
+          currentSegment = {
+            speaker: speakerId,
+            statementIndices: [index],
+            timestamp,
+          };
         } else {
           currentSegment.statementIndices.push(index);
         }
@@ -235,7 +257,8 @@ export function TranscriptionPanel({
     const names = new Map<string, string>();
     const iso3Codes = new Set<string>();
     Object.values(mapping).forEach((info) => {
-      if (info.affiliation && info.affiliation.length === 3) iso3Codes.add(info.affiliation);
+      if (info.affiliation && info.affiliation.length === 3)
+        iso3Codes.add(info.affiliation);
     });
     for (const code of iso3Codes) {
       const name = await getCountryName(code);
@@ -267,7 +290,21 @@ export function TranscriptionPanel({
       pvActiveTurnIndex,
       viewMode,
     });
-  }, [segments, speakerMappings, countryNames, topics, activeSegmentIndex, propositions, stage, checking, rawParagraphs, onDataChange, pvSpeakers, pvActiveTurnIndex, viewMode]);
+  }, [
+    segments,
+    speakerMappings,
+    countryNames,
+    topics,
+    activeSegmentIndex,
+    propositions,
+    stage,
+    checking,
+    rawParagraphs,
+    onDataChange,
+    pvSpeakers,
+    pvActiveTurnIndex,
+    viewMode,
+  ]);
 
   const handleTranscribe = async (force = false) => {
     setStage("transcribing");
@@ -280,7 +317,9 @@ export function TranscriptionPanel({
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || errorData.error || "Transcription failed");
+        throw new Error(
+          errorData.error?.message || errorData.error || "Transcription failed",
+        );
       }
       const data = await response.json();
       setTranscriptId(data.transcriptId);
@@ -300,7 +339,9 @@ export function TranscriptionPanel({
       if (data.raw_paragraphs) setRawParagraphs(data.raw_paragraphs);
       if (data.transcriptId) await pollForCompletion(data.transcriptId);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to transcribe");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Failed to transcribe",
+      );
       setStage("error");
     }
   };
@@ -314,11 +355,17 @@ export function TranscriptionPanel({
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || errorData.error || "Failed to schedule transcript");
+        throw new Error(
+          errorData.error?.message ||
+            errorData.error ||
+            "Failed to schedule transcript",
+        );
       }
       setStage("scheduled");
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to schedule transcript");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Failed to schedule transcript",
+      );
       setStage("error");
     }
   };
@@ -331,28 +378,39 @@ export function TranscriptionPanel({
       await new Promise((resolve) => setTimeout(resolve, 3000));
       pollCount++;
 
-      const pollResponse = await fetch(`/api/transcripts/${encodeURIComponent(tid)}`);
+      const pollResponse = await fetch(
+        `/api/transcripts/${encodeURIComponent(tid)}`,
+      );
       if (!pollResponse.ok) throw new Error("Failed to poll transcript status");
 
       const data = await pollResponse.json();
       if (data.stage) setStage(data.stage);
-      if (data.raw_paragraphs && !rawParagraphs) setRawParagraphs(data.raw_paragraphs);
+      if (data.raw_paragraphs && !rawParagraphs)
+        setRawParagraphs(data.raw_paragraphs);
 
       if (data.statements?.length > 0) {
         setStatements(data.statements);
-        if (data.speakerMappings && Object.keys(data.speakerMappings).length > 0) {
+        if (
+          data.speakerMappings &&
+          Object.keys(data.speakerMappings).length > 0
+        ) {
           setSpeakerMappings(data.speakerMappings);
           await loadCountryNames(data.speakerMappings);
         }
       }
 
-      if (data.topics && Object.keys(data.topics).length > 0) setTopics(data.topics);
-      if (data.propositions && data.propositions.length > 0) setPropositions(data.propositions);
+      if (data.topics && Object.keys(data.topics).length > 0)
+        setTopics(data.topics);
+      if (data.propositions && data.propositions.length > 0)
+        setPropositions(data.propositions);
 
       if (data.stage === "completed") break;
-      if (data.stage === "error") throw new Error(data.error_message || "Pipeline failed");
+      if (data.stage === "error")
+        throw new Error(data.error_message || "Pipeline failed");
       if (data.stage === "transcribing" && pollCount >= maxTranscriptionPolls) {
-        throw new Error("Transcription timeout - audio processing took too long");
+        throw new Error(
+          "Transcription timeout - audio processing took too long",
+        );
       }
     }
   };
@@ -417,7 +475,8 @@ export function TranscriptionPanel({
     segments.forEach((segment) => {
       const firstStmtIndex = segment.statementIndices[0] ?? 0;
       rtf += `{\\b ${escapeRtf(getSpeakerText(firstStmtIndex))}`;
-      if (segment.timestamp !== null) rtf += ` [${formatTime(segment.timestamp)}]`;
+      if (segment.timestamp !== null)
+        rtf += ` [${formatTime(segment.timestamp)}]`;
       rtf += ":}\\line\\line\n";
       segment.statementIndices.forEach((stmtIdx) => {
         const stmt = statements[stmtIdx];
@@ -463,7 +522,11 @@ export function TranscriptionPanel({
     worksheet.columns = [...baseColumns, ...topicColumns];
     const headerRow = worksheet.getRow(1);
     headerRow.font = { bold: true };
-    headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9D9D9" } };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFD9D9D9" },
+    };
     headerRow.alignment = { vertical: "middle", horizontal: "left" };
     worksheet.views = [{ state: "frozen", ySplit: 1 }];
 
@@ -493,11 +556,17 @@ export function TranscriptionPanel({
               text,
             };
             topicList.forEach((topic) => {
-              rowData[`topic_${topic.key}`] = paragraphTopics.has(topic.key) ? "Yes" : "";
+              rowData[`topic_${topic.key}`] = paragraphTopics.has(topic.key)
+                ? "Yes"
+                : "";
             });
             const row = worksheet.addRow(rowData);
             row.eachCell((cell) => {
-              cell.alignment = { vertical: "top", horizontal: "left", wrapText: true };
+              cell.alignment = {
+                vertical: "top",
+                horizontal: "left",
+                wrapText: true,
+              };
             });
           });
         }
@@ -552,7 +621,9 @@ export function TranscriptionPanel({
             if (data.stage) setStage(data.stage);
             if (data.transcriptId) {
               pollForCompletion(data.transcriptId).catch((err) => {
-                setErrorMessage(err instanceof Error ? err.message : "Pipeline failed");
+                setErrorMessage(
+                  err instanceof Error ? err.message : "Pipeline failed",
+                );
                 setStage("error");
               });
             }
@@ -600,7 +671,8 @@ export function TranscriptionPanel({
 
       const relativeTop = elementRect.top - containerRect.top;
       const isRoughlyInView =
-        relativeTop > -containerHeight * 1.5 && relativeTop < containerHeight * 2.5;
+        relativeTop > -containerHeight * 1.5 &&
+        relativeTop < containerHeight * 2.5;
 
       if (isJump || isRoughlyInView) {
         const offset = containerHeight / 3;
@@ -616,7 +688,8 @@ export function TranscriptionPanel({
       const viewportHeight = window.innerHeight;
       const relativeTop = elementRect.top;
       const isRoughlyInView =
-        relativeTop > -viewportHeight * 1.5 && relativeTop < viewportHeight * 2.5;
+        relativeTop > -viewportHeight * 1.5 &&
+        relativeTop < viewportHeight * 2.5;
 
       if (isJump || isRoughlyInView) {
         window.scrollTo({
@@ -679,31 +752,34 @@ export function TranscriptionPanel({
         />
       )}
 
-      {viewMode === "analysis" && propositions.length === 0 && stage === "completed" && (
-        <div className="mt-8 flex flex-col items-center gap-4 text-center">
-          <BarChart3 className="h-10 w-10 text-muted-foreground/50" />
-          <div>
-            <p className="text-sm font-medium">No analysis yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Identify key propositions and stakeholder positions across the transcript.
-            </p>
+      {viewMode === "analysis" &&
+        propositions.length === 0 &&
+        stage === "completed" && (
+          <div className="mt-8 flex flex-col items-center gap-4 text-center">
+            <BarChart3 className="h-10 w-10 text-muted-foreground/50" />
+            <div>
+              <p className="text-sm font-medium">No analysis yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Identify key propositions and stakeholder positions across the
+                transcript.
+              </p>
+            </div>
+            <button
+              onClick={handleRunAnalysis}
+              disabled={analyzingPropositions}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {analyzingPropositions ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Analyzing...
+                </span>
+              ) : (
+                "Run Analysis"
+              )}
+            </button>
           </div>
-          <button
-            onClick={handleRunAnalysis}
-            disabled={analyzingPropositions}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            {analyzingPropositions ? (
-              <span className="flex items-center gap-2">
-                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Analyzing...
-              </span>
-            ) : (
-              "Run Analysis"
-            )}
-          </button>
-        </div>
-      )}
+        )}
 
       {viewMode === "pv" && pvSymbol && (
         <PVPanel
@@ -734,20 +810,27 @@ export function TranscriptionPanel({
       )}
 
       {!segments && rawParagraphs && rawParagraphs.length > 0 && (
-        <RawTranscriptView rawParagraphs={rawParagraphs} onSeek={seekToTimestamp} />
+        <RawTranscriptView
+          rawParagraphs={rawParagraphs}
+          onSeek={seekToTimestamp}
+        />
       )}
 
-      {!segments && !rawParagraphs && stage === "idle" && !checking && viewMode !== "pv" && (
-        <div className="mt-2 rounded-lg border border-border bg-muted/30 px-5 py-6">
-          <p className="mb-1 text-sm font-medium text-foreground">
-            No transcript available yet
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Generate an AI transcript to read along with speaker identification,
-            topic tagging, and analysis.
-          </p>
-        </div>
-      )}
+      {!segments &&
+        !rawParagraphs &&
+        stage === "idle" &&
+        !checking &&
+        viewMode !== "pv" && (
+          <div className="mt-2 rounded-lg border border-border bg-muted/30 px-5 py-6">
+            <p className="mb-1 text-sm font-medium text-foreground">
+              No transcript available yet
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Generate an AI transcript to read along with speaker
+              identification, topic tagging, and analysis.
+            </p>
+          </div>
+        )}
     </div>
   );
 }

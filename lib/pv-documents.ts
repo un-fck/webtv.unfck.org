@@ -28,7 +28,12 @@ export function parseMeetingSymbol(
   // "Third Committee, 5th meeting - General Assembly, 79th session"
   // → A/C.1/79/PV.7 (1st = verbatim), A/C.3/79/SR.5 (2nd-6th = summary)
   const committeeNames: Record<string, string> = {
-    first: "1", second: "2", third: "3", fourth: "4", fifth: "5", sixth: "6",
+    first: "1",
+    second: "2",
+    third: "3",
+    fourth: "4",
+    fifth: "5",
+    sixth: "6",
   };
   const committeeM = title.match(
     /(First|Second|Third|Fourth|Fifth|Sixth)\s+Committee.*?(\d+)(?:st|nd|rd|th)\s+(?:plenary\s+)?meeting.*?(\d+)(?:st|nd|rd|th)\s+session/i,
@@ -57,7 +62,9 @@ export function parseMeetingSymbol(
   // GA Emergency Special Session: "23rd plenary meeting - Emergency special session" → A/ES-11/PV.23
   // Title patterns vary; the ES-NN number may be in the title or category
   const esMatch = title.match(/(\d+)(?:st|nd|rd|th)\s+plenary\s+meeting/i);
-  const esSession = (title + " " + category).match(/(?:ES|emergency\s+special).*?(\d+)/i);
+  const esSession = (title + " " + category).match(
+    /(?:ES|emergency\s+special).*?(\d+)/i,
+  );
   if (esMatch && esSession && /emergency/i.test(title + " " + category)) {
     return `A/ES-${esSession[1]}/PV.${esMatch[1]}`;
   }
@@ -85,7 +92,9 @@ export function parseMeetingSymbol(
   );
   if (ecosocM) {
     const meetingNum = ecosocM[1] || ecosocM[2];
-    const year = videoDate ? new Date(videoDate).getFullYear() : new Date().getFullYear();
+    const year = videoDate
+      ? new Date(videoDate).getFullYear()
+      : new Date().getFullYear();
     return `E/${year}/SR.${meetingNum}`;
   }
 
@@ -122,7 +131,11 @@ export async function fetchPVDocument(
     const buffer = Buffer.from(await res.arrayBuffer());
 
     // Basic validation: must be a real PDF (starts with %PDF)
-    if (buffer.length < 100 || !buffer.subarray(0, 5).toString().startsWith("%PDF")) return null;
+    if (
+      buffer.length < 100 ||
+      !buffer.subarray(0, 5).toString().startsWith("%PDF")
+    )
+      return null;
 
     // Validate: check if the symbol appears in the PDF binary (works for most PDFs
     // where text is stored as ASCII/latin1 literals in the stream). This guards against
@@ -160,7 +173,10 @@ export async function pvDocumentExists(
 
     // Basic validation: must be a real PDF
     const buffer = Buffer.from(await res.arrayBuffer());
-    return buffer.length >= 100 && buffer.subarray(0, 5).toString().startsWith("%PDF");
+    return (
+      buffer.length >= 100 &&
+      buffer.subarray(0, 5).toString().startsWith("%PDF")
+    );
   } catch {
     return false;
   }

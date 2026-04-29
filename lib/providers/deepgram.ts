@@ -58,17 +58,14 @@ export const deepgram: TranscriptionProvider = {
       console.log(`  [Deepgram] Transcribing with Nova-3...`);
       const t0 = Date.now();
 
-      const res = await fetch(
-        `https://api.deepgram.com/v1/listen?${params}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${DEEPGRAM_API_KEY}`,
-            "Content-Type": "audio/mp4",
-          },
-          body: fileData,
+      const res = await fetch(`https://api.deepgram.com/v1/listen?${params}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${DEEPGRAM_API_KEY}`,
+          "Content-Type": "audio/mp4",
         },
-      );
+        body: fileData,
+      });
 
       if (!res.ok) {
         throw new Error(
@@ -92,8 +89,7 @@ export const deepgram: TranscriptionProvider = {
         }
       } else {
         // Fall back to word-level with speaker grouping
-        const words =
-          raw.results.channels[0]?.alternatives[0]?.words || [];
+        const words = raw.results.channels[0]?.alternatives[0]?.words || [];
         for (const word of words) {
           const speaker = String(word.speaker ?? 0);
           const last = utterances[utterances.length - 1];

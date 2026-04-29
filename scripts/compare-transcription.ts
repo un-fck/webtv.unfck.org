@@ -51,13 +51,19 @@ async function main() {
   const { audioUrl } = await getKalturaAudioUrl(entryId);
   console.log(`Audio URL: ${audioUrl}\n`);
 
-  const outputDir = path.join(process.cwd(), "transcription-comparisons", entryId);
+  const outputDir = path.join(
+    process.cwd(),
+    "transcription-comparisons",
+    entryId,
+  );
   fs.mkdirSync(outputDir, { recursive: true });
 
   const tmpPath = await downloadAudioToTemp(audioUrl);
 
   try {
-    const transcript = await provider.transcribe(audioUrl, { audioFilePath: tmpPath });
+    const transcript = await provider.transcribe(audioUrl, {
+      audioFilePath: tmpPath,
+    });
 
     const safeProvider = providerName.replace(/[^a-z0-9-]/gi, "_");
     fs.writeFileSync(

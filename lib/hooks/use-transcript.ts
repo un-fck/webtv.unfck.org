@@ -113,10 +113,16 @@ export function useTranscript(
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [speakerMappings, setSpeakerMappings] = useState<SpeakerMapping>({});
-  const [countryNames, setCountryNames] = useState<Map<string, string>>(new Map());
-  const [topics, setTopics] = useState<Record<string, { key: string; label: string; description: string }>>({});
+  const [countryNames, setCountryNames] = useState<Map<string, string>>(
+    new Map(),
+  );
+  const [topics, setTopics] = useState<
+    Record<string, { key: string; label: string; description: string }>
+  >({});
   const [statements, setStatements] = useState<Statement[] | null>(null);
-  const [rawParagraphs, setRawParagraphs] = useState<RawParagraph[] | null>(null);
+  const [rawParagraphs, setRawParagraphs] = useState<RawParagraph[] | null>(
+    null,
+  );
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [propositions, setPropositions] = useState<Proposition[]>([]);
   const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
@@ -149,7 +155,10 @@ export function useTranscript(
   const applyData = useCallback(
     async (data: {
       statements?: Statement[];
-      topics?: Record<string, { key: string; label: string; description: string }>;
+      topics?: Record<
+        string,
+        { key: string; label: string; description: string }
+      >;
       propositions?: Proposition[];
       speakerMappings?: SpeakerMapping;
       raw_paragraphs?: RawParagraph[];
@@ -159,14 +168,21 @@ export function useTranscript(
       if (data.transcriptId) setTranscriptId(data.transcriptId);
       if (data.raw_paragraphs) setRawParagraphs(data.raw_paragraphs);
       if (data.stage) setStage(data.stage as Stage);
-      if (data.topics && Object.keys(data.topics).length > 0) setTopics(data.topics);
-      if (data.propositions && data.propositions.length > 0) setPropositions(data.propositions);
+      if (data.topics && Object.keys(data.topics).length > 0)
+        setTopics(data.topics);
+      if (data.propositions && data.propositions.length > 0)
+        setPropositions(data.propositions);
 
       if (data.statements && data.statements.length > 0) {
         setStatements(data.statements);
-        if (data.speakerMappings && Object.keys(data.speakerMappings).length > 0) {
+        if (
+          data.speakerMappings &&
+          Object.keys(data.speakerMappings).length > 0
+        ) {
           setSpeakerMappings(data.speakerMappings);
-          setSegments(groupStatementsBySpeaker(data.statements, data.speakerMappings));
+          setSegments(
+            groupStatementsBySpeaker(data.statements, data.speakerMappings),
+          );
           await loadCountryNames(data.speakerMappings);
         }
       }
@@ -197,10 +213,14 @@ export function useTranscript(
           // Wait before polling (with backoff on errors)
           await new Promise((resolve) => {
             const timer = setTimeout(resolve, errorBackoff);
-            controller.signal.addEventListener("abort", () => {
-              clearTimeout(timer);
-              resolve(undefined);
-            }, { once: true });
+            controller.signal.addEventListener(
+              "abort",
+              () => {
+                clearTimeout(timer);
+                resolve(undefined);
+              },
+              { once: true },
+            );
           });
 
           if (controller.signal.aborted) break;
@@ -240,24 +260,38 @@ export function useTranscript(
           }
 
           if (data.stage) setStage(data.stage);
-          if (data.raw_paragraphs && !rawParagraphs) setRawParagraphs(data.raw_paragraphs);
+          if (data.raw_paragraphs && !rawParagraphs)
+            setRawParagraphs(data.raw_paragraphs);
 
           if (data.statements?.length > 0) {
             setStatements(data.statements);
-            if (data.speakerMappings && Object.keys(data.speakerMappings).length > 0) {
+            if (
+              data.speakerMappings &&
+              Object.keys(data.speakerMappings).length > 0
+            ) {
               setSpeakerMappings(data.speakerMappings);
-              setSegments(groupStatementsBySpeaker(data.statements, data.speakerMappings));
+              setSegments(
+                groupStatementsBySpeaker(data.statements, data.speakerMappings),
+              );
               await loadCountryNames(data.speakerMappings);
             }
           }
 
-          if (data.topics && Object.keys(data.topics).length > 0) setTopics(data.topics);
-          if (data.propositions && data.propositions.length > 0) setPropositions(data.propositions);
+          if (data.topics && Object.keys(data.topics).length > 0)
+            setTopics(data.topics);
+          if (data.propositions && data.propositions.length > 0)
+            setPropositions(data.propositions);
 
           if (data.stage === "completed") break;
-          if (data.stage === "error") throw new Error(data.error_message || "Pipeline failed");
-          if (data.stage === "transcribing" && pollCount >= maxTranscriptionPolls) {
-            throw new Error("Transcription timeout - audio processing took too long");
+          if (data.stage === "error")
+            throw new Error(data.error_message || "Pipeline failed");
+          if (
+            data.stage === "transcribing" &&
+            pollCount >= maxTranscriptionPolls
+          ) {
+            throw new Error(
+              "Transcription timeout - audio processing took too long",
+            );
           }
         }
       } finally {
@@ -276,12 +310,20 @@ export function useTranscript(
         const response = await fetch("/api/transcripts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ kalturaId, force, language: selectedLanguage }),
+          body: JSON.stringify({
+            kalturaId,
+            force,
+            language: selectedLanguage,
+          }),
         });
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error?.message || errorData.error || "Transcription failed");
+          throw new Error(
+            errorData.error?.message ||
+              errorData.error ||
+              "Transcription failed",
+          );
         }
 
         const data = await response.json();
@@ -301,11 +343,19 @@ export function useTranscript(
           await pollForCompletion(data.transcriptId);
         }
       } catch (err) {
-        setErrorMessage(err instanceof Error ? err.message : "Failed to transcribe");
+        setErrorMessage(
+          err instanceof Error ? err.message : "Failed to transcribe",
+        );
         setStage("error");
       }
     },
-    [kalturaId, selectedLanguage, applyData, pollForCompletion, onLanguagesRefresh],
+    [
+      kalturaId,
+      selectedLanguage,
+      applyData,
+      pollForCompletion,
+      onLanguagesRefresh,
+    ],
   );
 
   const handleSchedule = useCallback(async () => {
@@ -321,11 +371,17 @@ export function useTranscript(
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || errorData.error || "Failed to schedule transcript");
+        throw new Error(
+          errorData.error?.message ||
+            errorData.error ||
+            "Failed to schedule transcript",
+        );
       }
       setStage("scheduled");
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to schedule transcript");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Failed to schedule transcript",
+      );
       setStage("error");
     }
   }, [kalturaId, videoId]);
@@ -347,9 +403,12 @@ export function useTranscript(
     if (!transcriptId) return;
     setAnalyzingPropositions(true);
     try {
-      const response = await fetch(`/api/transcripts/${encodeURIComponent(transcriptId)}/analysis`, {
-        method: "POST",
-      });
+      const response = await fetch(
+        `/api/transcripts/${encodeURIComponent(transcriptId)}/analysis`,
+        {
+          method: "POST",
+        },
+      );
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error?.message || data.error || "Analysis failed");
@@ -396,7 +455,9 @@ export function useTranscript(
             if (data.stage) setStage(data.stage);
             if (data.transcriptId) {
               pollForCompletion(data.transcriptId).catch((err) => {
-                setErrorMessage(err instanceof Error ? err.message : "Pipeline failed");
+                setErrorMessage(
+                  err instanceof Error ? err.message : "Pipeline failed",
+                );
                 setStage("error");
               });
             }

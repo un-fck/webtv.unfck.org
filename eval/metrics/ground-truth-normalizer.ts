@@ -19,10 +19,7 @@ const SPEAKER_LABEL_PATTERNS: Record<string, RegExp[]> = {
     // "Mr. Bendjama:", "Mr. Bendjama (Algeria):", "Ms. Foo (United States of America):"
     /^(?:Mr|Ms|Mrs|Sir|Dame|Lord)\b\.?[^:]*:/gm,
   ],
-  fr: [
-    /^(?:Le Président|La Présidente)\b[^:]*:/gm,
-    /^(?:M|Mme)\b\.?[^:]*:/gm,
-  ],
+  fr: [/^(?:Le Président|La Présidente)\b[^:]*:/gm, /^(?:M|Mme)\b\.?[^:]*:/gm],
   es: [
     /^(?:El Presidente|La Presidenta)\b[^:]*:/gm,
     /^(?:El Sr|La Sra)\b\.?[^:]*:/gm,
@@ -32,14 +29,8 @@ const SPEAKER_LABEL_PATTERNS: Record<string, RegExp[]> = {
     /^(?:الرئيس|الرئيسة)[^:]*:/gm,
     /^(?:السيد|السيدة)[^:]*:/gm,
   ],
-  ru: [
-    /^Председатель\b[^:]*:/gm,
-    /^(?:Г-н|Г-жа)\b[^:]*:/gm,
-  ],
-  zh: [
-    /^主席[^：:]*[：:]/gm,
-    /^(?:先生|女士|夫人)[^：:]*[：:]/gm,
-  ],
+  ru: [/^Председатель\b[^:]*:/gm, /^(?:Г-н|Г-жа)\b[^:]*:/gm],
+  zh: [/^主席[^：:]*[：:]/gm, /^(?:先生|女士|夫人)[^：:]*[：:]/gm],
 };
 
 /** Page header/footer: "30/01/2026 The situation in Cyprus S/PV.10100" or "3/3 26-01225" */
@@ -67,9 +58,7 @@ const VOTE_BLOCK_PATTERNS: Record<string, RegExp[]> = {
     /^Votos a favor:\n(?:[\s\S]*?)(?=^(?:El Presidente|La Presidenta|El Sr\.|La Sra\.)|\n\n)/gm,
   ],
   ar: [],
-  ru: [
-    /^Проводится голосование[^.]*\.$/gm,
-  ],
+  ru: [/^Проводится голосование[^.]*\.$/gm],
   zh: [],
 };
 
@@ -137,7 +126,10 @@ export function normalizeGroundTruth(text: string, language = "en"): string {
   }
 
   // Collapse whitespace
-  result = result.replace(/\n{3,}/g, "\n\n").replace(/[ \t]+/g, " ").trim();
+  result = result
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+/g, " ")
+    .trim();
 
   return result;
 }

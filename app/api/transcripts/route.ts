@@ -37,11 +37,21 @@ export async function POST(request: NextRequest) {
 
     // Check Turso for existing transcript (unless force=true)
     if (!force) {
-      const cached = await getTranscript(entryId, undefined, undefined, true, lang);
+      const cached = await getTranscript(
+        entryId,
+        undefined,
+        undefined,
+        true,
+        lang,
+      );
 
       if (cached && cached.status === "completed") {
         if (!cached.content.statements) {
-          return apiError(400, "old_format", "Transcript uses old format, please retranscribe");
+          return apiError(
+            400,
+            "old_format",
+            "Transcript uses old format, please retranscribe",
+          );
         }
 
         if (cached.content.statements.length === 0) {
@@ -81,13 +91,22 @@ export async function POST(request: NextRequest) {
       force,
       language: lang,
     });
-    console.log("Transcription started:", transcriptId, "for entryId:", entryId);
+    console.log(
+      "Transcription started:",
+      transcriptId,
+      "for entryId:",
+      entryId,
+    );
     return NextResponse.json({
       transcriptId,
       stage: "transcribing",
     });
   } catch (error) {
     console.error("Transcription error:", error);
-    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
+    return apiError(
+      500,
+      "internal_error",
+      error instanceof Error ? error.message : "Unknown error",
+    );
   }
 }

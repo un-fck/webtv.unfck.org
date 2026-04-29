@@ -41,12 +41,27 @@ export interface PVTurn {
 // ── Language detection ─────────────────────────────────────────────────
 
 const LANG_HINTS: Array<{ lang: string; pattern: RegExp }> = [
-  { lang: "fr", pattern: /Le Président|La Présidente|Conseil de sécurité|Conseil économique et social/ },
-  { lang: "es", pattern: /El Presidente|La Presidenta|Consejo de Seguridad|Consejo Económico y Social/ },
-  { lang: "ru", pattern: /Председатель|Совет Безопасности|Экономический и Социальный Совет/ },
+  {
+    lang: "fr",
+    pattern:
+      /Le Président|La Présidente|Conseil de sécurité|Conseil économique et social/,
+  },
+  {
+    lang: "es",
+    pattern:
+      /El Presidente|La Presidenta|Consejo de Seguridad|Consejo Económico y Social/,
+  },
+  {
+    lang: "ru",
+    pattern: /Председатель|Совет Безопасности|Экономический и Социальный Совет/,
+  },
   { lang: "zh", pattern: /安全理事会|主席|经济及社会理事会/ },
   { lang: "ar", pattern: /مجلس الأمن|الرئيس|المجلس الاقتصادي والاجتماعي/ },
-  { lang: "en", pattern: /Security Council|General Assembly|Economic and Social Council|The President/ },
+  {
+    lang: "en",
+    pattern:
+      /Security Council|General Assembly|Economic and Social Council|The President/,
+  },
 ];
 
 function detectLanguage(text: string): string {
@@ -96,7 +111,10 @@ const ZH_SPEAKER =
 
 // ── Spoken-language annotation detection ───────────────────────────────
 
-const SPOKEN_LANG_PATTERNS: Array<{ pattern: RegExp; extract: (m: string) => string }> = [
+const SPOKEN_LANG_PATTERNS: Array<{
+  pattern: RegExp;
+  extract: (m: string) => string;
+}> = [
   // EN: "spoke in French", "interpretation from French"
   { pattern: /spoke in (\w+)/i, extract: (m) => langNameToCode(m) },
   { pattern: /interpretation from (\w+)/i, extract: (m) => langNameToCode(m) },
@@ -114,27 +132,48 @@ const SPOKEN_LANG_PATTERNS: Array<{ pattern: RegExp; extract: (m: string) => str
 
 function langNameToCode(name: string): string {
   const map: Record<string, string> = {
-    english: "en", french: "fr", spanish: "es", russian: "ru",
-    chinese: "zh", arabic: "ar",
-    anglais: "en", français: "fr", espagnol: "es", russe: "ru",
-    chinois: "zh", arabe: "ar",
-    inglés: "en", francés: "fr", español: "es", ruso: "ru",
-    chino: "zh", árabe: "ar",
+    english: "en",
+    french: "fr",
+    spanish: "es",
+    russian: "ru",
+    chinese: "zh",
+    arabic: "ar",
+    anglais: "en",
+    français: "fr",
+    espagnol: "es",
+    russe: "ru",
+    chinois: "zh",
+    arabe: "ar",
+    inglés: "en",
+    francés: "fr",
+    español: "es",
+    ruso: "ru",
+    chino: "zh",
+    árabe: "ar",
   };
   return map[name.toLowerCase()] || name.toLowerCase();
 }
 
 function ruLangToCode(name: string): string {
   const map: Record<string, string> = {
-    английски: "en", французски: "fr", испански: "es",
-    русски: "ru", китайски: "zh", арабски: "ar",
+    английски: "en",
+    французски: "fr",
+    испански: "es",
+    русски: "ru",
+    китайски: "zh",
+    арабски: "ar",
   };
   return map[name.toLowerCase()] || name.toLowerCase();
 }
 
 function zhLangToCode(name: string): string {
   const map: Record<string, string> = {
-    英: "en", 法: "fr", 西班牙: "es", 俄: "ru", 中: "zh", 阿拉伯: "ar",
+    英: "en",
+    法: "fr",
+    西班牙: "es",
+    俄: "ru",
+    中: "zh",
+    阿拉伯: "ar",
   };
   return map[name] || name;
 }
@@ -142,13 +181,22 @@ function zhLangToCode(name: string): string {
 function arLangToCode(name: string): string {
   // The extracted text may have "إلنكليزية" or "لفرنسية" etc. (with ال prefix)
   const map: Record<string, string> = {
-    إنكليزية: "en", انكليزية: "en", إلنكليزية: "en",
+    إنكليزية: "en",
+    انكليزية: "en",
+    إلنكليزية: "en",
     لنكليزية: "en", // variant after ال
-    فرنسية: "fr", لفرنسية: "fr",
-    إسبانية: "es", اسبانية: "es", إلسبانية: "es", لسبانية: "es",
-    روسية: "ru", لروسية: "ru",
-    صينية: "zh", لصينية: "zh",
-    عربية: "ar", لعربية: "ar",
+    فرنسية: "fr",
+    لفرنسية: "fr",
+    إسبانية: "es",
+    اسبانية: "es",
+    إلسبانية: "es",
+    لسبانية: "es",
+    روسية: "ru",
+    لروسية: "ru",
+    صينية: "zh",
+    لصينية: "zh",
+    عربية: "ar",
+    لعربية: "ar",
   };
   // Try exact match first, then try removing leading ل or إل
   if (map[name]) return map[name];
@@ -183,8 +231,14 @@ function stripPageArtifacts(text: string): string {
   // Remove repeated document symbol headers (e.g., "S/PV.10124", "A/79/PV.21", "E/2024/SR.10", "A/HRC/61/SR.29")
   cleaned = cleaned.replace(/^\s*[SAE]\/(?:[\w.]+\/)*(?:PV|SR)\.\d+\s*$/gm, "");
   // Remove date+title headers repeated on each page (e.g. "23/03/2026 	Maintenance... 	S/PV.10124")
-  cleaned = cleaned.replace(/^\s*\d{2}\/\d{2}\/\d{4}\s+.+\s+[SAE]\/(?:[\dC.]+\/)?(?:PV|SR)\.\d+\s*$/gm, "");
-  cleaned = cleaned.replace(/^\s*[SAE]\/(?:[\dC.]+\/)?(?:PV|SR)\.\d+\s+.+\s+\d{2}\/\d{2}\/\d{4}\s*$/gm, "");
+  cleaned = cleaned.replace(
+    /^\s*\d{2}\/\d{2}\/\d{4}\s+.+\s+[SAE]\/(?:[\dC.]+\/)?(?:PV|SR)\.\d+\s*$/gm,
+    "",
+  );
+  cleaned = cleaned.replace(
+    /^\s*[SAE]\/(?:[\dC.]+\/)?(?:PV|SR)\.\d+\s+.+\s+\d{2}\/\d{2}\/\d{4}\s*$/gm,
+    "",
+  );
   // Remove reference codes (e.g., "26-01225 (E)", "26-03920")
   cleaned = cleaned.replace(/^\s*\d{2}-\d{5}\s*(?:\([A-Z]\))?\s*$/gm, "");
   cleaned = cleaned.replace(/^\s*\*\d+\*\s*$/gm, "");
@@ -231,33 +285,53 @@ function parseHeader(text: string, lang: string): ParsedHeader {
   // Extract document symbol (works across all languages)
   // Arabic PDFs may have spaces: "S /PV. 10124"
   // Handles S/PV.NNNN, A/NN/PV.NN, A/C.N/NN/PV.NN, A/ES-NN/PV.NN, E/YYYY/SR.NN
-  const symbolMatch = text.match(/[SAE]\s*\/\s*(?:[\w.ES-]+\s*\/\s*)*(?:PV|SR)\s*\.\s*\d+/);
+  const symbolMatch = text.match(
+    /[SAE]\s*\/\s*(?:[\w.ES-]+\s*\/\s*)*(?:PV|SR)\s*\.\s*\d+/,
+  );
   if (symbolMatch) header.symbol = symbolMatch[0].replace(/\s+/g, "");
 
   // Detect body
-  const bodyPatterns: Record<string, Array<{ pattern: RegExp; body: string }>> = {
+  const bodyPatterns: Record<
+    string,
+    Array<{ pattern: RegExp; body: string }>
+  > = {
     en: [
       { pattern: /Security Council/, body: "Security Council" },
       { pattern: /General Assembly/, body: "General Assembly" },
-      { pattern: /Economic and Social Council/, body: "Economic and Social Council" },
+      {
+        pattern: /Economic and Social Council/,
+        body: "Economic and Social Council",
+      },
       { pattern: /Human Rights Council/, body: "Human Rights Council" },
     ],
     fr: [
       { pattern: /Conseil de sécurité/, body: "Security Council" },
       { pattern: /Assemblée générale/, body: "General Assembly" },
-      { pattern: /Conseil économique et social/, body: "Economic and Social Council" },
-      { pattern: /Conseil des droits de l'homme/, body: "Human Rights Council" },
+      {
+        pattern: /Conseil économique et social/,
+        body: "Economic and Social Council",
+      },
+      {
+        pattern: /Conseil des droits de l'homme/,
+        body: "Human Rights Council",
+      },
     ],
     es: [
       { pattern: /Consejo de Seguridad/, body: "Security Council" },
       { pattern: /Asamblea General/, body: "General Assembly" },
-      { pattern: /Consejo Económico y Social/, body: "Economic and Social Council" },
+      {
+        pattern: /Consejo Económico y Social/,
+        body: "Economic and Social Council",
+      },
       { pattern: /Consejo de Derechos Humanos/, body: "Human Rights Council" },
     ],
     ru: [
       { pattern: /Совет Безопасности/, body: "Security Council" },
       { pattern: /Генеральная Ассамблея/, body: "General Assembly" },
-      { pattern: /Экономический и Социальный Совет/, body: "Economic and Social Council" },
+      {
+        pattern: /Экономический и Социальный Совет/,
+        body: "Economic and Social Council",
+      },
       { pattern: /Совет по правам человека/, body: "Human Rights Council" },
     ],
     zh: [
@@ -269,7 +343,10 @@ function parseHeader(text: string, lang: string): ParsedHeader {
     ar: [
       { pattern: /مجلس الأمن|مجلس األمن/, body: "Security Council" },
       { pattern: /الجمعية العامة/, body: "General Assembly" },
-      { pattern: /المجلس الاقتصادي والاجتماعي/, body: "Economic and Social Council" },
+      {
+        pattern: /المجلس الاقتصادي والاجتماعي/,
+        body: "Economic and Social Council",
+      },
       { pattern: /مجلس حقوق الإنسان/, body: "Human Rights Council" },
     ],
   };
@@ -301,14 +378,23 @@ function parseHeader(text: string, lang: string): ParsedHeader {
 
   // Detect provisional vs official
   const provisionalPatterns = [
-    /Provisional/i, /Provisoire/i, // EN/FR/ES: "Provisional" shared
-    /Предварительный/i, /临时/, /مؤقت/,
+    /Provisional/i,
+    /Provisoire/i, // EN/FR/ES: "Provisional" shared
+    /Предварительный/i,
+    /临时/,
+    /مؤقت/,
   ];
-  header.status = provisionalPatterns.some((p) => p.test(text)) ? "provisional" : "official";
+  header.status = provisionalPatterns.some((p) => p.test(text))
+    ? "provisional"
+    : "official";
 
   // Location — always New York for SC/GA
   const locationPatterns = [
-    /New York/i, /Nueva York/i, /Нью-Йорк/, /纽约/, /نيويورك/,
+    /New York/i,
+    /Nueva York/i,
+    /Нью-Йорк/,
+    /纽约/,
+    /نيويورك/,
   ];
   for (const p of locationPatterns) {
     if (p.test(text)) {
@@ -394,7 +480,8 @@ function parseAttendance(headerText: string, lang: string): AttendanceInfo {
       const trimmed = line.trim();
       if (!trimmed || trimmed.length < 3) continue;
       // Skip header-like lines
-      if (/^Members|^Membres|^Miembros|^Члены|^成员|^األعضاء/u.test(trimmed)) continue;
+      if (/^Members|^Membres|^Miembros|^Члены|^成员|^األعضاء/u.test(trimmed))
+        continue;
 
       const titleMatch = trimmed.match(titlePattern);
       if (titleMatch) {
@@ -582,7 +669,10 @@ function findSpeakerTurns(text: string, lang: string): RawSpeakerMatch[] {
   return matches;
 }
 
-function findWithPatterns(text: string, langPatterns: RegExp[]): RawSpeakerMatch[] {
+function findWithPatterns(
+  text: string,
+  langPatterns: RegExp[],
+): RawSpeakerMatch[] {
   const matches: RawSpeakerMatch[] = [];
   let remaining = text;
   let offset = 0;
@@ -773,21 +863,70 @@ function extractOnBehalfOf(paragraphs: string[]): string | undefined {
   // SR documents use PRESENT tense (not past): "dit que", "dice que", "говорит"
   const verbs = [
     // EN (past tense — used in EN SRs)
-    "said", "asked", "expressed", "noted", "recalled", "stressed", "urged",
-    "proposed", "supported", "endorsed", "observed", "welcomed", "pointed",
-    "drew", "took", "made", "called", "introduced", "informing",
+    "said",
+    "asked",
+    "expressed",
+    "noted",
+    "recalled",
+    "stressed",
+    "urged",
+    "proposed",
+    "supported",
+    "endorsed",
+    "observed",
+    "welcomed",
+    "pointed",
+    "drew",
+    "took",
+    "made",
+    "called",
+    "introduced",
+    "informing",
     // FR (present tense — "déclare que", "dit que", "note que", ...)
-    "déclare", "dit", "note", "rappelle", "souligne", "demande",
-    "exprime", "propose", "appuie", "accueille", "observe",
-    "présente", "indique", "fait",
+    "déclare",
+    "dit",
+    "note",
+    "rappelle",
+    "souligne",
+    "demande",
+    "exprime",
+    "propose",
+    "appuie",
+    "accueille",
+    "observe",
+    "présente",
+    "indique",
+    "fait",
     // ES (present tense — "dice que", "declara que", "señala que", ...)
-    "dice", "declara", "señala", "recuerda", "subraya", "pide", "expresa",
-    "propone", "apoya", "acoge", "observa", "presenta", "indica", "hace",
+    "dice",
+    "declara",
+    "señala",
+    "recuerda",
+    "subraya",
+    "pide",
+    "expresa",
+    "propone",
+    "apoya",
+    "acoge",
+    "observa",
+    "presenta",
+    "indica",
+    "hace",
     // RU (present tense — "говорит,", "заявляет,", "отмечает,", ...)
-    "говорит", "заявляет", "отмечает", "подчеркивает", "напоминает",
-    "предлагает", "выражает", "указывает", "приветствует", "призывает",
+    "говорит",
+    "заявляет",
+    "отмечает",
+    "подчеркивает",
+    "напоминает",
+    "предлагает",
+    "выражает",
+    "указывает",
+    "приветствует",
+    "призывает",
   ];
-  const verbPattern = verbs.map(v => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  const verbPattern = verbs
+    .map((v) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
   const preambleMatch = first.match(
     new RegExp(`^,\\s*(.+?),?\\s+(?=${verbPattern})\\s*`, "i"),
   );
@@ -795,7 +934,8 @@ function extractOnBehalfOf(paragraphs: string[]): string | undefined {
     // Strip the preamble from the paragraph, keep the rest starting with the verb
     const afterPreamble = first.slice(preambleMatch[0].length);
     // Capitalize the first letter of the remaining text
-    paragraphs[0] = afterPreamble.charAt(0).toUpperCase() + afterPreamble.slice(1);
+    paragraphs[0] =
+      afterPreamble.charAt(0).toUpperCase() + afterPreamble.slice(1);
     return preambleMatch[1].replace(/,\s*$/, "").trim();
   }
 
@@ -878,7 +1018,7 @@ const PROCEDURAL_PARAGRAPH_PATTERNS = [
 ];
 
 function isProceduralParagraph(text: string): boolean {
-  return PROCEDURAL_PARAGRAPH_PATTERNS.some(p => p.test(text.trim()));
+  return PROCEDURAL_PARAGRAPH_PATTERNS.some((p) => p.test(text.trim()));
 }
 
 // ── Turn-level procedural detection ──────────────────────────────────
@@ -910,7 +1050,10 @@ const PROCEDURAL_PATTERNS = [
 function isProcedural(text: string, speaker: string): boolean {
   // Only mark as procedural if it's a short turn from the President/Chair that contains
   // strong procedural language (votes, agenda adoption, meeting open/close)
-  const isChair = /President|Chairperson|Acting President|Président|Presidente|Председатель|主席|الرئيس/i.test(speaker);
+  const isChair =
+    /President|Chairperson|Acting President|Président|Presidente|Председатель|主席|الرئيس/i.test(
+      speaker,
+    );
   if (!isChair) return false;
   return PROCEDURAL_PATTERNS.some((p) => p.test(text));
 }
@@ -949,8 +1092,17 @@ export async function parsePVDocument(
 ): Promise<PVDocument> {
   // Disable worker to avoid issues in Next.js server environment
   pdfjs.GlobalWorkerOptions.workerSrc = "";
-  const data = new Uint8Array(pdfBuffer.buffer, pdfBuffer.byteOffset, pdfBuffer.byteLength);
-  const doc = await pdfjs.getDocument({ data, useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true }).promise;
+  const data = new Uint8Array(
+    pdfBuffer.buffer,
+    pdfBuffer.byteOffset,
+    pdfBuffer.byteLength,
+  );
+  const doc = await pdfjs.getDocument({
+    data,
+    useWorkerFetch: false,
+    isEvalSupported: false,
+    useSystemFonts: true,
+  }).promise;
   const pageTexts: string[] = [];
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
@@ -976,7 +1128,9 @@ export async function parsePVDocument(
   // If symbol wasn't found in the header (e.g., resumed/continuation sessions),
   // search the full text for document symbol in page artifacts
   if (!header.symbol) {
-    const fullSymbolMatch = cleanedText.match(/[SAE]\s*\/\s*(?:[\w.ES-]+\s*\/\s*)*(?:PV|SR)\s*\.\s*\d+/);
+    const fullSymbolMatch = cleanedText.match(
+      /[SAE]\s*\/\s*(?:[\w.ES-]+\s*\/\s*)*(?:PV|SR)\s*\.\s*\d+/,
+    );
     if (fullSymbolMatch) header.symbol = fullSymbolMatch[0].replace(/\s+/g, "");
   }
 
@@ -985,9 +1139,11 @@ export async function parsePVDocument(
   // in a GA emergency session about Palestine)
   if (header.symbol) {
     if (header.symbol.startsWith("S/")) header.body = "Security Council";
-    else if (header.symbol.startsWith("A/HRC/")) header.body = "Human Rights Council";
+    else if (header.symbol.startsWith("A/HRC/"))
+      header.body = "Human Rights Council";
     else if (header.symbol.startsWith("A/")) header.body = "General Assembly";
-    else if (header.symbol.startsWith("E/")) header.body = "Economic and Social Council";
+    else if (header.symbol.startsWith("E/"))
+      header.body = "Economic and Social Council";
   }
 
   // Parse attendance
@@ -1014,24 +1170,29 @@ export async function parsePVDocument(
     const textEnd = nextMatch ? nextMatch.index : speechText.length;
     const turnText = speechText.slice(textStart, textEnd).trim();
 
-    const { speaker, affiliation, spokenLanguage } = interpretSpeakerMatch(match, lang);
+    const { speaker, affiliation, spokenLanguage } = interpretSpeakerMatch(
+      match,
+      lang,
+    );
 
     // Split into paragraphs, preserving SR numbered paragraph structure.
     // For SR documents, split on newlines before numbered paragraphs (e.g. "25. The...")
     // BEFORE collapsing whitespace, so we use the PDF's original line breaks.
     const splitPattern = match.paragraphNumber
-      ? /\n\s*\n|\n(?=\d{1,3}\.\s+\S)/  // double newline OR newline before "NN. X"
-      : /\n\s*\n/;                         // PV: double newline only
+      ? /\n\s*\n|\n(?=\d{1,3}\.\s+\S)/ // double newline OR newline before "NN. X"
+      : /\n\s*\n/; // PV: double newline only
     const rawParas = turnText
       .split(splitPattern)
-      .map((p) => p
-        .replace(/\s+/g, " ")
-        // Rejoin words split across PDF line breaks:
-        // "гово- рит" → "говорит" (lowercase = line-break hyphen, remove it)
-        // "Юго- Восточной" → "Юго-Восточной" (uppercase = compound word, keep hyphen)
-        .replace(/(\p{L})- (\p{Ll})/gu, "$1$2")
-        .replace(/(\p{L})- (\p{Lu})/gu, "$1-$2")
-        .trim())
+      .map((p) =>
+        p
+          .replace(/\s+/g, " ")
+          // Rejoin words split across PDF line breaks:
+          // "гово- рит" → "говорит" (lowercase = line-break hyphen, remove it)
+          // "Юго- Восточной" → "Юго-Восточной" (uppercase = compound word, keep hyphen)
+          .replace(/(\p{L})- (\p{Ll})/gu, "$1$2")
+          .replace(/(\p{L})- (\p{Lu})/gu, "$1-$2")
+          .trim(),
+      )
       .filter((p) => p.length > 0);
 
     // For SR documents, merge orphan fragments (paragraphs that don't start with a number)
@@ -1054,7 +1215,8 @@ export async function parsePVDocument(
 
     // Capitalize the first letter of the first paragraph (SR turns often start with "said")
     if (paragraphs.length > 0 && /^[a-z]/.test(paragraphs[0])) {
-      paragraphs[0] = paragraphs[0].charAt(0).toUpperCase() + paragraphs[0].slice(1);
+      paragraphs[0] =
+        paragraphs[0].charAt(0).toUpperCase() + paragraphs[0].slice(1);
     }
 
     const type = isProcedural(turnText, speaker) ? "procedural" : "speech";
@@ -1072,7 +1234,9 @@ export async function parsePVDocument(
       affiliation,
       spokenLanguage,
       ...(onBehalfOf ? { onBehalfOf } : {}),
-      ...(match.paragraphNumber ? { paragraphNumber: match.paragraphNumber } : {}),
+      ...(match.paragraphNumber
+        ? { paragraphNumber: match.paragraphNumber }
+        : {}),
       paragraphs,
       type,
       ...(proceduralParagraphs.length > 0 ? { proceduralParagraphs } : {}),

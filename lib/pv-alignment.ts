@@ -11,11 +11,21 @@
 import fs from "fs";
 import type { PVDocument, PVTurn } from "./pv-parser";
 import {
-  GEMINI_API_KEY, GEMINI_MODEL, GEMINI_BASE,
-  CHUNK_THRESHOLD_SECONDS, CHUNK_DURATION_SECONDS,
-  httpsPostJson, uploadFileToGemini, waitForGeminiFile, deleteGeminiFile,
-  fmtHHMMSS, parseHHMMSSToSeconds as parseHHMMSS, extractJsonObject,
-  downloadAudioToTemp, getAudioDurationSeconds, extractAudioChunk,
+  GEMINI_API_KEY,
+  GEMINI_MODEL,
+  GEMINI_BASE,
+  CHUNK_THRESHOLD_SECONDS,
+  CHUNK_DURATION_SECONDS,
+  httpsPostJson,
+  uploadFileToGemini,
+  waitForGeminiFile,
+  deleteGeminiFile,
+  fmtHHMMSS,
+  parseHHMMSSToSeconds as parseHHMMSS,
+  extractJsonObject,
+  downloadAudioToTemp,
+  getAudioDurationSeconds,
+  extractAudioChunk,
 } from "./gemini-utils";
 import {
   trackGeminiTranscription,
@@ -65,7 +75,10 @@ export interface AlignmentOptions {
 // ── Alignment prompt ──────────────────────────────────────────────────
 
 /** Build flat list of alignment items from turns — one per paragraph. */
-function buildAlignmentItems(turns: PVTurn[], opts?: AlignmentOptions): AlignmentItem[] {
+function buildAlignmentItems(
+  turns: PVTurn[],
+  opts?: AlignmentOptions,
+): AlignmentItem[] {
   const previewLen = opts?.contentPreviewLength ?? 100;
   const items: AlignmentItem[] = [];
   for (let ti = 0; ti < turns.length; ti++) {
@@ -201,7 +214,12 @@ async function alignChunk(
   if (!responseText) throw new Error("Gemini returned empty response");
 
   const parsed = JSON.parse(extractJsonObject(responseText)) as {
-    alignments: Array<{ itemIndex: number; startTime: string; endTime: string; firstWords?: string }>;
+    alignments: Array<{
+      itemIndex: number;
+      startTime: string;
+      endTime: string;
+      firstWords?: string;
+    }>;
   };
 
   const usageMetadata: GeminiUsageMetadata = {
@@ -239,8 +257,10 @@ export async function alignPVWithAudio(
 
     let allAlignments: AlignmentResult[];
     const combinedUsage: GeminiUsageMetadata = {
-      promptTokenCount: 0, candidatesTokenCount: 0,
-      thoughtsTokenCount: 0, totalTokenCount: 0,
+      promptTokenCount: 0,
+      candidatesTokenCount: 0,
+      thoughtsTokenCount: 0,
+      totalTokenCount: 0,
     };
     const startTime = Date.now();
 
@@ -249,8 +269,10 @@ export async function alignPVWithAudio(
       const result = await alignChunk(tmpPath, allItems, undefined, opts);
       allAlignments = result.alignments;
       combinedUsage.promptTokenCount += result.usageMetadata.promptTokenCount;
-      combinedUsage.candidatesTokenCount += result.usageMetadata.candidatesTokenCount;
-      combinedUsage.thoughtsTokenCount += result.usageMetadata.thoughtsTokenCount;
+      combinedUsage.candidatesTokenCount +=
+        result.usageMetadata.candidatesTokenCount;
+      combinedUsage.thoughtsTokenCount +=
+        result.usageMetadata.thoughtsTokenCount;
       combinedUsage.totalTokenCount += result.usageMetadata.totalTokenCount;
     } else {
       // Long audio — chunk and process in parallel
@@ -292,10 +314,14 @@ export async function alignPVWithAudio(
               chunkDurationSec,
               opts,
             );
-            combinedUsage.promptTokenCount += result.usageMetadata.promptTokenCount;
-            combinedUsage.candidatesTokenCount += result.usageMetadata.candidatesTokenCount;
-            combinedUsage.thoughtsTokenCount += result.usageMetadata.thoughtsTokenCount;
-            combinedUsage.totalTokenCount += result.usageMetadata.totalTokenCount;
+            combinedUsage.promptTokenCount +=
+              result.usageMetadata.promptTokenCount;
+            combinedUsage.candidatesTokenCount +=
+              result.usageMetadata.candidatesTokenCount;
+            combinedUsage.thoughtsTokenCount +=
+              result.usageMetadata.thoughtsTokenCount;
+            combinedUsage.totalTokenCount +=
+              result.usageMetadata.totalTokenCount;
             // Adjust timestamps by chunk offset and item indices.
             const maxTimeSec = chunkDurationSec + 60;
             return result.alignments
@@ -304,12 +330,8 @@ export async function alignPVWithAudio(
               .map((r) => ({
                 ...r,
                 itemIndex: r.itemIndex + itemIndexOffset,
-                startTime: fmtHHMMSS(
-                  parseHHMMSS(r.startTime) + startSeconds,
-                ),
-                endTime: fmtHHMMSS(
-                  parseHHMMSS(r.endTime) + startSeconds,
-                ),
+                startTime: fmtHHMMSS(parseHHMMSS(r.startTime) + startSeconds),
+                endTime: fmtHHMMSS(parseHHMMSS(r.endTime) + startSeconds),
               }));
           } finally {
             fs.unlinkSync(chunkPath);
@@ -350,14 +372,15 @@ export async function alignPVWithAudio(
 
     // Map flat alignment results back to turn/paragraph structure
     // Build a map: itemIndex → alignment
-    const alignmentMap = new Map(
-      allAlignments.map((a) => [a.itemIndex, a]),
-    );
+    const alignmentMap = new Map(allAlignments.map((a) => [a.itemIndex, a]));
 
     // Build a reverse lookup: (turnIndex, paraIndex) → flat item index
     const itemIndexByTurnPara = new Map<string, number>();
     for (let idx = 0; idx < allItems.length; idx++) {
-      itemIndexByTurnPara.set(`${allItems[idx].turnIndex}:${allItems[idx].paraIndex}`, idx);
+      itemIndexByTurnPara.set(
+        `${allItems[idx].turnIndex}:${allItems[idx].paraIndex}`,
+        idx,
+      );
     }
 
     const alignedTurns: AlignedTurn[] = pvDoc.turns.map((turn, ti) => {
@@ -367,7 +390,8 @@ export async function alignPVWithAudio(
 
       for (let pi = 0; pi < turn.paragraphs.length; pi++) {
         const itemIdx = itemIndexByTurnPara.get(`${ti}:${pi}`);
-        const alignment = itemIdx !== undefined ? alignmentMap.get(itemIdx) : undefined;
+        const alignment =
+          itemIdx !== undefined ? alignmentMap.get(itemIdx) : undefined;
 
         if (alignment) {
           const startMs = parseHHMMSS(alignment.startTime) * 1000;

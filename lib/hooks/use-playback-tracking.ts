@@ -72,22 +72,43 @@ export function usePlaybackTracking(
           currentTimeRef.current = time;
 
           if (!segments || !statements || statements.length === 0) {
-            if (lastSegIdx !== -1) { setActiveSegmentIndex(-1); lastSegIdx = -1; }
-            if (lastStmtIdx !== -1) { setActiveStatementIndex(-1); lastStmtIdx = -1; }
-            if (lastParaIdx !== -1) { setActiveParagraphIndex(-1); lastParaIdx = -1; }
-            if (lastSentIdx !== -1) { setActiveSentenceIndex(-1); lastSentIdx = -1; }
-            if (lastWordIdx !== -1) { setActiveWordIndex(-1); lastWordIdx = -1; }
+            if (lastSegIdx !== -1) {
+              setActiveSegmentIndex(-1);
+              lastSegIdx = -1;
+            }
+            if (lastStmtIdx !== -1) {
+              setActiveStatementIndex(-1);
+              lastStmtIdx = -1;
+            }
+            if (lastParaIdx !== -1) {
+              setActiveParagraphIndex(-1);
+              lastParaIdx = -1;
+            }
+            if (lastSentIdx !== -1) {
+              setActiveSentenceIndex(-1);
+              lastSentIdx = -1;
+            }
+            if (lastWordIdx !== -1) {
+              setActiveWordIndex(-1);
+              lastWordIdx = -1;
+            }
           } else {
             let newSegIdx = -1;
             for (let i = segments.length - 1; i >= 0; i--) {
-              if (time >= segments[i].timestamp) { newSegIdx = i; break; }
+              if (time >= segments[i].timestamp) {
+                newSegIdx = i;
+                break;
+              }
             }
 
             let newStmtIdx = -1;
             for (let i = statements.length - 1; i >= 0; i--) {
               const stmt = statements[i];
               if (stmt?.paragraphs?.[0]?.sentences?.[0]) {
-                if (time >= stmt.paragraphs[0].sentences[0].start / 1000) { newStmtIdx = i; break; }
+                if (time >= stmt.paragraphs[0].sentences[0].start / 1000) {
+                  newStmtIdx = i;
+                  break;
+                }
               }
             }
 
@@ -97,7 +118,13 @@ export function usePlaybackTracking(
               if (stmt?.paragraphs) {
                 for (let i = stmt.paragraphs.length - 1; i >= 0; i--) {
                   const para = stmt.paragraphs[i];
-                  if (para.sentences?.[0] && time >= para.sentences[0].start / 1000) { newParaIdx = i; break; }
+                  if (
+                    para.sentences?.[0] &&
+                    time >= para.sentences[0].start / 1000
+                  ) {
+                    newParaIdx = i;
+                    break;
+                  }
                 }
               }
             }
@@ -107,26 +134,50 @@ export function usePlaybackTracking(
               const para = statements[newStmtIdx]?.paragraphs?.[newParaIdx];
               if (para?.sentences) {
                 for (let i = para.sentences.length - 1; i >= 0; i--) {
-                  if (time >= para.sentences[i].start / 1000) { newSentIdx = i; break; }
+                  if (time >= para.sentences[i].start / 1000) {
+                    newSentIdx = i;
+                    break;
+                  }
                 }
               }
             }
 
             let newWordIdx = -1;
             if (newStmtIdx >= 0 && newParaIdx >= 0 && newSentIdx >= 0) {
-              const sentence = statements[newStmtIdx]?.paragraphs?.[newParaIdx]?.sentences?.[newSentIdx];
+              const sentence =
+                statements[newStmtIdx]?.paragraphs?.[newParaIdx]?.sentences?.[
+                  newSentIdx
+                ];
               if (sentence?.words) {
                 for (let i = sentence.words.length - 1; i >= 0; i--) {
-                  if (time >= sentence.words[i].start / 1000) { newWordIdx = i; break; }
+                  if (time >= sentence.words[i].start / 1000) {
+                    newWordIdx = i;
+                    break;
+                  }
                 }
               }
             }
 
-            if (newSegIdx !== lastSegIdx) { setActiveSegmentIndex(newSegIdx); lastSegIdx = newSegIdx; }
-            if (newStmtIdx !== lastStmtIdx) { setActiveStatementIndex(newStmtIdx); lastStmtIdx = newStmtIdx; }
-            if (newParaIdx !== lastParaIdx) { setActiveParagraphIndex(newParaIdx); lastParaIdx = newParaIdx; }
-            if (newSentIdx !== lastSentIdx) { setActiveSentenceIndex(newSentIdx); lastSentIdx = newSentIdx; }
-            if (newWordIdx !== lastWordIdx) { setActiveWordIndex(newWordIdx); lastWordIdx = newWordIdx; }
+            if (newSegIdx !== lastSegIdx) {
+              setActiveSegmentIndex(newSegIdx);
+              lastSegIdx = newSegIdx;
+            }
+            if (newStmtIdx !== lastStmtIdx) {
+              setActiveStatementIndex(newStmtIdx);
+              lastStmtIdx = newStmtIdx;
+            }
+            if (newParaIdx !== lastParaIdx) {
+              setActiveParagraphIndex(newParaIdx);
+              lastParaIdx = newParaIdx;
+            }
+            if (newSentIdx !== lastSentIdx) {
+              setActiveSentenceIndex(newSentIdx);
+              lastSentIdx = newSentIdx;
+            }
+            if (newWordIdx !== lastWordIdx) {
+              setActiveWordIndex(newWordIdx);
+              lastWordIdx = newWordIdx;
+            }
           }
         }
       } catch (err) {

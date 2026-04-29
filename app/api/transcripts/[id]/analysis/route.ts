@@ -34,7 +34,11 @@ export async function POST(
 
     const speakerMapping = await getSpeakerMapping(transcriptId);
     if (!speakerMapping || Object.keys(speakerMapping).length === 0) {
-      return apiError(400, "missing_speakers", "No speaker mapping available — run transcription first");
+      return apiError(
+        400,
+        "missing_speakers",
+        "No speaker mapping available — run transcription first",
+      );
     }
 
     const acquired = await tryAcquirePipelineLock(transcriptId);
@@ -79,6 +83,10 @@ export async function POST(
     }
   } catch (error) {
     console.error("Proposition analysis error:", error);
-    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
+    return apiError(
+      500,
+      "internal_error",
+      error instanceof Error ? error.message : "Unknown error",
+    );
   }
 }

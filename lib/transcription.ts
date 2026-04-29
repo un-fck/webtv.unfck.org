@@ -187,7 +187,9 @@ export async function pollTranscription(
     if (paragraphs && paragraphs.length > 0) {
       const acquired = await tryAcquirePipelineLock(transcriptId);
       if (acquired) {
-        plog(`[Pipeline] Re-entering stuck stage ${transcript.status} for ${transcriptId}`);
+        plog(
+          `[Pipeline] Re-entering stuck stage ${transcript.status} for ${transcriptId}`,
+        );
         runAnalysisPipeline(transcriptId, paragraphs, undefined).catch(
           (err) => {
             perr("[Pipeline] Re-entry error:", err);
@@ -215,8 +217,6 @@ export async function pollTranscription(
   return { stage: "transcribing" };
 }
 
-
-
 // ---- Provider-agnostic transcription pipeline ----
 
 async function runTranscriptionPipeline(
@@ -229,7 +229,9 @@ async function runTranscriptionPipeline(
   try {
     const provider = getSTTProvider();
     await updateTranscriptStatus(transcriptId, "transcribing");
-    plog(`[Pipeline] Starting transcription with ${provider.name} for ${transcriptId}`);
+    plog(
+      `[Pipeline] Starting transcription with ${provider.name} for ${transcriptId}`,
+    );
 
     const start = Date.now();
     const transcript = await provider.transcribe(audioUrl, {
@@ -261,7 +263,9 @@ async function runTranscriptionPipeline(
       });
     }
 
-    plog(`[Pipeline] Transcription complete: ${paragraphs.length} segments (${provider.name}, ${durationMs}ms)`);
+    plog(
+      `[Pipeline] Transcription complete: ${paragraphs.length} segments (${provider.name}, ${durationMs}ms)`,
+    );
 
     const content: TranscriptContent = {
       raw_paragraphs: paragraphs,
@@ -286,19 +290,17 @@ async function runTranscriptionPipeline(
     if (acquired) {
       // Pass speakerMapping as prebuiltMapping for rich providers;
       // undefined for basic providers triggers full OpenAI speaker ID
-      runAnalysisPipeline(
-        transcriptId,
-        paragraphs,
-        speakerMapping,
-      ).catch((err) => {
-        perr("[Pipeline] Analysis error:", err);
-        updateTranscriptStatus(
-          transcriptId,
-          "error",
-          err instanceof Error ? err.message : "Analysis failed",
-        );
-        releasePipelineLock(transcriptId);
-      });
+      runAnalysisPipeline(transcriptId, paragraphs, speakerMapping).catch(
+        (err) => {
+          perr("[Pipeline] Analysis error:", err);
+          updateTranscriptStatus(
+            transcriptId,
+            "error",
+            err instanceof Error ? err.message : "Analysis failed",
+          );
+          releasePipelineLock(transcriptId);
+        },
+      );
     }
   } catch (err) {
     perr("[Pipeline] Error:", err);
@@ -318,7 +320,9 @@ async function runAnalysisPipeline(
 ): Promise<void> {
   try {
     await updateTranscriptStatus(transcriptId, "identifying_speakers");
-    await identifySpeakers(paragraphs, transcriptId, speakerMapping, { skipPropositions: true });
+    await identifySpeakers(paragraphs, transcriptId, speakerMapping, {
+      skipPropositions: true,
+    });
     await updateTranscriptStatus(transcriptId, "completed");
     await releasePipelineLock(transcriptId);
   } catch (err) {
@@ -338,7 +342,10 @@ async function runAnalysisPipeline(
  */
 export async function submitTranscription(
   kalturaId: string,
-  options: GeminiTranscriptionOptions & { force?: boolean; existingTranscriptId?: string } = {},
+  options: GeminiTranscriptionOptions & {
+    force?: boolean;
+    existingTranscriptId?: string;
+  } = {},
 ): Promise<{ entryId: string; transcriptId: string }> {
   const lang = options.language || "en";
   const kalturaLang = bcp47ToKalturaName(lang);
@@ -352,14 +359,30 @@ export async function submitTranscription(
   }
 
   const provider = getSTTProvider();
-  const transcriptId = options.existingTranscriptId ?? `${provider.name}-${randomUUID()}`;
+  const transcriptId =
+    options.existingTranscriptId ?? `${provider.name}-${randomUUID()}`;
 
-  await saveTranscript(entryId, transcriptId, null, null, audioUrl, "transcribing", lang, {
-    statements: [],
-    topics: {},
-  });
+  await saveTranscript(
+    entryId,
+    transcriptId,
+    null,
+    null,
+    audioUrl,
+    "transcribing",
+    lang,
+    {
+      statements: [],
+      topics: {},
+    },
+  );
 
-  runTranscriptionPipeline(transcriptId, entryId, audioUrl, options, lang).catch((err) => {
+  runTranscriptionPipeline(
+    transcriptId,
+    entryId,
+    audioUrl,
+    options,
+    lang,
+  ).catch((err) => {
     perr("[Pipeline] Unhandled error:", err);
   });
 

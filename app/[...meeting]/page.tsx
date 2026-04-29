@@ -62,8 +62,7 @@ export default async function MeetingPage({
   // Check if this video has a transcript
   const transcriptedEntries = await getAllTranscriptedEntries();
   const hasTranscript =
-    record.entry_id !== null &&
-    transcriptedEntries.includes(record.entry_id);
+    record.entry_id !== null && transcriptedEntries.includes(record.entry_id);
 
   const video = recordToVideo(record, hasTranscript);
   const metadata = await getVideoMetadata(record.asset_id);

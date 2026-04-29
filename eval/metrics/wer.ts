@@ -64,11 +64,16 @@ function chunkedEditDistance(ref: string[], hyp: string[], maxLen: number) {
   const refChunkSize = Math.ceil(ref.length / numChunks);
   const hypChunkSize = Math.ceil(hyp.length / numChunks);
 
-  let totalSub = 0, totalIns = 0, totalDel = 0;
+  let totalSub = 0,
+    totalIns = 0,
+    totalDel = 0;
   for (let i = 0; i < numChunks; i++) {
     const refChunk = ref.slice(i * refChunkSize, (i + 1) * refChunkSize);
     const hypChunk = hyp.slice(i * hypChunkSize, (i + 1) * hypChunkSize);
-    const { substitutions, insertions, deletions } = editDistance(refChunk, hypChunk);
+    const { substitutions, insertions, deletions } = editDistance(
+      refChunk,
+      hypChunk,
+    );
     totalSub += substitutions;
     totalIns += insertions;
     totalDel += deletions;

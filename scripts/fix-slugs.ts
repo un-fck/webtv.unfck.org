@@ -141,9 +141,7 @@ async function main() {
   const nullCount = await client.execute(
     "SELECT COUNT(*) as c FROM videos WHERE slug IS NULL",
   );
-  console.log(
-    `\nDone. Videos without slug: ${(nullCount.rows[0].c as number)}`,
-  );
+  console.log(`\nDone. Videos without slug: ${nullCount.rows[0].c as number}`);
 }
 
 main().catch(console.error);

@@ -16,7 +16,10 @@ import {
   getProviderNames,
 } from "../lib/providers/registry";
 import { UN_LANGUAGES } from "./config";
-import { downloadAudioToTemp, formatTime as msToHMS } from "../lib/providers/utils";
+import {
+  downloadAudioToTemp,
+  formatTime as msToHMS,
+} from "../lib/providers/utils";
 
 interface SessionConfig {
   symbol: string;
@@ -180,7 +183,9 @@ async function evalSession(
     let audioFilePath: string | null = null;
     if (fs.existsSync(audioCachePath)) {
       audioFilePath = audioCachePath;
-      console.log(`  Audio: cached (${(fs.statSync(audioCachePath).size / 1024 / 1024).toFixed(0)}MB)`);
+      console.log(
+        `  Audio: cached (${(fs.statSync(audioCachePath).size / 1024 / 1024).toFixed(0)}MB)`,
+      );
     } else {
       try {
         const tmpPath = await downloadAudioToTemp(audioUrl);
@@ -259,9 +264,7 @@ async function evalSession(
             return r;
           }
         } catch (err) {
-          console.warn(
-            `    ${providerName}: cache load failed, re-running`,
-          );
+          console.warn(`    ${providerName}: cache load failed, re-running`);
           fs.unlinkSync(rawFilePath);
         }
         return null;
@@ -344,12 +347,16 @@ async function evalSession(
       if (r) results.push(r);
     }
 
-    console.log(`  ${lang} done in ${((Date.now() - tLang) / 1000).toFixed(1)}s`);
+    console.log(
+      `  ${lang} done in ${((Date.now() - tLang) / 1000).toFixed(1)}s`,
+    );
 
     // Audio files are cached in corpus-data/audio/, don't delete
   }
 
-  console.log(`\n  Session ${session.symbol} done in ${((Date.now() - tSession) / 1000).toFixed(1)}s`);
+  console.log(
+    `\n  Session ${session.symbol} done in ${((Date.now() - tSession) / 1000).toFixed(1)}s`,
+  );
   return results;
 }
 
@@ -401,7 +408,13 @@ async function main() {
   const allResults: SessionResult[] = [...existingResults];
 
   for (const session of filteredSessions) {
-    const results = await evalSession(session, providerNames, opts.languages, existingKeys, opts.cachedOnly);
+    const results = await evalSession(
+      session,
+      providerNames,
+      opts.languages,
+      existingKeys,
+      opts.cachedOnly,
+    );
     // Merge new results, deduplicating by symbol+language+provider
     for (const r of results) {
       if (!existingKeys.has(existingKey(r))) {

@@ -12,20 +12,34 @@ export async function GET(request: NextRequest) {
     const language = searchParams.get("language") || "en";
 
     if (!kalturaId) {
-      return apiError(400, "missing_parameter", "kalturaId query parameter is required");
+      return apiError(
+        400,
+        "missing_parameter",
+        "kalturaId query parameter is required",
+      );
     }
 
     const kalturaLang = bcp47ToKalturaName(language);
     const { entryId } = await getKalturaAudioUrl(kalturaId, kalturaLang);
 
-    const cached = await getTranscript(entryId, undefined, undefined, true, language);
+    const cached = await getTranscript(
+      entryId,
+      undefined,
+      undefined,
+      true,
+      language,
+    );
 
     if (!cached || cached.status !== "completed") {
       return NextResponse.json({ cached: false });
     }
 
     if (!cached.content.statements) {
-      return apiError(400, "old_format", "Transcript uses old format, please retranscribe");
+      return apiError(
+        400,
+        "old_format",
+        "Transcript uses old format, please retranscribe",
+      );
     }
 
     // If statements array is empty, trigger speaker identification
@@ -59,6 +73,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Transcript check error:", error);
-    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
+    return apiError(
+      500,
+      "internal_error",
+      error instanceof Error ? error.message : "Unknown error",
+    );
   }
 }

@@ -9,14 +9,22 @@ export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { pvSymbol, kalturaId, language = "en" } = body as {
+  const {
+    pvSymbol,
+    kalturaId,
+    language = "en",
+  } = body as {
     pvSymbol: string;
     kalturaId: string;
     language?: string;
   };
 
   if (!pvSymbol || !kalturaId) {
-    return apiError(400, "missing_parameter", "Missing required parameters: pvSymbol, kalturaId");
+    return apiError(
+      400,
+      "missing_parameter",
+      "Missing required parameters: pvSymbol, kalturaId",
+    );
   }
 
   // Check if already aligned
@@ -32,7 +40,11 @@ export async function POST(request: NextRequest) {
 
   // Need the parsed PV document
   if (!cached) {
-    return apiError(400, "missing_data", "PV document not parsed yet. Fetch /api/pv first.");
+    return apiError(
+      400,
+      "missing_data",
+      "PV document not parsed yet. Fetch /api/pv first.",
+    );
   }
 
   const pvDoc = JSON.parse(cached.content) as PVDocument;

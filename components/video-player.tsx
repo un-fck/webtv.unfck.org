@@ -127,7 +127,8 @@ export function VideoPlayer({
             uiConfId: uiConfId,
           },
           playback: {
-            audioLanguage: audioLanguage === "floor" ? "ia" : (audioLanguage || "en"),
+            audioLanguage:
+              audioLanguage === "floor" ? "ia" : audioLanguage || "en",
           },
           ui: {
             locale: "en",

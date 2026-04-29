@@ -13,7 +13,11 @@ import {
   UsageStages,
 } from "./usage-tracking";
 import "./load-env";
-import { getAnalysisModel, getAnalysisModelMini, getAnalysisModelNano } from "./providers/config";
+import {
+  getAnalysisModel,
+  getAnalysisModelMini,
+  getAnalysisModelNano,
+} from "./providers/config";
 import Bottleneck from "bottleneck";
 // @ts-expect-error - no types available for sbd
 import sbd from "sbd";
@@ -32,7 +36,9 @@ async function mapWithConcurrency<T, R>(
       results[i] = await fn(items[i]);
     }
   }
-  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, () => worker()),
+  );
   return results;
 }
 
@@ -184,7 +190,7 @@ export interface ParagraphInput {
 }
 
 // SpeakerMapping is imported from ./speakers and re-exported for consumers
-export type { SpeakerMapping } from './speakers';
+export type { SpeakerMapping } from "./speakers";
 
 function createOpenAIClient() {
   return new AzureOpenAI({
@@ -632,10 +638,12 @@ async function tagSentencesWithTopics(
   // Batched tagging with rate-limited concurrency
   const BATCH_SIZE = 15;
   const BatchTopicResponse = z.object({
-    results: z.array(z.object({
-      index: z.number(),
-      topic_keys: z.array(z.string()),
-    })),
+    results: z.array(
+      z.object({
+        index: z.number(),
+        topic_keys: z.array(z.string()),
+      }),
+    ),
   });
 
   const batches: Array<typeof taggableSentences> = [];
@@ -643,7 +651,9 @@ async function tagSentencesWithTopics(
     batches.push(taggableSentences.slice(i, i + BATCH_SIZE));
   }
 
-  console.log(`  → Processing ${taggableSentences.length} sentences in ${batches.length} batches...`);
+  console.log(
+    `  → Processing ${taggableSentences.length} sentences in ${batches.length} batches...`,
+  );
 
   const limiter = new Bottleneck({
     maxConcurrent: 20,
@@ -655,9 +665,10 @@ async function tagSentencesWithTopics(
       limiter.schedule(async () => {
         const sentenceList = batch
           .map(({ index: globalIdx, sentence: sent }, i) => {
-            const contextBefore = globalIdx > 0
-              ? `  [context] ${allSentences[globalIdx - 1].text}\n`
-              : "";
+            const contextBefore =
+              globalIdx > 0
+                ? `  [context] ${allSentences[globalIdx - 1].text}\n`
+                : "";
             return `${contextBefore}  [${i}] ${sent.text}`;
           })
           .join("\n");
@@ -711,17 +722,28 @@ ${sentenceList}`,
           });
 
           const result = completion.choices[0]?.message?.content;
-          if (!result) return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
+          if (!result)
+            return batch.map(({ sentence: sent }) => ({
+              ...sent,
+              topic_keys: [] as string[],
+            }));
 
-          const parsed = JSON.parse(result) as z.infer<typeof BatchTopicResponse>;
-          const resultMap = new Map(parsed.results.map(r => [r.index, r.topic_keys]));
+          const parsed = JSON.parse(result) as z.infer<
+            typeof BatchTopicResponse
+          >;
+          const resultMap = new Map(
+            parsed.results.map((r) => [r.index, r.topic_keys]),
+          );
           return batch.map(({ sentence: sent }, i) => ({
             ...sent,
             topic_keys: resultMap.get(i) ?? [],
           }));
         } catch (error) {
           console.warn(`  ⚠ Failed to tag batch:`, error);
-          return batch.map(({ sentence: sent }) => ({ ...sent, topic_keys: [] as string[] }));
+          return batch.map(({ sentence: sent }) => ({
+            ...sent,
+            topic_keys: [] as string[],
+          }));
         }
       }),
     ),
@@ -1061,32 +1083,34 @@ export async function identifySpeakers(
 
   if (prebuiltMapping) {
     // Gemini path: speaker identity already resolved — skip OpenAI speaker ID + resegmentation
-    console.log(`  → Using pre-built speaker mapping for ${paragraphs.length} paragraphs (Gemini path)...`);
+    console.log(
+      `  → Using pre-built speaker mapping for ${paragraphs.length} paragraphs (Gemini path)...`,
+    );
     finalMapping = { ...prebuiltMapping };
   } else {
-  // Legacy path: identify speakers via OpenAI (for transcripts without pre-built mapping)
-  console.log(`  → Analyzing ${paragraphs.length} paragraphs...`);
+    // Legacy path: identify speakers via OpenAI (for transcripts without pre-built mapping)
+    console.log(`  → Analyzing ${paragraphs.length} paragraphs...`);
 
-  const transcriptParts = paragraphs.map((para, index) => {
-    const text = para.words.map((word) => word.text).join(" ");
-    const asrSpeaker = para.words?.[0]?.speaker || "Unknown";
-    return `[${index}] (ASR: Speaker ${asrSpeaker}) ${text}`;
-  });
+    const transcriptParts = paragraphs.map((para, index) => {
+      const text = para.words.map((word) => word.text).join(" ");
+      const asrSpeaker = para.words?.[0]?.speaker || "Unknown";
+      return `[${index}] (ASR: Speaker ${asrSpeaker}) ${text}`;
+    });
 
-  const completion = await trackOpenAIChatCompletion({
-    client,
-    transcriptId,
-    stage: UsageStages.identifyingSpeakers,
-    operation: UsageOperations.openaiInitialSpeakerMapping,
-    model: getAnalysisModelMini(),
-    requestMeta: { paragraph_count: paragraphs.length },
-    request: {
+    const completion = await trackOpenAIChatCompletion({
+      client,
+      transcriptId,
+      stage: UsageStages.identifyingSpeakers,
+      operation: UsageOperations.openaiInitialSpeakerMapping,
       model: getAnalysisModelMini(),
-      reasoning_effort: "low" as const,
-      messages: [
-        {
-          role: "system",
-          content: `You are an expert at identifying speakers in UN proceedings. For each paragraph in the transcript, extract the speaker's name, function/title, affiliation, and country-group information strictly from the context.
+      requestMeta: { paragraph_count: paragraphs.length },
+      request: {
+        model: getAnalysisModelMini(),
+        reasoning_effort: "low" as const,
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert at identifying speakers in UN proceedings. For each paragraph in the transcript, extract the speaker's name, function/title, affiliation, and country-group information strictly from the context.
 
 CRITICAL: Identify WHO IS ACTUALLY SPEAKING each paragraph, NOT who is being introduced or mentioned.
 
@@ -1160,143 +1184,148 @@ has_multiple_speakers: Boolean - Does this paragraph contain words spoken by mul
 
 is_off_record: Boolean - Is this paragraph clearly NOT part of the formal meeting? Only true for paragraphs at the very start/end that are obviously pre-meeting chatter, audio tests, gibberish, or post-meeting remarks. When uncertain, use false.
 `,
-        },
-        {
-          role: "user",
-          content: `Analyze the following UN transcript and identify the speaker for each numbered paragraph.
+          },
+          {
+            role: "user",
+            content: `Analyze the following UN transcript and identify the speaker for each numbered paragraph.
 
 Transcript:
 ${transcriptParts.join("\n\n")}`,
-        },
-      ],
-      response_format: zodResponseFormat(
-        ParagraphSpeakerMapping,
-        "paragraph_speaker_mapping",
-      ),
-    },
-  });
-
-  const result = completion.choices[0]?.message?.content;
-  if (!result) throw new Error("Failed to identify speakers");
-
-  const parsed = JSON.parse(result) as z.infer<typeof ParagraphSpeakerMapping>;
-  console.log(`  ✓ Initial identification complete`);
-
-  // Log off-record paragraphs
-  const offRecord = parsed.paragraphs
-    .filter((p) => p.is_off_record)
-    .map((p) => p.index);
-  if (offRecord.length > 0) {
-    console.log(
-      `  ℹ Found ${offRecord.length} off-record paragraph(s): [${offRecord.join(", ")}]`,
-    );
-  }
-
-  // Collect paragraphs needing resegmentation
-  const toResegment = parsed.paragraphs
-    .filter((p) => p.has_multiple_speakers)
-    .map((p) => p.index);
-
-  // Build initial mapping
-  parsed.paragraphs.forEach((para) => {
-    finalMapping[para.index.toString()] = {
-      name: para.name,
-      function: para.function,
-      affiliation: para.affiliation,
-      group: para.group,
-      is_off_record: para.is_off_record || undefined,
-    };
-  });
-
-  // Resegment in parallel
-  if (toResegment.length > 0) {
-    console.log(
-      `  → Found ${toResegment.length} paragraph(s) with mixed speakers: [${toResegment.join(", ")}]`,
-    );
-
-    const CONTEXT_SIZE = 3; // Number of paragraphs before and after
-
-    const resegmented = await mapWithConcurrency(toResegment, 10, async (idx) => {
-      const para = paragraphs[idx];
-      const speaker = finalMapping[idx.toString()];
-
-      // Gather context paragraphs
-      const contextParas: Array<{
-        para: ParagraphInput;
-        speaker: SpeakerInfo;
-        position: "before" | "current" | "after";
-      }> = [];
-
-      // Add before context
-      for (let i = Math.max(0, idx - CONTEXT_SIZE); i < idx; i++) {
-        contextParas.push({
-          para: paragraphs[i],
-          speaker: finalMapping[i.toString()],
-          position: "before",
-        });
-      }
-
-      // Add current
-      contextParas.push({
-        para: para,
-        speaker: speaker,
-        position: "current",
-      });
-
-      // Add after context
-      for (
-        let i = idx + 1;
-        i <= Math.min(paragraphs.length - 1, idx + CONTEXT_SIZE);
-        i++
-      ) {
-        contextParas.push({
-          para: paragraphs[i],
-          speaker: finalMapping[i.toString()],
-          position: "after",
-        });
-      }
-
-      return await resegmentParagraph(
-        client,
-        para,
-        contextParas,
-        idx,
-        transcriptId,
-      ).then((result) => ({ index: idx, ...result }));
+          },
+        ],
+        response_format: zodResponseFormat(
+          ParagraphSpeakerMapping,
+          "paragraph_speaker_mapping",
+        ),
+      },
     });
-    console.log(`  ✓ Resegmentation and speaker identification complete`);
-    console.log(`  → Rebuilding transcript with split paragraphs...`);
 
-    // Rebuild paragraphs array and mapping
-    const newParagraphs: ParagraphInput[] = [];
-    const newMapping: SpeakerMapping = {};
-    let currentNewIndex = 0;
+    const result = completion.choices[0]?.message?.content;
+    if (!result) throw new Error("Failed to identify speakers");
 
-    for (let i = 0; i < paragraphs.length; i++) {
-      const reseg = resegmented.find((r) => r.index === i);
+    const parsed = JSON.parse(result) as z.infer<
+      typeof ParagraphSpeakerMapping
+    >;
+    console.log(`  ✓ Initial identification complete`);
 
-      if (reseg) {
-        // Replace with segments
-        for (let j = 0; j < reseg.segments.length; j++) {
-          newParagraphs.push(reseg.segments[j]);
-          newMapping[currentNewIndex.toString()] = reseg.speakers[j];
-          currentNewIndex++;
-        }
-      } else {
-        // Keep original
-        newParagraphs.push(paragraphs[i]);
-        newMapping[currentNewIndex.toString()] = finalMapping[i.toString()];
-        currentNewIndex++;
-      }
+    // Log off-record paragraphs
+    const offRecord = parsed.paragraphs
+      .filter((p) => p.is_off_record)
+      .map((p) => p.index);
+    if (offRecord.length > 0) {
+      console.log(
+        `  ℹ Found ${offRecord.length} off-record paragraph(s): [${offRecord.join(", ")}]`,
+      );
     }
 
-    finalParagraphs = newParagraphs;
-    finalMapping = newMapping;
-    console.log(
-      `  ✓ Rebuilt transcript: ${paragraphs.length} → ${finalParagraphs.length} paragraphs`,
-    );
-  }
+    // Collect paragraphs needing resegmentation
+    const toResegment = parsed.paragraphs
+      .filter((p) => p.has_multiple_speakers)
+      .map((p) => p.index);
 
+    // Build initial mapping
+    parsed.paragraphs.forEach((para) => {
+      finalMapping[para.index.toString()] = {
+        name: para.name,
+        function: para.function,
+        affiliation: para.affiliation,
+        group: para.group,
+        is_off_record: para.is_off_record || undefined,
+      };
+    });
+
+    // Resegment in parallel
+    if (toResegment.length > 0) {
+      console.log(
+        `  → Found ${toResegment.length} paragraph(s) with mixed speakers: [${toResegment.join(", ")}]`,
+      );
+
+      const CONTEXT_SIZE = 3; // Number of paragraphs before and after
+
+      const resegmented = await mapWithConcurrency(
+        toResegment,
+        10,
+        async (idx) => {
+          const para = paragraphs[idx];
+          const speaker = finalMapping[idx.toString()];
+
+          // Gather context paragraphs
+          const contextParas: Array<{
+            para: ParagraphInput;
+            speaker: SpeakerInfo;
+            position: "before" | "current" | "after";
+          }> = [];
+
+          // Add before context
+          for (let i = Math.max(0, idx - CONTEXT_SIZE); i < idx; i++) {
+            contextParas.push({
+              para: paragraphs[i],
+              speaker: finalMapping[i.toString()],
+              position: "before",
+            });
+          }
+
+          // Add current
+          contextParas.push({
+            para: para,
+            speaker: speaker,
+            position: "current",
+          });
+
+          // Add after context
+          for (
+            let i = idx + 1;
+            i <= Math.min(paragraphs.length - 1, idx + CONTEXT_SIZE);
+            i++
+          ) {
+            contextParas.push({
+              para: paragraphs[i],
+              speaker: finalMapping[i.toString()],
+              position: "after",
+            });
+          }
+
+          return await resegmentParagraph(
+            client,
+            para,
+            contextParas,
+            idx,
+            transcriptId,
+          ).then((result) => ({ index: idx, ...result }));
+        },
+      );
+      console.log(`  ✓ Resegmentation and speaker identification complete`);
+      console.log(`  → Rebuilding transcript with split paragraphs...`);
+
+      // Rebuild paragraphs array and mapping
+      const newParagraphs: ParagraphInput[] = [];
+      const newMapping: SpeakerMapping = {};
+      let currentNewIndex = 0;
+
+      for (let i = 0; i < paragraphs.length; i++) {
+        const reseg = resegmented.find((r) => r.index === i);
+
+        if (reseg) {
+          // Replace with segments
+          for (let j = 0; j < reseg.segments.length; j++) {
+            newParagraphs.push(reseg.segments[j]);
+            newMapping[currentNewIndex.toString()] = reseg.speakers[j];
+            currentNewIndex++;
+          }
+        } else {
+          // Keep original
+          newParagraphs.push(paragraphs[i]);
+          newMapping[currentNewIndex.toString()] = finalMapping[i.toString()];
+          currentNewIndex++;
+        }
+      }
+
+      finalParagraphs = newParagraphs;
+      finalMapping = newMapping;
+      console.log(
+        `  ✓ Rebuilt transcript: ${paragraphs.length} → ${finalParagraphs.length} paragraphs`,
+      );
+    }
   } // end legacy path (else block)
 
   // Filter out off-record paragraphs

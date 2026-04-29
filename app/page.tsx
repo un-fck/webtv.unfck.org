@@ -65,7 +65,17 @@ function parseSearchParams(
       ? raw.q.trim()
       : undefined;
 
-  return { page, pageSize, sort, status, date, body: body?.length ? body : undefined, category: category?.length ? category : undefined, text: text.length ? text : undefined, q };
+  return {
+    page,
+    pageSize,
+    sort,
+    status,
+    date,
+    body: body?.length ? body : undefined,
+    category: category?.length ? category : undefined,
+    text: text.length ? text : undefined,
+    q,
+  };
 }
 
 export default async function Home({
@@ -115,7 +125,9 @@ export default async function Home({
     sortDir,
     page: params.page,
     pageSize: params.pageSize,
-    transcriptedEntryIds: params.text?.includes("transcript") ? transcriptedEntries : undefined,
+    transcriptedEntryIds: params.text?.includes("transcript")
+      ? transcriptedEntries
+      : undefined,
   };
 
   const [{ records, total }, availableDates, filterOptions] = await Promise.all(
@@ -128,10 +140,7 @@ export default async function Home({
 
   const transcriptedSet = new Set(transcriptedEntries);
   const videos = records.map((r) =>
-    recordToVideo(
-      r,
-      r.entry_id ? transcriptedSet.has(r.entry_id) : false,
-    ),
+    recordToVideo(r, r.entry_id ? transcriptedSet.has(r.entry_id) : false),
   );
 
   return (

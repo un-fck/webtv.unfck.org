@@ -41,15 +41,30 @@ interface Statement {
       start: number;
       end: number;
       topic_keys?: string[];
-      words?: Array<{ text: string; start: number; end: number; speaker?: string | null }>;
+      words?: Array<{
+        text: string;
+        start: number;
+        end: number;
+        speaker?: string | null;
+      }>;
     }>;
     start: number;
     end: number;
-    words: Array<{ text: string; start: number; end: number; speaker?: string | null }>;
+    words: Array<{
+      text: string;
+      start: number;
+      end: number;
+      speaker?: string | null;
+    }>;
   }>;
   start: number;
   end: number;
-  words: Array<{ text: string; start: number; end: number; speaker?: string | null }>;
+  words: Array<{
+    text: string;
+    start: number;
+    end: number;
+    speaker?: string | null;
+  }>;
 }
 
 export interface AnalysisViewProps {
@@ -244,7 +259,10 @@ export function AnalysisView({
                                     }
                                     title="Click to jump to video"
                                   >
-                                    <p dir="auto" className="text-start text-sm leading-relaxed text-foreground italic">
+                                    <p
+                                      dir="auto"
+                                      className="text-start text-sm leading-relaxed text-foreground italic"
+                                    >
                                       &ldquo;{ev.quote}&rdquo;
                                     </p>
                                   </div>

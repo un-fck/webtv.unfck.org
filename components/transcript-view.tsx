@@ -56,10 +56,7 @@ function renderSpeakerInfo(
 
   const info = speakerMappings[statementIndex.toString()];
 
-  if (
-    !info ||
-    (!info.affiliation && !info.group && !info.function)
-  ) {
+  if (!info || (!info.affiliation && !info.group && !info.function)) {
     return <span>Speaker {statementIndex + 1}</span>;
   }
 
@@ -142,7 +139,11 @@ export function TranscriptView({
           <div key={segmentIndex} className="space-y-1 pt-2">
             <div className="flex flex-wrap items-center gap-2">
               <div className="text-sm font-semibold tracking-wide text-foreground">
-                {renderSpeakerInfo(firstStmtIndex, speakerMappings, countryNames)}
+                {renderSpeakerInfo(
+                  firstStmtIndex,
+                  speakerMappings,
+                  countryNames,
+                )}
               </div>
               <button
                 onClick={() => onSeek(segment.timestamp)}
@@ -193,7 +194,11 @@ export function TranscriptView({
                                 selectedTopic &&
                                 sent.topic_keys?.includes(selectedTopic);
 
-                              if (topicCollapsed && selectedTopic && !isHighlighted) {
+                              if (
+                                topicCollapsed &&
+                                selectedTopic &&
+                                !isHighlighted
+                              ) {
                                 return null;
                               }
 
@@ -210,15 +215,22 @@ export function TranscriptView({
                                     >
                                       {sent.words.map((word, wordIdx) => {
                                         const isActiveWord =
-                                          isSentActive && wordIdx === activeWordIndex;
+                                          isSentActive &&
+                                          wordIdx === activeWordIndex;
                                         return (
                                           <span
                                             key={wordIdx}
-                                            onClick={() => onSeek(word.start / 1000)}
+                                            onClick={() =>
+                                              onSeek(word.start / 1000)
+                                            }
                                             className="cursor-pointer hover:opacity-70"
                                             style={{
-                                              textDecorationLine: isActiveWord ? "underline" : "none",
-                                              textDecorationColor: isActiveWord ? "hsl(var(--primary))" : "transparent",
+                                              textDecorationLine: isActiveWord
+                                                ? "underline"
+                                                : "none",
+                                              textDecorationColor: isActiveWord
+                                                ? "hsl(var(--primary))"
+                                                : "transparent",
                                               textDecorationThickness: "2px",
                                               textUnderlineOffset: "3px",
                                             }}
@@ -239,8 +251,12 @@ export function TranscriptView({
                                       onClick={() => onSeek(word.start / 1000)}
                                       className="cursor-pointer hover:opacity-70"
                                       style={{
-                                        textDecorationLine: isActiveWord ? "underline" : "none",
-                                        textDecorationColor: isActiveWord ? "hsl(var(--primary))" : "transparent",
+                                        textDecorationLine: isActiveWord
+                                          ? "underline"
+                                          : "none",
+                                        textDecorationColor: isActiveWord
+                                          ? "hsl(var(--primary))"
+                                          : "transparent",
                                         textDecorationThickness: "2px",
                                         textUnderlineOffset: "3px",
                                       }}
@@ -254,10 +270,18 @@ export function TranscriptView({
                               return (
                                 <span
                                   key={sentIdx}
-                                  className={isHighlighted ? "rounded-full px-2 py-1" : ""}
+                                  className={
+                                    isHighlighted
+                                      ? "rounded-full px-2 py-1"
+                                      : ""
+                                  }
                                   style={
                                     isHighlighted && highlightColor
-                                      ? { backgroundColor: highlightColor + "30", display: "inline" }
+                                      ? {
+                                          backgroundColor:
+                                            highlightColor + "30",
+                                          display: "inline",
+                                        }
                                       : undefined
                                   }
                                 >

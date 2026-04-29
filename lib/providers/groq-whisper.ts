@@ -8,7 +8,6 @@ const MAX_FILE_SIZE = 24 * 1024 * 1024; // 24MB to stay under Groq's 25MB limit
 const CHUNK_DURATION_SECS = 600; // 10 min chunks
 const PARALLEL_CHUNKS = 10; // concurrent Groq API calls
 
-
 /** Call Groq transcription API with file upload, with retry on rate limit */
 async function transcribeFile(
   filePath: string,
@@ -35,7 +34,9 @@ async function transcribeFile(
     if (res.status === 429) {
       const retryAfter = Number(res.headers.get("retry-after")) || 5;
       const wait = retryAfter * 1000 * (attempt + 1);
-      console.log(`  [Groq] Rate limited, waiting ${(wait / 1000).toFixed(0)}s...`);
+      console.log(
+        `  [Groq] Rate limited, waiting ${(wait / 1000).toFixed(0)}s...`,
+      );
       await new Promise((r) => setTimeout(r, wait));
       continue;
     }
@@ -48,7 +49,6 @@ async function transcribeFile(
   }
   throw new Error("Groq API: max retries exceeded (rate limit)");
 }
-
 
 export const groqWhisper: TranscriptionProvider = {
   name: "groq-whisper",
@@ -90,23 +90,33 @@ export const groqWhisper: TranscriptionProvider = {
         );
         const tSplit0 = Date.now();
         const chunks = splitAudio(tmpPath, CHUNK_DURATION_SECS, "groq-chunks-");
-        console.log(`  [Groq] Split into ${chunks.length} chunks in ${((Date.now() - tSplit0) / 1000).toFixed(1)}s, transcribing ${PARALLEL_CHUNKS} at a time...`);
+        console.log(
+          `  [Groq] Split into ${chunks.length} chunks in ${((Date.now() - tSplit0) / 1000).toFixed(1)}s, transcribing ${PARALLEL_CHUNKS} at a time...`,
+        );
 
         const tApi0 = Date.now();
-        const chunkResults = await parallelMap(chunks, PARALLEL_CHUNKS, async (chunk, i) => {
-          const chunkSize = fs.statSync(chunk.path).size;
-          const tChunk = Date.now();
-          const response = await transcribeFile(chunk.path, opts?.language);
-          console.log(
-            `  [Groq] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min, ${(chunkSize / 1024 / 1024).toFixed(0)}MB)`,
-          );
+        const chunkResults = await parallelMap(
+          chunks,
+          PARALLEL_CHUNKS,
+          async (chunk, i) => {
+            const chunkSize = fs.statSync(chunk.path).size;
+            const tChunk = Date.now();
+            const response = await transcribeFile(chunk.path, opts?.language);
+            console.log(
+              `  [Groq] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min, ${(chunkSize / 1024 / 1024).toFixed(0)}MB)`,
+            );
 
-          // Clean up chunk immediately
-          try { fs.unlinkSync(chunk.path); } catch {}
+            // Clean up chunk immediately
+            try {
+              fs.unlinkSync(chunk.path);
+            } catch {}
 
-          return { response, offsetMs: chunk.offsetMs };
-        });
-        console.log(`  [Groq] All chunks transcribed in ${((Date.now() - tApi0) / 1000).toFixed(1)}s`);
+            return { response, offsetMs: chunk.offsetMs };
+          },
+        );
+        console.log(
+          `  [Groq] All chunks transcribed in ${((Date.now() - tApi0) / 1000).toFixed(1)}s`,
+        );
 
         // Reassemble in order
         const textParts: string[] = [];
@@ -142,7 +152,9 @@ export const groqWhisper: TranscriptionProvider = {
         }),
       );
 
-      console.log(`  [Groq] Total transcription time: ${((Date.now() - t0) / 1000).toFixed(1)}s for ${(totalDurationMs / 1000 / 60).toFixed(0)}min audio`);
+      console.log(
+        `  [Groq] Total transcription time: ${((Date.now() - t0) / 1000).toFixed(1)}s for ${(totalDurationMs / 1000 / 60).toFixed(0)}min audio`,
+      );
 
       return {
         provider: "groq-whisper",

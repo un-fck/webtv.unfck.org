@@ -55,25 +55,33 @@ const TEST_CASES: TestCase[] = [
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const langs = args.find(a => a.startsWith("--lang="))?.split("=")[1]?.split(",") || ["en"];
-  const symbolFilter = args.find(a => a.startsWith("--symbol="))?.split("=")[1];
+  const langs = args
+    .find((a) => a.startsWith("--lang="))
+    ?.split("=")[1]
+    ?.split(",") || ["en"];
+  const symbolFilter = args
+    .find((a) => a.startsWith("--symbol="))
+    ?.split("=")[1];
   const dryRun = args.includes("--dry-run");
   const fresh = args.includes("--fresh");
 
   const opts: AlignmentOptions = {};
   if (args.includes("--thinking")) opts.enableThinking = true;
-  const previewArg = args.find(a => a.startsWith("--preview="));
-  if (previewArg) opts.contentPreviewLength = parseInt(previewArg.split("=")[1]);
+  const previewArg = args.find((a) => a.startsWith("--preview="));
+  if (previewArg)
+    opts.contentPreviewLength = parseInt(previewArg.split("=")[1]);
   if (args.includes("--first-words")) opts.requestFirstWords = true;
-  const overlapArg = args.find(a => a.startsWith("--overlap="));
+  const overlapArg = args.find((a) => a.startsWith("--overlap="));
   if (overlapArg) opts.overlapBuffer = parseInt(overlapArg.split("=")[1]);
 
   // Build experiment label
   const parts: string[] = [];
   if (opts.enableThinking) parts.push("thinking");
-  if (opts.contentPreviewLength) parts.push(`preview=${opts.contentPreviewLength}`);
+  if (opts.contentPreviewLength)
+    parts.push(`preview=${opts.contentPreviewLength}`);
   if (opts.requestFirstWords) parts.push("firstWords");
-  if (opts.overlapBuffer !== undefined) parts.push(`overlap=${opts.overlapBuffer}`);
+  if (opts.overlapBuffer !== undefined)
+    parts.push(`overlap=${opts.overlapBuffer}`);
   const experiment = parts.length > 0 ? parts.join("+") : "baseline";
 
   return { langs, symbolFilter, dryRun, fresh, opts, experiment };
@@ -85,7 +93,9 @@ interface TranscriptSegment {
   statementIndex: number;
 }
 
-async function extractTranscriptSegments(entryId: string): Promise<TranscriptSegment[]> {
+async function extractTranscriptSegments(
+  entryId: string,
+): Promise<TranscriptSegment[]> {
   const r = await client.execute({
     sql: `SELECT t.content, sm.mapping
           FROM transcripts t
@@ -98,7 +108,9 @@ async function extractTranscriptSegments(entryId: string): Promise<TranscriptSeg
   if (r.rows.length === 0) return [];
 
   const content = JSON.parse(r.rows[0].content as string);
-  const mapping = r.rows[0].mapping ? JSON.parse(r.rows[0].mapping as string) : {};
+  const mapping = r.rows[0].mapping
+    ? JSON.parse(r.rows[0].mapping as string)
+    : {};
 
   const segments: TranscriptSegment[] = [];
   if (content.statements) {
@@ -118,7 +130,10 @@ function findClosestTranscriptSegment(
   pvStartMs: number,
   segments: TranscriptSegment[],
 ): TranscriptSegment & { delta: number } {
-  let best = { ...segments[0], delta: Math.abs(segments[0].startMs - pvStartMs) };
+  let best = {
+    ...segments[0],
+    delta: Math.abs(segments[0].startMs - pvStartMs),
+  };
   for (const seg of segments) {
     const delta = Math.abs(seg.startMs - pvStartMs);
     if (delta < best.delta) best = { ...seg, delta };
@@ -131,7 +146,8 @@ function formatTime(ms: number): string {
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  if (h > 0)
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
@@ -147,9 +163,14 @@ async function validateAlignment(
   if (dryRun) {
     console.log("  [DRY RUN] Fetching PV...");
     const pdfBuffer = await fetchPVDocument(testCase.pvSymbol, lang);
-    if (!pdfBuffer) { console.log("  ✗ PV not available"); return null; }
+    if (!pdfBuffer) {
+      console.log("  ✗ PV not available");
+      return null;
+    }
     const pvDoc = await parsePVDocument(pdfBuffer, lang);
-    console.log(`  PV turns: ${pvDoc.turns.length}, first: ${pvDoc.turns[0]?.speaker}, last: ${pvDoc.turns[pvDoc.turns.length - 1]?.speaker}`);
+    console.log(
+      `  PV turns: ${pvDoc.turns.length}, first: ${pvDoc.turns[0]?.speaker}, last: ${pvDoc.turns[pvDoc.turns.length - 1]?.speaker}`,
+    );
     return null;
   }
 
@@ -185,7 +206,10 @@ async function validateAlignment(
   } else {
     console.log("  Fetching PV and running alignment...");
     const pdfBuffer = await fetchPVDocument(testCase.pvSymbol, lang);
-    if (!pdfBuffer) { console.log("  ✗ PV not available in " + lang); return null; }
+    if (!pdfBuffer) {
+      console.log("  ✗ PV not available in " + lang);
+      return null;
+    }
     const pvDoc = await parsePVDocument(pdfBuffer, lang);
     console.log(`  Parsed ${pvDoc.turns.length} turns`);
 
@@ -228,8 +252,10 @@ async function validateAlignment(
   // Summary for this run
   if (deltas.length > 0) {
     const mean = deltas.reduce((a, b) => a + b, 0) / deltas.length;
-    const within30 = deltas.filter(d => d <= 30).length;
-    console.log(`  → Mean: ${mean.toFixed(1)}s, ±30s: ${within30}/${deltas.length} (${((within30 / deltas.length) * 100).toFixed(0)}%), Unmatched: ${unmatched}`);
+    const within30 = deltas.filter((d) => d <= 30).length;
+    console.log(
+      `  → Mean: ${mean.toFixed(1)}s, ±30s: ${within30}/${deltas.length} (${((within30 / deltas.length) * 100).toFixed(0)}%), Unmatched: ${unmatched}`,
+    );
   }
 
   return { deltas, unmatched, total: aligned.turns.length };
@@ -239,7 +265,7 @@ async function main() {
   const { langs, symbolFilter, dryRun, fresh, opts, experiment } = parseArgs();
 
   const cases = symbolFilter
-    ? TEST_CASES.filter(c => c.pvSymbol === symbolFilter)
+    ? TEST_CASES.filter((c) => c.pvSymbol === symbolFilter)
     : TEST_CASES;
 
   console.log(`\n${"=".repeat(70)}`);
@@ -255,7 +281,13 @@ async function main() {
   for (const testCase of cases) {
     for (const lang of langs) {
       try {
-        const result = await validateAlignment(testCase, lang, opts, fresh, dryRun);
+        const result = await validateAlignment(
+          testCase,
+          lang,
+          opts,
+          fresh,
+          dryRun,
+        );
         if (result) {
           allDeltas.push(...result.deltas);
           totalUnmatched += result.unmatched;
@@ -278,16 +310,22 @@ async function main() {
 
   const mean = allDeltas.reduce((a, b) => a + b, 0) / allDeltas.length;
   const max = Math.max(...allDeltas);
-  const within30 = allDeltas.filter(d => d <= 30).length;
-  const within60 = allDeltas.filter(d => d <= 60).length;
+  const within30 = allDeltas.filter((d) => d <= 30).length;
+  const within60 = allDeltas.filter((d) => d <= 60).length;
 
   console.log(`Mean delta: ${mean.toFixed(1)}s`);
   console.log(`Max delta: ${max.toFixed(1)}s`);
-  console.log(`Within ±30s: ${within30}/${allDeltas.length} (${((within30 / allDeltas.length) * 100).toFixed(0)}%)`);
-  console.log(`Within ±60s: ${within60}/${allDeltas.length} (${((within60 / allDeltas.length) * 100).toFixed(0)}%)`);
+  console.log(
+    `Within ±30s: ${within30}/${allDeltas.length} (${((within30 / allDeltas.length) * 100).toFixed(0)}%)`,
+  );
+  console.log(
+    `Within ±60s: ${within60}/${allDeltas.length} (${((within60 / allDeltas.length) * 100).toFixed(0)}%)`,
+  );
 
-  const passed = mean < 15 && (within30 / allDeltas.length) >= 0.9;
-  console.log(`\nResult: ${passed ? "✅ PASS" : "❌ FAIL"} (target: mean <15s, ≥90% ±30s)`);
+  const passed = mean < 15 && within30 / allDeltas.length >= 0.9;
+  console.log(
+    `\nResult: ${passed ? "✅ PASS" : "❌ FAIL"} (target: mean <15s, ≥90% ±30s)`,
+  );
 }
 
 main();

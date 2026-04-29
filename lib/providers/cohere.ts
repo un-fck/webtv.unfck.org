@@ -33,8 +33,20 @@ export const cohere: TranscriptionProvider = {
 
   // Cohere Transcribe supports 14 languages: en, fr, de, it, es, pt, el, nl, pl, zh, ja, ko, vi, ar
   supportedLanguages: [
-    "en", "fr", "de", "it", "es", "pt", "el", "nl", "pl", "zh", "ja", "ko",
-    "vi", "ar",
+    "en",
+    "fr",
+    "de",
+    "it",
+    "es",
+    "pt",
+    "el",
+    "nl",
+    "pl",
+    "zh",
+    "ja",
+    "ko",
+    "vi",
+    "ar",
   ],
 
   async transcribe(audioUrl, opts) {
@@ -68,9 +80,7 @@ export const cohere: TranscriptionProvider = {
       );
 
       if (!res.ok) {
-        throw new Error(
-          `Cohere API error: ${res.status} ${await res.text()}`,
-        );
+        throw new Error(`Cohere API error: ${res.status} ${await res.text()}`);
       }
 
       const raw = (await res.json()) as {
@@ -124,12 +134,11 @@ export const cohere: TranscriptionProvider = {
         }
       }
 
-      const durationMs =
-        raw.duration
-          ? raw.duration * 1000
-          : utterances.length > 0
-            ? utterances[utterances.length - 1].end
-            : 0;
+      const durationMs = raw.duration
+        ? raw.duration * 1000
+        : utterances.length > 0
+          ? utterances[utterances.length - 1].end
+          : 0;
 
       console.log(
         `  [Cohere] Done in ${((Date.now() - t0) / 1000).toFixed(1)}s — ${utterances.length} segments, ${(durationMs / 1000 / 60).toFixed(0)}min audio`,
@@ -145,10 +154,14 @@ export const cohere: TranscriptionProvider = {
       } satisfies NormalizedTranscript;
     } finally {
       if (converted.needsCleanup) {
-        try { fs.unlinkSync(converted.path); } catch {}
+        try {
+          fs.unlinkSync(converted.path);
+        } catch {}
       }
       if (ownedPath) {
-        try { fs.unlinkSync(filePath); } catch {}
+        try {
+          fs.unlinkSync(filePath);
+        } catch {}
       }
     }
   },

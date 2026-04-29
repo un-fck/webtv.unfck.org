@@ -8,7 +8,14 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { ChevronUp, ChevronDown, Filter, X, CalendarIcon, Info } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Filter,
+  X,
+  CalendarIcon,
+  Info,
+} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -117,7 +124,9 @@ function DateFilterPopover({
   // Build set of day timestamps that have videos
   const availableDays = useMemo(() => {
     const s = new Set<number>();
-    availableDates.forEach((d) => s.add(getLocalMidnight(new Date(d + "T00:00:00")).getTime()));
+    availableDates.forEach((d) =>
+      s.add(getLocalMidnight(new Date(d + "T00:00:00")).getTime()),
+    );
     return s;
   }, [availableDates]);
 
@@ -204,13 +213,13 @@ function MultiFilterPopover({
   return (
     <Popover>
       <PopoverTrigger
-          className={`inline-flex h-5 w-5 items-center justify-center rounded transition-colors ${
-            isActive
-              ? "bg-primary text-white"
-              : "text-gray-400 hover:bg-gray-200 hover:text-gray-600"
-          }`}
-        >
-          <Filter className="h-3 w-3" />
+        className={`inline-flex h-5 w-5 items-center justify-center rounded transition-colors ${
+          isActive
+            ? "bg-primary text-white"
+            : "text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+        }`}
+      >
+        <Filter className="h-3 w-3" />
       </PopoverTrigger>
       <PopoverContent className="w-56 p-2" align="start">
         <div className="space-y-1">
@@ -227,7 +236,7 @@ function MultiFilterPopover({
               <button
                 key={opt}
                 onClick={() => toggle(opt)}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors whitespace-nowrap ${
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-colors ${
                   selected.includes(opt)
                     ? "bg-primary text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -239,12 +248,17 @@ function MultiFilterPopover({
                 )}
                 {tooltips?.[opt] && (
                   <Tooltip>
-                    <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Info className={`h-3 w-3 shrink-0 cursor-help ${
-                        selected.includes(opt)
-                          ? "opacity-60 hover:opacity-100"
-                          : "text-gray-400 hover:text-gray-600"
-                      }`} />
+                    <TooltipTrigger
+                      asChild
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Info
+                        className={`h-3 w-3 shrink-0 cursor-help ${
+                          selected.includes(opt)
+                            ? "opacity-60 hover:opacity-100"
+                            : "text-gray-400 hover:text-gray-600"
+                        }`}
+                      />
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-56 text-xs">
                       {tooltips[opt]}
@@ -319,7 +333,11 @@ function ActiveFilters({
   onClearSearch: () => void;
 }) {
   const hasAny =
-    !!dateFilter || bodyFilter.length > 0 || categoryFilter.length > 0 || textFilter.length > 0 || !!searchQuery;
+    !!dateFilter ||
+    bodyFilter.length > 0 ||
+    categoryFilter.length > 0 ||
+    textFilter.length > 0 ||
+    !!searchQuery;
   if (!hasAny) return null;
 
   return (
@@ -409,7 +427,10 @@ export function VideoTable({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const sortedBodies = useMemo(() => sortBodies(filterOptions.bodies), [filterOptions.bodies]);
+  const sortedBodies = useMemo(
+    () => sortBodies(filterOptions.bodies),
+    [filterOptions.bodies],
+  );
 
   // Search state (client-side, uses /api/search)
   const [inputValue, setInputValue] = useState(serverParams.q || "");
@@ -638,11 +659,13 @@ export function VideoTable({
                 </span>
               )}
               {hasPV && (
-                <span className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${
-                  isSR
-                    ? "bg-violet-500/10 text-violet-700"
-                    : "bg-amber-500/10 text-amber-700"
-                }`}>
+                <span
+                  className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${
+                    isSR
+                      ? "bg-violet-500/10 text-violet-700"
+                      : "bg-amber-500/10 text-amber-700"
+                  }`}
+                >
                   {isSR ? "SUMMARY" : "VERBATIM"}
                 </span>
               )}
@@ -681,7 +704,7 @@ export function VideoTable({
                 e.preventDefault();
                 submitSearch("");
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
               aria-label="Clear search"
             >
               ×
@@ -691,8 +714,7 @@ export function VideoTable({
         <div className="flex rounded-full border border-border bg-background p-0.5 text-xs font-medium shadow-xs">
           <button
             onClick={() =>
-              serverParams.status !== "past" &&
-              updateParams({ status: "past" })
+              serverParams.status !== "past" && updateParams({ status: "past" })
             }
             className={`rounded-full px-4 py-1.5 transition-all ${serverParams.status !== "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
@@ -765,7 +787,7 @@ export function VideoTable({
                 e.preventDefault();
                 submitSearch("");
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
               aria-label="Clear search"
             >
               ×
@@ -790,7 +812,9 @@ export function VideoTable({
           <select
             value={(serverParams.body ?? [])[0] || ""}
             onChange={(e) =>
-              updateParams({ body: e.target.value ? [e.target.value] : undefined })
+              updateParams({
+                body: e.target.value ? [e.target.value] : undefined,
+              })
             }
             className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
@@ -822,7 +846,9 @@ export function VideoTable({
           <select
             value={(serverParams.text ?? [])[0] || ""}
             onChange={(e) =>
-              updateParams({ text: e.target.value ? [e.target.value] : undefined })
+              updateParams({
+                text: e.target.value ? [e.target.value] : undefined,
+              })
             }
             className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
@@ -854,7 +880,6 @@ export function VideoTable({
         </div>
       </div>
 
-
       {/* Mobile Card View */}
       <div className="grid gap-3 lg:hidden">
         {table.getRowModel().rows.map((row) => {
@@ -885,12 +910,16 @@ export function VideoTable({
                         </span>
                       )}
                       {video.pvAvailable && (
-                        <span className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${
-                          video.pvSymbol?.includes("/SR.")
-                            ? "bg-violet-500/10 text-violet-700"
-                            : "bg-amber-500/10 text-amber-700"
-                        }`}>
-                          {video.pvSymbol?.includes("/SR.") ? "summary" : "verbatim"}
+                        <span
+                          className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${
+                            video.pvSymbol?.includes("/SR.")
+                              ? "bg-violet-500/10 text-violet-700"
+                              : "bg-amber-500/10 text-amber-700"
+                          }`}
+                        >
+                          {video.pvSymbol?.includes("/SR.")
+                            ? "summary"
+                            : "verbatim"}
                         </span>
                       )}
                     </div>
@@ -938,7 +967,9 @@ export function VideoTable({
                     />
                     <SortArrow
                       active={currentSortBy === "date"}
-                      direction={currentSortBy === "date" ? currentSortDir : "desc"}
+                      direction={
+                        currentSortBy === "date" ? currentSortDir : "desc"
+                      }
                       onClick={() => toggleSort("date")}
                     />
                   </div>
@@ -963,7 +994,9 @@ export function VideoTable({
                     <span>Title</span>
                     <SortArrow
                       active={currentSortBy === "title"}
-                      direction={currentSortBy === "title" ? currentSortDir : "asc"}
+                      direction={
+                        currentSortBy === "title" ? currentSortDir : "asc"
+                      }
                       onClick={() => toggleSort("title")}
                     />
                   </div>
@@ -1119,9 +1152,7 @@ export function VideoTable({
 
           <select
             value={serverParams.pageSize}
-            onChange={(e) =>
-              updateParams({ pageSize: Number(e.target.value) })
-            }
+            onChange={(e) => updateParams({ pageSize: Number(e.target.value) })}
             className="rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm text-muted-foreground focus:border-primary/50 focus:outline-none"
           >
             {[25, 50, 100, 200].map((pageSize) => (

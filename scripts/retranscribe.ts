@@ -73,7 +73,9 @@ async function run() {
   console.log(`Processing ${total} entry/entries...\n`);
 
   for (const entryId of targets) {
-    const { transcriptId } = await submitTranscription(entryId, { force: true });
+    const { transcriptId } = await submitTranscription(entryId, {
+      force: true,
+    });
     console.log(`✓ Submitted ${entryId} (${transcriptId})`);
     await pollUntilComplete(transcriptId, entryId);
   }

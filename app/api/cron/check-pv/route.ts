@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getVideosNeedingPVCheck,
-  updatePVAvailability,
-} from "@/lib/turso";
+import { getVideosNeedingPVCheck, updatePVAvailability } from "@/lib/turso";
 import { pvDocumentExists } from "@/lib/pv-documents";
 import { apiError } from "@/lib/api-error";
 

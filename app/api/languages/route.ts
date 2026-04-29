@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAvailableAudioLanguages } from "@/lib/transcription";
 import { getTranscriptLanguagesForEntry } from "@/lib/turso";
-import { kalturaNameToBcp47, getLanguageDisplayName, UN_LANGUAGES } from "@/lib/languages";
+import {
+  kalturaNameToBcp47,
+  getLanguageDisplayName,
+  UN_LANGUAGES,
+} from "@/lib/languages";
 import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
@@ -36,6 +40,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ entryId, languages });
   } catch (error) {
     console.error("Languages API error:", error);
-    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
+    return apiError(
+      500,
+      "internal_error",
+      error instanceof Error ? error.message : "Unknown error",
+    );
   }
 }

@@ -33,7 +33,12 @@ export async function POST(request: NextRequest) {
 
     try {
       await updateTranscriptStatus(transcriptId, "identifying_speakers");
-      const mapping = await identifySpeakers(paragraphs, transcriptId, undefined, { skipPropositions: true });
+      const mapping = await identifySpeakers(
+        paragraphs,
+        transcriptId,
+        undefined,
+        { skipPropositions: true },
+      );
       await updateTranscriptStatus(transcriptId, "completed");
       await releasePipelineLock(transcriptId);
 
@@ -54,6 +59,10 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Speaker identification error:", error);
-    return apiError(500, "internal_error", error instanceof Error ? error.message : "Unknown error");
+    return apiError(
+      500,
+      "internal_error",
+      error instanceof Error ? error.message : "Unknown error",
+    );
   }
 }

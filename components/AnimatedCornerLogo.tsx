@@ -59,7 +59,7 @@ export function AnimatedCornerLogo() {
         href="https://un-two-zero.network/"
         target="_blank"
         rel="noopener noreferrer"
-        className={`fixed bottom-0 left-0 z-30 hidden cursor-pointer transition-opacity hover:opacity-80 md:block [clip-path:polygon(0_0,0_100%,100%_100%)] ${cornerClass}`}
+        className={`fixed bottom-0 left-0 z-30 hidden cursor-pointer transition-opacity [clip-path:polygon(0_0,0_100%,100%_100%)] hover:opacity-80 md:block ${cornerClass}`}
         aria-label="Visit UN 2.0 Network"
       >
         <Image

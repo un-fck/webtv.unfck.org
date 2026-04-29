@@ -11,7 +11,11 @@ export async function GET(request: NextRequest) {
   const lang = request.nextUrl.searchParams.get("lang") || "en";
 
   if (!symbol) {
-    return apiError(400, "missing_parameter", "Missing required parameter: symbol");
+    return apiError(
+      400,
+      "missing_parameter",
+      "Missing required parameter: symbol",
+    );
   }
 
   // Check cache first

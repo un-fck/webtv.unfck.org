@@ -55,11 +55,20 @@ export function VideoPageClient({
   useEffect(() => {
     localStorage.setItem("selectedLanguage", selectedLanguage);
   }, [selectedLanguage]);
-  const [availableLanguages, setAvailableLanguages] = useState<LanguageOption[]>([]);
+  const [availableLanguages, setAvailableLanguages] = useState<
+    LanguageOption[]
+  >([]);
 
   // Update available languages based on tracks the player actually has
   const handleAudioTracksReady = useCallback(
-    (tracks: { id: number; language: string; label: string; active: boolean }[]) => {
+    (
+      tracks: {
+        id: number;
+        language: string;
+        label: string;
+        active: boolean;
+      }[],
+    ) => {
       const FLOOR_CODES = new Set(["ia"]);
       const availableFromPlayer = new Set<string>();
       for (const track of tracks) {
@@ -268,7 +277,10 @@ export function VideoPageClient({
 
       <div className="mx-auto max-w-7xl px-6 pb-16 sm:px-8">
         <nav className="py-3">
-          <a href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <a
+            href="/"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
             ← Back to schedule
           </a>
         </nav>
@@ -280,10 +292,7 @@ export function VideoPageClient({
             ref={videoPlaceholderRef}
             className="aspect-video min-w-0 bg-black lg:flex-[3]"
           >
-            <div
-              ref={videoWrapperRef}
-              className="h-full w-full"
-            >
+            <div ref={videoWrapperRef} className="h-full w-full">
               <VideoPlayer
                 kalturaId={kalturaId}
                 partnerId={2503451}
@@ -372,7 +381,9 @@ export function VideoPageClient({
               topicCollapsed={topicCollapsed}
               onTopicCollapsedChange={setTopicCollapsed}
               onDataChange={setPanelData}
-              pvSymbol={video.pvAvailable && video.pvSymbol ? video.pvSymbol : undefined}
+              pvSymbol={
+                video.pvAvailable && video.pvSymbol ? video.pvSymbol : undefined
+              }
             />
           </div>
 
@@ -388,13 +399,16 @@ export function VideoPageClient({
               />
 
               {/* Topics — offset so header aligns with first speaker label, pills align with paragraph box */}
-              <div className={`shrink-0 ${isVideoDocked ? "mt-2" : "mt-[48px]"}`}>
+              <div
+                className={`shrink-0 ${isVideoDocked ? "mt-2" : "mt-[48px]"}`}
+              >
                 {topicPills}
               </div>
 
               {/* Speakers — collapsible, scrollable. Shows speakers for the active tab only. */}
               {((panelData?.viewMode === "pv" && panelData?.pvSpeakers) ||
-                (panelData?.viewMode === "transcript" && panelData?.segments)) && (
+                (panelData?.viewMode === "transcript" &&
+                  panelData?.segments)) && (
                 <div className="flex min-h-0 flex-1 flex-col">
                   <button
                     onClick={() => setSpeakersOpen((v) => !v)}
@@ -413,7 +427,8 @@ export function VideoPageClient({
                           activeTurnIndex={panelData.pvActiveTurnIndex ?? -1}
                           onSeek={(ms) => seekToTimestamp(ms / 1000)}
                         />
-                      ) : panelData?.viewMode === "transcript" && panelData?.segments ? (
+                      ) : panelData?.viewMode === "transcript" &&
+                        panelData?.segments ? (
                         <SpeakerToc
                           segments={panelData.segments}
                           speakerMappings={panelData.speakerMappings}

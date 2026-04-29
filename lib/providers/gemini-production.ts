@@ -4,10 +4,7 @@
  * Gemini transcribes verbatim with numeric diarization labels (speaker_id).
  * Speaker identification is handled downstream by the standard OpenAI pipeline.
  */
-import type {
-  TranscriptionProvider,
-  NormalizedTranscript,
-} from "./types";
+import type { TranscriptionProvider, NormalizedTranscript } from "./types";
 import {
   transcribeAudioWithGemini,
   type GeminiTranscriptionResult,
@@ -25,10 +22,12 @@ export const geminiProduction: TranscriptionProvider = {
     audioUrl: string,
     opts?: { audioFilePath?: string; language?: string },
   ): Promise<NormalizedTranscript> {
-    const result: GeminiTranscriptionResult =
-      await transcribeAudioWithGemini(audioUrl, {
+    const result: GeminiTranscriptionResult = await transcribeAudioWithGemini(
+      audioUrl,
+      {
         language: opts?.language,
-      });
+      },
+    );
 
     return {
       provider: "gemini",

@@ -154,9 +154,7 @@ async function ensureInitialized() {
     client
       .execute(`ALTER TABLE videos ADD COLUMN pv_checked_at TEXT`)
       .catch(() => {}),
-    client
-      .execute(`ALTER TABLE videos ADD COLUMN slug TEXT`)
-      .catch(() => {}),
+    client.execute(`ALTER TABLE videos ADD COLUMN slug TEXT`).catch(() => {}),
   ]);
 
   // Create PV contents table for parsed PV documents
@@ -1081,16 +1079,12 @@ export async function getVideosPage(
   }
 
   if (bodies && bodies.length > 0) {
-    conditions.push(
-      `body IN (${bodies.map(() => "?").join(", ")})`,
-    );
+    conditions.push(`body IN (${bodies.map(() => "?").join(", ")})`);
     args.push(...bodies);
   }
 
   if (categories && categories.length > 0) {
-    conditions.push(
-      `category IN (${categories.map(() => "?").join(", ")})`,
-    );
+    conditions.push(`category IN (${categories.map(() => "?").join(", ")})`);
     args.push(...categories);
   }
 
@@ -1120,14 +1114,19 @@ export async function getVideosPage(
       }
     }
     if (docs.includes("pv")) {
-      docConditions.push("(pv_available = 1 AND (pv_symbol IS NULL OR pv_symbol NOT LIKE '%/SR.%'))");
+      docConditions.push(
+        "(pv_available = 1 AND (pv_symbol IS NULL OR pv_symbol NOT LIKE '%/SR.%'))",
+      );
     }
     if (docs.includes("sr")) {
       docConditions.push("(pv_available = 1 AND pv_symbol LIKE '%/SR.%')");
     }
     if (docConditions.length > 0) {
       conditions.push(`(${docConditions.join(" OR ")})`);
-    } else if (docs.includes("transcript") && (!transcriptedEntryIds || transcriptedEntryIds.length === 0)) {
+    } else if (
+      docs.includes("transcript") &&
+      (!transcriptedEntryIds || transcriptedEntryIds.length === 0)
+    ) {
       return { records: [], total: 0 };
     }
   }
@@ -1208,9 +1207,7 @@ export async function getAvailableDates(
   return result.rows.map((row) => row.date as string);
 }
 
-export async function getFilterOptions(
-  daysBack: number = 365,
-): Promise<{
+export async function getFilterOptions(daysBack: number = 365): Promise<{
   bodies: string[];
   categories: string[];
   bodyCounts: Record<string, number>;
@@ -1235,8 +1232,10 @@ export async function getFilterOptions(
 
   const bodyCounts: Record<string, number> = {};
   const categoryCounts: Record<string, number> = {};
-  for (const row of bodiesResult.rows) bodyCounts[row.body as string] = Number(row.cnt);
-  for (const row of categoriesResult.rows) categoryCounts[row.category as string] = Number(row.cnt);
+  for (const row of bodiesResult.rows)
+    bodyCounts[row.body as string] = Number(row.cnt);
+  for (const row of categoriesResult.rows)
+    categoryCounts[row.category as string] = Number(row.cnt);
 
   return {
     bodies: Object.keys(bodyCounts),
@@ -1253,7 +1252,12 @@ export async function updatePVAvailability(
   await ensureInitialized();
   await client.execute({
     sql: "UPDATE videos SET pv_available = ?, pv_checked_at = ?, updated_at = ? WHERE asset_id = ?",
-    args: [available ? 1 : 0, new Date().toISOString(), new Date().toISOString(), assetId],
+    args: [
+      available ? 1 : 0,
+      new Date().toISOString(),
+      new Date().toISOString(),
+      assetId,
+    ],
   });
 }
 

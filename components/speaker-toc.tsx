@@ -88,8 +88,7 @@ export function SpeakerToc({
           info.function.toLowerCase() !== "representative" &&
           !/^speaker\s/i.test(info.function);
         // Skip entries with no meaningful info
-        if (!hasAffiliation && !hasGroup && !hasFunction)
-          return null;
+        if (!hasAffiliation && !hasGroup && !hasFunction) return null;
 
         const hasTopic =
           selectedTopic && statements
@@ -122,9 +121,7 @@ export function SpeakerToc({
                 </span>
               )}
               {hasFunction && (
-                <span className="text-muted-foreground">
-                  {info!.function}
-                </span>
+                <span className="text-muted-foreground">{info!.function}</span>
               )}
             </div>
             {hasTopic && topicColor && (

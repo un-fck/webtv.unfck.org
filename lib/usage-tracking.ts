@@ -4,10 +4,7 @@ import type {
   ChatCompletionCreateParamsNonStreaming,
 } from "openai/resources/chat/completions/completions";
 
-import {
-  GEMINI_RATE_CARD_VERSION,
-  GEMINI_MODEL_PRICING,
-} from "./config";
+import { GEMINI_RATE_CARD_VERSION, GEMINI_MODEL_PRICING } from "./config";
 import { insertProcessingUsageEvent } from "./turso";
 import type { GeminiUsageMetadata } from "./gemini-transcription";
 
@@ -161,7 +158,8 @@ export async function trackGeminiTranscription({
   // Estimate cost: input + output + thinking tokens
   let estimatedCostUsd: number | null = null;
   if (pricing) {
-    const { promptTokenCount, candidatesTokenCount, thoughtsTokenCount } = usageMetadata;
+    const { promptTokenCount, candidatesTokenCount, thoughtsTokenCount } =
+      usageMetadata;
     estimatedCostUsd =
       (promptTokenCount * pricing.inputPerM) / 1_000_000 +
       (candidatesTokenCount * pricing.outputPerM) / 1_000_000 +
@@ -169,11 +167,11 @@ export async function trackGeminiTranscription({
   }
 
   await safeInsertUsageEvent({
-    transcript_id: transcriptId ?? 'unknown',
-    provider: 'gemini',
+    transcript_id: transcriptId ?? "unknown",
+    provider: "gemini",
     stage,
     operation,
-    status: 'success',
+    status: "success",
     model,
     input_tokens: usageMetadata.promptTokenCount,
     output_tokens: usageMetadata.candidatesTokenCount,
@@ -181,12 +179,14 @@ export async function trackGeminiTranscription({
     total_tokens: usageMetadata.totalTokenCount,
     usage_hours: usageHours,
     usage_seconds: audioSeconds ? Math.round(audioSeconds) : null,
-    usage_quantity_type: audioSeconds ? 'audio_hours' : null,
+    usage_quantity_type: audioSeconds ? "audio_hours" : null,
     rate_card_version: GEMINI_RATE_CARD_VERSION,
     base_rate_per_hour_usd: null, // Gemini is token-priced, not hour-priced
-    pricing_meta: safeJsonStringify({ estimated_cost_usd: estimatedCostUsd, pricing }),
+    pricing_meta: safeJsonStringify({
+      estimated_cost_usd: estimatedCostUsd,
+      pricing,
+    }),
     duration_ms: durationMs,
     request_meta: safeJsonStringify(requestMeta),
   });
 }
-
