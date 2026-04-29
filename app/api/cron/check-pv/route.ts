@@ -5,7 +5,7 @@ import { apiError } from "@/lib/api-error";
 
 const MAX_CHECKS_PER_RUN = 20;
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return apiError(401, "unauthorized", "Unauthorized");
