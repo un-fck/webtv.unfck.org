@@ -7,7 +7,7 @@ import {
   updateTranscriptStatus,
   tryAcquirePipelineLock,
   releasePipelineLock,
-} from "@/lib/turso";
+} from "@/lib/db";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { apiError } from "@/lib/api-error";
 

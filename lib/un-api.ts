@@ -1,4 +1,4 @@
-import { getVideoByAssetId, saveVideo, type VideoRecord } from "./turso";
+import { getVideoByAssetId, saveVideo, type VideoRecord } from "./db";
 import { parseMeetingSymbol } from "./pv-documents";
 import { meetingSlugFromVideo } from "./meeting-slug";
 
@@ -69,7 +69,9 @@ export function videoToRecord(
     title: video.title,
     clean_title: video.cleanTitle,
     date: video.date,
-    scheduled_time: video.scheduledTime,
+    scheduled_time: video.scheduledTime
+      ? new Date(video.scheduledTime.slice(0, 19) + "Z")
+      : null,
     duration: durationSeconds,
     url: video.url,
     body: video.body,
@@ -98,6 +100,9 @@ export function recordToVideo(
   const durationHMS = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
   // Calculate status based on scheduled time and duration
+  const scheduledTimeStr = record.scheduled_time
+    ? record.scheduled_time.toISOString()
+    : null;
   const status = calculateStatus(record.scheduled_time, durationHMS);
 
   return {
@@ -106,9 +111,9 @@ export function recordToVideo(
     title: record.title,
     cleanTitle: record.clean_title || record.title,
     category: record.category || "",
-    duration: durationHMS, // Already formatted as HH:MM:SS
+    duration: durationHMS,
     date: record.date,
-    scheduledTime: record.scheduled_time,
+    scheduledTime: scheduledTimeStr,
     status,
     eventCode: record.event_code,
     eventType: record.event_type,
@@ -117,26 +122,19 @@ export function recordToVideo(
     partNumber:
       record.part_number !== null ? parseInt(record.part_number) : null,
     pvSymbol: record.pv_symbol ?? null,
-    pvAvailable: record.pv_available === 1,
+    pvAvailable: record.pv_available === true,
     slug: record.slug ?? meetingSlugFromVideo(record),
     hasTranscript,
   };
 }
 
 function calculateStatus(
-  scheduledTime: string | null,
+  scheduledTime: Date | null,
   duration: string,
 ): "finished" | "live" | "scheduled" {
   if (!scheduledTime) return "finished";
 
-  // UN Web TV has broken timezone data in their ISO timestamps.
-  // Their workaround: slice off timezone, treat as UTC, then convert to local time.
-  // Source: https://webtv.un.org/sites/default/files/js/js_dA57f4jZ0sYpTuwvbXRb5Fns6GZvR5BtfWCN9UflmWI.js
-  // Code: `const date_time=node.textContent.slice(0,19); let time=luxon.DateTime.fromISO(date_time,{'zone':'UTC'});`
-  // Example: "2025-10-15T16:00:00-04:00" becomes "2025-10-15T16:00:00" treated as UTC
-  // This is absolutely fucked up, but we need to match their display to avoid user confusion.
-  const dateTimeWithoutTz = scheduledTime.slice(0, 19); // Remove timezone offset
-  const startTime = new Date(dateTimeWithoutTz + "Z"); // Append 'Z' to treat as UTC
+  const startTime = scheduledTime;
 
   const now = new Date();
 
@@ -320,9 +318,12 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
     const titleCleaned = cleanTitle(rawTitle, titleMetadata);
 
     const duration = durationMatch?.[1] || "00:00:00";
+    const scheduledDate = scheduledTime
+      ? new Date(scheduledTime.slice(0, 19) + "Z")
+      : null;
     const status = isLiveBadge
       ? "live"
-      : calculateStatus(scheduledTime, duration);
+      : calculateStatus(scheduledDate, duration);
 
     const pvSymbol = parseMeetingSymbol(rawTitle, categoryText, date);
     const partNumber = titleMetadata.partNumber;
@@ -360,7 +361,7 @@ export async function getVideoById(
     const cached = await getVideoByAssetId(videoId);
     if (cached) {
       // Check if it has a transcript
-      const { getAllTranscriptedEntries } = await import("./turso");
+      const { getAllTranscriptedEntries } = await import("./db");
       const transcriptedEntries = await getAllTranscriptedEntries();
       const hasTranscript = cached.entry_id
         ? transcriptedEntries.includes(cached.entry_id)
@@ -401,8 +402,7 @@ export async function getVideoById(
 }
 
 export async function getScheduleVideos(days: number = 365): Promise<Video[]> {
-  const { getRecentVideos, getAllTranscriptedEntries } =
-    await import("./turso");
+  const { getRecentVideos, getAllTranscriptedEntries } = await import("./db");
   const [records, transcriptedEntries] = await Promise.all([
     getRecentVideos(days),
     getAllTranscriptedEntries(),

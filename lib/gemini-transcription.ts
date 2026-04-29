@@ -32,7 +32,7 @@ import {
   getAudioDurationSeconds,
   extractAudioChunk,
 } from "./gemini-utils";
-import type { RawParagraph } from "./turso";
+import type { RawParagraph } from "./db";
 import { getLanguageFullName } from "./languages";
 
 export { GEMINI_MODEL };

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getVideoBySlug, getTranscript } from "@/lib/turso";
+import { getVideoBySlug, getTranscript } from "@/lib/db";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import {
   getSpeakerMapping,

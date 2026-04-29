@@ -30,6 +30,12 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTimezone } from "@/lib/hooks/use-timezone";
+import {
+  formatMeetingTime,
+  formatMeetingDate,
+  formatMeetingDateTime,
+} from "@/lib/timezone";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData, TValue> {
@@ -58,51 +64,6 @@ function sortBodies(bodies: string[]): string[] {
   );
 }
 
-// Helper to get date at local midnight for comparison
-function getLocalMidnight(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-// Apply UN Web TV's fucked-up timezone workaround
-// Their timestamps have incorrect timezone offsets, so they slice them off and treat as UTC
-// Source: https://webtv.un.org/sites/default/files/js/js_dA57f4jZ0sYpTuwvbXRb5Fns6GZvR5BtfWCN9UflmWI.js
-// Code: `const date_time=node.textContent.slice(0,19); let time=luxon.DateTime.fromISO(date_time,{'zone':'UTC'});`
-function parseUNTimestamp(timestamp: string): Date {
-  const dateTimeWithoutTz = timestamp.slice(0, 19); // Remove timezone offset
-  return new Date(dateTimeWithoutTz + "Z"); // Append 'Z' to treat as UTC
-}
-
-function getDateLabel(date: Date): string {
-  const now = new Date();
-  const today = getLocalMidnight(now);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const videoDate = getLocalMidnight(date);
-
-  if (videoDate.getTime() === tomorrow.getTime()) return "Tomorrow";
-  if (videoDate.getTime() === today.getTime()) return "Today";
-  if (videoDate.getTime() === yesterday.getTime()) return "Yesterday";
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-// Helper to format date/time for card view
-function formatDateTime(scheduledTime: string | null, date: string): string {
-  const d = scheduledTime ? parseUNTimestamp(scheduledTime) : new Date(date);
-  const dateStr = getDateLabel(d);
-  if (!scheduledTime) return dateStr;
-  const timeStr = d.toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return `${dateStr} ${timeStr}`;
-}
-
 // Helper to format duration for card view
 function formatDuration(duration: string): string | null {
   if (!duration || duration === "00:00:00") return null;
@@ -122,18 +83,17 @@ function DateFilterPopover({
 }) {
   const isActive = !!selectedDate;
 
-  // Build set of day timestamps that have videos
-  const availableDays = useMemo(() => {
-    const s = new Set<number>();
-    availableDates.forEach((d) =>
-      s.add(getLocalMidnight(new Date(d + "T00:00:00")).getTime()),
-    );
-    return s;
-  }, [availableDates]);
+  // Build set of date strings that have videos
+  const availableDaySet = useMemo(
+    () => new Set(availableDates),
+    [availableDates],
+  );
 
   // Only enable days that have videos
-  const disabledMatcher = (date: Date) =>
-    !availableDays.has(getLocalMidnight(date).getTime());
+  const disabledMatcher = (date: Date) => {
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return !availableDaySet.has(iso);
+  };
 
   // Default month to show: selected date, or most recent available date
   const defaultMonth = selectedDate
@@ -333,6 +293,7 @@ function ActiveFilters({
   onClearDocs: (value: string) => void;
   onClearSearch: () => void;
 }) {
+  const { timezone } = useTimezone();
   const hasAny =
     !!dateFilter ||
     bodyFilter.length > 0 ||
@@ -345,7 +306,7 @@ function ActiveFilters({
     <div className="flex flex-wrap items-center gap-1.5">
       {dateFilter && (
         <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-          {getDateLabel(new Date(dateFilter + "T00:00:00"))}
+          {formatMeetingDate(dateFilter, timezone)}
           <button onClick={onClearDate} className="hover:text-primary/70">
             <X className="h-3 w-3" />
           </button>
@@ -427,6 +388,7 @@ export function VideoTable({
 }: VideoTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { timezone } = useTimezone();
 
   const sortedBodies = useMemo(
     () => sortBodies(filterOptions.bodies),
@@ -551,9 +513,9 @@ export function VideoTable({
   const mobileDateOptions = useMemo(() => {
     return availableDates.map((dateStr) => ({
       value: dateStr,
-      label: getDateLabel(new Date(dateStr + "T00:00:00")),
+      label: formatMeetingDate(dateStr, timezone),
     }));
-  }, [availableDates]);
+  }, [availableDates, timezone]);
 
   // Pagination
   const pageCount = Math.max(1, Math.ceil(totalCount / serverParams.pageSize));
@@ -565,10 +527,7 @@ export function VideoTable({
         header: "Date",
         cell: (info) => {
           const time = info.getValue();
-          const date = time
-            ? parseUNTimestamp(time)
-            : new Date(info.row.original.date);
-          return getDateLabel(date);
+          return formatMeetingDate(time ?? info.row.original.date, timezone);
         },
         size: 120,
       }),
@@ -578,13 +537,9 @@ export function VideoTable({
         cell: (info) => {
           const time = info.getValue();
           if (!time) return <span className="text-black/20">—</span>;
-          const date = parseUNTimestamp(time);
           return (
             <span className="tabular-nums">
-              {date.toLocaleTimeString("en-GB", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {formatMeetingTime(time, timezone)}
             </span>
           );
         },
@@ -676,7 +631,7 @@ export function VideoTable({
         size: 140,
       }),
     ],
-    [],
+    [timezone],
   );
 
   const table = useReactTable({
@@ -922,7 +877,11 @@ export function VideoTable({
           const isLive = video.status === "live";
           const isScheduled = video.status === "scheduled";
           const duration = formatDuration(video.duration);
-          const dateTime = formatDateTime(video.scheduledTime, video.date);
+          const dateTime = formatMeetingDateTime(
+            video.scheduledTime,
+            video.date,
+            timezone,
+          );
 
           return (
             <a

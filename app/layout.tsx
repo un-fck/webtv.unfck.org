@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import { AnimatedCornerLogo } from "@/components/AnimatedCornerLogo";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { TimezoneProvider } from "@/lib/hooks/use-timezone";
 
 // https://fonts.google.com/specimen/Roboto
 // 100 (Thin), 300 (Light), 400 (Regular), 500 (Medium), 700 (Bold), 800 (ExtraBold), 900 (Black)
@@ -26,10 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${roboto.variable} antialiased`}>
       <body>
-        <TooltipProvider delayDuration={200}>
-          {children}
-          <AnimatedCornerLogo />
-        </TooltipProvider>
+        <TimezoneProvider>
+          <TooltipProvider delayDuration={200}>
+            {children}
+            <AnimatedCornerLogo />
+          </TooltipProvider>
+        </TimezoneProvider>
       </body>
     </html>
   );

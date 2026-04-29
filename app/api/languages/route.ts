@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAvailableAudioLanguages } from "@/lib/transcription";
-import { getTranscriptLanguagesForEntry } from "@/lib/turso";
+import { getTranscriptLanguagesForEntry } from "@/lib/db";
 import {
   kalturaNameToBcp47,
   getLanguageDisplayName,

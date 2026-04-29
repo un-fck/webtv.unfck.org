@@ -25,9 +25,9 @@ export default function AboutPage() {
             <section>
               <h2 className="mb-3 text-xl font-semibold">What is this?</h2>
               <p className="text-muted-foreground">
-                UN Web TV Transcripts is a public preview tool that automatically
-                generates searchable text transcripts from United Nations meeting
-                recordings published on{" "}
+                UN Web TV Transcripts is a public preview tool that
+                automatically generates searchable text transcripts from United
+                Nations meeting recordings published on{" "}
                 <a
                   href="https://webtv.un.org"
                   target="_blank"
@@ -35,15 +35,16 @@ export default function AboutPage() {
                   className="text-un-blue underline underline-offset-4 hover:opacity-75"
                 >
                   UN Web TV
-                </a>.
+                </a>
+                .
               </p>
             </section>
 
             <section>
               <h2 className="mb-3 text-xl font-semibold">Who is it for?</h2>
               <p className="mb-3 text-muted-foreground">
-                The tool is designed to help anyone who needs quick access to the
-                spoken content of UN meetings, including:
+                The tool is designed to help anyone who needs quick access to
+                the spoken content of UN meetings, including:
               </p>
               <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
                 {[
@@ -59,7 +60,9 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="mb-3 text-xl font-semibold">What meetings are covered?</h2>
+              <h2 className="mb-3 text-xl font-semibold">
+                What meetings are covered?
+              </h2>
               <p className="mb-3 text-muted-foreground">
                 The tool covers public meetings recorded and published on UN Web
                 TV, including:
@@ -76,19 +79,19 @@ export default function AboutPage() {
                 ))}
               </ul>
               <p className="mt-3 text-muted-foreground">
-                Closed or confidential meetings are not recorded on Web TV and are
-                therefore not covered.
+                Closed or confidential meetings are not recorded on Web TV and
+                are therefore not covered.
               </p>
             </section>
 
             <section>
               <h2 className="mb-3 text-xl font-semibold">Languages</h2>
               <p className="text-muted-foreground">
-                Transcripts are generated primarily in English. Speeches delivered
-                in other official UN languages (Arabic, Chinese, French, Russian,
-                Spanish) are transcribed in the original language of the speaker.
-                Machine translation is not applied — you will see the text in the
-                language it was spoken.
+                Transcripts are generated primarily in English. Speeches
+                delivered in other official UN languages (Arabic, Chinese,
+                French, Russian, Spanish) are transcribed in the original
+                language of the speaker. Machine translation is not applied —
+                you will see the text in the language it was spoken.
               </p>
             </section>
 
@@ -97,7 +100,9 @@ export default function AboutPage() {
                 Important limitations
               </h2>
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                <p className="mb-2 font-semibold">These are AI-generated transcripts.</p>
+                <p className="mb-2 font-semibold">
+                  These are AI-generated transcripts.
+                </p>
                 <p>
                   They are not official UN records. They may contain errors,
                   especially in names, country references, document symbols, and
@@ -124,7 +129,6 @@ export default function AboutPage() {
                 welcome.
               </p>
             </section>
-
           </div>
         </div>
       </div>

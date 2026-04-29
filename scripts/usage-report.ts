@@ -2,10 +2,11 @@
 import "../lib/load-env";
 
 import {
-  getTursoClient,
+  pool,
+  q,
   getProcessingUsageSummaryByTranscript,
   listProcessingUsageEventsByTranscript,
-} from "../lib/turso";
+} from "../lib/db";
 import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 
 const inputId = process.argv[2];
@@ -28,16 +29,17 @@ function normalizeVideoInput(raw: string): string {
 }
 
 async function resolveTranscriptId(rawInput: string): Promise<string | null> {
-  const client = await getTursoClient();
   const normalized = normalizeVideoInput(rawInput);
   const candidates = Array.from(new Set([rawInput, normalized]));
 
   // 1) Direct transcript_id lookup
   for (const candidate of candidates) {
-    const byTranscript = await client.execute({
-      sql: "SELECT transcript_id FROM transcripts WHERE transcript_id = ? LIMIT 1",
-      args: [candidate],
-    });
+    const byTranscript = await pool.query(
+      q(
+        "SELECT transcript_id FROM transcripts WHERE transcript_id = $1 LIMIT 1",
+        [candidate],
+      ),
+    );
     if (byTranscript.rows.length > 0) {
       return byTranscript.rows[0].transcript_id as string;
     }
@@ -45,10 +47,12 @@ async function resolveTranscriptId(rawInput: string): Promise<string | null> {
 
   // 2) entry_id lookup (latest transcript)
   for (const candidate of candidates) {
-    const byEntry = await client.execute({
-      sql: "SELECT transcript_id FROM transcripts WHERE entry_id = ? ORDER BY updated_at DESC LIMIT 1",
-      args: [candidate],
-    });
+    const byEntry = await pool.query(
+      q(
+        "SELECT transcript_id FROM transcripts WHERE entry_id = $1 ORDER BY updated_at DESC LIMIT 1",
+        [candidate],
+      ),
+    );
     if (byEntry.rows.length > 0) {
       return byEntry.rows[0].transcript_id as string;
     }
@@ -57,10 +61,12 @@ async function resolveTranscriptId(rawInput: string): Promise<string | null> {
   // 3) Resolve video/asset id -> entry_id -> latest transcript
   const resolvedEntryId = await resolveEntryIdHelper(normalized);
   if (resolvedEntryId) {
-    const byResolvedEntry = await client.execute({
-      sql: "SELECT transcript_id FROM transcripts WHERE entry_id = ? ORDER BY updated_at DESC LIMIT 1",
-      args: [resolvedEntryId],
-    });
+    const byResolvedEntry = await pool.query(
+      q(
+        "SELECT transcript_id FROM transcripts WHERE entry_id = $1 ORDER BY updated_at DESC LIMIT 1",
+        [resolvedEntryId],
+      ),
+    );
     if (byResolvedEntry.rows.length > 0) {
       return byResolvedEntry.rows[0].transcript_id as string;
     }

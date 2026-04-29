@@ -6,7 +6,7 @@ import {
   getTranscriptById,
   updateTranscriptContent,
   updateTranscriptStatus,
-} from "./turso";
+} from "./db";
 import {
   trackOpenAIChatCompletion,
   UsageOperations,

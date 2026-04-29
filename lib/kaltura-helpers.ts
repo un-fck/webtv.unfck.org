@@ -1,4 +1,4 @@
-import { updateVideoEntryId } from "./turso";
+import { updateVideoEntryId } from "./db";
 import { extractKalturaId } from "./kaltura";
 
 /**

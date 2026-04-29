@@ -5,7 +5,7 @@ import {
   updateTranscriptStatus,
   tryAcquirePipelineLock,
   releasePipelineLock,
-} from "@/lib/turso";
+} from "@/lib/db";
 import { apiError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {

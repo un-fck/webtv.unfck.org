@@ -3,7 +3,7 @@ import {
   getTranscript,
   deleteTranscriptsForEntry,
   scheduleTranscript,
-} from "@/lib/turso";
+} from "@/lib/db";
 import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";

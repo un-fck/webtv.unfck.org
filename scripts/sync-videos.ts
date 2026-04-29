@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 import { scrapeVideos, videoToRecord } from "../lib/un-api";
-import { saveVideo, getVideoByAssetId, updateVideoEntryId } from "../lib/turso";
+import { saveVideo, getVideoByAssetId, updateVideoEntryId } from "../lib/db";
 import { extractKalturaId } from "../lib/kaltura";
 
 const args = process.argv.slice(2);

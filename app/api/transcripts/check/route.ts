@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTranscript } from "@/lib/turso";
+import { getTranscript } from "@/lib/db";
 import { getKalturaAudioUrl } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";

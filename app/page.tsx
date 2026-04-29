@@ -1,12 +1,11 @@
 import { Suspense } from "react";
 import { recordToVideo } from "@/lib/un-api";
+import { getVideosPage, type VideosPageParams } from "@/lib/db";
 import {
-  getVideosPage,
-  getAvailableDates,
-  getFilterOptions,
-  getAllTranscriptedEntries,
-  type VideosPageParams,
-} from "@/lib/turso";
+  getCachedTranscriptedEntries,
+  getCachedAvailableDates,
+  getCachedFilterOptions,
+} from "@/lib/cached-db";
 import { VideoTable } from "@/components/TranscriptTable";
 import { SiteHeader } from "@/components/SiteHeader";
 
@@ -89,8 +88,8 @@ export default async function Home({
   // When search query is active, pass empty data — client handles via /api/search
   if (params.q) {
     const [availableDates, filterOptions] = await Promise.all([
-      getAvailableDates(DAYS_BACK),
-      getFilterOptions(DAYS_BACK),
+      getCachedAvailableDates(DAYS_BACK),
+      getCachedFilterOptions(DAYS_BACK),
     ]);
 
     return (
@@ -112,7 +111,7 @@ export default async function Home({
   ];
 
   // Fetch transcript IDs (needed for hasTranscript filter AND for enriching video records)
-  const transcriptedEntries = await getAllTranscriptedEntries();
+  const transcriptedEntries = await getCachedTranscriptedEntries();
 
   const pageParams: VideosPageParams = {
     daysBack: DAYS_BACK,
@@ -133,8 +132,8 @@ export default async function Home({
   const [{ records, total }, availableDates, filterOptions] = await Promise.all(
     [
       getVideosPage(pageParams),
-      getAvailableDates(DAYS_BACK),
-      getFilterOptions(DAYS_BACK),
+      getCachedAvailableDates(DAYS_BACK),
+      getCachedFilterOptions(DAYS_BACK),
     ],
   );
 

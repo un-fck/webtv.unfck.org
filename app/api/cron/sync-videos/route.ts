@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchVideosForDate, formatDate, videoToRecord } from "@/lib/un-api";
 import { resolveEntryId } from "@/lib/kaltura-helpers";
-import { saveVideo, getVideoByAssetId } from "@/lib/turso";
+import { saveVideo, getVideoByAssetId } from "@/lib/db";
 import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {

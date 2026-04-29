@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchVideos, getAllTranscriptedEntries } from "@/lib/turso";
+import { searchVideos } from "@/lib/db";
+import { getCachedTranscriptedEntries } from "@/lib/cached-db";
 import { recordToVideo } from "@/lib/un-api";
 
 export async function GET(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
   const PAGE_SIZE = 50;
   const [records, transcriptedEntries] = await Promise.all([
     searchVideos(q, PAGE_SIZE + 1, offset), // fetch one extra to detect if more exist
-    getAllTranscriptedEntries(),
+    getCachedTranscriptedEntries(),
   ]);
 
   const hasMore = records.length > PAGE_SIZE;

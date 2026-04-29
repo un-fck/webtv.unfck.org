@@ -23,7 +23,10 @@ export function NavMenu() {
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
@@ -42,13 +45,13 @@ export function NavMenu() {
   }, [open]);
 
   return (
-    <div ref={containerRef} className="relative ml-auto">
+    <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-md text-foreground transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <span
           className={`block h-0.5 w-5 bg-current transition-all duration-200 ${open ? "translate-y-2 rotate-45" : ""}`}
@@ -65,7 +68,7 @@ export function NavMenu() {
         <nav
           role="menu"
           aria-label="Site navigation"
-          className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg border border-border bg-background py-1 shadow-lg"
+          className="absolute top-full right-0 z-50 mt-2 w-44 rounded-lg border border-border bg-background py-1 shadow-lg"
         >
           {NAV_LINKS.map(({ href, label }) => (
             <Link
