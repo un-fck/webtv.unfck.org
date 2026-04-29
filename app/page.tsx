@@ -7,7 +7,7 @@ import {
   getAllTranscriptedEntries,
   type VideosPageParams,
 } from "@/lib/turso";
-import { VideoTable } from "@/components/video-table";
+import { VideoTable } from "@/components/TranscriptTable";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";

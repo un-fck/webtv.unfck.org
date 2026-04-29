@@ -305,7 +305,7 @@ export function VideoPageClient({
           </div>
 
           {/* Metadata — right column width */}
-          <div className="lg:flex-2
+          <div className="lg:flex-2">
             <h1 className="mb-1 text-base leading-snug font-semibold">
               {video.cleanTitle}
             </h1>

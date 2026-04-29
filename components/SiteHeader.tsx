@@ -22,7 +22,7 @@ export function SiteHeader() {
               <span className="font-bold">WebTV</span>
               <span className="font-normal"> Transcripts</span>
             </span>
-            <span className="mb-1 self-start rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-xs font-bold tracking-wide text-un-blue uppercase">
+            <span className="mb-1 self-start rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-[8pt] font-bold tracking-wide text-un-blue uppercase">
               Public Preview
             </span>
           </div>

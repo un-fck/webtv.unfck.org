@@ -165,3 +165,17 @@
     background: oklch(0.556 0 0 / 0.5);
   }
 }
+
+/* react-remove-scroll-bar injects a runtime <style> adding margin-right to body[data-scroll-locked]
+   to compensate for the hidden scrollbar. scrollbar-gutter already reserves that space, so the
+   margin causes a layout shift instead. Higher specificity beats the injected !important rule. */
+@supports (scrollbar-gutter: stable) {
+  html body[data-scroll-locked] {
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+html {
+  scrollbar-gutter: stable;
+}

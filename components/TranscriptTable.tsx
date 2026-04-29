@@ -1,34 +1,35 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  createColumnHelper,
-} from "@tanstack/react-table";
-import {
-  ChevronUp,
-  ChevronDown,
-  Filter,
-  X,
-  CalendarIcon,
-  Info,
-} from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import type { ServerParams } from "@/app/page";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Video } from "@/lib/un-api";
-import type { ServerParams } from "@/app/page";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  CalendarIcon,
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  Info,
+  Search,
+  X,
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData, TValue> {
@@ -441,6 +442,7 @@ export function VideoTable({
   const [searchOffset, setSearchOffset] = useState(0);
   const [hasMoreResults, setHasMoreResults] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // URL-driven param updater
   const updateParams = useCallback(
@@ -575,7 +577,7 @@ export function VideoTable({
         header: "Time",
         cell: (info) => {
           const time = info.getValue();
-          if (!time) return <span className="text-muted-foreground/30">—</span>;
+          if (!time) return <span className="text-black/20">—</span>;
           const date = parseUNTimestamp(time);
           return (
             <span className="tabular-nums">
@@ -593,7 +595,7 @@ export function VideoTable({
         cell: (info) => {
           const duration = info.getValue();
           if (!duration || duration === "00:00:00")
-            return <span className="text-muted-foreground/30">—</span>;
+            return <span className="text-black/20">—</span>;
           return (
             <span className="tabular-nums">
               {duration.replace(/^0+:?/, "").replace(/^0/, "")}
@@ -610,12 +612,11 @@ export function VideoTable({
         header: "Title",
         cell: (info) => {
           const slug = info.row.original.slug;
-          const isScheduled = info.row.original.status === "scheduled";
           const isLive = info.row.original.status === "live";
           return (
             <a
               href={`/${slug}`}
-              className={`underline-offset-2 hover:underline ${isScheduled ? "text-muted-foreground" : "text-foreground"}`}
+              className="text-sm text-black underline-offset-2 hover:underline"
             >
               {isLive && (
                 <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500 align-middle" />
@@ -628,21 +629,21 @@ export function VideoTable({
       }),
       columnHelper.accessor("body", {
         header: "Body",
-        cell: (info) => (
-          <span className="text-muted-foreground">
-            {info.getValue() || "—"}
-          </span>
-        ),
+        cell: (info) => {
+          const val = info.getValue();
+          if (!val) return null;
+          return <span className="truncate text-black">{val}</span>;
+        },
         size: 140,
       }),
       columnHelper.accessor("category", {
         header: "Category",
-        cell: (info) => (
-          <span className="text-muted-foreground">
-            {info.getValue() || "—"}
-          </span>
-        ),
-        size: 140,
+        cell: (info) => {
+          const val = info.getValue();
+          if (!val) return null;
+          return <span className="truncate text-black">{val}</span>;
+        },
+        size: 160,
       }),
       columnHelper.display({
         id: "docs",
@@ -688,15 +689,32 @@ export function VideoTable({
     <div className="space-y-4">
       {/* Desktop: Search bar with count */}
       <div className="hidden items-center gap-4 lg:flex">
-        <div className="relative w-1/2">
+        <div className="group relative w-1/2">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <Search
+              className={`h-4 w-4 transition-colors ${isSearchFocused || inputValue.trim().length > 0 ? "text-un-blue" : "text-slate-400 group-hover:text-un-blue"}`}
+              aria-hidden="true"
+            />
+          </div>
           <input
             type="text"
-            placeholder="Search all columns… (press Enter)"
+            placeholder="Search all meetings…"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submitSearch(inputValue)}
-            onBlur={() => submitSearch(inputValue)}
-            className="w-full rounded-full border border-border bg-muted/30 px-4 py-2 text-sm transition-colors placeholder:text-muted-foreground/40 focus:border-primary/50 focus:bg-background focus:ring-2 focus:ring-primary/10 focus:outline-none"
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => {
+              setIsSearchFocused(false);
+              submitSearch(inputValue);
+            }}
+            spellCheck={false}
+            autoCorrect="off"
+            autoCapitalize="off"
+            className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none ${
+              isSearchFocused || inputValue.trim().length > 0
+                ? "border-un-blue bg-un-blue/5 text-un-blue placeholder-un-blue/50"
+                : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-un-blue hover:text-un-blue hover:placeholder-un-blue/70"
+            }`}
           />
           {inputValue && (
             <button
@@ -704,19 +722,19 @@ export function VideoTable({
                 e.preventDefault();
                 submitSearch("");
               }}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-un-blue/50 hover:text-un-blue"
               aria-label="Clear search"
             >
-              ×
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
-        <div className="flex rounded-full border border-border bg-background p-0.5 text-xs font-medium shadow-xs">
+        <div className="flex h-10 rounded-lg border border-slate-300 bg-white p-0.5 text-xs font-medium">
           <button
             onClick={() =>
               serverParams.status !== "past" && updateParams({ status: "past" })
             }
-            className={`rounded-full px-4 py-1.5 transition-all ${serverParams.status !== "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`rounded-md px-4 py-1.5 transition-all ${serverParams.status !== "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             Recent
           </button>
@@ -725,7 +743,7 @@ export function VideoTable({
               serverParams.status !== "scheduled" &&
               updateParams({ status: "scheduled", sort: "date_asc" })
             }
-            className={`rounded-full px-4 py-1.5 transition-all ${serverParams.status === "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`rounded-md px-4 py-1.5 transition-all ${serverParams.status === "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             Scheduled
           </button>
@@ -735,10 +753,10 @@ export function VideoTable({
             ? "Searching…"
             : isSearchMode && searchResults !== null
               ? hasMoreResults
-                ? `Showing ${searchResults.length} meetings`
-                : `${searchResults.length} meetings in total`
+                ? `Showing ${searchResults.length.toLocaleString()} meetings`
+                : `${searchResults.length.toLocaleString()} meetings in total`
               : totalCount > 0
-                ? `${totalCount} meetings`
+                ? `${totalCount.toLocaleString()} meetings`
                 : null}
         </div>
       </div>
@@ -771,15 +789,32 @@ export function VideoTable({
 
       {/* Mobile: All filters grouped */}
       <div className="space-y-3 lg:hidden">
-        <div className="relative">
+        <div className="group relative">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <Search
+              className={`h-4 w-4 transition-colors ${isSearchFocused || inputValue.trim().length > 0 ? "text-un-blue" : "text-slate-400 group-hover:text-un-blue"}`}
+              aria-hidden="true"
+            />
+          </div>
           <input
             type="text"
-            placeholder="Search… (press Enter)"
+            placeholder="Search all meetings…"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submitSearch(inputValue)}
-            onBlur={() => submitSearch(inputValue)}
-            className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm transition-colors placeholder:text-muted-foreground/50 focus:border-primary focus:bg-background focus:outline-none"
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => {
+              setIsSearchFocused(false);
+              submitSearch(inputValue);
+            }}
+            spellCheck={false}
+            autoCorrect="off"
+            autoCapitalize="off"
+            className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none ${
+              isSearchFocused || inputValue.trim().length > 0
+                ? "border-un-blue bg-un-blue/5 text-un-blue placeholder-un-blue/50"
+                : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-un-blue hover:text-un-blue hover:placeholder-un-blue/70"
+            }`}
           />
           {inputValue && (
             <button
@@ -787,10 +822,10 @@ export function VideoTable({
                 e.preventDefault();
                 submitSearch("");
               }}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-un-blue/50 hover:text-un-blue"
               aria-label="Clear search"
             >
-              ×
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
@@ -800,7 +835,7 @@ export function VideoTable({
             onChange={(e) =>
               updateParams({ date: e.target.value || undefined })
             }
-            className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
+            className="min-w-30 flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
             <option value="">All Dates</option>
             {mobileDateOptions.map(({ value, label }) => (
@@ -816,7 +851,7 @@ export function VideoTable({
                 body: e.target.value ? [e.target.value] : undefined,
               })
             }
-            className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
+            className="min-w-30 flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
             <option value="">All Bodies</option>
             {sortedBodies.map((body) => (
@@ -832,7 +867,7 @@ export function VideoTable({
                 category: e.target.value ? [e.target.value] : undefined,
               })
             }
-            className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
+            className="min-w-30 flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
             <option value="">All Categories</option>
             {filterOptions.categories.map((cat) => (
@@ -850,20 +885,20 @@ export function VideoTable({
                 text: e.target.value ? [e.target.value] : undefined,
               })
             }
-            className="min-w-[120px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
+            className="min-w-30 flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
           >
             <option value="">All Text</option>
             <option value="transcript">Transcript</option>
             <option value="pv">Verbatim Record</option>
             <option value="sr">Summary Record</option>
           </select>
-          <div className="flex rounded-md bg-muted p-0.5 text-xs font-medium">
+          <div className="flex rounded-lg bg-muted p-0.5 text-xs font-medium">
             <button
               onClick={() =>
                 serverParams.status !== "past" &&
                 updateParams({ status: "past" })
               }
-              className={`rounded px-3 py-1.5 transition-colors ${serverParams.status !== "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              className={`rounded-md px-3 py-1.5 transition-colors ${serverParams.status !== "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             >
               Recent
             </button>
@@ -872,7 +907,7 @@ export function VideoTable({
                 serverParams.status !== "scheduled" &&
                 updateParams({ status: "scheduled", sort: "date_asc" })
               }
-              className={`rounded px-3 py-1.5 transition-colors ${serverParams.status === "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              className={`rounded-md px-3 py-1.5 transition-colors ${serverParams.status === "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             >
               Scheduled
             </button>
@@ -925,7 +960,7 @@ export function VideoTable({
                     </div>
                   )}
                 </div>
-                <div className="flex flex-shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   {isLive ? (
                     <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />
                   ) : (
@@ -950,12 +985,12 @@ export function VideoTable({
       {/* Desktop Table View */}
       <div className="hidden overflow-hidden rounded-lg border border-gray-200 lg:block">
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed text-sm">
+          <table className="w-full table-fixed text-xs">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 {/* Date */}
                 <th
-                  className="px-4 py-2 text-left text-[10px] font-medium tracking-wider text-gray-400 uppercase"
+                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
                   style={{ width: 120, minWidth: 120, maxWidth: 120 }}
                 >
                   <div className="flex items-center gap-1">
@@ -976,20 +1011,20 @@ export function VideoTable({
                 </th>
                 {/* Time */}
                 <th
-                  className="px-4 py-2 text-left text-[10px] font-medium tracking-wider text-gray-400 uppercase"
+                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
                   style={{ width: 70, minWidth: 70, maxWidth: 70 }}
                 >
                   <span>Time</span>
                 </th>
                 {/* Duration */}
                 <th
-                  className="px-4 py-2 text-right text-[10px] font-medium tracking-wider text-gray-400 uppercase"
+                  className="px-4 py-2 text-right text-xs font-medium tracking-wider text-gray-400 uppercase"
                   style={{ width: 80, minWidth: 80, maxWidth: 80 }}
                 >
                   <span>Duration</span>
                 </th>
                 {/* Title */}
-                <th className="px-4 py-2 text-left text-[10px] font-medium tracking-wider text-gray-400 uppercase">
+                <th className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase">
                   <div className="flex items-center gap-1">
                     <span>Title</span>
                     <SortArrow
@@ -1003,7 +1038,7 @@ export function VideoTable({
                 </th>
                 {/* Body */}
                 <th
-                  className="px-4 py-2 text-left text-[10px] font-medium tracking-wider text-gray-400 uppercase"
+                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
                   style={{ width: 140, minWidth: 140, maxWidth: 140 }}
                 >
                   <div className="flex items-center gap-1">
@@ -1020,7 +1055,7 @@ export function VideoTable({
                 </th>
                 {/* Category */}
                 <th
-                  className="px-4 py-2 text-left text-[10px] font-medium tracking-wider text-gray-400 uppercase"
+                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
                   style={{ width: 140, minWidth: 140, maxWidth: 140 }}
                 >
                   <div className="flex items-center gap-1">
@@ -1039,7 +1074,7 @@ export function VideoTable({
                 </th>
                 {/* Transcripts */}
                 <th
-                  className="px-4 py-2 text-left text-[10px] font-medium tracking-wider text-gray-400 uppercase"
+                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
                   style={{ width: 140, minWidth: 140, maxWidth: 140 }}
                 >
                   <div className="flex items-center gap-1">
