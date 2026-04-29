@@ -306,37 +306,40 @@ export function VideoPageClient({
 
           {/* Metadata — right column width */}
           <div className="lg:flex-2">
-            <h1 className="mb-1 text-base leading-snug font-semibold">
+            <h1 className="text-xl font-semibold leading-snug">
               {video.cleanTitle}
             </h1>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-              {video.date && (
-                <span>
-                  {new Date(video.date).toLocaleDateString("en-US", {
+
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+              {[
+                video.date &&
+                  new Date(video.date).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
-                  })}
-                </span>
-              )}
-              {video.date && video.scheduledTime && <span>·</span>}
-              {video.scheduledTime && (
-                <span>
-                  {new Date(video.scheduledTime).toLocaleTimeString("en-GB", {
+                  }),
+                video.scheduledTime &&
+                  new Date(video.scheduledTime).toLocaleTimeString("en-GB", {
                     hour: "2-digit",
                     minute: "2-digit",
                     timeZoneName: "short",
-                  })}
-                </span>
-              )}
-              {video.scheduledTime && video.body && <span>·</span>}
-              {video.body && <span>{video.body}</span>}
-              {video.body && video.category && <span>·</span>}
-              {video.category && <span>{video.category}</span>}
-              {video.category && video.duration && <span>·</span>}
-              {video.duration && <span>{video.duration}</span>}
+                  }),
+                video.body,
+                video.category,
+                video.duration,
+              ]
+                .filter(Boolean)
+                .map((item, i, arr) => (
+                  <span key={i} className="flex items-center gap-2">
+                    {item}
+                    {i < arr.length - 1 && (
+                      <span className="opacity-30">·</span>
+                    )}
+                  </span>
+                ))}
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm">
               <a
                 href={video.url}
                 target="_blank"
@@ -356,8 +359,9 @@ export function VideoPageClient({
                 </a>
               )}
             </div>
+
             {metadata.summary && (
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                 {metadata.summary}
               </p>
             )}
