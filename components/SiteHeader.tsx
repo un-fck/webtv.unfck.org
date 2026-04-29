@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { NavMenu } from "@/components/NavMenu";
 
 export function SiteHeader() {
   return (
@@ -27,6 +28,7 @@ export function SiteHeader() {
             </span>
           </div>
         </Link>
+        <NavMenu />
       </div>
     </header>
   );
