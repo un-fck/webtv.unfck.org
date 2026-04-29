@@ -632,7 +632,7 @@ export function VideoTable({
         cell: (info) => {
           const val = info.getValue();
           if (!val) return null;
-          return <span className="truncate text-black">{val}</span>;
+          return <div className="truncate text-black">{val}</div>;
         },
         size: 140,
       }),
@@ -641,7 +641,7 @@ export function VideoTable({
         cell: (info) => {
           const val = info.getValue();
           if (!val) return null;
-          return <span className="truncate text-black">{val}</span>;
+          return <div className="truncate text-black">{val}</div>;
         },
         size: 160,
       }),
