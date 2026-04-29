@@ -8,7 +8,7 @@ import {
   type VideosPageParams,
 } from "@/lib/turso";
 import { VideoTable } from "@/components/video-table";
-import { SiteHeader } from "@/components/site-header";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";
 

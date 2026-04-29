@@ -22,7 +22,7 @@ export function SiteHeader() {
               Web TV Transcripts
             </span>
             <span className="rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-[9px] font-bold tracking-widest text-un-blue uppercase">
-              Beta
+              Public Preview
             </span>
           </div>
         </Link>
