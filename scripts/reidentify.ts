@@ -4,7 +4,7 @@ import {
   identifySpeakers,
   ParagraphInput,
 } from "../lib/speaker-identification";
-import { getTursoClient } from "../lib/turso";
+import { pool, q } from "../lib/db";
 import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 
 const usage = `Usage:
@@ -44,8 +44,6 @@ const ALL_QUERY = `
   ORDER BY updated_at DESC
 `;
 
-const clientPromise = getTursoClient();
-
 async function resolveEntryId(input: string) {
   const decoded = decodeURIComponent(input.trim());
   if (!decoded) throw new Error("Empty id");
@@ -68,20 +66,18 @@ function parseParagraphs(row: TranscriptRow) {
 
 async function loadTargets(arg: string) {
   if (arg.toLowerCase() === "all") {
-    const client = await clientPromise;
-    const rows = await client.execute({
-      sql: "SELECT DISTINCT entry_id FROM transcripts WHERE status = 'completed' AND start_time IS NULL AND end_time IS NULL",
-    });
-    return rows.rows.map((row) => row.entry_id as string);
+    const result = await pool.query(
+      "SELECT DISTINCT entry_id FROM transcripts WHERE status = 'completed' AND start_time IS NULL AND end_time IS NULL",
+    );
+    return result.rows.map((row) => row.entry_id as string);
   }
   return [await resolveEntryId(arg)];
 }
 
 async function loadTranscripts(entryId: string) {
-  const client = await clientPromise;
   const query = entryId === "*ALL*" ? ALL_QUERY : SINGLE_QUERY;
   const args = entryId === "*ALL*" ? [] : [entryId];
-  const result = await client.execute({ sql: query, args });
+  const result = await pool.query(q(query, args));
   return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
     entry_id: row.entry_id as string,

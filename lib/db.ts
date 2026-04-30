@@ -32,7 +32,6 @@ pool.on("error", (err) => {
   console.error("PostgreSQL pool error:", err);
 });
 
-
 // Convert ?-style placeholders to $N for pg
 export function q(
   sql: string,
@@ -285,7 +284,9 @@ export async function getTranscriptById(
 ): Promise<Transcript | null> {
   await ensureInitialized();
   const result = await pool.query(
-    q("SELECT * FROM webtv.transcripts WHERE transcript_id = ?", [transcriptId]),
+    q("SELECT * FROM webtv.transcripts WHERE transcript_id = ?", [
+      transcriptId,
+    ]),
   );
   if (result.rows.length === 0) return null;
   return mapTranscriptRow(result.rows[0]);
@@ -743,10 +744,10 @@ export async function updateVideoEntryId(
 ): Promise<void> {
   await ensureInitialized();
   await pool.query(
-    q("UPDATE webtv.videos SET entry_id = ?, updated_at = NOW() WHERE asset_id = ?", [
-      entryId,
-      assetId,
-    ]),
+    q(
+      "UPDATE webtv.videos SET entry_id = ?, updated_at = NOW() WHERE asset_id = ?",
+      [entryId, assetId],
+    ),
   );
 }
 

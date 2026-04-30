@@ -37,8 +37,7 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Required for the web app:**
 
-- `TURSO_DB` — libSQL/Turso database URL
-- `TURSO_TOKEN` — Turso auth token
+- `DATABASE_URL` — PostgreSQL connection string
 - `GEMINI_API_KEY` — transcription (Gemini)
 - `AZURE_OPENAI_ENDPOINT` — speaker identification & post-processing
 - `AZURE_OPENAI_API_KEY` — speaker identification & post-processing
@@ -76,9 +75,9 @@ For detailed architecture, see the `docs/` files above. Summary:
 
 UN Web TV has no public API — `lib/un-api.ts` scrapes HTML directly. See `docs/webtv.md` for full details on scraping, Kaltura ID resolution, and what gets stored.
 
-On page load, videos are fetched for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`, default 14 days), cached for 5 minutes. All scraped videos are persisted into Turso via `scripts/sync-videos.ts`.
+On page load, videos are fetched for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`, default 14 days), cached for 5 minutes. All scraped videos are persisted into PostgreSQL via `scripts/sync-videos.ts`.
 
-For search beyond the rolling window, the frontend calls `/api/search` which queries Turso directly.
+For search beyond the rolling window, the frontend calls `/api/search` which queries the database directly.
 
 ### Transcription Pipeline
 
@@ -96,11 +95,11 @@ Triggered from the video page UI or via scheduled processing:
 
 The STT provider is configurable via `STT_PROVIDER` env var (default: `gemini`). Analysis model names are configurable via `STT_ANALYSIS_MODEL` and `STT_ANALYSIS_MODEL_MINI`. Provider implementations live in `lib/providers/` (shared with the eval system).
 
-**Scheduled transcription**: Videos can be queued for transcription before audio is available. `lib/turso.ts:scheduleTranscript()` creates a `scheduled` status record. The Vercel cron job (`/api/cron/process-scheduled`, every 5 min) picks these up and starts transcription once audio is available.
+**Scheduled transcription**: Videos can be queued for transcription before audio is available. `lib/db.ts:scheduleTranscript()` creates a `scheduled` status record. The Vercel cron job (`/api/cron/process-scheduled`, every 5 min) picks these up and starts transcription once audio is available.
 
-### Database (Turso / libSQL)
+### Database (PostgreSQL)
 
-`lib/turso.ts` is the single data-access layer. Schema auto-migrates on first connection via `ensureInitialized()`.
+`lib/db.ts` is the single data-access layer, backed by a `pg` connection pool.
 
 **Tables:**
 

@@ -8,9 +8,8 @@ DO $$ BEGIN IF NOT EXISTS (
 ) THEN CREATE ROLE webtv_app LOGIN PASSWORD 'CHANGE-ME';
 END IF;
 END $$;
--- Schema-level: let the app see and create objects in webtv (for ensureInitialized)
+-- Schema-level: let the app resolve objects in webtv
 GRANT USAGE ON SCHEMA webtv TO webtv_app;
-GRANT CREATE ON SCHEMA webtv TO webtv_app;
 -- Table-level: full DML + DDL on all current and future tables in webtv
 ALTER DEFAULT PRIVILEGES IN SCHEMA webtv
 GRANT SELECT,

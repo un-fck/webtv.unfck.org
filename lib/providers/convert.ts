@@ -6,7 +6,7 @@
  * each utterance span.
  */
 import type { NormalizedTranscript } from "./types";
-import type { RawParagraph } from "../turso";
+import type { RawParagraph } from "../db";
 
 /**
  * Convert utterances to RawParagraph[], preserving real word timestamps
