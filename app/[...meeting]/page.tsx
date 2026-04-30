@@ -1,4 +1,5 @@
-import { getVideoBySlug, getAllTranscriptedEntries } from "@/lib/turso";
+import { getVideoBySlug } from "@/lib/db";
+import { getCachedTranscriptedEntries } from "@/lib/cached-db";
 import { notFound } from "next/navigation";
 import { VideoPageClient } from "@/components/video-page-client";
 import { extractKalturaId } from "@/lib/kaltura";
@@ -60,7 +61,7 @@ export default async function MeetingPage({
   }
 
   // Check if this video has a transcript
-  const transcriptedEntries = await getAllTranscriptedEntries();
+  const transcriptedEntries = await getCachedTranscriptedEntries();
   const hasTranscript =
     record.entry_id !== null && transcriptedEntries.includes(record.entry_id);
 

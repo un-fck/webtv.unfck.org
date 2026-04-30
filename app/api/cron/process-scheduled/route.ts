@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const ts = () => new Date().toTimeString().slice(0, 8);
-import { getScheduledTranscripts } from "@/lib/turso";
+import { getScheduledTranscripts } from "@/lib/db";
 import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
 import { apiError } from "@/lib/api-error";
 

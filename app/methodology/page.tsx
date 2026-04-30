@@ -128,7 +128,9 @@ export default function MethodologyPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xl font-semibold">Accuracy and limitations</h2>
+            <h2 className="mb-3 text-xl font-semibold">
+              Accuracy and limitations
+            </h2>
             <p className="mb-4 text-muted-foreground">
               AI transcription is significantly faster than human transcription
               but introduces errors that a human reviewer would catch. Common

@@ -7,33 +7,43 @@
  * 4. Backfill any remaining null slugs
  */
 import "../lib/load-env";
-import { getTursoClient } from "../lib/turso";
+import { pool } from "../lib/db";
 import { parseMeetingSymbol } from "../lib/pv-documents";
 import { meetingSlugFromVideo } from "../lib/meeting-slug";
-import type { InStatement } from "@libsql/client";
 
 const BATCH_SIZE = 200;
 
-async function executeBatched(
-  client: Awaited<ReturnType<typeof getTursoClient>>,
-  statements: InStatement[],
-) {
+type Statement = { sql: string; args: unknown[] };
+
+async function executeBatched(statements: Statement[]) {
   for (let i = 0; i < statements.length; i += BATCH_SIZE) {
     const batch = statements.slice(i, i + BATCH_SIZE);
-    await client.batch(batch, "write");
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      for (const stmt of batch) {
+        let idx = 0;
+        const text = stmt.sql.replace(/\?/g, () => `$${++idx}`);
+        await client.query({ text, values: stmt.args });
+      }
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 }
 
 async function main() {
-  const client = await getTursoClient();
-
   // Step 1: Fix ECOSOC — recalculate pv_symbol with tightened filter
-  const ecosocVideos = await client.execute(
+  const ecosocVideos = await pool.query(
     "SELECT asset_id, title, category, date, pv_symbol, part_number FROM videos WHERE pv_symbol LIKE 'E/%'",
   );
   console.log(`Found ${ecosocVideos.rows.length} videos with ECOSOC symbols`);
 
-  const ecosocFixes: InStatement[] = [];
+  const ecosocFixes: Statement[] = [];
   for (const row of ecosocVideos.rows) {
     const newSymbol = parseMeetingSymbol(
       row.title as string,
@@ -49,15 +59,13 @@ async function main() {
     }
   }
   console.log(`Clearing ${ecosocFixes.length} incorrect ECOSOC symbols`);
-  await executeBatched(client, ecosocFixes);
+  await executeBatched(ecosocFixes);
 
   // Step 2: Fix resumed meetings — assign sequential part numbers per symbol
-  // Get ALL videos grouped by pv_symbol, ordered by date+title
-  const allWithSymbol = await client.execute(
+  const allWithSymbol = await pool.query(
     "SELECT asset_id, title, pv_symbol, part_number, date, scheduled_time FROM videos WHERE pv_symbol IS NOT NULL ORDER BY pv_symbol, date, scheduled_time, title",
   );
 
-  // Group by pv_symbol
   const bySymbol = new Map<string, typeof allWithSymbol.rows>();
   for (const row of allWithSymbol.rows) {
     const sym = row.pv_symbol as string;
@@ -65,11 +73,10 @@ async function main() {
     bySymbol.get(sym)!.push(row);
   }
 
-  const partFixes: InStatement[] = [];
-  for (const [sym, rows] of bySymbol) {
+  const partFixes: Statement[] = [];
+  for (const [, rows] of bySymbol) {
     if (rows.length <= 1) continue;
 
-    // Assign part numbers: non-resumed first, then resumed in order
     const nonResumed = rows.filter(
       (r) => !/^\(resumed\)/i.test((r.title as string).trim()),
     );
@@ -77,19 +84,17 @@ async function main() {
       /^\(resumed\)/i.test((r.title as string).trim()),
     );
 
-    // Non-resumed get part 1 (or keep existing part_number if set)
     for (const row of nonResumed) {
       const current = row.part_number as string | null;
-      if (nonResumed.length === 1 && resumed.length === 0) continue; // single video, no need
+      if (nonResumed.length === 1 && resumed.length === 0) continue;
       if (!current || current === "0") {
         partFixes.push({
-          sql: "UPDATE videos SET part_number = '1' WHERE asset_id = ?",
-          args: [row.asset_id as string],
+          sql: "UPDATE videos SET part_number = ? WHERE asset_id = ?",
+          args: ["1", row.asset_id as string],
         });
       }
     }
 
-    // Resumed get part 2, 3, etc.
     for (let i = 0; i < resumed.length; i++) {
       const partNum = String(nonResumed.length > 0 ? i + 2 : i + 1);
       partFixes.push({
@@ -100,16 +105,16 @@ async function main() {
   }
 
   console.log(`Fixing part_number for ${partFixes.length} videos`);
-  await executeBatched(client, partFixes);
+  await executeBatched(partFixes);
 
   // Step 3: Recompute all slugs from scratch
   console.log("\nRecomputing all slugs...");
-  const allVideos = await client.execute(
+  const allVideos = await pool.query(
     "SELECT asset_id, pv_symbol, part_number FROM videos",
   );
 
-  const slugAssignments = new Map<string, string>(); // slug -> asset_id (first wins)
-  const slugFixes: InStatement[] = [];
+  const slugAssignments = new Map<string, string>();
+  const slugFixes: Statement[] = [];
 
   for (const row of allVideos.rows) {
     const slug = meetingSlugFromVideo({
@@ -119,7 +124,6 @@ async function main() {
     });
 
     if (slugAssignments.has(slug)) {
-      // Duplicate — fall back to meeting/asset_id
       const fallback = `meeting/${row.asset_id as string}`;
       slugFixes.push({
         sql: "UPDATE videos SET slug = ? WHERE asset_id = ?",
@@ -135,13 +139,13 @@ async function main() {
   }
 
   console.log(`Setting slugs for ${slugFixes.length} videos`);
-  await executeBatched(client, slugFixes);
+  await executeBatched(slugFixes);
 
   // Verify
-  const nullCount = await client.execute(
-    "SELECT COUNT(*) as c FROM videos WHERE slug IS NULL",
+  const nullCount = await pool.query(
+    "SELECT COUNT(*) AS c FROM videos WHERE slug IS NULL",
   );
-  console.log(`\nDone. Videos without slug: ${nullCount.rows[0].c as number}`);
+  console.log(`\nDone. Videos without slug: ${Number(nullCount.rows[0].c)}`);
 }
 
 main().catch(console.error);

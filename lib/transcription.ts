@@ -13,7 +13,7 @@ import {
   type TranscriptStatus,
   type TranscriptContent,
   type RawParagraph,
-} from "./turso";
+} from "./db";
 import { identifySpeakers } from "./speaker-identification";
 import type { SpeakerMapping } from "./speakers";
 import {
@@ -28,7 +28,7 @@ import { getSTTProvider } from "./providers/config";
 import { toRawParagraphs } from "./providers/convert";
 import type { GeminiTranscriptionResult } from "./gemini-transcription";
 
-export { type TranscriptStatus } from "./turso";
+export { type TranscriptStatus } from "./db";
 
 export interface PollResult {
   stage: TranscriptStatus;

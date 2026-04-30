@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPVContent, savePVContent } from "@/lib/turso";
+import { getPVContent, savePVContent } from "@/lib/db";
 import { fetchPVDocument } from "@/lib/pv-documents";
 import { parsePVDocument } from "@/lib/pv-parser";
 import { apiError } from "@/lib/api-error";
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   // Check cache first
   const cached = await getPVContent(symbol, lang);
   if (cached) {
-    return NextResponse.json(JSON.parse(cached.content));
+    return NextResponse.json(cached.content);
   }
 
   // Fetch and parse
@@ -32,10 +32,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const pvDoc = await parsePVDocument(pdfBuffer, lang);
-    const content = JSON.stringify(pvDoc);
 
-    // Save to cache
-    await savePVContent(symbol, lang, content);
+    // Save to cache (content stored as JSONB — pass object directly)
+    await savePVContent(symbol, lang, pvDoc as object);
 
     return NextResponse.json(pvDoc);
   } catch (err) {

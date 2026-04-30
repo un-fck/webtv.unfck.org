@@ -4,7 +4,7 @@ import "../lib/load-env";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { getTursoClient } from "../lib/turso";
+import { pool, q } from "../lib/db";
 
 const sinceArg = process.argv.find((arg) => arg.startsWith("--since="));
 const since = sinceArg ? sinceArg.slice("--since=".length).trim() : null;
@@ -81,13 +81,11 @@ async function loadHoursPerDayByBody(): Promise<Map<string, number>> {
 }
 
 async function run() {
-  const client = await getTursoClient();
-
-  const sincePredicate = since ? `AND created_at >= ?` : "";
+  const sincePredicate = since ? `AND created_at >= $1` : "";
   const queryArgs = since ? [since] : [];
 
-  const overallResult = await client.execute({
-    sql: `
+  const overallResult = await pool.query({
+    text: `
       WITH transcription_per_transcript AS (
         SELECT
           transcript_id,
@@ -144,7 +142,7 @@ async function run() {
         CASE WHEN COALESCE(SUM(usage_hours), 0) > 0 THEN COALESCE(SUM(total_tokens), 0) / SUM(usage_hours) ELSE 0 END AS total_tokens_per_hour
       FROM matched
     `,
-    args: since ? [...queryArgs, ...queryArgs] : queryArgs,
+    values: queryArgs,
   });
 
   const row = overallResult.rows[0];
@@ -187,8 +185,8 @@ async function run() {
   }
   console.table([summary]);
 
-  const stageResult = await client.execute({
-    sql: `
+  const stageResult = await pool.query({
+    text: `
       WITH transcription_per_transcript AS (
         SELECT
           transcript_id,
@@ -253,7 +251,7 @@ async function run() {
       GROUP BY s.stage, t.hours
       ORDER BY total_tokens_per_hour DESC
     `,
-    args: since ? [...queryArgs, ...queryArgs, ...queryArgs] : queryArgs,
+    values: queryArgs,
   });
 
   console.log(
@@ -313,8 +311,8 @@ async function run() {
   );
   console.table(projectedRows);
 
-  const perVideoResult = await client.execute({
-    sql: `
+  const perVideoResult = await pool.query({
+    text: `
       WITH transcription_per_transcript AS (
         SELECT
           transcript_id,
@@ -361,7 +359,7 @@ async function run() {
       WHERE a.usage_hours > 0
       ORDER BY total_tokens_per_hour DESC
     `,
-    args: since ? [...queryArgs, ...queryArgs] : queryArgs,
+    values: queryArgs,
   });
 
   console.log("\nPer-video variation (no stage breakdown)");

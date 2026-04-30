@@ -12,18 +12,13 @@
  *   npx tsx scripts/test-pv-alignment.ts --symbol=S/PV.10122 # single meeting
  *   npx tsx scripts/test-pv-alignment.ts --dry-run           # parse only, no alignment
  */
-import "dotenv/config";
-import { createClient } from "@libsql/client";
+import "../lib/load-env";
+import { pool, q } from "../lib/db";
 import { parsePVDocument } from "../lib/pv-parser";
 import { fetchPVDocument } from "../lib/pv-documents";
 import { alignPVWithAudio } from "../lib/pv-alignment";
 import { getKalturaAudioUrl } from "../lib/transcription";
 import type { AlignedPVDocument, AlignmentOptions } from "../lib/pv-alignment";
-
-const client = createClient({
-  url: process.env.TURSO_DB!,
-  authToken: process.env.TURSO_TOKEN,
-});
 
 interface TestCase {
   pvSymbol: string;
@@ -96,14 +91,16 @@ interface TranscriptSegment {
 async function extractTranscriptSegments(
   entryId: string,
 ): Promise<TranscriptSegment[]> {
-  const r = await client.execute({
-    sql: `SELECT t.content, sm.mapping
+  const r = await pool.query(
+    q(
+      `SELECT t.content, sm.mapping
           FROM transcripts t
           LEFT JOIN speaker_mappings sm ON sm.transcript_id = t.transcript_id
           WHERE t.entry_id = ? AND t.status = 'completed' AND t.language_code = 'en'
           LIMIT 1`,
-    args: [entryId],
-  });
+      [entryId],
+    ),
+  );
 
   if (r.rows.length === 0) return [];
 
@@ -177,17 +174,20 @@ async function validateAlignment(
   let aligned: AlignedPVDocument;
 
   if (fresh) {
-    // Delete cached alignment
-    await client.execute({
-      sql: `DELETE FROM pv_contents WHERE pv_symbol = ? AND language = ?`,
-      args: [testCase.pvSymbol, lang],
-    });
+    await pool.query(
+      q(`DELETE FROM pv_contents WHERE pv_symbol = ? AND language = ?`, [
+        testCase.pvSymbol,
+        lang,
+      ]),
+    );
   }
 
-  const cachedRes = await client.execute({
-    sql: `SELECT content FROM pv_contents WHERE pv_symbol = ? AND language = ?`,
-    args: [testCase.pvSymbol, lang],
-  });
+  const cachedRes = await pool.query(
+    q(`SELECT content FROM pv_contents WHERE pv_symbol = ? AND language = ?`, [
+      testCase.pvSymbol,
+      lang,
+    ]),
+  );
 
   if (cachedRes.rows.length > 0) {
     const doc = JSON.parse(cachedRes.rows[0].content as string);
@@ -198,10 +198,12 @@ async function validateAlignment(
       console.log("  Cached PV not aligned, running alignment...");
       const { audioUrl } = await getKalturaAudioUrl(testCase.entryId);
       aligned = await alignPVWithAudio(doc, audioUrl, opts);
-      await client.execute({
-        sql: `UPDATE pv_contents SET content = ? WHERE pv_symbol = ? AND language = ?`,
-        args: [JSON.stringify(aligned), testCase.pvSymbol, lang],
-      });
+      await pool.query(
+        q(
+          `UPDATE pv_contents SET content = ? WHERE pv_symbol = ? AND language = ?`,
+          [JSON.stringify(aligned), testCase.pvSymbol, lang],
+        ),
+      );
     }
   } else {
     console.log("  Fetching PV and running alignment...");
@@ -217,10 +219,15 @@ async function validateAlignment(
     aligned = await alignPVWithAudio(pvDoc, audioUrl, opts);
 
     const now = new Date().toISOString();
-    await client.execute({
-      sql: `INSERT OR REPLACE INTO pv_contents (pv_symbol, language, content, fetched_at, parsed_at) VALUES (?, ?, ?, ?, ?)`,
-      args: [testCase.pvSymbol, lang, JSON.stringify(aligned), now, now],
-    });
+    await pool.query(
+      q(
+        `INSERT INTO pv_contents (pv_symbol, language, content, fetched_at, parsed_at)
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT (pv_symbol, language) DO UPDATE
+           SET content = EXCLUDED.content, fetched_at = EXCLUDED.fetched_at, parsed_at = EXCLUDED.parsed_at`,
+        [testCase.pvSymbol, lang, JSON.stringify(aligned), now, now],
+      ),
+    );
   }
 
   // Compare against EN transcript (same audio regardless of PV language)

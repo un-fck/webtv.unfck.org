@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 import "../lib/load-env";
-import { getTursoClient } from "../lib/turso";
+import { pool, q } from "../lib/db";
 import { submitTranscription, pollTranscription } from "../lib/transcription";
 import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 
@@ -25,11 +25,10 @@ async function resolveEntryId(input: string) {
 
 async function loadTargets(arg: string): Promise<string[]> {
   if (arg.toLowerCase() === "all") {
-    const client = await getTursoClient();
-    const rows = await client.execute({
-      sql: "SELECT DISTINCT entry_id FROM transcripts WHERE status = 'completed' AND start_time IS NULL AND end_time IS NULL",
-    });
-    return rows.rows.map((row) => row.entry_id as string);
+    const result = await pool.query(
+      "SELECT DISTINCT entry_id FROM transcripts WHERE status = 'completed' AND start_time IS NULL AND end_time IS NULL",
+    );
+    return result.rows.map((row) => row.entry_id as string);
   }
   return [await resolveEntryId(arg)];
 }

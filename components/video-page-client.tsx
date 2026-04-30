@@ -13,6 +13,8 @@ import { PVSpeakerToc } from "./pv-panel";
 import { SiteHeader } from "./SiteHeader";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
+import { useTimezone } from "@/lib/hooks/use-timezone";
+import { formatMeetingTime, formatMeetingDate } from "@/lib/timezone";
 import { getPVDocumentUrl } from "@/lib/pv-documents";
 import { UN_LANGUAGES } from "@/lib/languages";
 
@@ -27,6 +29,7 @@ export function VideoPageClient({
   video,
   metadata,
 }: VideoPageClientProps) {
+  const { timezone } = useTimezone();
   const [player, setPlayer] = useState<{
     currentTime: number;
     play: () => void;
@@ -306,24 +309,19 @@ export function VideoPageClient({
 
           {/* Metadata — right column width */}
           <div className="lg:flex-2">
-            <h1 className="text-xl font-semibold leading-tight">
+            <h1 className="text-xl leading-tight font-semibold">
               {video.cleanTitle}
             </h1>
 
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
               {[
                 video.date &&
-                  new Date(video.date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  }),
+                  formatMeetingDate(
+                    video.scheduledTime ?? video.date,
+                    timezone,
+                  ),
                 video.scheduledTime &&
-                  new Date(video.scheduledTime).toLocaleTimeString("en-GB", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZoneName: "short",
-                  }),
+                  formatMeetingTime(video.scheduledTime, timezone),
                 video.body,
                 video.category,
                 video.duration,

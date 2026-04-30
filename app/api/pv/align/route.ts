@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPVContent, savePVContent } from "@/lib/turso";
+import { getPVContent, savePVContent } from "@/lib/db";
 import { getKalturaAudioUrl } from "@/lib/transcription";
 import { alignPVWithAudio } from "@/lib/pv-alignment";
 import type { PVDocument } from "@/lib/pv-parser";
@@ -30,9 +30,7 @@ export async function POST(request: NextRequest) {
   // Check if already aligned
   const cached = await getPVContent(pvSymbol, language);
   if (cached) {
-    const doc = JSON.parse(cached.content) as PVDocument & {
-      aligned?: boolean;
-    };
+    const doc = cached.content as PVDocument & { aligned?: boolean };
     if (doc.aligned) {
       return NextResponse.json(doc);
     }
@@ -47,7 +45,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const pvDoc = JSON.parse(cached.content) as PVDocument;
+  const pvDoc = cached.content as PVDocument;
 
   // Get audio URL
   const { audioUrl } = await getKalturaAudioUrl(kalturaId);
@@ -56,7 +54,7 @@ export async function POST(request: NextRequest) {
   const aligned = await alignPVWithAudio(pvDoc, audioUrl);
 
   // Save aligned version
-  await savePVContent(pvSymbol, language, JSON.stringify(aligned));
+  await savePVContent(pvSymbol, language, aligned as object);
 
   return NextResponse.json(aligned);
 }

@@ -5,7 +5,7 @@ import type {
 } from "openai/resources/chat/completions/completions";
 
 import { GEMINI_RATE_CARD_VERSION, GEMINI_MODEL_PRICING } from "./config";
-import { insertProcessingUsageEvent } from "./turso";
+import { insertProcessingUsageEvent } from "./db";
 import type { GeminiUsageMetadata } from "./gemini-transcription";
 
 export const UsageStages = {
@@ -29,13 +29,10 @@ export const UsageOperations = {
   openaiNormalizeSpeakers: "openai_normalize_speakers",
 } as const;
 
-function safeJsonStringify(value: unknown): string | null {
-  if (value === undefined) return null;
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return null;
-  }
+function safeObject(value: unknown): object | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value === "object") return value as object;
+  return null;
 }
 
 async function safeInsertUsageEvent(
@@ -94,7 +91,7 @@ export async function trackOpenAIChatCompletion({
           usage?.prompt_tokens_details?.cached_tokens ?? null,
         total_tokens: usage?.total_tokens ?? null,
         duration_ms: durationMs,
-        request_meta: safeJsonStringify(requestMeta),
+        request_meta: safeObject(requestMeta),
       });
 
       return completion;
@@ -121,7 +118,7 @@ export async function trackOpenAIChatCompletion({
         status: "error",
         model,
         duration_ms: durationMs,
-        request_meta: safeJsonStringify(requestMeta),
+        request_meta: safeObject(requestMeta),
         error_message: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -182,11 +179,11 @@ export async function trackGeminiTranscription({
     usage_quantity_type: audioSeconds ? "audio_hours" : null,
     rate_card_version: GEMINI_RATE_CARD_VERSION,
     base_rate_per_hour_usd: null, // Gemini is token-priced, not hour-priced
-    pricing_meta: safeJsonStringify({
+    pricing_meta: safeObject({
       estimated_cost_usd: estimatedCostUsd,
       pricing,
     }),
     duration_ms: durationMs,
-    request_meta: safeJsonStringify(requestMeta),
+    request_meta: safeObject(requestMeta),
   });
 }
