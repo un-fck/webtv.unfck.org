@@ -17,7 +17,7 @@ import {
   getAnalysisModel,
   getAnalysisModelMini,
   getAnalysisModelNano,
-} from "./providers/config";
+} from "./providers/models";
 import Bottleneck from "bottleneck";
 // @ts-expect-error - no types available for sbd
 import sbd from "sbd";
