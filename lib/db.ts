@@ -32,10 +32,6 @@ pool.on("error", (err) => {
   console.error("PostgreSQL pool error:", err);
 });
 
-// Route all queries through the webtv schema
-pool.on("connect", (client) => {
-  client.query("SET search_path = webtv").catch(() => {});
-});
 
 // Convert ?-style placeholders to $N for pg
 export function q(
@@ -53,180 +49,6 @@ let initialized = false;
 
 async function ensureInitialized() {
   if (initialized) return;
-
-  await pool.query("SET search_path = webtv");
-
-  await Promise.all([
-    pool.query(`
-      CREATE TABLE IF NOT EXISTS speaker_mappings (
-        transcript_id TEXT PRIMARY KEY,
-        mapping       JSONB NOT NULL,
-        updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `),
-    pool.query(`
-      CREATE TABLE IF NOT EXISTS transcripts (
-        entry_id      TEXT NOT NULL,
-        transcript_id TEXT NOT NULL PRIMARY KEY,
-        start_time    DOUBLE PRECISION,
-        end_time      DOUBLE PRECISION,
-        audio_url     TEXT NOT NULL,
-        status        TEXT NOT NULL,
-        language_code TEXT,
-        content       JSONB NOT NULL DEFAULT '{}',
-        pipeline_lock TIMESTAMPTZ,
-        error_message TEXT,
-        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `),
-    pool.query(`
-      CREATE TABLE IF NOT EXISTS videos (
-        asset_id       TEXT PRIMARY KEY,
-        entry_id       TEXT,
-        title          TEXT NOT NULL,
-        clean_title    TEXT,
-        date           DATE NOT NULL,
-        scheduled_time TIMESTAMPTZ,
-        duration       INTEGER,
-        url            TEXT NOT NULL,
-        body           TEXT,
-        category       TEXT,
-        event_code     TEXT,
-        event_type     TEXT,
-        session_number TEXT,
-        part_number    TEXT,
-        pv_symbol      TEXT,
-        pv_available   BOOLEAN,
-        pv_checked_at  TIMESTAMPTZ,
-        slug           TEXT,
-        last_seen      DATE NOT NULL,
-        created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        fts_vec tsvector GENERATED ALWAYS AS (
-          to_tsvector('english', COALESCE(clean_title, title))
-        ) STORED
-      )
-    `),
-    pool.query(`
-      CREATE TABLE IF NOT EXISTS processing_usage_events (
-        id                        SERIAL PRIMARY KEY,
-        transcript_id             TEXT NOT NULL,
-        provider                  TEXT NOT NULL,
-        stage                     TEXT NOT NULL,
-        operation                 TEXT NOT NULL,
-        status                    TEXT NOT NULL,
-        model                     TEXT,
-        input_tokens              INTEGER,
-        output_tokens             INTEGER,
-        reasoning_tokens          INTEGER,
-        cached_input_tokens       INTEGER,
-        total_tokens              INTEGER,
-        usage_hours               DOUBLE PRECISION,
-        usage_seconds             INTEGER,
-        usage_quantity_type       TEXT,
-        usage_multiplier          DOUBLE PRECISION,
-        rate_card_version         TEXT,
-        base_rate_per_hour_usd    DOUBLE PRECISION,
-        feature_rate_per_hour_usd DOUBLE PRECISION,
-        pricing_meta              JSONB,
-        duration_ms               INTEGER,
-        request_meta              JSONB,
-        error_message             TEXT,
-        created_at                TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `),
-  ]);
-
-  await Promise.all([
-    pool.query(
-      `CREATE INDEX IF NOT EXISTS idx_entry_id ON transcripts(entry_id)`,
-    ),
-    pool.query(
-      `CREATE INDEX IF NOT EXISTS idx_videos_entry_id ON videos(entry_id)`,
-    ),
-    pool.query(`CREATE INDEX IF NOT EXISTS idx_videos_date ON videos(date)`),
-    pool.query(
-      `CREATE INDEX IF NOT EXISTS idx_videos_last_seen ON videos(last_seen)`,
-    ),
-    pool.query(
-      `CREATE INDEX IF NOT EXISTS idx_usage_transcript_id ON processing_usage_events(transcript_id)`,
-    ),
-    pool.query(
-      `CREATE INDEX IF NOT EXISTS idx_usage_provider_stage ON processing_usage_events(provider, stage)`,
-    ),
-    pool.query(
-      `CREATE INDEX IF NOT EXISTS idx_usage_created_at ON processing_usage_events(created_at)`,
-    ),
-  ]);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS pv_contents (
-      pv_symbol  TEXT NOT NULL,
-      language   TEXT NOT NULL DEFAULT 'en',
-      content    JSONB NOT NULL,
-      fetched_at TIMESTAMPTZ NOT NULL,
-      parsed_at  TIMESTAMPTZ NOT NULL,
-      PRIMARY KEY (pv_symbol, language)
-    )
-  `);
-
-  await Promise.all([
-    pool
-      .query(
-        `CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_slug ON videos(slug)`,
-      )
-      .catch(() => {}),
-    pool
-      .query(`CREATE INDEX IF NOT EXISTS idx_videos_body ON videos(body)`)
-      .catch(() => {}),
-    pool
-      .query(
-        `CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category)`,
-      )
-      .catch(() => {}),
-    pool
-      .query(
-        `CREATE INDEX IF NOT EXISTS idx_transcripts_entry_lang ON transcripts(entry_id, language_code)`,
-      )
-      .catch(() => {}),
-    pool
-      .query(
-        `CREATE INDEX IF NOT EXISTS idx_transcripts_status_entry ON transcripts(status, entry_id)`,
-      )
-      .catch(() => {}),
-  ]);
-
-  // Normalize legacy language codes
-  await Promise.all([
-    pool
-      .query(
-        `UPDATE transcripts SET language_code = 'en' WHERE language_code IS NULL`,
-      )
-      .catch(() => {}),
-    pool
-      .query(
-        `UPDATE transcripts SET language_code = 'en' WHERE language_code LIKE 'en%' AND language_code != 'en'`,
-      )
-      .catch(() => {}),
-  ]);
-
-  // FTS support (requires pg_trgm extension — apply sql/schema.sql first in prod)
-  await pool.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`).catch(() => {});
-
-  await Promise.all([
-    pool
-      .query(
-        `CREATE INDEX IF NOT EXISTS idx_videos_fts ON videos USING GIN(fts_vec)`,
-      )
-      .catch(() => {}),
-    pool
-      .query(
-        `CREATE INDEX IF NOT EXISTS idx_videos_trgm ON videos USING GIN (COALESCE(clean_title, title) gin_trgm_ops)`,
-      )
-      .catch(() => {}),
-  ]);
-
   initialized = true;
 }
 
@@ -410,10 +232,10 @@ export async function getTranscript(
 
   let sql: string;
   if (startTime !== undefined && endTime !== undefined) {
-    sql = `SELECT * FROM transcripts WHERE entry_id = ? AND start_time = ? AND end_time = ? ${statusFilter} ${langFilter} ORDER BY updated_at DESC LIMIT 1`;
+    sql = `SELECT * FROM webtv.transcripts WHERE entry_id = ? AND start_time = ? AND end_time = ? ${statusFilter} ${langFilter} ORDER BY updated_at DESC LIMIT 1`;
     args.push(startTime, endTime);
   } else {
-    sql = `SELECT * FROM transcripts WHERE entry_id = ? AND start_time IS NULL AND end_time IS NULL ${statusFilter} ${langFilter} ORDER BY updated_at DESC LIMIT 1`;
+    sql = `SELECT * FROM webtv.transcripts WHERE entry_id = ? AND start_time IS NULL AND end_time IS NULL ${statusFilter} ${langFilter} ORDER BY updated_at DESC LIMIT 1`;
   }
   if (languageCode) args.push(languageCode);
 
@@ -428,7 +250,7 @@ export async function getAllTranscriptsForEntry(
   await ensureInitialized();
   const result = await pool.query(
     q(
-      "SELECT * FROM transcripts WHERE entry_id = ? AND status = 'completed' ORDER BY start_time ASC",
+      "SELECT * FROM webtv.transcripts WHERE entry_id = ? AND status = 'completed' ORDER BY start_time ASC",
       [entryId],
     ),
   );
@@ -447,7 +269,7 @@ export async function getTranscriptLanguagesForEntry(
   await ensureInitialized();
   const result = await pool.query(
     q(
-      "SELECT language_code, status, transcript_id FROM transcripts WHERE entry_id = ? ORDER BY language_code",
+      "SELECT language_code, status, transcript_id FROM webtv.transcripts WHERE entry_id = ? ORDER BY language_code",
       [entryId],
     ),
   );
@@ -463,7 +285,7 @@ export async function getTranscriptById(
 ): Promise<Transcript | null> {
   await ensureInitialized();
   const result = await pool.query(
-    q("SELECT * FROM transcripts WHERE transcript_id = ?", [transcriptId]),
+    q("SELECT * FROM webtv.transcripts WHERE transcript_id = ?", [transcriptId]),
   );
   if (result.rows.length === 0) return null;
   return mapTranscriptRow(result.rows[0]);
@@ -482,7 +304,7 @@ export async function saveTranscript(
   await ensureInitialized();
   await pool.query(
     q(
-      `INSERT INTO transcripts (entry_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
+      `INSERT INTO webtv.transcripts (entry_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(transcript_id) DO UPDATE SET
          entry_id = EXCLUDED.entry_id,
@@ -513,7 +335,7 @@ export async function updateTranscriptStatus(
   await ensureInitialized();
   await pool.query(
     q(
-      "UPDATE transcripts SET status = ?, error_message = ?, updated_at = NOW() WHERE transcript_id = ?",
+      "UPDATE webtv.transcripts SET status = ?, error_message = ?, updated_at = NOW() WHERE transcript_id = ?",
       [status, errorMessage ?? null, transcriptId],
     ),
   );
@@ -526,7 +348,7 @@ export async function updateTranscriptContent(
   await ensureInitialized();
   await pool.query(
     q(
-      "UPDATE transcripts SET content = ?, updated_at = NOW() WHERE transcript_id = ?",
+      "UPDATE webtv.transcripts SET content = ?, updated_at = NOW() WHERE transcript_id = ?",
       [content, transcriptId],
     ),
   );
@@ -542,7 +364,7 @@ export async function scheduleTranscript(
   const transcriptId = `scheduled-${assetId}-${Date.now()}`;
   await pool.query(
     q(
-      `INSERT INTO transcripts (entry_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
+      `INSERT INTO webtv.transcripts (entry_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
        VALUES (?, ?, ?, ?, ?, 'scheduled', null, '{}')
        ON CONFLICT(transcript_id) DO NOTHING`,
       [kalturaId, transcriptId, startTime, endTime, `pending:${assetId}`],
@@ -566,7 +388,7 @@ export async function getScheduledTranscripts(): Promise<
   await ensureInitialized();
   const result = await pool.query(
     `SELECT transcript_id, entry_id, start_time, end_time, audio_url, created_at
-     FROM transcripts WHERE status = 'scheduled' ORDER BY created_at ASC`,
+     FROM webtv.transcripts WHERE status = 'scheduled' ORDER BY created_at ASC`,
   );
   return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
@@ -584,7 +406,7 @@ export async function tryAcquirePipelineLock(
   await ensureInitialized();
   const result = await pool.query(
     q(
-      `UPDATE transcripts SET pipeline_lock = NOW(), updated_at = NOW()
+      `UPDATE webtv.transcripts SET pipeline_lock = NOW(), updated_at = NOW()
        WHERE transcript_id = ? AND (pipeline_lock IS NULL OR pipeline_lock < NOW() - INTERVAL '30 minutes')`,
       [transcriptId],
     ),
@@ -596,7 +418,7 @@ export async function releasePipelineLock(transcriptId: string): Promise<void> {
   await ensureInitialized();
   await pool.query(
     q(
-      "UPDATE transcripts SET pipeline_lock = NULL, updated_at = NOW() WHERE transcript_id = ?",
+      "UPDATE webtv.transcripts SET pipeline_lock = NULL, updated_at = NOW() WHERE transcript_id = ?",
       [transcriptId],
     ),
   );
@@ -605,12 +427,12 @@ export async function releasePipelineLock(transcriptId: string): Promise<void> {
 export async function deleteTranscript(transcriptId: string): Promise<void> {
   await ensureInitialized();
   await pool.query(
-    q("DELETE FROM processing_usage_events WHERE transcript_id = ?", [
+    q("DELETE FROM webtv.processing_usage_events WHERE transcript_id = ?", [
       transcriptId,
     ]),
   );
   await pool.query(
-    q("DELETE FROM transcripts WHERE transcript_id = ?", [transcriptId]),
+    q("DELETE FROM webtv.transcripts WHERE transcript_id = ?", [transcriptId]),
   );
 }
 
@@ -624,14 +446,14 @@ export async function deleteTranscriptsForEntry(
 
   await pool.query(
     q(
-      `DELETE FROM processing_usage_events WHERE transcript_id IN (
-         SELECT transcript_id FROM transcripts WHERE entry_id = ?${langFilter}
+      `DELETE FROM webtv.processing_usage_events WHERE transcript_id IN (
+         SELECT transcript_id FROM webtv.transcripts WHERE entry_id = ?${langFilter}
        )`,
       args,
     ),
   );
   await pool.query(
-    q(`DELETE FROM transcripts WHERE entry_id = ?${langFilter}`, args),
+    q(`DELETE FROM webtv.transcripts WHERE entry_id = ?${langFilter}`, args),
   );
 }
 
@@ -641,7 +463,7 @@ export async function insertProcessingUsageEvent(
   await ensureInitialized();
   await pool.query(
     q(
-      `INSERT INTO processing_usage_events (
+      `INSERT INTO webtv.processing_usage_events (
          transcript_id, provider, stage, operation, status, model,
          input_tokens, output_tokens, reasoning_tokens, cached_input_tokens, total_tokens,
          usage_hours, usage_seconds, usage_quantity_type, usage_multiplier,
@@ -682,7 +504,7 @@ export async function listProcessingUsageEventsByTranscript(
   await ensureInitialized();
   const result = await pool.query(
     q(
-      "SELECT * FROM processing_usage_events WHERE transcript_id = ? ORDER BY created_at ASC, id ASC",
+      "SELECT * FROM webtv.processing_usage_events WHERE transcript_id = ? ORDER BY created_at ASC, id ASC",
       [transcriptId],
     ),
   );
@@ -739,7 +561,7 @@ export async function getProcessingUsageSummaryByTranscript(
              THEN usage_hours * (COALESCE(base_rate_per_hour_usd, 0) + COALESCE(feature_rate_per_hour_usd, 0))
            ELSE 0
          END), 0) AS estimated_cost_usd
-       FROM processing_usage_events
+       FROM webtv.processing_usage_events
        WHERE transcript_id = ?
        GROUP BY provider, stage
        ORDER BY provider, stage`,
@@ -766,7 +588,7 @@ export async function getProcessingUsageSummaryByTranscript(
 export async function getAllTranscriptedEntries(): Promise<string[]> {
   await ensureInitialized();
   const result = await pool.query(
-    `SELECT DISTINCT entry_id FROM transcripts WHERE status = 'completed'`,
+    `SELECT DISTINCT entry_id FROM webtv.transcripts WHERE status = 'completed'`,
   );
   return result.rows.map((row) => row.entry_id as string);
 }
@@ -827,7 +649,7 @@ export async function saveVideo(
   await ensureInitialized();
   await pool.query(
     q(
-      `INSERT INTO videos (
+      `INSERT INTO webtv.videos (
          asset_id, entry_id, title, clean_title, date, scheduled_time,
          duration, url, body, category, event_code, event_type,
          session_number, part_number, pv_symbol, slug, last_seen
@@ -876,7 +698,7 @@ export async function getVideoByAssetId(
 ): Promise<VideoRecord | null> {
   await ensureInitialized();
   const result = await pool.query(
-    q("SELECT * FROM videos WHERE asset_id = ?", [assetId]),
+    q("SELECT * FROM webtv.videos WHERE asset_id = ?", [assetId]),
   );
   if (result.rows.length === 0) return null;
   return mapVideoRow(result.rows[0]);
@@ -887,14 +709,14 @@ export async function getVideoBySlug(
 ): Promise<VideoRecord | null> {
   await ensureInitialized();
   let result = await pool.query(
-    q("SELECT * FROM videos WHERE slug = ?", [slug]),
+    q("SELECT * FROM webtv.videos WHERE slug = ?", [slug]),
   );
 
   if (result.rows.length === 0 && slug.startsWith("meeting/")) {
     const rest = slug.slice("meeting/".length);
     const assetId = rest.replace(/-part-\d+$/, "");
     result = await pool.query(
-      q("SELECT * FROM videos WHERE asset_id = ?", [assetId]),
+      q("SELECT * FROM webtv.videos WHERE asset_id = ?", [assetId]),
     );
   }
 
@@ -908,7 +730,7 @@ export async function getRecentVideos(
   await ensureInitialized();
   const result = await pool.query(
     q(
-      "SELECT * FROM videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC, scheduled_time DESC",
+      "SELECT * FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC, scheduled_time DESC",
       [daysBack],
     ),
   );
@@ -921,7 +743,7 @@ export async function updateVideoEntryId(
 ): Promise<void> {
   await ensureInitialized();
   await pool.query(
-    q("UPDATE videos SET entry_id = ?, updated_at = NOW() WHERE asset_id = ?", [
+    q("UPDATE webtv.videos SET entry_id = ?, updated_at = NOW() WHERE asset_id = ?", [
       entryId,
       assetId,
     ]),
@@ -944,7 +766,7 @@ export async function searchVideos(
       const ftsResult = await pool.query(
         q(
           `SELECT *, ts_rank(fts_vec, websearch_to_tsquery('english', ?)) AS rank
-           FROM videos
+           FROM webtv.videos
            WHERE fts_vec @@ websearch_to_tsquery('english', ?)
            ORDER BY rank DESC, date DESC
            LIMIT ? OFFSET ?`,
@@ -963,7 +785,7 @@ export async function searchVideos(
   const pattern = `%${query}%`;
   const result = await pool.query(
     q(
-      `SELECT * FROM videos WHERE title ILIKE ? OR clean_title ILIKE ?
+      `SELECT * FROM webtv.videos WHERE title ILIKE ? OR clean_title ILIKE ?
        ORDER BY date DESC, scheduled_time DESC
        LIMIT ? OFFSET ?`,
       [pattern, pattern, limit, offset],
@@ -1088,11 +910,11 @@ export async function getVideosPage(
 
   const [countResult, dataResult] = await Promise.all([
     pool.query(
-      q(`SELECT COUNT(*) AS total FROM videos WHERE ${where}`, countArgs),
+      q(`SELECT COUNT(*) AS total FROM webtv.videos WHERE ${where}`, countArgs),
     ),
     pool.query(
       q(
-        `SELECT * FROM videos WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+        `SELECT * FROM webtv.videos WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
         dataArgs,
       ),
     ),
@@ -1109,7 +931,7 @@ export async function getAvailableDates(
   await ensureInitialized();
   const result = await pool.query(
     q(
-      "SELECT DISTINCT date FROM videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC",
+      "SELECT DISTINCT date FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC",
       [daysBack],
     ),
   );
@@ -1126,13 +948,13 @@ export async function getFilterOptions(daysBack: number = 365): Promise<{
   const [bodiesResult, categoriesResult] = await Promise.all([
     pool.query(
       q(
-        "SELECT body, COUNT(*) as cnt FROM videos WHERE last_seen >= CURRENT_DATE - ?::int AND body IS NOT NULL GROUP BY body ORDER BY body",
+        "SELECT body, COUNT(*) as cnt FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND body IS NOT NULL GROUP BY body ORDER BY body",
         [daysBack],
       ),
     ),
     pool.query(
       q(
-        "SELECT category, COUNT(*) as cnt FROM videos WHERE last_seen >= CURRENT_DATE - ?::int AND category IS NOT NULL GROUP BY category ORDER BY category",
+        "SELECT category, COUNT(*) as cnt FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND category IS NOT NULL GROUP BY category ORDER BY category",
         [daysBack],
       ),
     ),
@@ -1160,7 +982,7 @@ export async function updatePVAvailability(
   await ensureInitialized();
   await pool.query(
     q(
-      "UPDATE videos SET pv_available = ?, pv_checked_at = NOW(), updated_at = NOW() WHERE asset_id = ?",
+      "UPDATE webtv.videos SET pv_available = ?, pv_checked_at = NOW(), updated_at = NOW() WHERE asset_id = ?",
       [available, assetId],
     ),
   );
@@ -1173,7 +995,7 @@ export async function getVideosNeedingPVCheck(
   await ensureInitialized();
   const result = await pool.query(
     q(
-      `SELECT asset_id, pv_symbol FROM videos
+      `SELECT asset_id, pv_symbol FROM webtv.videos
        WHERE pv_symbol IS NOT NULL
          AND date >= CURRENT_DATE - ?::int
          AND (
@@ -1199,7 +1021,7 @@ export async function getPVContent(
   await ensureInitialized();
   const result = await pool.query(
     q(
-      "SELECT content, fetched_at, parsed_at FROM pv_contents WHERE pv_symbol = ? AND language = ?",
+      "SELECT content, fetched_at, parsed_at FROM webtv.pv_contents WHERE pv_symbol = ? AND language = ?",
       [pvSymbol, language],
     ),
   );
@@ -1220,7 +1042,7 @@ export async function savePVContent(
   await ensureInitialized();
   await pool.query(
     q(
-      `INSERT INTO pv_contents (pv_symbol, language, content, fetched_at, parsed_at)
+      `INSERT INTO webtv.pv_contents (pv_symbol, language, content, fetched_at, parsed_at)
        VALUES (?, ?, ?, NOW(), NOW())
        ON CONFLICT (pv_symbol, language)
        DO UPDATE SET content = EXCLUDED.content, parsed_at = NOW()`,
@@ -1246,7 +1068,7 @@ export async function getSpeakerMapping(
 ): Promise<SpeakerMapping | null> {
   await ensureInitialized();
   const result = await pool.query(
-    q("SELECT mapping FROM speaker_mappings WHERE transcript_id = ?", [
+    q("SELECT mapping FROM webtv.speaker_mappings WHERE transcript_id = ?", [
       transcriptId,
     ]),
   );
@@ -1261,7 +1083,7 @@ export async function setSpeakerMapping(
   await ensureInitialized();
   await pool.query(
     q(
-      `INSERT INTO speaker_mappings (transcript_id, mapping)
+      `INSERT INTO webtv.speaker_mappings (transcript_id, mapping)
        VALUES (?, ?)
        ON CONFLICT(transcript_id) DO UPDATE SET
          mapping = EXCLUDED.mapping,
