@@ -16,7 +16,6 @@ import "./load-env";
 import {
   getAnalysisModel,
   getAnalysisModelMini,
-  getAnalysisModelNano,
 } from "./providers/models";
 import Bottleneck from "bottleneck";
 // @ts-expect-error - no types available for sbd
@@ -373,6 +372,7 @@ async function defineTopics(
     },
     request: {
       model: getAnalysisModel(),
+      reasoning_effort: "medium" as const,
       messages: [
         {
           role: "system",
@@ -478,6 +478,7 @@ export async function analyzePropositions(
     },
     request: {
       model: getAnalysisModel(),
+      reasoning_effort: "medium" as const,
       messages: [
         {
           role: "system",
@@ -679,13 +680,13 @@ async function tagSentencesWithTopics(
             transcriptId,
             stage: UsageStages.taggingSentences,
             operation: UsageOperations.openaiTagSentenceTopics,
-            model: getAnalysisModelNano(),
+            model: getAnalysisModelMini(),
             requestMeta: {
               batch_size: batch.length,
               first_global_index: batch[0].index,
             },
             request: {
-              model: getAnalysisModelNano(),
+              model: getAnalysisModelMini(),
               reasoning_effort: "none" as const,
               messages: [
                 {
@@ -839,14 +840,14 @@ async function resegmentParagraph(
     transcriptId,
     stage: UsageStages.resegmenting,
     operation: UsageOperations.openaiResegmentParagraph,
-    model: getAnalysisModelMini(),
+    model: getAnalysisModel(),
     requestMeta: {
       paragraph_index: paragraphIndex ?? null,
       context_size: contextParas.length,
     },
     request: {
-      model: getAnalysisModelMini(),
-      reasoning_effort: "low" as const,
+      model: getAnalysisModel(),
+      reasoning_effort: "medium" as const,
       messages: [
         {
           role: "system",
@@ -1102,11 +1103,11 @@ export async function identifySpeakers(
       transcriptId,
       stage: UsageStages.identifyingSpeakers,
       operation: UsageOperations.openaiInitialSpeakerMapping,
-      model: getAnalysisModelMini(),
+      model: getAnalysisModel(),
       requestMeta: { paragraph_count: paragraphs.length },
       request: {
-        model: getAnalysisModelMini(),
-        reasoning_effort: "low" as const,
+        model: getAnalysisModel(),
+        reasoning_effort: "medium" as const,
         messages: [
           {
             role: "system",
