@@ -225,6 +225,7 @@ async function runTranscriptionPipeline(
   audioUrl: string,
   options: GeminiTranscriptionOptions,
   languageCode: string,
+  kalturaId: string,
 ): Promise<void> {
   try {
     const provider = getSTTProvider();
@@ -281,6 +282,7 @@ async function runTranscriptionPipeline(
       "identifying_speakers",
       languageCode,
       content,
+      kalturaId,
     );
     if (speakerMapping) {
       await setSpeakerMapping(transcriptId, speakerMapping);
@@ -374,6 +376,7 @@ export async function submitTranscription(
       statements: [],
       topics: {},
     },
+    kalturaId,
   );
 
   runTranscriptionPipeline(
@@ -382,6 +385,7 @@ export async function submitTranscription(
     audioUrl,
     options,
     lang,
+    kalturaId,
   ).catch((err) => {
     perr("[Pipeline] Unhandled error:", err);
   });

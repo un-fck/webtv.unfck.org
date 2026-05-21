@@ -1,6 +1,7 @@
 import { getVideoByAssetId, saveVideo, type VideoRecord } from "./db";
 import { parseMeetingSymbol } from "./pv-documents";
 import { meetingSlugFromVideo } from "./meeting-slug";
+import { extractKalturaId } from "./kaltura";
 
 export interface Video {
   id: string;
@@ -66,6 +67,7 @@ export function videoToRecord(
   return {
     asset_id: video.id,
     entry_id: null, // Will be resolved later
+    kaltura_id: extractKalturaId(video.id),
     title: video.title,
     clean_title: video.cleanTitle,
     date: video.date,

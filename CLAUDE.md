@@ -25,7 +25,8 @@ pnpm usage-benchmark          # Benchmark usage tracking
 pnpm compare-transcribe -- <assetId|entryId> [provider]  # One-off provider compare
 
 # Untracked (not in package.json — run via tsx directly)
-tsx scripts/backfill-kaltura-id.ts   # One-time: add kaltura_id column + backfill
+psql "$DATABASE_URL" -f sql/migrations/001_add_kaltura_id.sql  # Schema migration (run first)
+tsx scripts/backfill-kaltura-id.ts   # One-time: backfill kaltura_id (run after the migration)
 tsx scripts/test-pv-alignment.ts     # Validate PV alignment timestamps
 tsx scripts/test-pv-parser.ts        # Validate PV parser across 6 languages
 

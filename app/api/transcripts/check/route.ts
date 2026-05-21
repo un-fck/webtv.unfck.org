@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTranscript } from "@/lib/db";
+import { getTranscript, getTranscriptByKalturaId } from "@/lib/db";
 import { getKalturaAudioUrl } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";
@@ -19,16 +19,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const kalturaLang = bcp47ToKalturaName(language);
-    const { entryId } = await getKalturaAudioUrl(kalturaId, kalturaLang);
-
-    const cached = await getTranscript(
-      entryId,
-      undefined,
-      undefined,
-      true,
-      language,
-    );
+    // Fast path: look up by the stable player ID (no external API call).
+    // Falls back to resolving via Kaltura only for legacy rows that
+    // pre-date the `kaltura_id` column.
+    let cached = await getTranscriptByKalturaId(kalturaId, language);
+    if (!cached) {
+      const kalturaLang = bcp47ToKalturaName(language);
+      const { entryId } = await getKalturaAudioUrl(kalturaId, kalturaLang);
+      cached = await getTranscript(
+        entryId,
+        undefined,
+        undefined,
+        true,
+        language,
+      );
+    }
 
     if (!cached || cached.status !== "completed") {
       return NextResponse.json({ cached: false });

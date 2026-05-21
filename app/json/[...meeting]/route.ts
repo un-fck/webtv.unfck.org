@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getVideoBySlug, getTranscript } from "@/lib/db";
+import { getVideoBySlug, getTranscript, getTranscriptByKalturaId } from "@/lib/db";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import {
   getSpeakerMapping,
@@ -38,29 +38,35 @@ export async function GET(
     const kalturaId = extractKalturaId(record.asset_id);
     const metadata = await getVideoMetadata(record.asset_id);
 
-    // Resolve entry ID
-    const entryId = await resolveEntryId(record.asset_id, record.entry_id);
-
-    if (!entryId) {
-      const response = NextResponse.json({
-        video,
-        metadata,
-        transcript: null,
-        error: "Unable to resolve video entry ID",
-      });
-      response.headers.set("Content-Type", "application/json; charset=utf-8");
-      return response;
-    }
-
-    // Check DB for transcript (optional language filter)
     const language = request.nextUrl.searchParams.get("language") || undefined;
-    const transcript = await getTranscript(
-      entryId,
-      undefined,
-      undefined,
-      true,
-      language,
-    );
+
+    // Fast path: look up by the stable player ID (no Kaltura round-trip).
+    let transcript = kalturaId
+      ? await getTranscriptByKalturaId(kalturaId, language)
+      : null;
+
+    // Fall back to resolving the entry ID for legacy rows that pre-date the
+    // `kaltura_id` column.
+    if (!transcript) {
+      const entryId = await resolveEntryId(record.asset_id, record.entry_id);
+      if (!entryId) {
+        const response = NextResponse.json({
+          video,
+          metadata,
+          transcript: null,
+          error: "Unable to resolve video entry ID",
+        });
+        response.headers.set("Content-Type", "application/json; charset=utf-8");
+        return response;
+      }
+      transcript = await getTranscript(
+        entryId,
+        undefined,
+        undefined,
+        true,
+        language,
+      );
+    }
 
     if (!transcript) {
       const response = NextResponse.json({

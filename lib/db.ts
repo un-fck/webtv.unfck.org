@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 import "@/lib/load-env";
+import { extractKalturaId } from "./kaltura";
 
 export type TranscriptStatus =
   | "scheduled"
@@ -118,6 +119,7 @@ export interface TranscriptContent {
 
 export interface Transcript {
   entry_id: string;
+  kaltura_id: string | null;
   transcript_id: string;
   start_time: number | null;
   end_time: number | null;
@@ -202,6 +204,7 @@ export interface ProcessingUsageSummaryRow {
 function mapTranscriptRow(row: Record<string, unknown>): Transcript {
   return {
     entry_id: row.entry_id as string,
+    kaltura_id: (row.kaltura_id as string | null) ?? null,
     transcript_id: row.transcript_id as string,
     start_time: row.start_time as number | null,
     end_time: row.end_time as number | null,
@@ -301,14 +304,16 @@ export async function saveTranscript(
   status: TranscriptStatus,
   languageCode: string | null,
   content: TranscriptContent,
+  kalturaId: string | null = null,
 ): Promise<void> {
   await ensureInitialized();
   await pool.query(
     q(
-      `INSERT INTO webtv.transcripts (entry_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(transcript_id) DO UPDATE SET
          entry_id = EXCLUDED.entry_id,
+         kaltura_id = COALESCE(EXCLUDED.kaltura_id, transcripts.kaltura_id),
          audio_url = EXCLUDED.audio_url,
          status = EXCLUDED.status,
          language_code = EXCLUDED.language_code,
@@ -316,6 +321,7 @@ export async function saveTranscript(
          updated_at = NOW()`,
       [
         entryId,
+        kalturaId,
         transcriptId,
         startTime,
         endTime,
@@ -365,10 +371,17 @@ export async function scheduleTranscript(
   const transcriptId = `scheduled-${assetId}-${Date.now()}`;
   await pool.query(
     q(
-      `INSERT INTO webtv.transcripts (entry_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
-       VALUES (?, ?, ?, ?, ?, 'scheduled', null, '{}')
+      `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
+       VALUES (?, ?, ?, ?, ?, ?, 'scheduled', null, '{}')
        ON CONFLICT(transcript_id) DO NOTHING`,
-      [kalturaId, transcriptId, startTime, endTime, `pending:${assetId}`],
+      [
+        kalturaId,
+        kalturaId,
+        transcriptId,
+        startTime,
+        endTime,
+        `pending:${assetId}`,
+      ],
     ),
   );
   return transcriptId;
@@ -586,10 +599,43 @@ export async function getProcessingUsageSummaryByTranscript(
   }));
 }
 
+export async function getTranscriptByKalturaId(
+  kalturaId: string,
+  languageCode?: string,
+  completedOnly = true,
+): Promise<Transcript | null> {
+  await ensureInitialized();
+  const conditions: string[] = ["kaltura_id = ?"];
+  const args: unknown[] = [kalturaId];
+  if (completedOnly) conditions.push("status = 'completed'");
+  if (languageCode) {
+    conditions.push("language_code = ?");
+    args.push(languageCode);
+  }
+  const result = await pool.query(
+    q(
+      `SELECT * FROM webtv.transcripts WHERE ${conditions.join(" AND ")}
+       ORDER BY updated_at DESC LIMIT 1`,
+      args,
+    ),
+  );
+  if (result.rows.length === 0) return null;
+  return mapTranscriptRow(result.rows[0]);
+}
+
 export async function getAllTranscriptedEntries(): Promise<string[]> {
   await ensureInitialized();
+  // Return identifiers that match `videos.entry_id`. Some legacy transcripts
+  // were keyed by a resolved (canonical) entry that differs from the
+  // pre-redirect Kaltura ID stored on `videos.entry_id`, so we also accept a
+  // match via `videos.kaltura_id` (the stable player ID) when available.
   const result = await pool.query(
-    `SELECT DISTINCT entry_id FROM webtv.transcripts WHERE status = 'completed'`,
+    `SELECT DISTINCT v.entry_id
+       FROM webtv.videos v
+       JOIN webtv.transcripts t
+         ON t.status = 'completed'
+        AND (t.entry_id = v.entry_id OR t.kaltura_id = v.kaltura_id)
+      WHERE v.entry_id IS NOT NULL`,
   );
   return result.rows.map((row) => row.entry_id as string);
 }
@@ -597,6 +643,7 @@ export async function getAllTranscriptedEntries(): Promise<string[]> {
 export interface VideoRecord {
   asset_id: string;
   entry_id: string | null;
+  kaltura_id: string | null;
   title: string;
   clean_title: string | null;
   date: string;
@@ -622,6 +669,7 @@ function mapVideoRow(row: Record<string, unknown>): VideoRecord {
   return {
     asset_id: row.asset_id as string,
     entry_id: row.entry_id as string | null,
+    kaltura_id: (row.kaltura_id as string | null) ?? null,
     title: row.title as string,
     clean_title: row.clean_title as string | null,
     date: row.date as string,
@@ -651,12 +699,13 @@ export async function saveVideo(
   await pool.query(
     q(
       `INSERT INTO webtv.videos (
-         asset_id, entry_id, title, clean_title, date, scheduled_time,
+         asset_id, entry_id, kaltura_id, title, clean_title, date, scheduled_time,
          duration, url, body, category, event_code, event_type,
          session_number, part_number, pv_symbol, slug, last_seen
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(asset_id) DO UPDATE SET
          entry_id = COALESCE(EXCLUDED.entry_id, videos.entry_id),
+         kaltura_id = COALESCE(EXCLUDED.kaltura_id, videos.kaltura_id),
          title = EXCLUDED.title,
          clean_title = EXCLUDED.clean_title,
          scheduled_time = EXCLUDED.scheduled_time,
@@ -674,6 +723,7 @@ export async function saveVideo(
       [
         video.asset_id,
         video.entry_id,
+        video.kaltura_id ?? extractKalturaId(video.asset_id),
         video.title,
         video.clean_title,
         video.date,
@@ -932,7 +982,7 @@ export async function getAvailableDates(
   await ensureInitialized();
   const result = await pool.query(
     q(
-      "SELECT DISTINCT date FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC",
+      "SELECT DISTINCT TO_CHAR(date, 'YYYY-MM-DD') AS date FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC",
       [daysBack],
     ),
   );

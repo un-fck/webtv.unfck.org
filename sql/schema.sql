@@ -13,6 +13,7 @@ SET search_path = webtv, public;
 CREATE TABLE IF NOT EXISTS videos (
     asset_id TEXT PRIMARY KEY,
     entry_id TEXT,
+    kaltura_id TEXT,
     title TEXT NOT NULL,
     clean_title TEXT,
     date DATE NOT NULL,
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS videos (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_slug ON videos(slug);
 CREATE INDEX IF NOT EXISTS idx_videos_entry_id ON videos(entry_id);
+CREATE INDEX IF NOT EXISTS idx_videos_kaltura_id ON videos(kaltura_id);
 CREATE INDEX IF NOT EXISTS idx_videos_date ON videos(date);
 CREATE INDEX IF NOT EXISTS idx_videos_last_seen ON videos(last_seen);
 CREATE INDEX IF NOT EXISTS idx_videos_body ON videos(body);
@@ -48,6 +50,7 @@ CREATE INDEX IF NOT EXISTS idx_videos_trgm ON videos USING GIN (COALESCE(clean_t
 -- ── transcripts ───────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS transcripts (
     entry_id TEXT NOT NULL,
+    kaltura_id TEXT,
     transcript_id TEXT NOT NULL PRIMARY KEY,
     start_time DOUBLE PRECISION,
     end_time DOUBLE PRECISION,
@@ -62,8 +65,10 @@ CREATE TABLE IF NOT EXISTS transcripts (
 );
 CREATE INDEX IF NOT EXISTS idx_transcripts_entry_id ON transcripts(entry_id);
 CREATE INDEX IF NOT EXISTS idx_transcripts_entry_lang ON transcripts(entry_id, language_code);
+CREATE INDEX IF NOT EXISTS idx_transcripts_kaltura_lang ON transcripts(kaltura_id, language_code);
 -- Covering index — lets getAllTranscriptedEntries scan only the index (no table rows)
 CREATE INDEX IF NOT EXISTS idx_transcripts_status_entry ON transcripts(status, entry_id);
+CREATE INDEX IF NOT EXISTS idx_transcripts_status_kaltura ON transcripts(status, kaltura_id);
 -- ── speaker_mappings ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS speaker_mappings (
     transcript_id TEXT PRIMARY KEY,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getTranscript,
+  getTranscriptByKalturaId,
   deleteTranscriptsForEntry,
   scheduleTranscript,
 } from "@/lib/db";
@@ -8,6 +9,46 @@ import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";
 import { apiError } from "@/lib/api-error";
+import type { Transcript } from "@/lib/db";
+
+async function respondWithCached(cached: Transcript) {
+  if (!cached.content.statements) {
+    return apiError(
+      400,
+      "old_format",
+      "Transcript uses old format, please retranscribe",
+    );
+  }
+
+  if (cached.content.statements.length === 0) {
+    fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/identify-speakers`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcriptId: cached.transcript_id }),
+      },
+    ).catch((err) => {
+      console.error("Error triggering speaker identification:", err);
+    });
+
+    return NextResponse.json({
+      transcriptId: cached.transcript_id,
+      stage: "identifying_speakers",
+    });
+  }
+
+  const speakerMappings = await getSpeakerMapping(cached.transcript_id);
+  return NextResponse.json({
+    statements: cached.content.statements,
+    language: cached.language_code,
+    cached: true,
+    transcriptId: cached.transcript_id,
+    topics: cached.content.topics || {},
+    propositions: cached.content.propositions || [],
+    speakerMappings: speakerMappings || {},
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,11 +72,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ transcriptId, stage: "scheduled" });
     }
 
-    // Get audio download URL from Kaltura
+    // Fast cache check by stable player ID — avoids hitting Kaltura when we
+    // already have a completed transcript locally.
+    if (!force) {
+      const cached = await getTranscriptByKalturaId(kalturaId, lang);
+      if (cached && cached.status === "completed") {
+        return await respondWithCached(cached);
+      }
+    }
+
+    // Either forced or no fast-path hit — resolve via Kaltura for the legacy
+    // lookup and (if needed) to start a new transcription.
     const kalturaLang = bcp47ToKalturaName(lang);
     const { entryId } = await getKalturaAudioUrl(kalturaId, kalturaLang);
 
-    // Check Turso for existing transcript (unless force=true)
+    // Check DB for existing transcript by resolved entry_id (unless force=true)
     if (!force) {
       const cached = await getTranscript(
         entryId,
@@ -46,42 +97,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (cached && cached.status === "completed") {
-        if (!cached.content.statements) {
-          return apiError(
-            400,
-            "old_format",
-            "Transcript uses old format, please retranscribe",
-          );
-        }
-
-        if (cached.content.statements.length === 0) {
-          fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/identify-speakers`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ transcriptId: cached.transcript_id }),
-            },
-          ).catch((err) => {
-            console.error("Error triggering speaker identification:", err);
-          });
-
-          return NextResponse.json({
-            transcriptId: cached.transcript_id,
-            stage: "identifying_speakers",
-          });
-        }
-
-        const speakerMappings = await getSpeakerMapping(cached.transcript_id);
-        return NextResponse.json({
-          statements: cached.content.statements,
-          language: cached.language_code,
-          cached: true,
-          transcriptId: cached.transcript_id,
-          topics: cached.content.topics || {},
-          propositions: cached.content.propositions || [],
-          speakerMappings: speakerMappings || {},
-        });
+        return await respondWithCached(cached);
       }
     } else {
       await deleteTranscriptsForEntry(entryId, lang);
