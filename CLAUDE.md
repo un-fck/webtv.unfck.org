@@ -18,17 +18,16 @@ pnpm sync-videos              # Scrape UN Web TV schedule → PostgreSQL
 pnpm fetch-video-metadata     # Dump stored videos to analysis/video-metadata.json
 pnpm retranscribe             # Re-run transcription pipeline on existing transcripts
 pnpm reidentify               # Re-run speaker identification on existing transcripts
-pnpm backfill-slugs           # Backfill videos.slug for legacy rows
-pnpm fix-slugs                # Repair malformed slugs
 pnpm usage-report             # Print API cost report
 pnpm usage-benchmark          # Benchmark usage tracking
 pnpm compare-transcribe -- <assetId|entryId> [provider]  # One-off provider compare
 
 # Untracked (not in package.json — run via tsx directly)
-psql "$DATABASE_URL" -f sql/migrations/001_add_kaltura_id.sql  # Schema migration (run first)
-tsx scripts/backfill-kaltura-id.ts   # One-time: backfill kaltura_id (run after the migration)
 tsx scripts/test-pv-alignment.ts     # Validate PV alignment timestamps
 tsx scripts/test-pv-parser.ts        # Validate PV parser across 6 languages
+
+# Schema migrations (apply once per database)
+psql "$DATABASE_URL" -f sql/migrations/001_add_kaltura_id.sql
 
 # Eval system (independent from main app, see eval/README.md)
 pnpm eval -- --symbol=A/... --providers=assemblyai,gemini --languages=en

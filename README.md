@@ -52,8 +52,6 @@ pnpm sync-videos              # Sync video metadata from UN Web TV into PostgreS
 pnpm fetch-video-metadata     # Dump stored videos to analysis/video-metadata.json
 pnpm retranscribe             # Re-run transcription pipeline on stored transcripts
 pnpm reidentify               # Re-run speaker identification on stored transcripts
-pnpm backfill-slugs           # Backfill videos.slug for legacy rows
-pnpm fix-slugs                # Repair malformed slugs
 pnpm usage-report             # Print API usage/cost report
 pnpm usage-benchmark          # Run usage benchmark
 pnpm compare-transcribe -- <asset-id|entry-id> [provider]  # Single-shot provider compare
@@ -147,8 +145,6 @@ scripts/                            # CLI scripts (run via tsx, use lib/load-env
   fetch-video-metadata.ts           # Dump stored videos to analysis/video-metadata.json
   retranscribe.ts                   # Re-run transcription on existing records
   reidentify.ts                     # Re-run speaker identification
-  backfill-slugs.ts / fix-slugs.ts  # Slug maintenance
-  backfill-kaltura-id.ts            # One-time migration: add + backfill kaltura_id (not in package.json)
   usage-report.ts                   # Print cost report
   usage-benchmark.ts                # Benchmark usage tracking
   compare-transcription.ts          # Single-shot provider compare
