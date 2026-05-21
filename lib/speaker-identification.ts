@@ -13,10 +13,7 @@ import {
   UsageStages,
 } from "./usage-tracking";
 import "./load-env";
-import {
-  getAnalysisModel,
-  getAnalysisModelMini,
-} from "./providers/models";
+import { getAnalysisModel, getAnalysisModelMini } from "./providers/models";
 import Bottleneck from "bottleneck";
 // @ts-expect-error - no types available for sbd
 import sbd from "sbd";

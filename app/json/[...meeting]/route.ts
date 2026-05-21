@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getVideoBySlug, getTranscript, getTranscriptByKalturaId } from "@/lib/db";
+import {
+  getVideoBySlug,
+  getTranscript,
+  getTranscriptByKalturaId,
+} from "@/lib/db";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import {
   getSpeakerMapping,

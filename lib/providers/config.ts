@@ -4,7 +4,11 @@
 import type { TranscriptionProvider } from "./types";
 import { getProvider } from "./registry";
 
-export { getAnalysisModel, getAnalysisModelMini, getAnalysisModelNano } from "./models";
+export {
+  getAnalysisModel,
+  getAnalysisModelMini,
+  getAnalysisModelNano,
+} from "./models";
 
 export function getSTTProvider(): TranscriptionProvider {
   const name = process.env.STT_PROVIDER || "gemini";

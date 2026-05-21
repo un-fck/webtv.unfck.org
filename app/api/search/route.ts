@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchVideos } from "@/lib/db";
+import { searchVideos, type SearchSort } from "@/lib/db";
 import { getCachedTranscriptedEntries } from "@/lib/cached-db";
 import { recordToVideo } from "@/lib/un-api";
+
+const SORT_VALUES = ["date_desc", "date_asc", "title_asc", "title_desc"];
+
+// Parses a sort param into a SearchSort, or undefined for relevance ordering.
+function parseSort(raw: string | null): SearchSort | undefined {
+  if (!raw || !SORT_VALUES.includes(raw)) return undefined;
+  const [by, dir] = raw.split("_") as [SearchSort["by"], SearchSort["dir"]];
+  return { by, dir };
+}
 
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim();
@@ -9,6 +18,7 @@ export async function GET(request: NextRequest) {
     request.nextUrl.searchParams.get("offset") || "0",
     10,
   );
+  const sort = parseSort(request.nextUrl.searchParams.get("sort"));
 
   if (!q || q.length < 2) {
     return NextResponse.json({ videos: [], hasMore: false });
@@ -16,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   const PAGE_SIZE = 50;
   const [records, transcriptedEntries] = await Promise.all([
-    searchVideos(q, PAGE_SIZE + 1, offset), // fetch one extra to detect if more exist
+    searchVideos(q, PAGE_SIZE + 1, offset, sort), // fetch one extra to detect if more exist
     getCachedTranscriptedEntries(),
   ]);
 

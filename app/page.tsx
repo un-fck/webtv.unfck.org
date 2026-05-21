@@ -16,7 +16,7 @@ const DAYS_BACK = 365;
 export interface ServerParams {
   page: number;
   pageSize: number;
-  sort: string;
+  sort?: string; // undefined = auto (date desc in normal mode, relevance in search)
   status: "past" | "scheduled";
   date?: string;
   body?: string[];
@@ -36,7 +36,7 @@ function parseSearchParams(
     String(raw.sort ?? ""),
   )
     ? String(raw.sort)
-    : "date_desc";
+    : undefined; // auto: date desc in normal mode, relevance in search mode
   const status =
     String(raw.status ?? "") === "scheduled" ? "scheduled" : "past";
   const date =
@@ -105,7 +105,8 @@ export default async function Home({
     );
   }
 
-  const [sortBy, sortDir] = params.sort.split("_") as [
+  // Auto (unset) sort defaults to date desc in normal mode.
+  const [sortBy, sortDir] = (params.sort ?? "date_desc").split("_") as [
     "date" | "title",
     "asc" | "desc",
   ];

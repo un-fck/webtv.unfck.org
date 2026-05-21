@@ -418,7 +418,7 @@ export function VideoTable({
       const sp = new URLSearchParams();
       if (next.page > 1) sp.set("page", String(next.page));
       if (next.pageSize !== 50) sp.set("pageSize", String(next.pageSize));
-      if (next.sort !== "date_desc") sp.set("sort", next.sort);
+      if (next.sort) sp.set("sort", next.sort);
       if (next.status !== "past") sp.set("status", next.status);
       if (next.date) sp.set("date", next.date);
       next.body?.forEach((v) => sp.append("body", v));
@@ -448,7 +448,8 @@ export function VideoTable({
 
     setIsSearching(true);
     setSearchOffset(0);
-    fetch(`/api/search?q=${encodeURIComponent(serverParams.q)}`)
+    const sortParam = serverParams.sort ? `&sort=${serverParams.sort}` : "";
+    fetch(`/api/search?q=${encodeURIComponent(serverParams.q)}${sortParam}`)
       .then((res) => res.json())
       .then((data) => {
         setSearchResults(data.videos);
@@ -457,13 +458,14 @@ export function VideoTable({
       })
       .catch(() => setSearchResults(null))
       .finally(() => setIsSearching(false));
-  }, [serverParams.q]);
+  }, [serverParams.q, serverParams.sort]);
 
   const loadMore = () => {
     if (!serverParams.q || isLoadingMore) return;
     setIsLoadingMore(true);
+    const sortParam = serverParams.sort ? `&sort=${serverParams.sort}` : "";
     fetch(
-      `/api/search?q=${encodeURIComponent(serverParams.q)}&offset=${searchOffset}`,
+      `/api/search?q=${encodeURIComponent(serverParams.q)}&offset=${searchOffset}${sortParam}`,
     )
       .then((res) => res.json())
       .then((data) => {
@@ -491,11 +493,10 @@ export function VideoTable({
   const tableData = searchResults ?? videos;
   const isSearchMode = !!serverParams.q;
 
-  // Parse current sort state
-  const [currentSortBy, currentSortDir] = serverParams.sort.split("_") as [
-    string,
-    "asc" | "desc",
-  ];
+  // Parse current sort state (undefined = auto, no column actively sorted)
+  const [currentSortBy, currentSortDir] = (
+    serverParams.sort ? serverParams.sort.split("_") : [undefined, undefined]
+  ) as [string | undefined, "asc" | "desc" | undefined];
 
   const toggleSort = (column: "date" | "title") => {
     if (currentSortBy === column) {
@@ -962,7 +963,9 @@ export function VideoTable({
                     <SortArrow
                       active={currentSortBy === "date"}
                       direction={
-                        currentSortBy === "date" ? currentSortDir : "desc"
+                        currentSortBy === "date"
+                          ? (currentSortDir ?? "desc")
+                          : "desc"
                       }
                       onClick={() => toggleSort("date")}
                     />
@@ -989,7 +992,9 @@ export function VideoTable({
                     <SortArrow
                       active={currentSortBy === "title"}
                       direction={
-                        currentSortBy === "title" ? currentSortDir : "asc"
+                        currentSortBy === "title"
+                          ? (currentSortDir ?? "asc")
+                          : "asc"
                       }
                       onClick={() => toggleSort("title")}
                     />

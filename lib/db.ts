@@ -801,15 +801,31 @@ export async function updateVideoEntryId(
   );
 }
 
+export interface SearchSort {
+  by: "date" | "title";
+  dir: "asc" | "desc";
+}
+
+// Maps an explicit sort to a hardcoded ORDER BY clause (no user-input
+// interpolation). Returns null for relevance ordering (default).
+function searchOrderBy(sort?: SearchSort): string | null {
+  if (!sort) return null;
+  const dir = sort.dir === "asc" ? "ASC" : "DESC";
+  if (sort.by === "title") return `COALESCE(clean_title, title) ${dir}`;
+  return `date ${dir}, scheduled_time ${dir}`;
+}
+
 export async function searchVideos(
   query: string,
   limit = 50,
   offset = 0,
+  sort?: SearchSort,
 ): Promise<VideoRecord[]> {
   await ensureInitialized();
 
   const words = query.trim().split(/\s+/);
   const allShort = words.every((w) => w.length < 3);
+  const orderBy = searchOrderBy(sort);
 
   if (!allShort) {
     // Primary: FTS with websearch_to_tsquery (handles non-adjacent keywords)
@@ -819,7 +835,7 @@ export async function searchVideos(
           `SELECT *, ts_rank(fts_vec, websearch_to_tsquery('english', ?)) AS rank
            FROM webtv.videos
            WHERE fts_vec @@ websearch_to_tsquery('english', ?)
-           ORDER BY rank DESC, date DESC
+           ORDER BY ${orderBy ?? "rank DESC, date DESC"}
            LIMIT ? OFFSET ?`,
           [query, query, limit, offset],
         ),
@@ -837,7 +853,7 @@ export async function searchVideos(
   const result = await pool.query(
     q(
       `SELECT * FROM webtv.videos WHERE title ILIKE ? OR clean_title ILIKE ?
-       ORDER BY date DESC, scheduled_time DESC
+       ORDER BY ${orderBy ?? "date DESC, scheduled_time DESC"}
        LIMIT ? OFFSET ?`,
       [pattern, pattern, limit, offset],
     ),
