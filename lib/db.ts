@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import "@/lib/load-env";
 import { extractKalturaId } from "./kaltura";
+import { slugFromSymbol } from "./meeting-slug";
 
 export type TranscriptStatus =
   | "scheduled"
@@ -692,56 +693,109 @@ function mapVideoRow(row: Record<string, unknown>): VideoRecord {
   };
 }
 
+/**
+ * Resolve the unique slug to store for a video, using DB collision data rather
+ * than brittle title parsing.
+ *
+ * - The base slug comes from `pv_symbol` (or the inherently-unique
+ *   `meeting/{asset_id}` fallback).
+ * - If this asset_id already has a row, its existing slug is kept (URL stability
+ *   — we never repoint a published URL).
+ * - Otherwise the base slug is used if free, else the lowest free
+ *   `{base}-part-N` (N ≥ 2) is chosen.
+ */
+async function resolveVideoSlug(
+  assetId: string,
+  pvSymbol: string | null,
+): Promise<string> {
+  const base = (pvSymbol && slugFromSymbol(pvSymbol)) || `meeting/${assetId}`;
+
+  // Keep an existing asset's slug stable.
+  const existing = await pool.query(
+    q("SELECT slug FROM webtv.videos WHERE asset_id = ?", [assetId]),
+  );
+  const existingSlug = existing.rows[0]?.slug as string | undefined;
+  if (existingSlug) return existingSlug;
+
+  // Gather slugs already using this base (the base itself or any -part-N).
+  const taken = await pool.query(
+    q(
+      "SELECT slug FROM webtv.videos WHERE slug = ? OR slug LIKE ?",
+      [base, `${base}-part-%`],
+    ),
+  );
+  const used = new Set(taken.rows.map((r) => r.slug as string));
+  if (!used.has(base)) return base;
+
+  let n = 2;
+  while (used.has(`${base}-part-${n}`)) n++;
+  return `${base}-part-${n}`;
+}
+
 export async function saveVideo(
   video: Omit<VideoRecord, "created_at" | "updated_at">,
 ): Promise<void> {
   await ensureInitialized();
-  await pool.query(
-    q(
-      `INSERT INTO webtv.videos (
-         asset_id, entry_id, kaltura_id, title, clean_title, date, scheduled_time,
-         duration, url, body, category, event_code, event_type,
-         session_number, part_number, pv_symbol, slug, last_seen
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(asset_id) DO UPDATE SET
-         entry_id = COALESCE(EXCLUDED.entry_id, videos.entry_id),
-         kaltura_id = COALESCE(EXCLUDED.kaltura_id, videos.kaltura_id),
-         title = EXCLUDED.title,
-         clean_title = EXCLUDED.clean_title,
-         scheduled_time = EXCLUDED.scheduled_time,
-         duration = EXCLUDED.duration,
-         body = EXCLUDED.body,
-         category = EXCLUDED.category,
-         event_code = EXCLUDED.event_code,
-         event_type = EXCLUDED.event_type,
-         session_number = EXCLUDED.session_number,
-         part_number = EXCLUDED.part_number,
-         pv_symbol = COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol),
-         slug = COALESCE(EXCLUDED.slug, videos.slug),
-         last_seen = EXCLUDED.last_seen,
-         updated_at = NOW()`,
-      [
-        video.asset_id,
-        video.entry_id,
-        video.kaltura_id ?? extractKalturaId(video.asset_id),
-        video.title,
-        video.clean_title,
-        video.date,
-        video.scheduled_time,
-        video.duration,
-        video.url,
-        video.body,
-        video.category,
-        video.event_code,
-        video.event_type,
-        video.session_number,
-        video.part_number,
-        video.pv_symbol,
-        video.slug,
-        video.last_seen,
-      ],
-    ),
-  );
+
+  // Up to a few attempts to absorb a race where a concurrent save claims the
+  // slug we picked between our SELECT and INSERT (slug UNIQUE index → 23505).
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const slug = await resolveVideoSlug(video.asset_id, video.pv_symbol);
+    try {
+      await pool.query(
+        q(
+          `INSERT INTO webtv.videos (
+             asset_id, entry_id, kaltura_id, title, clean_title, date, scheduled_time,
+             duration, url, body, category, event_code, event_type,
+             session_number, part_number, pv_symbol, slug, last_seen
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(asset_id) DO UPDATE SET
+             entry_id = COALESCE(EXCLUDED.entry_id, videos.entry_id),
+             kaltura_id = COALESCE(EXCLUDED.kaltura_id, videos.kaltura_id),
+             title = EXCLUDED.title,
+             clean_title = EXCLUDED.clean_title,
+             scheduled_time = EXCLUDED.scheduled_time,
+             duration = EXCLUDED.duration,
+             body = EXCLUDED.body,
+             category = EXCLUDED.category,
+             event_code = EXCLUDED.event_code,
+             event_type = EXCLUDED.event_type,
+             session_number = EXCLUDED.session_number,
+             part_number = EXCLUDED.part_number,
+             pv_symbol = COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol),
+             slug = videos.slug,
+             last_seen = EXCLUDED.last_seen,
+             updated_at = NOW()`,
+          [
+            video.asset_id,
+            video.entry_id,
+            video.kaltura_id ?? extractKalturaId(video.asset_id),
+            video.title,
+            video.clean_title,
+            video.date,
+            video.scheduled_time,
+            video.duration,
+            video.url,
+            video.body,
+            video.category,
+            video.event_code,
+            video.event_type,
+            video.session_number,
+            video.part_number,
+            video.pv_symbol,
+            slug,
+            video.last_seen,
+          ],
+        ),
+      );
+      return;
+    } catch (err) {
+      // 23505 = unique_violation. Only retry slug collisions; rethrow otherwise.
+      const code = (err as { code?: string }).code;
+      if (code === "23505" && attempt < 4) continue;
+      throw err;
+    }
+  }
 }
 
 export async function getVideoByAssetId(

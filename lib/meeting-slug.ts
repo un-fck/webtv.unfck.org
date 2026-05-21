@@ -57,7 +57,10 @@ export function slugFromSymbol(symbol: string): string | null {
 export function symbolFromSlug(
   slug: string,
 ): { pvSymbol: string; srSymbol?: string } | null {
-  const parts = slug.split("/");
+  // A trailing -part-N disambiguates multiple video assets of the same meeting
+  // (e.g. a session and its "(Continued)" part); both reconstruct to the same
+  // underlying document symbol.
+  const parts = slug.replace(/-part-\d+$/, "").split("/");
 
   // sc/NNNN → S/PV.NNNN
   if (parts[0] === "sc" && parts.length === 2 && /^\d+$/.test(parts[1])) {
