@@ -52,7 +52,7 @@ export async function GET(
       return response;
     }
 
-    // Check Turso for transcript (optional language filter)
+    // Check DB for transcript (optional language filter)
     const language = request.nextUrl.searchParams.get("language") || undefined;
     const transcript = await getTranscript(
       entryId,

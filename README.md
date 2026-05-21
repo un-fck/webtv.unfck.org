@@ -48,12 +48,15 @@ pnpm typecheck                # TypeScript type-check (no emit)
 pnpm format                   # Prettier
 
 # Data management
-pnpm sync-videos              # Sync video metadata from UN Web TV into the database
-pnpm fetch-video-metadata     # Fetch additional Kaltura metadata for stored videos
+pnpm sync-videos              # Sync video metadata from UN Web TV into PostgreSQL
+pnpm fetch-video-metadata     # Dump stored videos to analysis/video-metadata.json
 pnpm retranscribe             # Re-run transcription pipeline on stored transcripts
 pnpm reidentify               # Re-run speaker identification on stored transcripts
+pnpm backfill-slugs           # Backfill videos.slug for legacy rows
+pnpm fix-slugs                # Repair malformed slugs
 pnpm usage-report             # Print API usage/cost report
 pnpm usage-benchmark          # Run usage benchmark
+pnpm compare-transcribe -- <asset-id|entry-id> [provider]  # Single-shot provider compare
 
 # Eval system (see eval/README.md)
 pnpm eval -- --symbol=S/PV.9826 --providers=assemblyai --languages=en
@@ -94,24 +97,38 @@ app/
   layout.tsx                        # Root layout (Roboto font, corner logo)
   globals.css                       # Tailwind v4 theme + UN color palette
   api/
-    transcripts/route.ts            # Start or schedule transcription
+    health/route.ts                 # DB liveness probe
+    transcripts/check/route.ts      # Cache check (GET, by kalturaId)
+    transcripts/route.ts            # Start / force / schedule transcription
     transcripts/[id]/route.ts       # Poll transcript status / fetch result
-    transcripts/[id]/analysis/...   # Run proposition analysis
+    transcripts/[id]/analysis/...   # Run on-demand proposition analysis
     identify-speakers/route.ts      # Speaker identification (Azure OpenAI)
-    search/route.ts                 # Full-archive video search
-    cron/sync-videos/route.ts       # Cron: sync video metadata
-    cron/process-scheduled/route.ts # Cron: process scheduled transcriptions
-    cron/check-pv/route.ts          # Cron: check PV document availability
+    languages/route.ts              # Available audio language tracks for a Kaltura entry
+    pv/route.ts                     # Fetch + parse + cache PV document
+    pv/align/route.ts               # Align PV with audio (timestamps)
+    search/route.ts                 # Full-archive video search (FTS + trigram fallback)
+    cron/sync-videos/route.ts       # Cron (15 min): scrape tomorrow + last 3 days
+    cron/process-scheduled/route.ts # Cron (5 min): process scheduled transcripts
+    cron/check-pv/route.ts          # Cron (6 h): check PV document availability
   json/
     route.ts                        # JSON API: video list
     [...meeting]/route.ts           # JSON API: single video
 
 components/
-  video-table.tsx                   # Main schedule table (client, TanStack Table)
+  TranscriptTable.tsx               # Main schedule table (client, TanStack Table) — exports VideoTable
   video-page-client.tsx             # Video page client wrapper
   transcription-panel.tsx           # Transcribe/poll/display flow
+  transcript-view.tsx               # Statement rendering
+  raw-transcript-view.tsx           # Raw paragraph rendering
+  transcript-toolbar.tsx            # View-mode switcher
+  speaker-toc.tsx                   # Speaker table-of-contents
+  analysis-view.tsx                 # Proposition / stakeholder positions
+  pv-panel.tsx                      # Side-by-side PV display with alignment
+  stage-progress.tsx                # Pipeline progress indicator
   video-player.tsx                  # Kaltura embedded player
-  site-header.tsx                   # Header (home vs nav variants)
+  SiteHeader.tsx / NavMenu.tsx      # Site chrome
+  TimezonePicker.tsx                # User timezone preference
+  AnimatedCornerLogo.tsx            # Decorative
 
 lib/
   db.ts                             # Database layer (all queries, pg pool)
@@ -127,11 +144,16 @@ lib/
 
 scripts/                            # CLI scripts (run via tsx, use lib/load-env)
   sync-videos.ts                    # Scrape UN Web TV → database
-  fetch-video-metadata.ts           # Enrich videos with Kaltura metadata
+  fetch-video-metadata.ts           # Dump stored videos to analysis/video-metadata.json
   retranscribe.ts                   # Re-run transcription on existing records
   reidentify.ts                     # Re-run speaker identification
+  backfill-slugs.ts / fix-slugs.ts  # Slug maintenance
+  backfill-kaltura-id.ts            # One-time migration: add + backfill kaltura_id (not in package.json)
   usage-report.ts                   # Print cost report
   usage-benchmark.ts                # Benchmark usage tracking
+  compare-transcription.ts          # Single-shot provider compare
+  test-pv-alignment.ts              # Validate PV alignment timestamps (not in package.json)
+  test-pv-parser.ts                 # Validate PV parser (not in package.json)
 
 docs/
   ai.md                             # AI pipeline: models, stages, design decisions

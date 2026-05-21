@@ -1,4 +1,5 @@
-// Initial page load only fetches recent videos. Historical search uses /api/search (Turso).
+// Lookback window for the schedule view (note: app/page.tsx currently uses DAYS_BACK = 365 directly).
+// Historical search beyond this window goes through /api/search (PostgreSQL FTS).
 export const scheduleLookbackDays = 14;
 
 // Gemini pricing — verify at https://ai.google.dev/gemini-api/docs/pricing

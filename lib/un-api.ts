@@ -356,7 +356,7 @@ export async function getVideoById(
   videoId: string,
   maxDaysBack: number = 30,
 ): Promise<Video | null> {
-  // Step 1: Check Turso cache first (instant lookup)
+  // Step 1: Check PostgreSQL cache first (instant lookup)
   try {
     const cached = await getVideoByAssetId(videoId);
     if (cached) {
@@ -370,7 +370,7 @@ export async function getVideoById(
       return recordToVideo(cached, hasTranscript);
     }
   } catch (error) {
-    console.warn("Turso cache lookup failed:", error);
+    console.warn("Video cache lookup failed:", error);
     // Continue to fallback
   }
 

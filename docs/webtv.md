@@ -53,14 +53,15 @@ This redirect resolution is necessary because UN asset IDs can reference alias/r
 | `corporateName` | Field items under corporate name section |
 | `speakerAffiliation` | Field items under speaker section |
 
-**None of these are stored in Turso.** They are fetched on demand only.
+**None of these are stored in PostgreSQL.** They are fetched on demand only.
 
-## What Gets Stored (Turso `videos` table)
+## What Gets Stored (PostgreSQL `webtv.videos` table)
 
 | Column | Source | Notes |
 |---|---|---|
 | `asset_id` | Schedule page URL | Primary key |
 | `entry_id` | Kaltura API | Resolved asynchronously, cached |
+| `kaltura_id` | `extractKalturaId(asset_id)` | Pre-redirect Kaltura ID. Lets us cache-check transcripts without round-tripping Kaltura. |
 | `title`, `clean_title` | Schedule page | `clean_title` strips event code prefix |
 | `date` | Schedule page | `YYYY-MM-DD` |
 | `scheduled_time` | Hidden `mediaun-timezone` div | ISO timestamp |
@@ -83,29 +84,29 @@ The `saveVideo` upsert uses `COALESCE` for `entry_id` and `pv_symbol` to never o
 ```
 Schedule page HTML
   ├─ scrapeVideos() → Video[] (in-memory)
-  ├─ saveVideo() → Turso `videos` table (upsert)
-  └─ resolveEntryId() → Kaltura API → updates `entry_id` in Turso
+  ├─ saveVideo() → PostgreSQL `videos` table (upsert)
+  └─ resolveEntryId() → Kaltura API → updates `entry_id` in PostgreSQL
 
 App page load
-  └─ getRecentVideos(14 days) from Turso → VideoTable
+  └─ getRecentVideos(14 days) from PostgreSQL → VideoTable
 
 Search
   └─ /api/search?q=... → SQL LIKE on title/clean_title
 
 Video page
-  ├─ Video record from Turso
+  ├─ Video record from PostgreSQL
   ├─ getVideoMetadata() → on-demand scrape of asset page (not stored)
   └─ entry_id → Kaltura player embed + audio URL for transcription
 ```
 
 ## Scripts
 
-- `pnpm sync-videos` (`scripts/sync-videos.ts`) — scrapes past N days (default 7), upserts to Turso, resolves entry IDs. Contains its own inline copy of the Kaltura resolution logic.
-- `pnpm fetch-video-metadata` (`scripts/fetch-video-metadata.ts`) — dumps Turso video records to `analysis/video-metadata.json`. Despite the name, does not fetch the rich per-video metadata.
+- `pnpm sync-videos` (`scripts/sync-videos.ts`) — scrapes past N days (default 7), upserts to PostgreSQL, resolves entry IDs. Contains its own inline copy of the Kaltura resolution logic.
+- `pnpm fetch-video-metadata` (`scripts/fetch-video-metadata.ts`) — dumps PostgreSQL video records to `analysis/video-metadata.json`. Despite the name, does not fetch the rich per-video metadata.
 
 ## Limitations
 
 - Search is `LIKE %query%` on `title` and `clean_title` only — no full-text search, no search on category/body/metadata.
 - Rich per-video metadata (summary, topics, related documents, speakers) is never persisted.
-- `getVideoById` falls back to day-by-day scraping if the video isn't in Turso, up to 30 days back.
+- `getVideoById` falls back to day-by-day scraping if the video isn't in PostgreSQL, up to 30 days back.
 - Status calculation (`scheduled`/`live`/`finished`) works around UN Web TV's broken timezone handling by stripping timezones and appending `Z`.

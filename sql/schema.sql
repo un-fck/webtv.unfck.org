@@ -3,8 +3,8 @@
 --   psql "$DATABASE_URL" -f sql/schema.sql
 --
 -- All tables live in the `webtv` schema.
--- The application sets `search_path = webtv` on every connection,
--- so SQL queries use unqualified table names (e.g. `videos`, not `webtv.videos`).
+-- Application queries fully qualify table names (e.g. `webtv.videos`).
+-- The SET search_path below only affects the DDL session that applies this file.
 -- pg_trgm must be created in public (requires superuser, done once per DB)
 CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public;
 CREATE SCHEMA IF NOT EXISTS webtv;

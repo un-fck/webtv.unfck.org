@@ -664,7 +664,7 @@ export function VideoTable({
             }}
             spellCheck={false}
             autoCorrect="off"
-            autoCapitalize="off"
+            autoCapitalize="none"
             className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none ${
               isSearchFocused || inputValue.trim().length > 0
                 ? "border-un-blue bg-un-blue/5 text-un-blue placeholder-un-blue/50"
@@ -764,7 +764,7 @@ export function VideoTable({
             }}
             spellCheck={false}
             autoCorrect="off"
-            autoCapitalize="off"
+            autoCapitalize="none"
             className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none ${
               isSearchFocused || inputValue.trim().length > 0
                 ? "border-un-blue bg-un-blue/5 text-un-blue placeholder-un-blue/50"
