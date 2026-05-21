@@ -48,23 +48,23 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Required for the web app:**
 
-- `DATABASE_URL` — Azure PostgreSQL connection string (use PgBouncer port 6432 for Vercel serverless)
+- `DATABASE_URL` — PostgreSQL connection string (Azure Database for PostgreSQL via PgBouncer port 6432). All tables live in the `webtv` schema; the connection pool runs `SET search_path = webtv, public` per checkout, so SQL queries use unqualified names.
 - `GEMINI_API_KEY` — transcription (Gemini)
-- `AZURE_OPENAI_ENDPOINT` — speaker identification & post-processing
-- `AZURE_OPENAI_API_KEY` — speaker identification & post-processing
-- `AZURE_OPENAI_API_VERSION` — defaults in `.env.example`
+- `AZURE_OPENAI_ENDPOINT` — speaker identification, topics, propositions
+- `AZURE_OPENAI_API_KEY` — speaker identification, topics, propositions
+- `AZURE_OPENAI_API_VERSION` — defaults in `.env.example` (e.g. `2025-03-01-preview`)
 
 **Production only:**
 
 - `CRON_SECRET` — Vercel cron job authorization (auto-set by Vercel)
+- `NEXT_PUBLIC_BASE_URL` — used by the API to call itself for fire-and-forget speaker-identification triggers; **must be set in production** or those internal requests will go to `localhost:3000` and silently fail.
 
 **Optional:**
 
-- `NEXT_PUBLIC_BASE_URL` — defaults to `http://localhost:3000` (used for server-to-self fetches)
-- `STT_PROVIDER` — STT provider name (default: `gemini`). See `lib/providers/registry.ts` for available providers
+- `STT_PROVIDER` — STT provider name (default: `gemini`). Available: `gemini` (production, rich named-speaker output), `gemini-eval`, `assemblyai`, `azure-openai`, `azure-speech`, `elevenlabs`, `google-chirp`, `groq-whisper`, `alibaba`, `deepgram`, `mistral`, `cohere`. See `lib/providers/registry.ts`.
 - `STT_ANALYSIS_MODEL` — Azure OpenAI model for speaker ID, resegmentation, topics, propositions (default: `gpt-5.4`)
-- `STT_ANALYSIS_MODEL_MINI` — Azure OpenAI model for cross-chunk speaker normalization (default: `gpt-5.4-mini`)
-- `STT_ANALYSIS_MODEL_NANO` — Azure OpenAI model for sentence-level topic tagging (default: `gpt-5.4-nano`)
+- `STT_ANALYSIS_MODEL_MINI` — Azure OpenAI model for cross-chunk normalization (default: `gpt-5.4-mini`)
+- `STT_ANALYSIS_MODEL_NANO` — Azure OpenAI model for sentence tagging (default: `gpt-5.4-nano`)
 
 **Eval system only:** `ASSEMBLYAI_API_KEY`, `AZURE_SPEECH_KEY`, `AZURE_SPEECH_ENDPOINT`, `ELEVENLABS_API_KEY`, `GROQ_API_KEY`, `DASHSCOPE_API_KEY`, `DEEPGRAM_API_KEY`, `MISTRAL_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`.
 
@@ -72,11 +72,12 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 Detailed docs live in `docs/` — read these before working on the relevant subsystem:
 
-- `docs/ai.md` — AI pipeline: models used, pipeline stages (transcription → speaker normalization → identification → resegmentation → topics → propositions → PV alignment)
+- `docs/ai.md` — AI pipeline: models used, pipeline stages (transcription → speaker identification + resegmentation → topics → sentence tagging → propositions → PV alignment)
 - `docs/webtv.md` — UN Web TV scraping, Kaltura two-ID system, schedule scraping, per-video metadata, what gets stored
-- `docs/eval.md` — Evaluation system: ground truth from PV documents, 10 STT providers, metrics (WER/CER), corpus, dashboard, HuggingFace datasets
+- `docs/eval.md` — Evaluation system: ground truth from PV documents, multi-provider STT, metrics (WER/CER), corpus, dashboard, HuggingFace datasets
 - `docs/official-transcripts.md` — Which UN organs produce PV vs SR records, document symbol patterns
 - `docs/api.md` — Public API: URL scheme, JSON endpoints, response shapes
+- `REVIEW.md` (project root) — current code review, known issues, ranked refactor opportunities
 
 ## Architecture
 
@@ -86,122 +87,122 @@ For detailed architecture, see the `docs/` files above. Summary:
 
 UN Web TV has no public API — `lib/un-api.ts` scrapes HTML directly. See `docs/webtv.md` for full details on scraping, Kaltura ID resolution, and what gets stored.
 
-The home page (`app/page.tsx`) is **fully server-rendered from PostgreSQL** via `getVideosPage` with server-side pagination/filtering. There is no longer a "live scrape on page load" path — scraping happens out-of-band via `pnpm sync-videos` and the `/api/cron/sync-videos` cron (every 15 min, scrapes tomorrow + last 3 days).
+On page load, videos are fetched from PostgreSQL for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`, default 14 days), with cached helpers in `lib/cached-db.ts` (60s revalidate). All scraped videos are persisted via `scripts/sync-videos.ts` and the `/api/cron/sync-videos` cron (every 15 min).
 
-`lib/config.ts:scheduleLookbackDays` (default 14) is currently only used for one or two callers; the home page uses `DAYS_BACK = 365` directly in `app/page.tsx`. (This is a small inconsistency — see `docs/TODO.md`.)
-
-For search beyond the rolling window, the frontend calls `/api/search` which queries the database directly (FTS with `to_tsvector('english', …)` + a trigram fallback for short tokens).
+For search beyond the rolling window, the frontend calls `/api/search` which queries the database directly using the FTS index, with a trigram-accelerated ILIKE fallback when FTS errors.
 
 ### Transcription Pipeline
 
 See `docs/ai.md` for the full pipeline with model details and design decisions.
 
-Triggered from the video page UI or via scheduled processing:
+Triggered from the video page UI (`POST /api/transcripts`) or via the scheduled-processing cron (`/api/cron/process-scheduled`):
 
-1. **Transcribe** (`lib/gemini-transcription.ts` via `lib/providers/gemini-production.ts`) — uploads audio to Gemini, transcribes with rich speaker output (named speakers, function, affiliation, group)
-2. **Speaker normalization** — cross-chunk deduplication via `STT_ANALYSIS_MODEL_MINI` (only for chunked audio)
-3. **Speaker identification** (`lib/speaker-identification.ts:identifySpeakers`) — legacy path for non-Gemini transcripts; for Gemini, this stage builds the per-paragraph mapping from the rich output
-4. **Resegmentation** — splits paragraphs flagged as `has_multiple_speakers`
-5. **Topic definition + sentence tagging** — `STT_ANALYSIS_MODEL` defines 5–10 topics, `STT_ANALYSIS_MODEL_NANO` tags sentences in batches
-6. **Proposition analysis** — on-demand stakeholder position mapping (`POST /api/transcripts/[id]/analysis`)
-7. **PV alignment** (`lib/pv-alignment.ts` via `POST /api/pv/align`) — aligns official verbatim records with audio timestamps
+1. **Transcribe** — provider-agnostic via `lib/providers/` (default `gemini`). Audio is downloaded from Kaltura, uploaded to the provider, and transcribed with speaker diarization. Long audio (>10 min) is chunked by the Gemini provider and stitched.
+2. **Speaker identification + resegmentation** — `lib/speaker-identification.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping.
+3. **Topic definition** — identifies 5–10 substantive policy topics across the meeting (GPT-5.4).
+4. **Sentence tagging** — tags each non-chair sentence with 0–3 topic keys (GPT-5.4-nano, batched; rate-limited via Bottleneck — 20 concurrent / 10 per sec).
+5. **Proposition analysis** *(on demand)* — `POST /api/transcripts/[id]/analysis` identifies stakeholder positions on concrete propositions, with fuzzy-match evidence verification.
+6. **PV alignment** *(separate)* — `POST /api/pv/align` aligns an official UN verbatim record with the audio for timestamped speaker turns.
 
-The STT provider is configurable via `STT_PROVIDER` env var (default: `gemini`). Provider implementations live in `lib/providers/` (shared with the eval system). Note: `lib/providers/registry.ts` registers two Gemini providers — `gemini` (production, rich output) and `gemini-eval` (simplified, for benchmarking only).
+Stages 2–4 run in `runAnalysisPipeline` (`lib/transcription.ts:316`) inside `identifySpeakers()`. The status column transitions `transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed` (or `error`); analyzing_propositions is only reached when proposition analysis runs.
 
-**Scheduled transcription:** Videos can be queued before audio is available. `scheduleTranscript()` creates a `scheduled` status row where `entry_id` is reused to carry the `kalturaId` until resolution. The Vercel cron (`/api/cron/process-scheduled`, every 5 min) picks these up and starts transcription once audio is available.
+The provider is selected via `STT_PROVIDER` (default `gemini`). Analysis model names are configurable via `STT_ANALYSIS_MODEL` / `_MINI` / `_NANO`. Provider implementations live in `lib/providers/` (shared with the eval system).
 
-### Database (Azure PostgreSQL)
+> Cross-chunk speaker normalization is described in `docs/ai.md` as a stage. The
+> production Gemini provider deduplicates speakers within its own chunking, and
+> there is no separate `normalizeSpeakers()` call in `runTranscriptionPipeline`.
+> Treat the doc as design intent and the code as the source of truth.
 
-`lib/db.ts` is the single data-access layer, backed by a `pg` connection pool (max 5, 30s idle, 5s connect, `sslmode=require` with `rejectUnauthorized: false`).
+**Scheduled transcription**: Videos can be queued for transcription before audio is available. `lib/db.ts:scheduleTranscript()` creates a `scheduled` status record. The cron `/api/cron/process-scheduled` (every 5 min) picks them up and starts transcription once Kaltura audio is available.
 
-All tables live in the `webtv` schema and **every query in the app uses fully-qualified table names** (e.g. `webtv.transcripts`). The schema is provisioned via `sql/schema.sql`; an application role with scoped privileges is provisioned via `sql/role.sql`.
+### Database (PostgreSQL)
 
-Internally, `lib/db.ts:q()` rewrites `?` placeholders to `$N` for `pg` — a convenience layer kept from the libSQL/Turso era.
+`lib/db.ts` is the single data-access layer, backed by a `pg` connection pool. Schema lives in `sql/schema.sql`; the application role lives in `sql/role.sql`. Everything lives in the `webtv` schema. The pool runs `SET search_path = webtv, public` per checkout so queries use unqualified names. All queries use the `q()` helper which converts `?` placeholders to `$N` (parameterized — no string interpolation of user input).
 
 **Tables:**
 
-- `videos` — scraped video metadata, keyed by `asset_id`. Columns include `entry_id` (resolved Kaltura entry), `kaltura_id` (pre-redirect Kaltura ID, extracted from asset_id), `title`, `clean_title`, `date`, `scheduled_time`, `duration`, `url`, `body`, `category`, `event_code`, `event_type`, `session_number`, `part_number`, `pv_symbol`, `pv_available`, `pv_checked_at`, `slug`, `last_seen`. Has a generated `fts_vec tsvector` column + GIN indexes for FTS and trigram search.
-- `transcripts` — transcription results, keyed by `transcript_id`. Carries both `entry_id` (resolved) and `kaltura_id` (stable player ID) for legacy compatibility. Status lifecycle: `scheduled → transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed | error`. Has `pipeline_lock` column for concurrency control (30-min timeout). `content` is a JSONB blob containing `raw_paragraphs`, `statements`, `topics`, `propositions`.
-- `speaker_mappings` — AI-resolved speaker info per transcript (`{name, function, affiliation, group, is_off_record}`), keyed by `transcript_id`.
-- `processing_usage_events` — per-operation API cost tracking (provider, stage, tokens, hours, rate card).
-- `pv_contents` — cached, parsed PV documents keyed by `(pv_symbol, language)`.
+- `videos` — scraped video metadata, keyed by `asset_id`. Columns: `entry_id`, `title`, `clean_title`, `date`, `scheduled_time`, `duration`, `url`, `body`, `category`, `event_code`, `event_type`, `session_number`, `part_number`, `pv_symbol`, `pv_available`, `pv_checked_at`, `slug`, `last_seen`, `created_at`, `updated_at`, plus a generated `fts_vec tsvector` over `COALESCE(clean_title, title)`. Indexes: unique on `slug`; btree on `entry_id`, `date`, `last_seen`, `body`, `category`; GIN on `fts_vec`; GIN trigram on the title fallback.
+- `transcripts` — transcription results, keyed by `transcript_id`. Status lifecycle: `scheduled → transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed | error`. Has `pipeline_lock` column for concurrency control (30-min stale-lock timeout, no heartbeat). No FK to `videos`; the join is via `entry_id`.
+- `speaker_mappings` — AI-resolved speaker info per transcript (name, function, affiliation, group), one row per `transcript_id` with a JSONB `mapping` column.
+- `processing_usage_events` — per-operation API cost tracking (provider, stage, operation, status, model, tokens, hours, rate card, USD-derivable). 33 columns, SERIAL PK.
+- `pv_contents` — cached PV/SR document content, composite PK `(pv_symbol, language)`, JSONB `content` plus `fetched_at` / `parsed_at`. Populated by `app/api/pv/route.ts`.
 
-**Key queries:** `searchVideos` (FTS with trigram fallback), `getScheduledTranscripts`, `getAllTranscriptedEntries`, `getVideosPage` (server-paginated, filterable), `getFilterOptions`, `getVideosNeedingPVCheck`.
+There are **no foreign-key constraints** between these tables; referential integrity is enforced in application code only. `deleteTranscript()` and `deleteTranscriptsForEntry()` issue separate DELETEs against `processing_usage_events` and `transcripts` without a transaction; if the second fails, orphan usage events remain.
 
-**Types exported:** `Transcript`, `TranscriptContent`, `VideoRecord`, `TranscriptStatus`, `ProcessingUsageEvent`, `SpeakerMapping`, `SpeakerInfo`. `lib/speakers.ts` is a thin shim that re-exports the speaker-related symbols from `lib/db.ts` and adds `formatSpeakerInfo`.
+**Key queries:** `searchVideos` (FTS with ILIKE/trigram fallback), `getVideosPage`, `getRecentVideos`, `getScheduledTranscripts`, `getAllTranscriptedEntries`, `getVideosNeedingPVCheck`, `getProcessingUsageSummaryByTranscript`.
+
+**Types exported from `lib/db.ts`:** `Transcript`, `TranscriptContent`, `RawParagraph`, `VideoRecord`, `TranscriptStatus`, `ProcessingUsageProvider`, `ProcessingUsageStatus`. `SpeakerMapping` is exported from `lib/speakers.ts`.
 
 ### API Routes
 
-| Route                              | Method | Purpose                                                              |
-| ---------------------------------- | ------ | -------------------------------------------------------------------- |
-| `/api/health`                      | GET    | DB liveness probe (`SELECT 1`)                                       |
-| `/api/transcripts/check`           | GET    | Check cache for existing transcript (`?kalturaId=...&language=...`)  |
-| `/api/transcripts`                 | POST   | Start, force-restart, or schedule transcription                      |
-| `/api/transcripts/[id]`            | GET    | Poll transcript status / fetch result                                |
-| `/api/transcripts/[id]/analysis`   | POST   | Run on-demand proposition analysis                                   |
-| `/api/identify-speakers`           | POST   | Run speaker identification on an existing transcript                 |
-| `/api/languages`                   | GET    | Available audio language tracks for a Kaltura entry                  |
-| `/api/pv`                          | GET    | Fetch + parse + cache a PV document (`?symbol=...&lang=...`)         |
-| `/api/pv/align`                    | POST   | Align a PV document with audio (timestamps)                          |
-| `/api/search`                      | GET    | Search video archive (`?q=...&offset=...`) — FTS + trigram fallback  |
-| `/api/cron/sync-videos`            | GET    | Cron (every 15 min): scrape tomorrow + last 3 days                   |
-| `/api/cron/process-scheduled`      | GET    | Cron (every 5 min): pick up scheduled transcripts                    |
-| `/api/cron/check-pv`               | GET    | Cron (every 6 h): probe documents.un.org for PV availability         |
-| `/json`                            | GET    | JSON API: video list                                                 |
-| `/json/[...meeting]`               | GET    | JSON API: single video by meeting slug                               |
+| Route                                | Method | Purpose                                                              |
+| ------------------------------------ | ------ | -------------------------------------------------------------------- |
+| `/api/health`                        | GET    | DB ping (`{status}`)                                                 |
+| `/api/transcripts/check`             | GET    | Check cache for existing transcript (`?kalturaId=...&language=...`)  |
+| `/api/transcripts`                   | POST   | Start or schedule transcription                                      |
+| `/api/transcripts/[id]`              | GET    | Poll transcript status / fetch result                                |
+| `/api/transcripts/[id]/analysis`     | POST   | Run proposition analysis on transcript                               |
+| `/api/identify-speakers`             | POST   | Run speaker identification + topic pipeline on a transcript          |
+| `/api/languages`                     | GET    | List available audio language tracks for a Kaltura entry             |
+| `/api/search`                        | GET    | Search video archive (`?q=...&offset=...`)                           |
+| `/api/pv`                            | GET    | Fetch / parse a PV document PDF and cache JSON in `pv_contents`      |
+| `/api/pv/align`                      | POST   | Align a PV document with audio (timestamps only)                     |
+| `/api/cron/process-scheduled`        | GET    | Cron: process scheduled transcripts (auth via `CRON_SECRET`)         |
+| `/api/cron/sync-videos`              | GET    | Cron: sync UN Web TV schedule (auth via `CRON_SECRET`)               |
+| `/api/cron/check-pv`                 | GET    | Cron: check PV document availability (auth via `CRON_SECRET`)        |
+| `/json`                              | GET    | JSON API: all transcribed videos                                     |
+| `/json/[...meeting]`                 | GET    | JSON API: single video by meeting slug                               |
 
-All cron routes are **GET** (Vercel switched away from POST a while back) and gated on `Authorization: Bearer ${CRON_SECRET}`.
+Cron schedule (`vercel.json`): `process-scheduled` every 5 min, `sync-videos` every 15 min, `check-pv` every 6 hours.
 
 ### Frontend
 
 **Pages:**
 
-- `app/page.tsx` — server component; reads videos directly from PostgreSQL via `getVideosPage`, renders `VideoTable` (in `components/TranscriptTable.tsx`)
-- `app/[...meeting]/page.tsx` — catch-all meeting route; resolves human-readable slug to a video, renders player + transcript panel
-- `app/about/page.tsx`, `app/methodology/page.tsx` — static pages
+- `app/page.tsx` — server component; fetches recent videos from PostgreSQL and the cached transcripted-entries set, renders the home schedule table.
+- `app/[...meeting]/page.tsx` — catch-all meeting route; resolves human-readable slug (e.g. `/sc/9748`, `/ga/79/21`) to a video record, renders player + transcript panel.
+- `app/about/page.tsx`, `app/methodology/page.tsx` — static content pages.
 
-**URL scheme:** Meeting pages use human-readable slugs derived from UN document symbols (see `docs/api.md` for the full table):
-
+**URL scheme:** Meeting pages use human-readable slugs derived from UN document symbols:
 - `/sc/{n}` — Security Council (from `S/PV.{n}`)
-- `/ga/{session}/{meeting}` — General Assembly plenary
-- `/ga/es{s}/{n}` — GA Emergency Special Session
-- `/ga/c{c}/{session}/{meeting}` — GA Committees (1st = PV, others = SR)
+- `/ga/{session}/{meeting}` — General Assembly plenary (from `A/{session}/PV.{meeting}`)
+- `/ga/c{n}/{session}/{meeting}` — GA committees
 - `/hrc/{session}/{meeting}` — Human Rights Council
 - `/ecosoc/{year}/{meeting}` — ECOSOC
 - `/meeting/{asset_id}` — fallback for videos without document symbols
-- Multi-part meetings append `-part-{n}`.
 
-Slug logic lives in `lib/meeting-slug.ts` with bidirectional conversion (`meetingSlugFromVideo` / `symbolFromSlug`).
+Slug logic lives in `lib/meeting-slug.ts` with bidirectional conversion (`slugFromSymbol` / `symbolFromSlug`).
 
-**Components** (note: filename casing is currently inconsistent — see review notes):
+**Components** (file naming is intentionally mixed PascalCase / kebab-case — match neighbours when editing, don't bulk-rename):
 
-- `components/TranscriptTable.tsx` — main table (`VideoTable`, despite the filename). TanStack Table with column filters (date dropdown, status dropdown, body dropdown, text-presence filter, global search), pagination, active filters chip strip, search-archive mode.
-- `components/transcription-panel.tsx` — orchestrates the transcribe → poll → display lifecycle.
+- `components/TranscriptTable.tsx` — main schedule table (client, TanStack Table). Column filters (date popover, status, body, category, text search), pagination, scheduled-view toggle, search-archive mode.
+- `components/transcription-panel.tsx` — orchestrates the transcribe → poll → display lifecycle, language switching, topic/proposition state.
+- `components/transcript-view.tsx`, `transcript-toolbar.tsx`, `raw-transcript-view.tsx` — transcript rendering surfaces.
+- `components/speaker-toc.tsx` — speaker table of contents.
+- `components/pv-panel.tsx` — fetches and displays the official verbatim record alongside the AI transcript.
+- `components/analysis-view.tsx` — proposition / stakeholder position display.
 - `components/stage-progress.tsx` — pipeline progress indicator.
-- `components/transcript-view.tsx` / `raw-transcript-view.tsx` — rendering of statements / raw paragraphs.
-- `components/transcript-toolbar.tsx` — view-mode switcher.
-- `components/speaker-toc.tsx` — speaker table-of-contents.
-- `components/analysis-view.tsx` — proposition / stakeholder positions.
-- `components/pv-panel.tsx` — side-by-side PV display with alignment.
-- `components/video-page-client.tsx` — wraps video page client interactions.
+- `components/video-page-client.tsx` — wraps video page client interactions (player docking, language selection, panels).
 - `components/video-player.tsx` — Kaltura embedded player (loads Kaltura SDK dynamically).
-- `components/SiteHeader.tsx` / `NavMenu.tsx` / `TimezonePicker.tsx` / `AnimatedCornerLogo.tsx` — chrome.
+- `components/SiteHeader.tsx` — header with `home` and `nav` variants.
+- `components/NavMenu.tsx`, `components/TimezonePicker.tsx`, `components/AnimatedCornerLogo.tsx` — header chrome.
+- `components/ui/` — shadcn primitives (button, calendar, popover, switch, tooltip).
 
-**Hooks:**
+**Hooks (`lib/hooks/`):**
 
-- `lib/hooks/use-transcript.ts` — transcript state machine + API interactions.
-- `lib/hooks/use-playback-tracking.ts` — rAF-based playback position tracking; computes active segment / statement / paragraph / sentence / word indices.
-- `lib/hooks/use-timezone.tsx` — user timezone preference (client localStorage).
+- `use-transcript.ts` — transcript state machine (statements, segments, speakers, topics, propositions) and API interactions (transcribe, poll, schedule, analyze).
+- `use-playback-tracking.ts` — rAF-based playback position tracking; computes active segment/statement/paragraph/sentence/word indices.
+- `use-timezone.tsx` — timezone context for date/time formatting.
 
 ### Cost Tracking
 
-`lib/usage-tracking.ts` wraps OpenAI and Gemini calls to record usage into `processing_usage_events`. Tracks tokens, hours, rate card versions (see `lib/config.ts:GEMINI_RATE_CARD_VERSION` + `GEMINI_MODEL_PRICING`), and estimated USD cost. Report via `pnpm usage-report`.
+`lib/usage-tracking.ts` wraps OpenAI and Gemini calls to record usage to the `processing_usage_events` table. Tracks tokens, hours, rate card versions, and estimated USD cost. Includes built-in retry/backoff for 429s. Insert errors are swallowed (logged only) so a usage-tracking outage does not break the pipeline. Report via `pnpm usage-report`.
 
 ### Eval System
 
-`eval/` is a fully independent evaluation harness — separate `tsconfig`, excluded from the root type-check. The dashboard (`eval/dashboard/`) is a standalone Vite + React app using npm (not pnpm). See `docs/eval.md` for full details and `eval/README.md` for running instructions.
+`eval/` is a fully independent evaluation harness — separate `tsconfig`, excluded from root type-check. The dashboard (`eval/dashboard/`) is a standalone Vite + React app using npm (not pnpm). See `docs/eval.md` for full details and `eval/README.md` for running instructions.
 
-Benchmarks 10 STT providers against UN verbatim records (PV documents) as ground truth across all 6 UN languages. Provider implementations are shared with the main app via `lib/providers/`.
+Benchmarks ~12 STT providers (registered in `lib/providers/registry.ts`) against UN verbatim records (PV documents) as ground truth across all 6 UN languages. Provider implementations are shared with the main app via `lib/providers/`.
 
 ## Conventions
 
@@ -213,5 +214,6 @@ Benchmarks 10 STT providers against UN verbatim records (PV documents) as ground
 - **Global solutions** over parallel infrastructures; avoid hardcoding values
 - **Scripts** in `scripts/` use `lib/load-env` (loads `.env.local` via dotenv) since they run outside Next.js
 - **Path alias**: `@/*` maps to project root (see `tsconfig.json`)
-- **Vercel cron**: configured in `vercel.json`, all `GET`, authenticated via `CRON_SECRET` Bearer token
-- **Two ID systems**: Asset IDs (UN Web TV URLs, DB primary key) vs Kaltura entry IDs (player/audio). A third "stable player ID" (`kaltura_id`, extracted from the asset_id via `extractKalturaId`) was added later to avoid round-tripping Kaltura on every cache check. Always be clear which one you're working with.
+- **Vercel cron**: configured in `vercel.json`, authenticated via `CRON_SECRET` Bearer token
+- **Two ID systems**: Asset IDs (UN Web TV URLs, DB primary key) vs Kaltura entry IDs (player/audio). Always be clear which one you're working with
+- **Component file naming is intentionally mixed** (`TranscriptTable.tsx` vs `transcription-panel.tsx`) — match neighbours when editing, don't bulk-rename

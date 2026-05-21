@@ -75,16 +75,24 @@ Sessions list: `eval/corpus/sessions.json` (20 sessions ≤ 90 min from 2024).
 
 ## Providers
 
-| Provider     | Command name   | Model                    | Languages                                  | Pricing     |
-| ------------ | -------------- | ------------------------ | ------------------------------------------ | ----------- |
-| AssemblyAI   | `assemblyai`   | Universal-2              | all 6                                      | ~$0.27/hr   |
-| Azure OpenAI | `azure-openai` | gpt-4o-transcribe        | all 6                                      | ~$0.06/hr   |
-| ElevenLabs   | `elevenlabs`   | Scribe v2                | all 6                                      | ~$0.40/hr   |
-| Azure Speech | `azure-speech` | Cognitive Services Batch | all 6                                      | ~$0.36/hr   |
-| Gemini       | `gemini`       | Gemini 3 Flash           | all 6                                      | ~$0.01/hr   |
-| Google Chirp | `google-chirp` | Chirp 3 (Speech V2 API)  | en, fr, es, zh (no diarization for ar, ru) | ~$0.016/min |
+Provider implementations live in `lib/providers/` (shared with the main app). The eval runner imports them through `lib/providers/registry.ts`, so the same code that powers `STT_PROVIDER` on the production site is what gets benchmarked.
 
-Add providers in `eval/providers/` implementing the `TranscriptionProvider` interface.
+| Provider     | Command name    | Model                    | Languages                                  | Pricing     |
+| ------------ | --------------- | ------------------------ | ------------------------------------------ | ----------- |
+| AssemblyAI   | `assemblyai`    | Universal-2              | all 6                                      | ~$0.27/hr   |
+| Azure OpenAI | `azure-openai`  | gpt-4o-transcribe        | all 6                                      | ~$0.06/hr   |
+| ElevenLabs   | `elevenlabs`    | Scribe v2                | all 6                                      | ~$0.40/hr   |
+| Azure Speech | `azure-speech`  | Cognitive Services Batch | all 6                                      | ~$0.36/hr   |
+| Gemini (eval)| `gemini-eval`   | gemini-3-flash-preview   | all 6                                      | ~$0.01/hr   |
+| Gemini (prod)| `gemini`        | gemini-3-flash-preview   | all 6                                      | ~$0.01/hr   |
+| Google Chirp | `google-chirp`  | Chirp 3 (Speech V2 API)  | en, fr, es, zh (no diarization for ar, ru) | ~$0.016/min |
+| Groq         | `groq-whisper`  | whisper-large-v3         | all 6                                      | varies      |
+| Alibaba      | `alibaba`       | Qwen3-ASR-Flash          | all 6 (chunked)                            | varies      |
+| Deepgram     | `deepgram`      | Nova-3                   | all 6                                      | varies      |
+| Mistral      | `mistral`       | voxtral-mini-latest      | all 6                                      | varies      |
+| Cohere       | `cohere`        | (see provider)           | all 6                                      | varies      |
+
+Add a provider by implementing the `TranscriptionProvider` interface (`lib/providers/types.ts`) and registering it in `lib/providers/registry.ts`.
 
 ## Results
 
@@ -126,60 +134,46 @@ Features:
 eval/
   run.ts                    # Main runner — tsx eval/run.ts [options]
   config.ts                 # Language codes, constants
-  utils.ts                  # downloadAudioToTemp, formatTime
 
-  providers/
-    types.ts                # TranscriptionProvider, NormalizedTranscript interfaces
-    registry.ts             # Provider lookup by name
-    assemblyai.ts           # AssemblyAI Universal-2
-    azure-openai.ts         # Azure OpenAI gpt-4o-transcribe
-    elevenlabs.ts           # ElevenLabs Scribe v2
-    azure-speech.ts         # Azure Cognitive Services Speech
-    gemini.ts               # Gemini 3 Flash (structured diarization via prompt)
-    google-chirp.ts         # Google Cloud Chirp 3 (Speech V2 API)
-
-  ground-truth/
-    documents-api.ts        # Fetch PV PDFs from documents.un.org
-    pdf-parser.ts           # Extract + parse speaker turns from PV PDFs
-    normalizer.ts           # Strip headers, page numbers, normalize text
-    resolver.ts             # Video asset ID → session symbol matching
-
-  metrics/
-    wer.ts                  # WER + CER via Levenshtein DP
-    text-normalizer.ts      # Lowercase, strip punctuation, remove fillers
-    index.ts                # computeMetrics(), computePairwiseMetrics()
-
-  dashboard/
-    src/App.tsx             # Main app with tabs (Overview, Transcriptions & Diff)
-    src/components/
-      Leaderboard.tsx       # Bar charts with CI whiskers
-      DiffView.tsx          # 3-column diff viewer
-    src/lib/diff.ts         # Sentence-aligned diff with word-level highlighting
-    src/types.ts            # Shared types and constants
-    scripts/prepare-data.ts # Aggregates results into data.json
-
+  ground-truth/             # PV document fetch + parse + normalize
+  metrics/                  # WER / CER computation, text normalization
+  dashboard/                # Standalone Vite + React app (npm)
+    src/App.tsx
+    src/components/Leaderboard.tsx
+    src/components/DiffView.tsx
+    src/lib/diff.ts
+    scripts/prepare-data.ts
   corpus/
     sessions.json           # Split 2 test set: [{symbol, assetId, notes}]
     discover-corpus.ts      # Auto-discover sessions from Web TV schedule
-    discover-dev-sessions.ts # Find short sessions for dev iteration
-
   hf/
     build-gadebate.ts       # Scrape gadebate.un.org → metadata.jsonl
     push-gadebate.py        # Push split 1 to HuggingFace (uv run)
     upload-corpus.ts        # Download split 2 audio + PV text locally
     push-corpus.py          # Push split 2 to HuggingFace (uv run)
     upload-results.ts       # Upload eval results to HuggingFace
-
   results/                  # gitignored
     raw/{symbol}/{provider}_{lang}.json
     summary.json
-
   corpus-data/              # gitignored
     gadebate/
-      metadata.jsonl        # Split 1 speech metadata
-      audio/                # Cached audio (optional)
-    audio/                  # Split 2 audio (temporary, deleted after push)
-    metadata.jsonl          # Split 2 session metadata
+      metadata.jsonl
+      audio/
+    audio/
+    metadata.jsonl
+
+# Providers are NOT under eval/ — they live in lib/providers/ and are shared
+# with the main app:
+lib/providers/
+  registry.ts               # Provider lookup by name
+  types.ts                  # TranscriptionProvider interface
+  config.ts, models.ts      # STT_PROVIDER and analysis-model env wiring
+  convert.ts                # NormalizedTranscript → RawParagraph[] adapter
+  gemini-production.ts      # Production Gemini provider (rich named speakers)
+  gemini.ts                 # Eval Gemini provider (basic diarization)
+  assemblyai.ts, azure-openai.ts, azure-speech.ts, elevenlabs.ts,
+  google-chirp.ts, groq-whisper.ts, alibaba.ts, deepgram.ts,
+  mistral.ts, cohere.ts
 ```
 
 ## Session Symbols

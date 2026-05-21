@@ -53,15 +53,14 @@ This redirect resolution is necessary because UN asset IDs can reference alias/r
 | `corporateName` | Field items under corporate name section |
 | `speakerAffiliation` | Field items under speaker section |
 
-**None of these are stored in PostgreSQL.** They are fetched on demand only.
+**None of these are stored in the database.** They are fetched on demand only.
 
-## What Gets Stored (PostgreSQL `webtv.videos` table)
+## What Gets Stored (`videos` table)
 
 | Column | Source | Notes |
 |---|---|---|
 | `asset_id` | Schedule page URL | Primary key |
 | `entry_id` | Kaltura API | Resolved asynchronously, cached |
-| `kaltura_id` | `extractKalturaId(asset_id)` | Pre-redirect Kaltura ID. Lets us cache-check transcripts without round-tripping Kaltura. |
 | `title`, `clean_title` | Schedule page | `clean_title` strips event code prefix |
 | `date` | Schedule page | `YYYY-MM-DD` |
 | `scheduled_time` | Hidden `mediaun-timezone` div | ISO timestamp |
@@ -84,29 +83,31 @@ The `saveVideo` upsert uses `COALESCE` for `entry_id` and `pv_symbol` to never o
 ```
 Schedule page HTML
   ├─ scrapeVideos() → Video[] (in-memory)
-  ├─ saveVideo() → PostgreSQL `videos` table (upsert)
-  └─ resolveEntryId() → Kaltura API → updates `entry_id` in PostgreSQL
+  ├─ saveVideo() → `videos` table (upsert; COALESCE preserves resolved entry_id / pv_symbol)
+  └─ resolveEntryId() → Kaltura API → updates `entry_id`
 
 App page load
-  └─ getRecentVideos(14 days) from PostgreSQL → VideoTable
+  └─ getRecentVideos(14 days) → VideoTable (with cached helpers in lib/cached-db.ts)
 
 Search
-  └─ /api/search?q=... → SQL LIKE on title/clean_title
+  └─ /api/search?q=... → tsvector FTS over clean_title/title, with trigram-accelerated ILIKE fallback
 
 Video page
-  ├─ Video record from PostgreSQL
+  ├─ Video record from DB (lookup by slug, fall back to asset_id)
   ├─ getVideoMetadata() → on-demand scrape of asset page (not stored)
   └─ entry_id → Kaltura player embed + audio URL for transcription
 ```
 
 ## Scripts
 
-- `pnpm sync-videos` (`scripts/sync-videos.ts`) — scrapes past N days (default 7), upserts to PostgreSQL, resolves entry IDs. Contains its own inline copy of the Kaltura resolution logic.
-- `pnpm fetch-video-metadata` (`scripts/fetch-video-metadata.ts`) — dumps PostgreSQL video records to `analysis/video-metadata.json`. Despite the name, does not fetch the rich per-video metadata.
+- `pnpm sync-videos` (`scripts/sync-videos.ts`) — scrapes past N days (default 7), upserts to the database, resolves entry IDs. Contains its own inline copy of the Kaltura resolution logic.
+- `pnpm fetch-video-metadata` (`scripts/fetch-video-metadata.ts`) — dumps stored video records to `analysis/video-metadata.json`. Despite the name, does **not** call the per-video metadata scraper.
+- `pnpm backfill-slugs` / `pnpm fix-slugs` — populate or repair the `slug` column when the meeting-slug logic changes.
+- `/api/cron/sync-videos` — Vercel cron (every 15 min) calls the same scraper logic against the live DB, so the script is mostly used for ad-hoc backfills.
 
-## Limitations
+## Limitations & Gotchas
 
-- Search is `LIKE %query%` on `title` and `clean_title` only — no full-text search, no search on category/body/metadata.
-- Rich per-video metadata (summary, topics, related documents, speakers) is never persisted.
-- `getVideoById` falls back to day-by-day scraping if the video isn't in PostgreSQL, up to 30 days back.
-- Status calculation (`scheduled`/`live`/`finished`) works around UN Web TV's broken timezone handling by stripping timezones and appending `Z`.
+- Search uses Postgres FTS + trigram fallback only on `title` / `clean_title`. There is no search across category/body/metadata.
+- Rich per-video metadata (summary, topics, related documents, speakers) is fetched on demand and never persisted.
+- `getVideoBySlug` falls back to looking up by `asset_id` if no slug match — useful during the slug-migration window.
+- Status calculation (`scheduled`/`live`/`finished`) works around UN Web TV's broken timezone handling by stripping timezones and appending `Z` — see `lib/timezone.ts`.

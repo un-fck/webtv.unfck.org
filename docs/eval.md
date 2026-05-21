@@ -16,20 +16,22 @@ Audio is sourced from Kaltura, the UN's video hosting platform. For each session
 
 ## Providers
 
-Ten STT providers are benchmarked:
+The eval system benchmarks the providers registered in `lib/providers/registry.ts`. Two Gemini variants are registered: `gemini` (the production provider, with a richer named-speaker schema) and `gemini-eval` (a simpler diarization-only variant used when benchmarking apples-to-apples against other providers).
 
-| Provider | Model | Mechanism |
-|---|---|---|
-| AssemblyAI | Universal-2 | URL submission, polling |
-| Azure OpenAI | gpt-4o-transcribe-diarize | File upload |
-| Azure Speech | Cognitive Services Batch | Batch job submission, polling |
-| Deepgram | Nova-3 | File upload |
-| ElevenLabs | Scribe v2 | File upload |
-| Gemini | gemini-3-flash-preview | File upload to Gemini Files API, structured prompt |
-| Google Chirp | chirp_3 (Speech V2) | FLAC conversion, GCS upload, batch recognition |
-| Groq | whisper-large-v3 | File upload, chunked for files >24 MB |
-| Alibaba | Qwen3-ASR-Flash | 4-minute chunks, base64 encoded |
-| Mistral | voxtral-mini-latest | File upload |
+| Provider | Registry name | Model | Mechanism |
+|---|---|---|---|
+| AssemblyAI | `assemblyai` | Universal-2 | URL submission, polling |
+| Azure OpenAI | `azure-openai` | gpt-4o-transcribe-diarize | File upload |
+| Azure Speech | `azure-speech` | Cognitive Services Batch | Batch job submission, polling |
+| Deepgram | `deepgram` | Nova-3 | File upload |
+| ElevenLabs | `elevenlabs` | Scribe v2 | File upload |
+| Gemini (eval) | `gemini-eval` | gemini-3-flash-preview | File upload to Gemini Files API, structured prompt |
+| Gemini (prod) | `gemini` | gemini-3-flash-preview | Same, but production schema (named speakers, etc.) |
+| Google Chirp | `google-chirp` | chirp_3 (Speech V2) | FLAC conversion, GCS upload, batch recognition |
+| Groq | `groq-whisper` | whisper-large-v3 | File upload, chunked for files >24 MB |
+| Alibaba | `alibaba` | Qwen3-ASR-Flash | 4-minute chunks, base64 encoded |
+| Mistral | `mistral` | voxtral-mini-latest | File upload |
+| Cohere | `cohere` | (see provider) | File upload |
 
 All providers produce a normalized transcript format: `{provider, language, fullText, utterances[], durationMs}`, where each utterance has a speaker label and start/end timestamps in milliseconds. Providers that support word-level timestamps (AssemblyAI, Deepgram, ElevenLabs, Azure Speech, Google Chirp, Cohere) also return `words[]` per utterance with per-word timing.
 

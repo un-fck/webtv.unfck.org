@@ -21,26 +21,38 @@ All AI calls are tracked in the `processing_usage_events` table via `lib/usage-t
 Kaltura audio URL
        │
        ▼
- 1. Transcription (Gemini)
-       │
-       ├── [if chunked] 2. Speaker normalization (GPT-5.4-mini)
-       │
-       ▼
- 3. Speaker identification (GPT-5.4, legacy path only)
-       │
-       ├── [if mixed speakers] 4. Resegmentation (GPT-5.4)
+ 1. Transcription — STT provider (default: Gemini)
+       │   Long audio is split into 10-min chunks inside the provider.
        │
        ▼
- 5. Topic definition (GPT-5.4)
+ 2. Speaker identification + resegmentation (GPT-5.4)
+       │   Single call in lib/speaker-identification.ts:identifySpeakers().
+       │   Per-paragraph speaker resolution; multi-speaker paragraphs are
+       │   resegmented in parallel; speaker mapping persisted.
        │
        ▼
- 6. Sentence topic tagging (GPT-5.4-nano, batched)
+ 3. Topic definition (GPT-5.4)
+       │   5–10 substantive policy topics across the meeting.
        │
-       ▼ (on demand only)
- 7. Proposition analysis (GPT-5.4)
+       ▼
+ 4. Sentence topic tagging (GPT-5.4-nano, batched, rate-limited)
+       │   0–3 topic keys per non-chair sentence.
+       │
+       ▼ (on demand only — POST /api/transcripts/[id]/analysis)
+ 5. Proposition analysis (GPT-5.4)
 ```
 
-Separately, PV document alignment (step 8) can run independently when an official verbatim record is available.
+Separately, PV document alignment can run independently when an official verbatim record is available (`POST /api/pv/align`).
+
+The transcript `status` column transitions
+`scheduled → transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed | error`.
+`analyzing_propositions` is only reached when proposition analysis runs.
+
+> Cross-chunk speaker normalization (described below as "Stage 2: speaker
+> normalization") is implemented as a helper but is **not invoked by the current
+> production pipeline** — the production Gemini provider deduplicates speakers
+> within its own chunked output. Treat that section as design intent and the
+> code in `lib/transcription.ts` as the source of truth.
 
 ---
 

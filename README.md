@@ -29,6 +29,8 @@ Detailed documentation lives in [`docs/`](docs/):
 - [UN Web TV & Kaltura](docs/webtv.md) — scraping, ID systems, data flow
 - [Evaluation System](docs/eval.md) — STT benchmarking, metrics, dashboard
 - [Official Meeting Records](docs/official-transcripts.md) — PV vs SR records by UN organ
+- [Public API](docs/api.md) — URL scheme + JSON endpoints
+- [REVIEW.md](REVIEW.md) — comprehensive code review with ranked issues
 
 ## Getting Started
 
@@ -49,12 +51,11 @@ pnpm format                   # Prettier
 
 # Data management
 pnpm sync-videos              # Sync video metadata from UN Web TV into PostgreSQL
-pnpm fetch-video-metadata     # Dump stored videos to analysis/video-metadata.json
+pnpm fetch-video-metadata     # Dump stored video records to analysis/video-metadata.json
 pnpm retranscribe             # Re-run transcription pipeline on stored transcripts
 pnpm reidentify               # Re-run speaker identification on stored transcripts
 pnpm usage-report             # Print API usage/cost report
-pnpm usage-benchmark          # Run usage benchmark
-pnpm compare-transcribe -- <asset-id|entry-id> [provider]  # Single-shot provider compare
+pnpm usage-benchmark          # Compare/benchmark API pricing config
 
 # Eval system (see eval/README.md)
 pnpm eval -- --symbol=S/PV.9826 --providers=assemblyai --languages=en
@@ -83,7 +84,7 @@ See `.env.example` for all variables. Core ones:
 - **Transcription**: Gemini (batch)
 - **Speaker ID**: Azure OpenAI (structured output via Zod)
 - **Video hosting**: Kaltura (partner ID: 2503451)
-- **Deployment**: Vercel (cron job every 5 min for scheduled transcripts)
+- **Deployment**: Vercel — three cron jobs: `process-scheduled` every 5 min, `sync-videos` every 15 min, `check-pv` every 6 hours
 - **Package manager**: pnpm
 
 ## Project Structure
@@ -92,73 +93,87 @@ See `.env.example` for all variables. Core ones:
 app/
   page.tsx                          # Home page (server component, fetches schedule)
   [...meeting]/page.tsx             # Video page with player + transcript
+  about/page.tsx                    # About page
+  methodology/page.tsx              # Methodology page
   layout.tsx                        # Root layout (Roboto font, corner logo)
   globals.css                       # Tailwind v4 theme + UN color palette
   api/
-    health/route.ts                 # DB liveness probe
-    transcripts/check/route.ts      # Cache check (GET, by kalturaId)
-    transcripts/route.ts            # Start / force / schedule transcription
+    health/route.ts                 # DB health probe
+    languages/route.ts              # Available audio languages for a Kaltura entry
+    transcripts/route.ts            # Start or schedule transcription
+    transcripts/check/route.ts      # Cache lookup for an existing transcript
     transcripts/[id]/route.ts       # Poll transcript status / fetch result
-    transcripts/[id]/analysis/...   # Run on-demand proposition analysis
+    transcripts/[id]/analysis/...   # Run proposition analysis
     identify-speakers/route.ts      # Speaker identification (Azure OpenAI)
-    languages/route.ts              # Available audio language tracks for a Kaltura entry
-    pv/route.ts                     # Fetch + parse + cache PV document
-    pv/align/route.ts               # Align PV with audio (timestamps)
-    search/route.ts                 # Full-archive video search (FTS + trigram fallback)
-    cron/sync-videos/route.ts       # Cron (15 min): scrape tomorrow + last 3 days
-    cron/process-scheduled/route.ts # Cron (5 min): process scheduled transcripts
-    cron/check-pv/route.ts          # Cron (6 h): check PV document availability
+    search/route.ts                 # Full-archive video search
+    pv/route.ts                     # Fetch + cache PV document JSON
+    pv/align/route.ts               # Align PV document with audio (timestamps)
+    cron/sync-videos/route.ts       # Cron: sync video metadata
+    cron/process-scheduled/route.ts # Cron: process scheduled transcriptions
+    cron/check-pv/route.ts          # Cron: check PV document availability
   json/
     route.ts                        # JSON API: video list
     [...meeting]/route.ts           # JSON API: single video
 
-components/
-  TranscriptTable.tsx               # Main schedule table (client, TanStack Table) — exports VideoTable
+components/                         # Mixed PascalCase / kebab-case naming — match neighbours
+  TranscriptTable.tsx               # Main schedule table (client, TanStack Table)
+  SiteHeader.tsx                    # Header (home vs nav variants)
+  NavMenu.tsx, TimezonePicker.tsx, AnimatedCornerLogo.tsx
   video-page-client.tsx             # Video page client wrapper
   transcription-panel.tsx           # Transcribe/poll/display flow
-  transcript-view.tsx               # Statement rendering
-  raw-transcript-view.tsx           # Raw paragraph rendering
-  transcript-toolbar.tsx            # View-mode switcher
-  speaker-toc.tsx                   # Speaker table-of-contents
-  analysis-view.tsx                 # Proposition / stakeholder positions
-  pv-panel.tsx                      # Side-by-side PV display with alignment
+  transcript-view.tsx, transcript-toolbar.tsx, raw-transcript-view.tsx
+  speaker-toc.tsx                   # Speaker table of contents
+  pv-panel.tsx                      # Official verbatim record panel
+  analysis-view.tsx                 # Propositions / stakeholder positions
   stage-progress.tsx                # Pipeline progress indicator
   video-player.tsx                  # Kaltura embedded player
-  SiteHeader.tsx / NavMenu.tsx      # Site chrome
-  TimezonePicker.tsx                # User timezone preference
-  AnimatedCornerLogo.tsx            # Decorative
+  ui/                               # shadcn primitives
 
 lib/
-  db.ts                             # Database layer (all queries, pg pool)
+  db.ts                             # Database layer (all queries, pg pool, search_path = webtv)
+  cached-db.ts                      # next/cache wrappers for read-heavy queries
   un-api.ts                         # UN Web TV HTML scraper + metadata extraction
   transcription.ts                  # Transcription submission + audio URL resolution
-  speaker-identification.ts         # Azure OpenAI speaker mapping pipeline
+  gemini-transcription.ts           # Gemini Files API transcription (chunked)
+  speaker-identification.ts         # Speaker mapping + topic + proposition pipeline
   speakers.ts                       # Speaker mapping CRUD
   usage-tracking.ts                 # API cost tracking (Gemini + OpenAI)
-  kaltura-helpers.ts                # Kaltura entry ID resolution + audio URL
+  pv-alignment.ts, pv-documents.ts, pv-parser.ts  # PV document pipeline
+  kaltura.ts, kaltura-helpers.ts    # Kaltura entry ID resolution + audio URL
   meeting-slug.ts                   # Bidirectional slug ↔ document symbol conversion
-  config.ts                         # App config (lookback days, pricing rates)
+  config.ts                         # App config (lookback days, Gemini pricing card)
+  api-error.ts                      # Standardized API error responses
+  languages.ts, country-lookup.ts, timezone.ts
+  providers/                        # STT provider implementations (shared with eval/)
+    registry.ts, config.ts, models.ts, types.ts, convert.ts
+    gemini-production.ts, gemini.ts, assemblyai.ts, ...
+  hooks/
+    use-transcript.ts, use-playback-tracking.ts, use-timezone.tsx
   load-env.ts                       # Loads .env.local for scripts outside Next.js
 
 scripts/                            # CLI scripts (run via tsx, use lib/load-env)
   sync-videos.ts                    # Scrape UN Web TV → database
-  fetch-video-metadata.ts           # Dump stored videos to analysis/video-metadata.json
+  fetch-video-metadata.ts           # Dump video records to analysis/
   retranscribe.ts                   # Re-run transcription on existing records
   reidentify.ts                     # Re-run speaker identification
-  usage-report.ts                   # Print cost report
-  usage-benchmark.ts                # Benchmark usage tracking
-  compare-transcription.ts          # Single-shot provider compare
-  test-pv-alignment.ts              # Validate PV alignment timestamps (not in package.json)
-  test-pv-parser.ts                 # Validate PV parser (not in package.json)
+  test-pv-parser.ts, test-pv-alignment.ts, compare-transcription.ts
+
+sql/
+  schema.sql                        # webtv schema, tables, indexes
+  role.sql                          # webtv_app application role
 
 docs/
   ai.md                             # AI pipeline: models, stages, design decisions
   webtv.md                          # UN Web TV scraping & Kaltura integration
   eval.md                           # Eval system: providers, metrics, corpus, dashboard
   official-transcripts.md           # PV vs SR records by UN organ
+  api.md                            # Public JSON API + URL scheme
+  TODO.md                           # Backlog notes
 
 eval/                               # Independent eval harness (see docs/eval.md)
-  eval/dashboard/                   # Standalone Vite + React dashboard (npm, not pnpm)
+  dashboard/                        # Standalone Vite + React dashboard (npm, not pnpm)
+
+REVIEW.md                           # Latest comprehensive code review (root)
 ```
 
 ## Eval System
