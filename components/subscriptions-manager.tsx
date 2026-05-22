@@ -19,6 +19,16 @@ interface VideoSub {
   language: string;
   title: string | null;
   slug: string | null;
+  emailed_at: string | null;
+}
+
+function formatEmailedAt(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
 
 export function SubscriptionsManager() {
@@ -140,23 +150,34 @@ export function SubscriptionsManager() {
                 key={`${sub.kaltura_id}-${sub.language}`}
                 className="flex items-center justify-between gap-4 px-4 py-3"
               >
-                {sub.slug ? (
-                  <Link
-                    href={`/${sub.slug}`}
-                    className={cn(typography.body, "hover:text-un-blue")}
-                  >
-                    {sub.title || sub.slug}
-                  </Link>
-                ) : (
-                  <span className={typography.body}>
-                    {sub.title || sub.kaltura_id}
-                  </span>
-                )}
+                <div className="min-w-0">
+                  {sub.slug ? (
+                    <Link
+                      href={`/${sub.slug}`}
+                      className={cn(typography.body, "hover:text-un-blue")}
+                    >
+                      {sub.title || sub.slug}
+                    </Link>
+                  ) : (
+                    <span className={typography.body}>
+                      {sub.title || sub.kaltura_id}
+                    </span>
+                  )}
+                  <p className={cn(typography.caption, "text-muted-foreground")}>
+                    {sub.emailed_at ? (
+                      <span className="text-un-blue">
+                        Emailed {formatEmailedAt(sub.emailed_at)}
+                      </span>
+                    ) : (
+                      "We'll email you when the transcript is ready"
+                    )}
+                  </p>
+                </div>
                 <button
                   onClick={() => removeVideo(sub)}
                   className={cn(
                     typography.caption,
-                    "text-muted-foreground transition-colors hover:text-foreground",
+                    "shrink-0 text-muted-foreground transition-colors hover:text-foreground",
                   )}
                 >
                   Remove

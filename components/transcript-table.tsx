@@ -174,6 +174,11 @@ function MultiFilterPopover({
     );
   };
 
+  // When counts are available, show the most common options first.
+  const sortedOptions = counts
+    ? [...options].sort((a, b) => (counts[b] ?? 0) - (counts[a] ?? 0))
+    : options;
+
   return (
     <Popover>
       <PopoverTrigger
@@ -196,7 +201,7 @@ function MultiFilterPopover({
             </button>
           )}
           <div className="flex flex-wrap gap-1.5">
-            {options.map((opt) => (
+            {sortedOptions.map((opt) => (
               <button
                 key={opt}
                 onClick={() => toggle(opt)}

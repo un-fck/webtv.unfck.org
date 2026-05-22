@@ -1506,15 +1506,26 @@ export interface UserVideoSubscription {
   title: string | null;
   slug: string | null;
   created_at: Date;
+  /** When the "transcript ready" email was sent to this user, if it has been. */
+  emailed_at: Date | null;
 }
 
 export async function getUserVideoSubscriptions(
   userId: string,
 ): Promise<UserVideoSubscription[]> {
+  // emailed_at: the notification ledger is keyed by transcript_id, so join
+  // through transcripts (matched on the same kaltura_id, or its entry_id) to
+  // find whether this user has already been emailed for this video.
   const result = await pool.query(
     q(
       `SELECT vs.kaltura_id, vs.language, vs.created_at,
-              COALESCE(v.clean_title, v.title) AS title, v.slug
+              COALESCE(v.clean_title, v.title) AS title, v.slug,
+              (SELECT MAX(stn.sent_at)
+                 FROM webtv.sent_transcript_notifications stn
+                 JOIN webtv.transcripts t ON t.transcript_id = stn.transcript_id
+                WHERE stn.user_id = vs.user_id
+                  AND (t.kaltura_id = vs.kaltura_id OR t.entry_id = vs.kaltura_id)
+              ) AS emailed_at
          FROM webtv.video_subscriptions vs
          LEFT JOIN webtv.videos v
            ON v.kaltura_id = vs.kaltura_id OR v.entry_id = vs.kaltura_id
@@ -1529,6 +1540,7 @@ export async function getUserVideoSubscriptions(
     title: (row.title as string | null) ?? null,
     slug: (row.slug as string | null) ?? null,
     created_at: row.created_at as Date,
+    emailed_at: (row.emailed_at as Date | null) ?? null,
   }));
 }
 
