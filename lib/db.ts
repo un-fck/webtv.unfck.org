@@ -46,13 +46,6 @@ export function q(
 // Expose pool for scripts that need raw query access
 export { pool };
 
-let initialized = false;
-
-async function ensureInitialized() {
-  if (initialized) return;
-  initialized = true;
-}
-
 export interface RawParagraph {
   text: string;
   start: number;
@@ -227,8 +220,6 @@ export async function getTranscript(
   completedOnly = true,
   languageCode?: string,
 ): Promise<Transcript | null> {
-  await ensureInitialized();
-
   const statusFilter = completedOnly ? "AND status = 'completed'" : "";
   const langFilter = languageCode ? "AND language_code = ?" : "";
   const args: unknown[] = [entryId];
@@ -250,7 +241,6 @@ export async function getTranscript(
 export async function getAllTranscriptsForEntry(
   entryId: string,
 ): Promise<Transcript[]> {
-  await ensureInitialized();
   const result = await pool.query(
     q(
       "SELECT * FROM webtv.transcripts WHERE entry_id = ? AND status = 'completed' ORDER BY start_time ASC",
@@ -269,7 +259,6 @@ export interface TranscriptLanguageInfo {
 export async function getTranscriptLanguagesForEntry(
   entryId: string,
 ): Promise<TranscriptLanguageInfo[]> {
-  await ensureInitialized();
   const result = await pool.query(
     q(
       "SELECT language_code, status, transcript_id FROM webtv.transcripts WHERE entry_id = ? ORDER BY language_code",
@@ -286,7 +275,6 @@ export async function getTranscriptLanguagesForEntry(
 export async function getTranscriptById(
   transcriptId: string,
 ): Promise<Transcript | null> {
-  await ensureInitialized();
   const result = await pool.query(
     q("SELECT * FROM webtv.transcripts WHERE transcript_id = ?", [
       transcriptId,
@@ -307,7 +295,6 @@ export async function saveTranscript(
   content: TranscriptContent,
   kalturaId: string | null = null,
 ): Promise<void> {
-  await ensureInitialized();
   await pool.query(
     q(
       `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
@@ -340,7 +327,6 @@ export async function updateTranscriptStatus(
   status: TranscriptStatus,
   errorMessage?: string,
 ): Promise<void> {
-  await ensureInitialized();
   await pool.query(
     q(
       "UPDATE webtv.transcripts SET status = ?, error_message = ?, updated_at = NOW() WHERE transcript_id = ?",
@@ -353,7 +339,6 @@ export async function updateTranscriptContent(
   transcriptId: string,
   content: TranscriptContent,
 ): Promise<void> {
-  await ensureInitialized();
   await pool.query(
     q(
       "UPDATE webtv.transcripts SET content = ?, updated_at = NOW() WHERE transcript_id = ?",
@@ -368,7 +353,6 @@ export async function scheduleTranscript(
   startTime: number | null,
   endTime: number | null,
 ): Promise<string> {
-  await ensureInitialized();
   const transcriptId = `scheduled-${assetId}-${Date.now()}`;
   await pool.query(
     q(
@@ -400,7 +384,6 @@ export interface ScheduledTranscript {
 export async function getScheduledTranscripts(): Promise<
   ScheduledTranscript[]
 > {
-  await ensureInitialized();
   const result = await pool.query(
     `SELECT transcript_id, entry_id, start_time, end_time, audio_url, created_at
      FROM webtv.transcripts WHERE status = 'scheduled' ORDER BY created_at ASC`,
@@ -418,7 +401,6 @@ export async function getScheduledTranscripts(): Promise<
 export async function tryAcquirePipelineLock(
   transcriptId: string,
 ): Promise<boolean> {
-  await ensureInitialized();
   const result = await pool.query(
     q(
       `UPDATE webtv.transcripts SET pipeline_lock = NOW(), updated_at = NOW()
@@ -430,7 +412,6 @@ export async function tryAcquirePipelineLock(
 }
 
 export async function releasePipelineLock(transcriptId: string): Promise<void> {
-  await ensureInitialized();
   await pool.query(
     q(
       "UPDATE webtv.transcripts SET pipeline_lock = NULL, updated_at = NOW() WHERE transcript_id = ?",
@@ -439,43 +420,79 @@ export async function releasePipelineLock(transcriptId: string): Promise<void> {
   );
 }
 
+/**
+ * Refresh the pipeline lock timestamp — a heartbeat. Long-running stages call
+ * this at their boundaries so a job that is still making progress keeps its
+ * lock fresh and isn't re-entered concurrently by a poll when it legitimately
+ * runs past the 30-minute stale window. Only updates a lock we still hold.
+ */
+export async function touchPipelineLock(transcriptId: string): Promise<void> {
+  await pool.query(
+    q(
+      "UPDATE webtv.transcripts SET pipeline_lock = NOW() WHERE transcript_id = ? AND pipeline_lock IS NOT NULL",
+      [transcriptId],
+    ),
+  );
+}
+
+/** Run `fn` inside a single BEGIN/COMMIT on one pooled client. */
+async function withTransaction<T>(
+  fn: (client: import("pg").PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await fn(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 export async function deleteTranscript(transcriptId: string): Promise<void> {
-  await ensureInitialized();
-  await pool.query(
-    q("DELETE FROM webtv.processing_usage_events WHERE transcript_id = ?", [
-      transcriptId,
-    ]),
-  );
-  await pool.query(
-    q("DELETE FROM webtv.transcripts WHERE transcript_id = ?", [transcriptId]),
-  );
+  await withTransaction(async (client) => {
+    await client.query(
+      q("DELETE FROM webtv.processing_usage_events WHERE transcript_id = ?", [
+        transcriptId,
+      ]),
+    );
+    await client.query(
+      q("DELETE FROM webtv.transcripts WHERE transcript_id = ?", [
+        transcriptId,
+      ]),
+    );
+  });
 }
 
 export async function deleteTranscriptsForEntry(
   entryId: string,
   languageCode?: string,
 ): Promise<void> {
-  await ensureInitialized();
   const langFilter = languageCode ? " AND language_code = ?" : "";
   const args = languageCode ? [entryId, languageCode] : [entryId];
 
-  await pool.query(
-    q(
-      `DELETE FROM webtv.processing_usage_events WHERE transcript_id IN (
-         SELECT transcript_id FROM webtv.transcripts WHERE entry_id = ?${langFilter}
-       )`,
-      args,
-    ),
-  );
-  await pool.query(
-    q(`DELETE FROM webtv.transcripts WHERE entry_id = ?${langFilter}`, args),
-  );
+  await withTransaction(async (client) => {
+    await client.query(
+      q(
+        `DELETE FROM webtv.processing_usage_events WHERE transcript_id IN (
+           SELECT transcript_id FROM webtv.transcripts WHERE entry_id = ?${langFilter}
+         )`,
+        args,
+      ),
+    );
+    await client.query(
+      q(`DELETE FROM webtv.transcripts WHERE entry_id = ?${langFilter}`, args),
+    );
+  });
 }
 
 export async function insertProcessingUsageEvent(
   event: ProcessingUsageEventInsert,
 ): Promise<void> {
-  await ensureInitialized();
   await pool.query(
     q(
       `INSERT INTO webtv.processing_usage_events (
@@ -516,7 +533,6 @@ export async function insertProcessingUsageEvent(
 export async function listProcessingUsageEventsByTranscript(
   transcriptId: string,
 ): Promise<ProcessingUsageEvent[]> {
-  await ensureInitialized();
   const result = await pool.query(
     q(
       "SELECT * FROM webtv.processing_usage_events WHERE transcript_id = ? ORDER BY created_at ASC, id ASC",
@@ -555,7 +571,6 @@ export async function listProcessingUsageEventsByTranscript(
 export async function getProcessingUsageSummaryByTranscript(
   transcriptId: string,
 ): Promise<ProcessingUsageSummaryRow[]> {
-  await ensureInitialized();
   const result = await pool.query(
     q(
       `SELECT
@@ -605,7 +620,6 @@ export async function getTranscriptByKalturaId(
   languageCode?: string,
   completedOnly = true,
 ): Promise<Transcript | null> {
-  await ensureInitialized();
   const conditions: string[] = ["kaltura_id = ?"];
   const args: unknown[] = [kalturaId];
   if (completedOnly) conditions.push("status = 'completed'");
@@ -625,7 +639,6 @@ export async function getTranscriptByKalturaId(
 }
 
 export async function getAllTranscriptedEntries(): Promise<string[]> {
-  await ensureInitialized();
   // Return identifiers that match `videos.entry_id`. Some legacy transcripts
   // were keyed by a resolved (canonical) entry that differs from the
   // pre-redirect Kaltura ID stored on `videos.entry_id`, so we also accept a
@@ -719,10 +732,10 @@ async function resolveVideoSlug(
 
   // Gather slugs already using this base (the base itself or any -part-N).
   const taken = await pool.query(
-    q(
-      "SELECT slug FROM webtv.videos WHERE slug = ? OR slug LIKE ?",
-      [base, `${base}-part-%`],
-    ),
+    q("SELECT slug FROM webtv.videos WHERE slug = ? OR slug LIKE ?", [
+      base,
+      `${base}-part-%`,
+    ]),
   );
   const used = new Set(taken.rows.map((r) => r.slug as string));
   if (!used.has(base)) return base;
@@ -735,8 +748,6 @@ async function resolveVideoSlug(
 export async function saveVideo(
   video: Omit<VideoRecord, "created_at" | "updated_at">,
 ): Promise<void> {
-  await ensureInitialized();
-
   // Up to a few attempts to absorb a race where a concurrent save claims the
   // slug we picked between our SELECT and INSERT (slug UNIQUE index → 23505).
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -801,7 +812,6 @@ export async function saveVideo(
 export async function getVideoByAssetId(
   assetId: string,
 ): Promise<VideoRecord | null> {
-  await ensureInitialized();
   const result = await pool.query(
     q("SELECT * FROM webtv.videos WHERE asset_id = ?", [assetId]),
   );
@@ -812,7 +822,6 @@ export async function getVideoByAssetId(
 export async function getVideoBySlug(
   slug: string,
 ): Promise<VideoRecord | null> {
-  await ensureInitialized();
   let result = await pool.query(
     q("SELECT * FROM webtv.videos WHERE slug = ?", [slug]),
   );
@@ -832,7 +841,6 @@ export async function getVideoBySlug(
 export async function getRecentVideos(
   daysBack: number = 365,
 ): Promise<VideoRecord[]> {
-  await ensureInitialized();
   const result = await pool.query(
     q(
       "SELECT * FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC, scheduled_time DESC",
@@ -846,7 +854,6 @@ export async function updateVideoEntryId(
   assetId: string,
   entryId: string,
 ): Promise<void> {
-  await ensureInitialized();
   await pool.query(
     q(
       "UPDATE webtv.videos SET entry_id = ?, updated_at = NOW() WHERE asset_id = ?",
@@ -875,8 +882,6 @@ export async function searchVideos(
   offset = 0,
   sort?: SearchSort,
 ): Promise<VideoRecord[]> {
-  await ensureInitialized();
-
   const words = query.trim().split(/\s+/);
   const allShort = words.every((w) => w.length < 3);
   const orderBy = searchOrderBy(sort);
@@ -897,8 +902,13 @@ export async function searchVideos(
       if (ftsResult.rows.length > 0) {
         return ftsResult.rows.map(mapVideoRow);
       }
-    } catch {
-      // fts_vec column may not exist yet in dev — fall through to LIKE
+    } catch (err) {
+      // fts_vec column may not exist yet in dev — fall through to LIKE.
+      // Warn so a broken FTS index doesn't silently degrade us to trigram-only.
+      console.warn(
+        "FTS query failed, falling back to trigram ILIKE:",
+        err instanceof Error ? err.message : err,
+      );
     }
   }
 
@@ -939,8 +949,6 @@ export interface VideosPage {
 export async function getVideosPage(
   params: VideosPageParams,
 ): Promise<VideosPage> {
-  await ensureInitialized();
-
   const {
     daysBack = 365,
     date,
@@ -1049,7 +1057,6 @@ export async function getVideosPage(
 export async function getAvailableDates(
   daysBack: number = 365,
 ): Promise<string[]> {
-  await ensureInitialized();
   const result = await pool.query(
     q(
       "SELECT DISTINCT TO_CHAR(date, 'YYYY-MM-DD') AS date FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC",
@@ -1065,7 +1072,6 @@ export async function getFilterOptions(daysBack: number = 365): Promise<{
   bodyCounts: Record<string, number>;
   categoryCounts: Record<string, number>;
 }> {
-  await ensureInitialized();
   const [bodiesResult, categoriesResult] = await Promise.all([
     pool.query(
       q(
@@ -1100,7 +1106,6 @@ export async function updatePVAvailability(
   assetId: string,
   available: boolean,
 ): Promise<void> {
-  await ensureInitialized();
   await pool.query(
     q(
       "UPDATE webtv.videos SET pv_available = ?, pv_checked_at = NOW(), updated_at = NOW() WHERE asset_id = ?",
@@ -1113,7 +1118,6 @@ export async function getVideosNeedingPVCheck(
   maxAgeDays: number = 90,
   recheckAfterDays: number = 7,
 ): Promise<Array<{ asset_id: string; pv_symbol: string }>> {
-  await ensureInitialized();
   const result = await pool.query(
     q(
       `SELECT asset_id, pv_symbol FROM webtv.videos
@@ -1139,7 +1143,6 @@ export async function getPVContent(
   pvSymbol: string,
   language: string = "en",
 ): Promise<{ content: object; fetchedAt: Date; parsedAt: Date } | null> {
-  await ensureInitialized();
   const result = await pool.query(
     q(
       "SELECT content, fetched_at, parsed_at FROM webtv.pv_contents WHERE pv_symbol = ? AND language = ?",
@@ -1160,7 +1163,6 @@ export async function savePVContent(
   language: string,
   content: object,
 ): Promise<void> {
-  await ensureInitialized();
   await pool.query(
     q(
       `INSERT INTO webtv.pv_contents (pv_symbol, language, content, fetched_at, parsed_at)
@@ -1187,7 +1189,6 @@ export type SpeakerMapping = Record<string, SpeakerInfo>;
 export async function getSpeakerMapping(
   transcriptId: string,
 ): Promise<SpeakerMapping | null> {
-  await ensureInitialized();
   const result = await pool.query(
     q("SELECT mapping FROM webtv.speaker_mappings WHERE transcript_id = ?", [
       transcriptId,
@@ -1201,7 +1202,6 @@ export async function setSpeakerMapping(
   transcriptId: string,
   mapping: SpeakerMapping,
 ): Promise<void> {
-  await ensureInitialized();
   await pool.query(
     q(
       `INSERT INTO webtv.speaker_mappings (transcript_id, mapping)

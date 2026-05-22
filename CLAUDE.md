@@ -48,7 +48,7 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Required for the web app:**
 
-- `DATABASE_URL` — PostgreSQL connection string (Azure Database for PostgreSQL via PgBouncer port 6432). All tables live in the `webtv` schema; the connection pool runs `SET search_path = webtv, public` per checkout, so SQL queries use unqualified names.
+- `DATABASE_URL` — PostgreSQL connection string (Azure Database for PostgreSQL via PgBouncer port 6432). All tables live in the `webtv` schema and every query is explicitly schema-qualified (`webtv.<table>`); there is no `search_path` setup, so this works regardless of the connection's default schema.
 - `GEMINI_API_KEY` — transcription (Gemini)
 - `AZURE_OPENAI_ENDPOINT` — speaker identification, topics, propositions
 - `AZURE_OPENAI_API_KEY` — speaker identification, topics, propositions
@@ -57,7 +57,7 @@ Copy `.env.example` → `.env.local` and fill in values.
 **Production only:**
 
 - `CRON_SECRET` — Vercel cron job authorization (auto-set by Vercel)
-- `NEXT_PUBLIC_BASE_URL` — used by the API to call itself for fire-and-forget speaker-identification triggers; **must be set in production** or those internal requests will go to `localhost:3000` and silently fail.
+- `NEXT_PUBLIC_BASE_URL` — public base URL of the site. (No longer used for internal speaker-identification triggers — those now run in-process via `runSpeakerIdentification()` + `after()`, not an HTTP self-call.)
 
 **Optional:**
 
@@ -117,17 +117,17 @@ The provider is selected via `STT_PROVIDER` (default `gemini`). Analysis model n
 
 ### Database (PostgreSQL)
 
-`lib/db.ts` is the single data-access layer, backed by a `pg` connection pool. Schema lives in `sql/schema.sql`; the application role lives in `sql/role.sql`. Everything lives in the `webtv` schema. The pool runs `SET search_path = webtv, public` per checkout so queries use unqualified names. All queries use the `q()` helper which converts `?` placeholders to `$N` (parameterized — no string interpolation of user input).
+`lib/db.ts` is the single data-access layer, backed by a `pg` connection pool. Schema lives in `sql/schema.sql`; the application role lives in `sql/role.sql`. Everything lives in the `webtv` schema, and every query references tables with an explicit `webtv.` prefix (there is no `SET search_path` — queries never rely on the connection's default schema). All queries use the `q()` helper which converts `?` placeholders to `$N` (parameterized — no string interpolation of user input).
 
 **Tables:**
 
 - `videos` — scraped video metadata, keyed by `asset_id`. Columns: `entry_id`, `title`, `clean_title`, `date`, `scheduled_time`, `duration`, `url`, `body`, `category`, `event_code`, `event_type`, `session_number`, `part_number`, `pv_symbol`, `pv_available`, `pv_checked_at`, `slug`, `last_seen`, `created_at`, `updated_at`, plus a generated `fts_vec tsvector` over `COALESCE(clean_title, title)`. Indexes: unique on `slug`; btree on `entry_id`, `date`, `last_seen`, `body`, `category`; GIN on `fts_vec`; GIN trigram on the title fallback.
-- `transcripts` — transcription results, keyed by `transcript_id`. Status lifecycle: `scheduled → transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed | error`. Has `pipeline_lock` column for concurrency control (30-min stale-lock timeout, no heartbeat). No FK to `videos`; the join is via `entry_id`.
+- `transcripts` — transcription results, keyed by `transcript_id`. Status lifecycle: `scheduled → transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed | error`. Has `pipeline_lock` column for concurrency control (30-min stale-lock timeout, refreshed by a heartbeat — `touchPipelineLock()` — at each pipeline stage boundary and throttled during the long resegmentation pass, so a job still making progress isn't re-entered). No FK to `videos`; the join is via `entry_id`.
 - `speaker_mappings` — AI-resolved speaker info per transcript (name, function, affiliation, group), one row per `transcript_id` with a JSONB `mapping` column.
 - `processing_usage_events` — per-operation API cost tracking (provider, stage, operation, status, model, tokens, hours, rate card, USD-derivable). 33 columns, SERIAL PK.
 - `pv_contents` — cached PV/SR document content, composite PK `(pv_symbol, language)`, JSONB `content` plus `fetched_at` / `parsed_at`. Populated by `app/api/pv/route.ts`.
 
-There are **no foreign-key constraints** between these tables; referential integrity is enforced in application code only. `deleteTranscript()` and `deleteTranscriptsForEntry()` issue separate DELETEs against `processing_usage_events` and `transcripts` without a transaction; if the second fails, orphan usage events remain.
+There are **no foreign-key constraints** between these tables; referential integrity is enforced in application code only. `deleteTranscript()` and `deleteTranscriptsForEntry()` delete from `processing_usage_events` and `transcripts` inside a single `BEGIN/COMMIT` transaction (`withTransaction()` in `lib/db.ts`), so a partial delete can't leave orphaned usage rows.
 
 **Key queries:** `searchVideos` (FTS with ILIKE/trigram fallback), `getVideosPage`, `getRecentVideos`, `getScheduledTranscripts`, `getAllTranscriptedEntries`, `getVideosNeedingPVCheck`, `getProcessingUsageSummaryByTranscript`.
 

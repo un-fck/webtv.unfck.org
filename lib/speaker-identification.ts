@@ -6,6 +6,7 @@ import {
   getTranscriptById,
   updateTranscriptContent,
   updateTranscriptStatus,
+  touchPipelineLock,
 } from "./db";
 import {
   trackOpenAIChatCompletion,
@@ -1240,6 +1241,17 @@ ${transcriptParts.join("\n\n")}`,
 
       const CONTEXT_SIZE = 3; // Number of paragraphs before and after
 
+      // Resegmentation is the longest stage on big debates. Refresh the
+      // pipeline lock at most every 30s as paragraphs complete so a job still
+      // making progress keeps its lock fresh and isn't re-entered concurrently.
+      let lastHeartbeat = Date.now();
+      const heartbeat = async () => {
+        if (!transcriptId) return;
+        if (Date.now() - lastHeartbeat < 30_000) return;
+        lastHeartbeat = Date.now();
+        await touchPipelineLock(transcriptId).catch(() => {});
+      };
+
       const resegmented = await mapWithConcurrency(
         toResegment,
         10,
@@ -1283,13 +1295,15 @@ ${transcriptParts.join("\n\n")}`,
             });
           }
 
-          return await resegmentParagraph(
+          const result = await resegmentParagraph(
             client,
             para,
             contextParas,
             idx,
             transcriptId,
-          ).then((result) => ({ index: idx, ...result }));
+          );
+          await heartbeat();
+          return { index: idx, ...result };
         },
       );
       console.log(`  ✓ Resegmentation and speaker identification complete`);
@@ -1427,6 +1441,7 @@ ${transcriptParts.join("\n\n")}`,
   if (statementsWithSentences.length > 0 && transcriptId) {
     // --- Stage: Analyzing topics ---
     await updateTranscriptStatus(transcriptId, "analyzing_topics");
+    await touchPipelineLock(transcriptId); // heartbeat: keep the lock fresh
     console.log(`  → Analyzing topics...`);
 
     try {
@@ -1465,6 +1480,7 @@ ${transcriptParts.join("\n\n")}`,
     if (!options?.skipPropositions) {
       // --- Stage: Analyzing propositions ---
       await updateTranscriptStatus(transcriptId, "analyzing_propositions");
+      await touchPipelineLock(transcriptId); // heartbeat: keep the lock fresh
       console.log(`  → Analyzing propositions...`);
 
       try {

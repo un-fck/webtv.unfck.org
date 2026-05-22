@@ -11,14 +11,15 @@ export const getCachedTranscriptedEntries = unstable_cache(
   { revalidate: 60 },
 );
 
-export const getCachedAvailableDates = unstable_cache(
-  (daysBack: number) => getAvailableDates(daysBack),
-  ["available-dates"],
-  { revalidate: 60 },
-);
+// `unstable_cache` hashes the arguments into the key internally, but we also
+// list `daysBack` explicitly in keyParts so cache entries are introspectable
+// and distinct per argument (and targetable by `revalidateTag`).
+export const getCachedAvailableDates = (daysBack: number) =>
+  unstable_cache(getAvailableDates, ["available-dates", String(daysBack)], {
+    revalidate: 60,
+  })(daysBack);
 
-export const getCachedFilterOptions = unstable_cache(
-  (daysBack: number) => getFilterOptions(daysBack),
-  ["filter-options"],
-  { revalidate: 60 },
-);
+export const getCachedFilterOptions = (daysBack: number) =>
+  unstable_cache(getFilterOptions, ["filter-options", String(daysBack)], {
+    revalidate: 60,
+  })(daysBack);

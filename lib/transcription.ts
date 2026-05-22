@@ -24,6 +24,7 @@ import {
 import { bcp47ToKalturaName } from "./languages";
 import type { GeminiTranscriptionOptions } from "./gemini-transcription";
 import { setSpeakerMapping } from "./speakers";
+import { KALTURA_PARTNER_ID, KALTURA_WIDGET_ID } from "./kaltura";
 import { getSTTProvider } from "./providers/config";
 import { toRawParagraphs } from "./providers/convert";
 import type { GeminiTranscriptionResult } from "./gemini-transcription";
@@ -49,7 +50,7 @@ async function fetchKalturaFlavors(kalturaId: string) {
         "1": {
           service: "session",
           action: "startWidgetSession",
-          widgetId: "_2503451",
+          widgetId: KALTURA_WIDGET_ID,
         },
         "2": {
           service: "baseEntry",
@@ -68,7 +69,7 @@ async function fetchKalturaFlavors(kalturaId: string) {
         format: 1,
         ks: "",
         clientTag: "html5:v3.17.30",
-        partnerId: 2503451,
+        partnerId: KALTURA_PARTNER_ID,
       }),
     },
   );
@@ -87,7 +88,7 @@ async function fetchKalturaFlavors(kalturaId: string) {
 }
 
 function buildAudioUrl(entryId: string, flavorParamId: number) {
-  return `https://cdnapisec.kaltura.com/p/2503451/sp/0/playManifest/entryId/${entryId}/format/download/protocol/https/flavorParamIds/${flavorParamId}`;
+  return `https://cdnapisec.kaltura.com/p/${KALTURA_PARTNER_ID}/sp/0/playManifest/entryId/${entryId}/format/download/protocol/https/flavorParamIds/${flavorParamId}`;
 }
 
 export async function getKalturaAudioUrl(
@@ -335,6 +336,82 @@ async function runAnalysisPipeline(
     );
     await releasePipelineLock(transcriptId);
     throw err;
+  }
+}
+
+export type SpeakerIdentificationResult =
+  | {
+      ok: true;
+      mapping: SpeakerMapping;
+      statements: TranscriptContent["statements"];
+      topics: TranscriptContent["topics"];
+    }
+  | {
+      ok: false;
+      code: "not_found" | "missing_data" | "pipeline_locked";
+      message: string;
+    };
+
+/**
+ * Run speaker identification + the analysis pipeline for an existing transcript,
+ * in-process. Shared by the `/api/identify-speakers` route and the
+ * transcribe/check routes' fire-and-forget triggers — no HTTP self-call, so it
+ * works regardless of `NEXT_PUBLIC_BASE_URL` and avoids the extra round trip.
+ */
+export async function runSpeakerIdentification(
+  transcriptId: string,
+): Promise<SpeakerIdentificationResult> {
+  const transcript = await getTranscriptById(transcriptId);
+  if (!transcript) {
+    return { ok: false, code: "not_found", message: "Transcript not found" };
+  }
+
+  const paragraphs = transcript.content.raw_paragraphs;
+  if (!paragraphs || paragraphs.length === 0) {
+    return {
+      ok: false,
+      code: "missing_data",
+      message: "No raw paragraphs available",
+    };
+  }
+
+  const acquired = await tryAcquirePipelineLock(transcriptId);
+  if (!acquired) {
+    return {
+      ok: false,
+      code: "pipeline_locked",
+      message: "Pipeline already running",
+    };
+  }
+
+  try {
+    await updateTranscriptStatus(transcriptId, "identifying_speakers");
+    const mapping = await identifySpeakers(
+      paragraphs,
+      transcriptId,
+      undefined,
+      {
+        skipPropositions: true,
+      },
+    );
+    await updateTranscriptStatus(transcriptId, "completed");
+    await releasePipelineLock(transcriptId);
+
+    const updated = await getTranscriptById(transcriptId);
+    return {
+      ok: true,
+      mapping,
+      statements: updated?.content.statements || [],
+      topics: updated?.content.topics || {},
+    };
+  } catch (error) {
+    await updateTranscriptStatus(
+      transcriptId,
+      "error",
+      error instanceof Error ? error.message : "Pipeline failed",
+    );
+    await releasePipelineLock(transcriptId);
+    throw error;
   }
 }
 

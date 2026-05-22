@@ -1,5 +1,58 @@
 import { updateVideoEntryId } from "./db";
-import { extractKalturaId } from "./kaltura";
+import {
+  extractKalturaId,
+  KALTURA_PARTNER_ID,
+  KALTURA_WIDGET_ID,
+} from "./kaltura";
+
+/**
+ * Low-level Kaltura lookup: resolve a Kaltura player ID to its canonical
+ * entry ID (following any `redirectFromEntryId` indirection). No caching.
+ * Shared by `resolveEntryId` here and `scripts/sync-videos.ts`.
+ */
+export async function resolveEntryIdFromKaltura(
+  kalturaId: string,
+): Promise<string | null> {
+  try {
+    const response = await fetch(
+      "https://cdnapisec.kaltura.com/api_v3/service/multirequest",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          "1": {
+            service: "session",
+            action: "startWidgetSession",
+            widgetId: KALTURA_WIDGET_ID,
+          },
+          "2": {
+            service: "baseEntry",
+            action: "list",
+            ks: "{1:result:ks}",
+            filter: { redirectFromEntryId: kalturaId },
+            responseProfile: { type: 1, fields: "id" },
+          },
+          apiVersion: "3.3.0",
+          format: 1,
+          ks: "",
+          clientTag: "html5:v3.17.30",
+          partnerId: KALTURA_PARTNER_ID,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      console.warn(`Kaltura API failed: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data[1]?.objects?.[0]?.id || null;
+  } catch (error) {
+    console.error("Failed to resolve entry ID:", error);
+    return null;
+  }
+}
 
 /**
  * Resolves an asset ID or Kaltura ID to an entry ID.
@@ -21,54 +74,16 @@ export async function resolveEntryId(
   }
 
   // Step 2: Call Kaltura API to resolve (handles redirects)
-  try {
-    const response = await fetch(
-      "https://cdnapisec.kaltura.com/api_v3/service/multirequest",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          "1": {
-            service: "session",
-            action: "startWidgetSession",
-            widgetId: "_2503451",
-          },
-          "2": {
-            service: "baseEntry",
-            action: "list",
-            ks: "{1:result:ks}",
-            filter: { redirectFromEntryId: kalturaId },
-            responseProfile: { type: 1, fields: "id" },
-          },
-          apiVersion: "3.3.0",
-          format: 1,
-          ks: "",
-          clientTag: "html5:v3.17.30",
-          partnerId: 2503451,
-        }),
-      },
-    );
+  const entryId = await resolveEntryIdFromKaltura(kalturaId);
 
-    if (!response.ok) {
-      console.warn(`Kaltura API failed: ${response.status}`);
-      return null;
+  // Step 3: Save resolved entry_id back to cache for next time
+  if (entryId) {
+    try {
+      await updateVideoEntryId(assetId, entryId);
+    } catch (error) {
+      console.warn("Failed to cache entry ID:", error);
     }
-
-    const data = await response.json();
-    const entryId = data[1]?.objects?.[0]?.id;
-
-    // Step 3: Save resolved entry_id back to cache for next time
-    if (entryId) {
-      try {
-        await updateVideoEntryId(assetId, entryId);
-      } catch (error) {
-        console.warn("Failed to cache entry ID:", error);
-      }
-    }
-
-    return entryId || null;
-  } catch (error) {
-    console.error("Failed to resolve entry ID:", error);
-    return null;
   }
+
+  return entryId;
 }

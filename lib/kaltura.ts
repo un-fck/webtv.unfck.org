@@ -1,3 +1,8 @@
+// UN Web TV's Kaltura account. Single source of truth — if the UN ever rotates
+// these, change them here only.
+export const KALTURA_PARTNER_ID = 2503451;
+export const KALTURA_WIDGET_ID = `_${KALTURA_PARTNER_ID}`;
+
 export function extractKalturaId(assetId: string): string | null {
   if (!assetId) return null;
 

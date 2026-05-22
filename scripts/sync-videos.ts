@@ -2,6 +2,7 @@
 import { scrapeVideos, videoToRecord } from "../lib/un-api";
 import { saveVideo, getVideoByAssetId, updateVideoEntryId } from "../lib/db";
 import { extractKalturaId } from "../lib/kaltura";
+import { resolveEntryIdFromKaltura } from "../lib/kaltura-helpers";
 
 const args = process.argv.slice(2);
 const daysArg = args.find((arg) => arg.startsWith("--days="));
@@ -28,45 +29,6 @@ Note: The "--" before options is required when using npm run
 if (isNaN(DAYS_TO_SYNC) || DAYS_TO_SYNC < 1) {
   console.error("Error: --days must be a positive number");
   process.exit(1);
-}
-
-async function resolveEntryId(kalturaId: string): Promise<string | null> {
-  try {
-    const response = await fetch(
-      "https://cdnapisec.kaltura.com/api_v3/service/multirequest",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          "1": {
-            service: "session",
-            action: "startWidgetSession",
-            widgetId: "_2503451",
-          },
-          "2": {
-            service: "baseEntry",
-            action: "list",
-            ks: "{1:result:ks}",
-            filter: { redirectFromEntryId: kalturaId },
-            responseProfile: { type: 1, fields: "id" },
-          },
-          apiVersion: "3.3.0",
-          format: 1,
-          ks: "",
-          clientTag: "html5:v3.17.30",
-          partnerId: 2503451,
-        }),
-      },
-    );
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    return data[1]?.objects?.[0]?.id || null;
-  } catch (error) {
-    console.error(`Failed to resolve entry ID for ${kalturaId}:`, error);
-    return null;
-  }
 }
 
 async function main() {
@@ -104,7 +66,7 @@ async function main() {
       if (!existing?.entry_id) {
         const kalturaId = extractKalturaId(video.id);
         if (kalturaId) {
-          const entryId = await resolveEntryId(kalturaId);
+          const entryId = await resolveEntryIdFromKaltura(kalturaId);
           if (entryId) {
             await updateVideoEntryId(video.id, entryId);
             resolvedCount++;

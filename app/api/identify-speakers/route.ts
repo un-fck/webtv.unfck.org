@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { identifySpeakers } from "@/lib/speaker-identification";
-import {
-  getTranscriptById,
-  updateTranscriptStatus,
-  tryAcquirePipelineLock,
-  releasePipelineLock,
-} from "@/lib/db";
+import { runSpeakerIdentification } from "@/lib/transcription";
 import { apiError } from "@/lib/api-error";
+
+const STATUS_BY_CODE = {
+  not_found: 404,
+  missing_data: 400,
+  pipeline_locked: 409,
+} as const;
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,47 +16,16 @@ export async function POST(request: NextRequest) {
       return apiError(400, "missing_parameter", "transcriptId required");
     }
 
-    const transcript = await getTranscriptById(transcriptId);
-    if (!transcript) {
-      return apiError(404, "not_found", "Transcript not found");
+    const result = await runSpeakerIdentification(transcriptId);
+    if (!result.ok) {
+      return apiError(STATUS_BY_CODE[result.code], result.code, result.message);
     }
 
-    const paragraphs = transcript.content.raw_paragraphs;
-    if (!paragraphs || paragraphs.length === 0) {
-      return apiError(400, "missing_data", "No raw paragraphs available");
-    }
-
-    const acquired = await tryAcquirePipelineLock(transcriptId);
-    if (!acquired) {
-      return apiError(409, "pipeline_locked", "Pipeline already running");
-    }
-
-    try {
-      await updateTranscriptStatus(transcriptId, "identifying_speakers");
-      const mapping = await identifySpeakers(
-        paragraphs,
-        transcriptId,
-        undefined,
-        { skipPropositions: true },
-      );
-      await updateTranscriptStatus(transcriptId, "completed");
-      await releasePipelineLock(transcriptId);
-
-      const updated = await getTranscriptById(transcriptId);
-      return NextResponse.json({
-        mapping,
-        statements: updated?.content.statements || [],
-        topics: updated?.content.topics || {},
-      });
-    } catch (error) {
-      await updateTranscriptStatus(
-        transcriptId,
-        "error",
-        error instanceof Error ? error.message : "Pipeline failed",
-      );
-      await releasePipelineLock(transcriptId);
-      throw error;
-    }
+    return NextResponse.json({
+      mapping: result.mapping,
+      statements: result.statements,
+      topics: result.topics,
+    });
   } catch (error) {
     console.error("Speaker identification error:", error);
     return apiError(

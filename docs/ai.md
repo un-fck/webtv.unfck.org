@@ -8,7 +8,7 @@ Overview of how AI models are used in the transcription and analysis pipeline.
 | --- | --- | --- |
 | Google Gemini | `gemini-3-flash-preview` | Audio transcription (default STT provider), PV document alignment |
 | Azure OpenAI | `gpt-5.4` (configurable via `STT_ANALYSIS_MODEL`) | Speaker identification (legacy), resegmentation, topic definition, proposition analysis |
-| Azure OpenAI | `gpt-5.4-mini` (configurable via `STT_ANALYSIS_MODEL_MINI`) | Cross-chunk speaker normalization |
+| Azure OpenAI | `gpt-5.4-mini` (configurable via `STT_ANALYSIS_MODEL_MINI`) | Cross-chunk speaker normalization _(design intent, not implemented)_ |
 | Azure OpenAI | `gpt-5.4-nano` (configurable via `STT_ANALYSIS_MODEL_NANO`) | Sentence-level topic tagging (reasoning disabled) |
 
 The STT provider is configurable via `STT_PROVIDER` env var (default: `gemini`). Available providers are registered in `lib/providers/registry.ts`. Analysis model names are configurable via `STT_ANALYSIS_MODEL`, `STT_ANALYSIS_MODEL_MINI`, and `STT_ANALYSIS_MODEL_NANO`.
@@ -49,10 +49,11 @@ The transcript `status` column transitions
 `analyzing_propositions` is only reached when proposition analysis runs.
 
 > Cross-chunk speaker normalization (described below as "Stage 2: speaker
-> normalization") is implemented as a helper but is **not invoked by the current
-> production pipeline** — the production Gemini provider deduplicates speakers
-> within its own chunked output. Treat that section as design intent and the
-> code in `lib/transcription.ts` as the source of truth.
+> normalization") is **not part of the production pipeline and the
+> `normalizeSpeakers()` helper no longer exists in the code** — the production
+> Gemini provider deduplicates speakers within its own chunked output. The
+> section below is retained only as design intent; `lib/transcription.ts` is the
+> source of truth.
 
 ---
 
@@ -81,11 +82,15 @@ Word-level timestamps are derived by interpolation within each sentence-level se
 
 **Settings:** `temperature: 0`, `maxOutputTokens: 65536`, thinking disabled by default.
 
-## 2. Speaker normalization (cross-chunk)
+## 2. Speaker normalization (cross-chunk) — design intent only, not implemented
 
-**File:** `lib/gemini-transcription.ts` — `normalizeSpeakers()`
-**Model:** `gpt-5.4-mini` via Azure OpenAI (structured output)
-**Only runs after chunked transcription.**
+> This stage is **not implemented**: there is no `normalizeSpeakers()` helper in
+> the codebase and nothing in the production pipeline calls it. The production
+> Gemini provider already deduplicates speakers within its own chunked output.
+> The description below documents the original design intent.
+
+**Model (intended):** `gpt-5.4-mini` via Azure OpenAI (structured output)
+**Would run after chunked transcription.**
 
 When audio is split into chunks, the same speaker may appear with slight variations across chunks (different spellings, titles, accents). This step deduplicates them.
 

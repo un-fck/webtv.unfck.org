@@ -130,7 +130,7 @@ components/                         # Mixed PascalCase / kebab-case naming — m
   ui/                               # shadcn primitives
 
 lib/
-  db.ts                             # Database layer (all queries, pg pool, search_path = webtv)
+  db.ts                             # Database layer (all queries, pg pool, webtv.-qualified tables)
   cached-db.ts                      # next/cache wrappers for read-heavy queries
   un-api.ts                         # UN Web TV HTML scraper + metadata extraction
   transcription.ts                  # Transcription submission + audio URL resolution

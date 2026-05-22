@@ -77,20 +77,20 @@ Sessions list: `eval/corpus/sessions.json` (20 sessions ≤ 90 min from 2024).
 
 Provider implementations live in `lib/providers/` (shared with the main app). The eval runner imports them through `lib/providers/registry.ts`, so the same code that powers `STT_PROVIDER` on the production site is what gets benchmarked.
 
-| Provider     | Command name    | Model                    | Languages                                  | Pricing     |
-| ------------ | --------------- | ------------------------ | ------------------------------------------ | ----------- |
-| AssemblyAI   | `assemblyai`    | Universal-2              | all 6                                      | ~$0.27/hr   |
-| Azure OpenAI | `azure-openai`  | gpt-4o-transcribe        | all 6                                      | ~$0.06/hr   |
-| ElevenLabs   | `elevenlabs`    | Scribe v2                | all 6                                      | ~$0.40/hr   |
-| Azure Speech | `azure-speech`  | Cognitive Services Batch | all 6                                      | ~$0.36/hr   |
-| Gemini (eval)| `gemini-eval`   | gemini-3-flash-preview   | all 6                                      | ~$0.01/hr   |
-| Gemini (prod)| `gemini`        | gemini-3-flash-preview   | all 6                                      | ~$0.01/hr   |
-| Google Chirp | `google-chirp`  | Chirp 3 (Speech V2 API)  | en, fr, es, zh (no diarization for ar, ru) | ~$0.016/min |
-| Groq         | `groq-whisper`  | whisper-large-v3         | all 6                                      | varies      |
-| Alibaba      | `alibaba`       | Qwen3-ASR-Flash          | all 6 (chunked)                            | varies      |
-| Deepgram     | `deepgram`      | Nova-3                   | all 6                                      | varies      |
-| Mistral      | `mistral`       | voxtral-mini-latest      | all 6                                      | varies      |
-| Cohere       | `cohere`        | (see provider)           | all 6                                      | varies      |
+| Provider      | Command name   | Model                    | Languages                                  | Pricing     |
+| ------------- | -------------- | ------------------------ | ------------------------------------------ | ----------- |
+| AssemblyAI    | `assemblyai`   | Universal-2              | all 6                                      | ~$0.27/hr   |
+| Azure OpenAI  | `azure-openai` | gpt-4o-transcribe        | all 6                                      | ~$0.06/hr   |
+| ElevenLabs    | `elevenlabs`   | Scribe v2                | all 6                                      | ~$0.40/hr   |
+| Azure Speech  | `azure-speech` | Cognitive Services Batch | all 6                                      | ~$0.36/hr   |
+| Gemini (eval) | `gemini-eval`  | gemini-3-flash-preview   | all 6                                      | ~$0.01/hr   |
+| Gemini (prod) | `gemini`       | gemini-3-flash-preview   | all 6                                      | ~$0.01/hr   |
+| Google Chirp  | `google-chirp` | Chirp 3 (Speech V2 API)  | en, fr, es, zh (no diarization for ar, ru) | ~$0.016/min |
+| Groq          | `groq-whisper` | whisper-large-v3         | all 6                                      | varies      |
+| Alibaba       | `alibaba`      | Qwen3-ASR-Flash          | all 6 (chunked)                            | varies      |
+| Deepgram      | `deepgram`     | Nova-3                   | all 6                                      | varies      |
+| Mistral       | `mistral`      | voxtral-mini-latest      | all 6                                      | varies      |
+| Cohere        | `cohere`       | (see provider)           | all 6                                      | varies      |
 
 Add a provider by implementing the `TranscriptionProvider` interface (`lib/providers/types.ts`) and registering it in `lib/providers/registry.ts`.
 

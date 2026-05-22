@@ -5,7 +5,12 @@ import {
   deleteTranscriptsForEntry,
   scheduleTranscript,
 } from "@/lib/db";
-import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
+import {
+  getKalturaAudioUrl,
+  submitTranscription,
+  runSpeakerIdentification,
+} from "@/lib/transcription";
+import { after } from "next/server";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";
 import { apiError } from "@/lib/api-error";
@@ -21,15 +26,14 @@ async function respondWithCached(cached: Transcript) {
   }
 
   if (cached.content.statements.length === 0) {
-    fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/identify-speakers`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcriptId: cached.transcript_id }),
-      },
-    ).catch((err) => {
-      console.error("Error triggering speaker identification:", err);
+    // Run speaker identification in-process after the response is sent — no
+    // HTTP self-call, so it can't silently misfire to localhost in production.
+    after(async () => {
+      try {
+        await runSpeakerIdentification(cached.transcript_id);
+      } catch (err) {
+        console.error("Error running speaker identification:", err);
+      }
     });
 
     return NextResponse.json({

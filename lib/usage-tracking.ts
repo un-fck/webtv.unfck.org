@@ -1,3 +1,7 @@
+import { appendFile } from "fs/promises";
+import { tmpdir } from "os";
+import { join } from "path";
+
 import { AzureOpenAI } from "openai";
 import type {
   ChatCompletion,
@@ -7,6 +11,12 @@ import type {
 import { GEMINI_RATE_CARD_VERSION, GEMINI_MODEL_PRICING } from "./config";
 import { insertProcessingUsageEvent } from "./db";
 import type { GeminiUsageMetadata } from "./gemini-transcription";
+
+// Where failed usage-event inserts are spooled for later backfill. Override
+// with USAGE_EVENTS_FAILED_PATH; defaults to the OS temp dir (writable on Vercel).
+const USAGE_EVENTS_FAILED_PATH =
+  process.env.USAGE_EVENTS_FAILED_PATH ||
+  join(tmpdir(), "usage-events.failed.jsonl");
 
 export const UsageStages = {
   transcribing: "transcribing",
@@ -26,7 +36,6 @@ export const UsageOperations = {
   openaiAnalyzePropositions: "openai_analyze_propositions",
   geminiTranscribe: "gemini_transcribe",
   geminiPvAlignment: "gemini_pv_alignment",
-  openaiNormalizeSpeakers: "openai_normalize_speakers",
 } as const;
 
 function safeObject(value: unknown): object | null {
@@ -45,6 +54,19 @@ async function safeInsertUsageEvent(
       "Failed to persist usage event:",
       error instanceof Error ? error.message : error,
     );
+    // Spool to a JSONL fallback so usage rows can be backfilled if Postgres
+    // was flaking. A spool failure must never break the pipeline either.
+    try {
+      await appendFile(
+        USAGE_EVENTS_FAILED_PATH,
+        JSON.stringify({ failedAt: new Date().toISOString(), event }) + "\n",
+      );
+    } catch (spoolError) {
+      console.warn(
+        "Failed to spool usage event to fallback file:",
+        spoolError instanceof Error ? spoolError.message : spoolError,
+      );
+    }
   }
 }
 
