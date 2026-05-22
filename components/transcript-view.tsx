@@ -190,9 +190,12 @@ export function TranscriptView({
                             {para.sentences.map((sent, sentIdx) => {
                               const isSentActive =
                                 isParaActive && sentIdx === activeSentenceIndex;
-                              const isHighlighted =
-                                selectedTopic &&
-                                sent.topic_keys?.includes(selectedTopic);
+                              const isTopicHit = (s: (typeof para.sentences)[number]) =>
+                                Boolean(
+                                  selectedTopic &&
+                                    s.topic_keys?.includes(selectedTopic),
+                                );
+                              const isHighlighted = isTopicHit(sent);
 
                               if (
                                 topicCollapsed &&
@@ -202,12 +205,29 @@ export function TranscriptView({
                                 return null;
                               }
 
+                              // Merge consecutive highlights into one run:
+                              // only round/pad the outer edges so neighbouring
+                              // highlighted sentences read as a single block.
+                              const prevHighlighted =
+                                sentIdx > 0 &&
+                                isTopicHit(para.sentences[sentIdx - 1]);
+                              const nextHighlighted =
+                                sentIdx < para.sentences.length - 1 &&
+                                isTopicHit(para.sentences[sentIdx + 1]);
+                              const pillClass = [
+                                "py-1",
+                                prevHighlighted ? "" : "rounded-l-full pl-2",
+                                nextHighlighted ? "" : "rounded-r-full pr-2",
+                              ]
+                                .filter(Boolean)
+                                .join(" ");
+
                               if (sent.words && sent.words.length > 0) {
                                 if (isHighlighted && highlightColor) {
                                   return (
                                     <span
                                       key={sentIdx}
-                                      className="rounded-full px-2 py-1"
+                                      className={pillClass}
                                       style={{
                                         backgroundColor: highlightColor + "30",
                                         display: "inline",
@@ -275,7 +295,7 @@ export function TranscriptView({
                                   key={sentIdx}
                                   onClick={() => onSeek(sent.start / 1000)}
                                   className={`cursor-pointer hover:opacity-70 ${
-                                    isHighlighted ? "rounded-full px-2 py-1" : ""
+                                    isHighlighted ? pillClass : ""
                                   }`}
                                   style={{
                                     ...(isHighlighted && highlightColor
