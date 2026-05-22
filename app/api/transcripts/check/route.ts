@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { getTranscript, getActiveTranscriptByKalturaId } from "@/lib/db";
+import {
+  getActiveTranscriptByEntryId,
+  getActiveTranscriptByKalturaId,
+} from "@/lib/db";
 import {
   getKalturaAudioUrl,
   runSpeakerIdentification,
@@ -29,7 +32,7 @@ export async function GET(request: NextRequest) {
     if (!cached) {
       const kalturaLang = bcp47ToKalturaName(language);
       const { entryId } = await getKalturaAudioUrl(kalturaId, kalturaLang);
-      cached = await getTranscript(entryId, undefined, undefined, false, language);
+      cached = await getActiveTranscriptByEntryId(entryId, language);
     }
 
     if (!cached || cached.transcription_status === "error") {

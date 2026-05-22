@@ -724,6 +724,37 @@ export async function getActiveTranscriptByKalturaId(
   return mapTranscriptRow(result.rows[0]);
 }
 
+// Latest non-error full-meeting transcript for a resolved (canonical) entry.
+// Mirrors getActiveTranscriptByKalturaId for the entry-id path so that a newer
+// `error` row (e.g. a failed re-transcription) can't mask an older usable
+// (completed/in-progress) transcript for the same entry.
+export async function getActiveTranscriptByEntryId(
+  entryId: string,
+  languageCode?: string,
+  executor: Pick<Pool, "query"> = pool,
+): Promise<Transcript | null> {
+  const conditions: string[] = [
+    "entry_id = ?",
+    "start_time IS NULL",
+    "end_time IS NULL",
+    "transcription_status <> 'error'",
+  ];
+  const args: unknown[] = [entryId];
+  if (languageCode) {
+    conditions.push("language_code = ?");
+    args.push(languageCode);
+  }
+  const result = await executor.query(
+    q(
+      `SELECT * FROM webtv.transcripts WHERE ${conditions.join(" AND ")}
+       ORDER BY updated_at DESC LIMIT 1`,
+      args,
+    ),
+  );
+  if (result.rows.length === 0) return null;
+  return mapTranscriptRow(result.rows[0]);
+}
+
 export async function getAllTranscriptedEntries(): Promise<string[]> {
   // Return identifiers that match `videos.entry_id`. Some legacy transcripts
   // were keyed by a resolved (canonical) entry that differs from the

@@ -159,6 +159,10 @@ export function TranscriptionPanel({
   const [propositions, setPropositions] = useState<Proposition[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("transcript");
   const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
+  // Covers the POST round-trip (click → response) so the Generate button can
+  // show instant feedback before the server resolves Kaltura and starts polling.
+  const [starting, setStarting] = useState(false);
+  const startingRef = useRef(false);
 
   const {
     activeSegmentIndex,
@@ -285,6 +289,10 @@ export function TranscriptionPanel({
   ]);
 
   const handleTranscribe = async (force = false) => {
+    // Guard against a double-click firing a second POST while one is in flight.
+    if (startingRef.current) return;
+    startingRef.current = true;
+    setStarting(true);
     setStage("transcribing");
     setErrorMessage(null);
     try {
@@ -300,6 +308,11 @@ export function TranscriptionPanel({
         );
       }
       const data = await response.json();
+      // POST resolved — hand off to the stage list / polling. Clear before the
+      // awaited pollForCompletion below (a finally would keep it set for the
+      // entire transcription).
+      startingRef.current = false;
+      setStarting(false);
       setTranscriptId(data.transcriptId);
       if (data.statements && data.statements.length > 0) {
         setStatements(data.statements);
@@ -317,6 +330,8 @@ export function TranscriptionPanel({
       if (data.raw_paragraphs) setRawParagraphs(data.raw_paragraphs);
       if (data.transcriptId) await pollForCompletion(data.transcriptId);
     } catch (err) {
+      startingRef.current = false;
+      setStarting(false);
       setErrorMessage(
         err instanceof Error ? err.message : "Failed to transcribe",
       );
@@ -717,6 +732,7 @@ export function TranscriptionPanel({
         isLoggedIn={isLoggedIn}
         checking={checking}
         stage={stage}
+        starting={starting}
         videoStatus={video.status}
         videoSlug={video.slug}
         onTranscribe={() => handleTranscribe()}
@@ -743,7 +759,7 @@ export function TranscriptionPanel({
         </div>
       )}
 
-      {isLoading && <StageProgress currentStage={stage} />}
+      {isLoading && !starting && <StageProgress currentStage={stage} />}
 
       {stage === "error" && (
         <StageProgress

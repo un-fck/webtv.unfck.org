@@ -28,6 +28,7 @@ interface TranscriptToolbarProps {
   isLoggedIn: boolean;
   checking: boolean;
   stage: Stage;
+  starting: boolean;
   videoStatus?: string;
   videoSlug?: string;
   onTranscribe: () => void;
@@ -51,6 +52,7 @@ export function TranscriptToolbar({
   isLoggedIn,
   checking,
   stage,
+  starting,
   videoStatus,
   videoSlug,
   onTranscribe,
@@ -222,25 +224,38 @@ export function TranscriptToolbar({
         )}
 
       <div className="ml-auto flex gap-2">
-        {!hasSegments && !hasRawParagraphs && !checking && stage === "idle" && (
-          <>
-            <button
-              onClick={onTranscribe}
-              className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Generate
-            </button>
-            {(videoStatus === "live" || videoStatus === "scheduled") && (
-              <button
-                onClick={onSchedule}
-                className="rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
-                title="Queue transcript to start automatically when recording ends"
-              >
-                Schedule
-              </button>
-            )}
-          </>
+        {starting && (
+          <button
+            disabled
+            className="flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground opacity-70"
+          >
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            Generating…
+          </button>
         )}
+        {!hasSegments &&
+          !hasRawParagraphs &&
+          !checking &&
+          stage === "idle" &&
+          !starting && (
+            <>
+              <button
+                onClick={onTranscribe}
+                className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Generate
+              </button>
+              {(videoStatus === "live" || videoStatus === "scheduled") && (
+                <button
+                  onClick={onSchedule}
+                  className="rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
+                  title="Queue transcript to start automatically when recording ends"
+                >
+                  Schedule
+                </button>
+              )}
+            </>
+          )}
         {!hasSegments &&
           !hasRawParagraphs &&
           !checking &&
