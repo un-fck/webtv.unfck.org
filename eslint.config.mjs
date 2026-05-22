@@ -1,16 +1,18 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import next from "eslint-config-next";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
+// Flat config (ESLint 9/10 + Next 16). eslint-config-next now ships native
+// flat-config arrays, so we spread them directly — no @eslint/eslintrc bridge
+// (which breaks under ESLint 10).
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...next,
+  {
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "eval/dashboard/**",
+      "lib/__fixtures__/**",
+    ],
+  },
 ];
 
 export default eslintConfig;

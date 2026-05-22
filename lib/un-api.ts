@@ -130,7 +130,7 @@ export function recordToVideo(
   };
 }
 
-function calculateStatus(
+export function calculateStatus(
   scheduledTime: Date | null,
   duration: string,
 ): "finished" | "live" | "scheduled" {
@@ -162,7 +162,7 @@ function calculateStatus(
     : "finished";
 }
 
-function decodeEventCode(code: string): string {
+export function decodeEventCode(code: string): string {
   const eventTypes: Record<string, string> = {
     EM: "Event - Ministerial",
     GO: "Global Occasion",
@@ -177,7 +177,7 @@ function decodeEventCode(code: string): string {
   return eventTypes[prefix] || `Event ${code}`;
 }
 
-function cleanTitle(
+export function cleanTitle(
   title: string,
   metadata: {
     eventCode: string | null;
@@ -199,7 +199,7 @@ function cleanTitle(
   return cleaned.trim();
 }
 
-function extractMetadataFromTitle(title: string, category?: string) {
+export function extractMetadataFromTitle(title: string, category?: string) {
   const metadata = {
     eventCode: null as string | null,
     eventType: null as string | null,

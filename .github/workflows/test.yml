@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Blocking gate — protects the deterministic data-processing logic and
+      # types. The Layer 1 test suite runs fully offline (a dummy DATABASE_URL
+      # is injected by vitest.config.ts; nothing connects).
+      - run: pnpm typecheck
+      - run: pnpm test
+
+      # Non-blocking: the lint toolchain works again, but the codebase still
+      # has pre-existing react-hooks violations to clear out separately.
+      - run: pnpm lint
+        continue-on-error: true

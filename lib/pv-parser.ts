@@ -1086,10 +1086,12 @@ function findSpeechStart(text: string, lang: string): number {
 
 // ── Main parser ───────────────────────────────────────────────────────
 
-export async function parsePVDocument(
-  pdfBuffer: Buffer,
-  langHint?: string,
-): Promise<PVDocument> {
+/**
+ * Extract raw text from a PV/SR PDF buffer (the I/O half of
+ * {@link parsePVDocument}). Split out so fixtures can capture exactly the text
+ * that production feeds to {@link parsePVText}.
+ */
+export async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
   // Disable worker to avoid issues in Next.js server environment
   pdfjs.GlobalWorkerOptions.workerSrc = "";
   const data = new Uint8Array(
@@ -1115,8 +1117,23 @@ export async function parsePVDocument(
     }
     pageTexts.push(parts.join(""));
   }
-  const rawText = pageTexts.join("\n");
+  return pageTexts.join("\n");
+}
 
+export async function parsePVDocument(
+  pdfBuffer: Buffer,
+  langHint?: string,
+): Promise<PVDocument> {
+  const rawText = await extractPdfText(pdfBuffer);
+  return parsePVText(rawText, langHint);
+}
+
+/**
+ * Parse already-extracted PV/SR document text into a structured `PVDocument`.
+ * This is the pure, deterministic half of {@link parsePVDocument} (no PDF/IO),
+ * split out so it can be unit-tested offline against captured text fixtures.
+ */
+export function parsePVText(rawText: string, langHint?: string): PVDocument {
   const lang = langHint || detectLanguage(rawText);
   const cleanedText = stripPageArtifacts(rawText);
 

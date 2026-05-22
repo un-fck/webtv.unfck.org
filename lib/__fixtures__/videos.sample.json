@@ -1,0 +1,488 @@
+[
+  {
+    "id": "k16/k162lf4a00",
+    "title": "The situation in the Middle East - Security Council, 10105th meeting",
+    "category": "Security Council",
+    "date": "2026-02-12",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-12T15:10:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Security Council",
+      "sessionNumber": null,
+      "partNumber": null,
+      "cleanTitle": "The situation in the Middle East - Security Council, 10105th meeting",
+      "pvSymbol": "S/PV.10105",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1s/k1s7t5vwfm",
+    "title": "Threats to international peace and security caused by terrorist acts - Security Council, 10104th meeting",
+    "category": "Security Council",
+    "date": "2026-02-12",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-12T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Security Council",
+      "sessionNumber": null,
+      "partNumber": null,
+      "cleanTitle": "Threats to international peace and security caused by terrorist acts - Security Council, 10104th meeting",
+      "pvSymbol": "S/PV.10104",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1j/k1j8o6r1jw",
+    "title": "Outer Space: Committee on the Peaceful Uses of Outer Space, Scientific and Technical Subcommittee, 63rd session, 1052th meeting",
+    "category": "General Assembly",
+    "date": "2026-02-13",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-13T14:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "General Assembly",
+      "sessionNumber": "63rd session",
+      "partNumber": null,
+      "cleanTitle": "Outer Space: Committee on the Peaceful Uses of Outer Space, Scientific and Technical Subcommittee, 63rd session, 1052th meeting",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1j/k1jdozb9er",
+    "title": "Outer Space: Committee on the Peaceful Uses of Outer Space, Scientific and Technical Subcommittee, 63rd session, 1051th meeting",
+    "category": "General Assembly",
+    "date": "2026-02-13",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-13T09:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "General Assembly",
+      "sessionNumber": "63rd session",
+      "partNumber": null,
+      "cleanTitle": "Outer Space: Committee on the Peaceful Uses of Outer Space, Scientific and Technical Subcommittee, 63rd session, 1051th meeting",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1u/k1uzvq6ql8",
+    "title": "First Committee, 26th plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-06",
+    "duration": "02:20:44",
+    "scheduledTime": "2025-11-06T20:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "First Committee",
+      "sessionNumber": "26th plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "First Committee, 26th plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.1/80/PV.26",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1a/k1awesy45r",
+    "title": "First Committee, 25th plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-06",
+    "duration": "02:51:18",
+    "scheduledTime": "2025-11-06T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "First Committee",
+      "sessionNumber": "25th plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "First Committee, 25th plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.1/80/PV.25",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k18/k18ybozz71",
+    "title": "Second Committee, 23rd plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-26",
+    "duration": "00:00:00",
+    "scheduledTime": "2025-11-26T20:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Second Committee",
+      "sessionNumber": "23rd plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Second Committee, 23rd plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.2/80/SR.23",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1k/k1knoqow4e",
+    "title": "Second Committee, 22nd plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-26",
+    "duration": "03:07:00",
+    "scheduledTime": "2025-11-26T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Second Committee",
+      "sessionNumber": "22nd plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Second Committee, 22nd plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.2/80/SR.22",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1s/k1s92ja0wz",
+    "title": "Third Committee, 52nd plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-21",
+    "duration": "02:02:33",
+    "scheduledTime": "2025-11-21T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Third Committee",
+      "sessionNumber": "52nd plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Third Committee, 52nd plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.3/80/SR.52",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1o/k1o6nwotz6",
+    "title": "Third Committee, 51st plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-20",
+    "duration": "02:55:05",
+    "scheduledTime": "2025-11-20T20:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Third Committee",
+      "sessionNumber": "51st plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Third Committee, 51st plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.3/80/SR.51",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1c/k1cmrafbcq",
+    "title": "Fourth Committee, 28th plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-19",
+    "duration": "01:46:21",
+    "scheduledTime": "2025-11-19T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Fourth Committee",
+      "sessionNumber": "28th plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Fourth Committee, 28th plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.4/80/SR.28",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k12/k12elrpo4u",
+    "title": "Fourth Committee, 27th plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-18",
+    "duration": "02:09:44",
+    "scheduledTime": "2025-11-18T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Fourth Committee",
+      "sessionNumber": "27th plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Fourth Committee, 27th plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.4/80/SR.27",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1m/k1mcux4qdt",
+    "title": "Fifth Committee, 20th plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-12-19",
+    "duration": "00:35:38",
+    "scheduledTime": "2025-12-19T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Fifth Committee",
+      "sessionNumber": "20th plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Fifth Committee, 20th plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.5/80/SR.20",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1z/k1z92qt66a",
+    "title": "Fifth Committee, 19th plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-12-15",
+    "duration": "00:22:25",
+    "scheduledTime": "2025-12-15T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Fifth Committee",
+      "sessionNumber": "19th plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Fifth Committee, 19th plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.5/80/SR.19",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k11/k11s3pgo0y",
+    "title": "Sixth Committee, 39th plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-21",
+    "duration": "01:04:44",
+    "scheduledTime": "2025-11-21T20:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Sixth Committee",
+      "sessionNumber": "39th plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Sixth Committee, 39th plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.6/80/SR.39",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1o/k1ojitq5wa",
+    "title": "Sixth Committee, 38th plenary meeting - General Assembly, 80th session",
+    "category": "General Assembly",
+    "date": "2025-11-21",
+    "duration": "02:25:05",
+    "scheduledTime": "2025-11-21T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Sixth Committee",
+      "sessionNumber": "38th plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "Sixth Committee, 38th plenary meeting - General Assembly, 80th session",
+      "pvSymbol": "A/C.6/80/SR.38",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1w/k1wjnpcfkw",
+    "title": "(18th meeting) Intergovernmental Negotiating Committee on the United Nations Framework Convention on International Tax Cooperation - Fourth Session",
+    "category": "Economic and Social Council",
+    "date": "2026-02-13",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-13T20:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Economic and Social Council",
+      "sessionNumber": null,
+      "partNumber": null,
+      "cleanTitle": "(18th meeting) Intergovernmental Negotiating Committee on the United Nations Framework Convention on International Tax Cooperation - Fourth Session",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1q/k1qnvi1f2s",
+    "title": "(17th meeting) Intergovernmental Negotiating Committee on the United Nations Framework Convention on International Tax Cooperation - Fourth Session",
+    "category": "Economic and Social Council",
+    "date": "2026-02-13",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-13T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Economic and Social Council",
+      "sessionNumber": null,
+      "partNumber": null,
+      "cleanTitle": "(17th meeting) Intergovernmental Negotiating Committee on the United Nations Framework Convention on International Tax Cooperation - Fourth Session",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1f/k1fkz7i07z",
+    "title": "Trusteeship Council: 1720th meeting, 75th session",
+    "category": "Trusteeship Council",
+    "date": "2025-12-12",
+    "duration": "00:47:44",
+    "scheduledTime": "2025-12-12T20:45:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "Trusteeship Council",
+      "sessionNumber": "75th session",
+      "partNumber": null,
+      "cleanTitle": "Trusteeship Council: 1720th meeting, 75th session",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1q/k1qduo7w59",
+    "title": "GO16 - World Food Forum Closing Ceremony",
+    "category": "Agencies, Funds & Programmes",
+    "date": "2025-10-17",
+    "duration": "02:37:10",
+    "scheduledTime": "2025-10-17T12:00:00-04:00",
+    "expected": {
+      "eventCode": "GO16",
+      "eventType": "Global Occasion",
+      "body": null,
+      "sessionNumber": null,
+      "partNumber": null,
+      "cleanTitle": "World Food Forum Closing Ceremony",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1j/k1jr0wx1f8",
+    "title": "GO15 - World Food Forum Joint Presentation of Outcomes",
+    "category": "Agencies, Funds & Programmes",
+    "date": "2025-10-17",
+    "duration": "01:09:00",
+    "scheduledTime": "2025-10-17T09:30:00-04:00",
+    "expected": {
+      "eventCode": "GO15",
+      "eventType": "Global Occasion",
+      "body": null,
+      "sessionNumber": null,
+      "partNumber": null,
+      "cleanTitle": "World Food Forum Joint Presentation of Outcomes",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1l/k1l2pb1qlx",
+    "title": "(Part 2) 11th International Day of Women & Girls in Science Assembly",
+    "category": "High-level Events",
+    "date": "2026-02-11",
+    "duration": "04:13:39",
+    "scheduledTime": "2026-02-11T20:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": null,
+      "sessionNumber": null,
+      "partNumber": 2,
+      "cleanTitle": "(Part 2) 11th International Day of Women & Girls in Science Assembly",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k15/k15tz6p91f",
+    "title": "(Part 1) 11th International Day of Women & Girls in Science Assembly",
+    "category": "High-level Events",
+    "date": "2026-02-11",
+    "duration": "02:57:01",
+    "scheduledTime": "2026-02-11T15:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": null,
+      "sessionNumber": null,
+      "partNumber": 1,
+      "cleanTitle": "(Part 1) 11th International Day of Women & Girls in Science Assembly",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1i/k1i7yufj2r",
+    "title": "General Assembly: 72nd plenary meeting, 80th session",
+    "category": "General Assembly",
+    "date": "2026-02-12",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-12T20:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "General Assembly",
+      "sessionNumber": "72nd plenary meeting",
+      "partNumber": null,
+      "cleanTitle": "General Assembly: 72nd plenary meeting, 80th session",
+      "pvSymbol": "A/80/PV.72",
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k16/k168wiqphf",
+    "title": "Outer Space: Committee on the Peaceful Uses of Outer Space, Scientific and Technical Subcommittee, 63rd session, 1050th meeting",
+    "category": "General Assembly",
+    "date": "2026-02-12",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-12T14:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": "General Assembly",
+      "sessionNumber": "63rd session",
+      "partNumber": null,
+      "cleanTitle": "Outer Space: Committee on the Peaceful Uses of Outer Space, Scientific and Technical Subcommittee, 63rd session, 1050th meeting",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k1l/k1lnuvyqhp",
+    "title": "(4th meeting) 2026 IPU Parliamentary Hearing at the United Nations",
+    "category": "Meetings & Events",
+    "date": "2026-02-13",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-13T20:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": null,
+      "sessionNumber": null,
+      "partNumber": null,
+      "cleanTitle": "(4th meeting) 2026 IPU Parliamentary Hearing at the United Nations",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  },
+  {
+    "id": "k17/k17otwzuc6",
+    "title": "Daily Press Briefing by the Spokesperson of the Secretary-General and the Spokesperson for the President of the General Assembly",
+    "category": "Press Conferences",
+    "date": "2026-02-13",
+    "duration": "00:00:00",
+    "scheduledTime": "2026-02-13T17:00:00-05:00",
+    "expected": {
+      "eventCode": null,
+      "eventType": null,
+      "body": null,
+      "sessionNumber": null,
+      "partNumber": null,
+      "cleanTitle": "Daily Press Briefing by the Spokesperson of the Secretary-General and the Spokesperson for the President of the General Assembly",
+      "pvSymbol": null,
+      "statusWhenFinished": "finished"
+    }
+  }
+]
