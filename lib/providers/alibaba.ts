@@ -3,7 +3,7 @@ import { execSync } from "child_process";
 import os from "os";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "./utils";
+import { downloadAudioToTemp, apiLanguage } from "./utils";
 
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY!;
 // Use international endpoint; switch to dashscope.aliyuncs.com for China region
@@ -149,6 +149,7 @@ export const alibaba: TranscriptionProvider = {
 
   async transcribe(audioUrl, opts) {
     const lang = opts?.language;
+    const apiLang = apiLanguage(opts?.language);
     const ownedPath = !opts?.audioFilePath;
     const filePath =
       opts?.audioFilePath || (await downloadAudioToTemp(audioUrl, "Alibaba"));
@@ -168,7 +169,7 @@ export const alibaba: TranscriptionProvider = {
         PARALLEL_CHUNKS,
         async (chunk, i) => {
           const tChunk = Date.now();
-          const sentences = await transcribeChunk(chunk.path, lang);
+          const sentences = await transcribeChunk(chunk.path, apiLang);
           console.log(
             `  [Alibaba] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (${sentences.length} sentences)`,
           );

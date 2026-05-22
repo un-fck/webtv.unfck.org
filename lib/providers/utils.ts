@@ -9,6 +9,16 @@ import { execSync } from "child_process";
 import os from "os";
 import path from "path";
 
+/**
+ * Normalize a pipeline language code into an ISO code an STT API will accept.
+ * "floor" is the UN original mixed-language channel, not an ISO code, so it
+ * maps to `undefined` (let the provider auto-detect). Providers that have their
+ * own meaning for "floor" (e.g. Gemini's special prompt) should not use this.
+ */
+export function apiLanguage(language?: string): string | undefined {
+  return language && language !== "floor" ? language : undefined;
+}
+
 /** Format milliseconds as HH:MM:SS */
 export function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);

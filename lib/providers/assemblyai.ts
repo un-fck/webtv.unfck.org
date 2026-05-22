@@ -1,4 +1,5 @@
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
+import { apiLanguage } from "./utils";
 
 const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;
 
@@ -21,7 +22,7 @@ export const assemblyai: TranscriptionProvider = {
       body: JSON.stringify({
         audio_url: audioUrl,
         speaker_labels: true,
-        language_code: opts?.language,
+        language_code: apiLanguage(opts?.language),
       }),
     });
     if (!submitRes.ok)

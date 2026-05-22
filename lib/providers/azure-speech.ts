@@ -22,9 +22,10 @@ export const azureSpeech: TranscriptionProvider = {
   },
 
   async transcribe(audioUrl, opts) {
-    const locale = opts?.language
-      ? LANG_MAP[opts.language] || opts.language
-      : "en-US";
+    // "floor" is the mixed-language channel, not an ISO code; Azure batch needs
+    // a concrete locale, so fall back to the en-US default rather than 422.
+    const lang = opts?.language === "floor" ? undefined : opts?.language;
+    const locale = lang ? LANG_MAP[lang] || lang : "en-US";
     const baseUrl = AZURE_SPEECH_ENDPOINT.replace(/\/$/, "");
     const apiBase = `${baseUrl}/speechtotext/v3.2/transcriptions`;
     const subKey = { "Ocp-Apim-Subscription-Key": AZURE_SPEECH_KEY };

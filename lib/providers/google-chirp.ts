@@ -148,7 +148,11 @@ export const googleChirp: TranscriptionProvider = {
 
   async transcribe(audioUrl, opts) {
     const lang = opts?.language || "en";
-    const locale = LANG_MAP[lang] || `${lang}-${lang.toUpperCase()}`;
+    // "floor" is the mixed-language channel — Chirp accepts "auto" to detect.
+    const locale =
+      lang === "floor"
+        ? "auto"
+        : LANG_MAP[lang] || `${lang}-${lang.toUpperCase()}`;
     const projectId = getProjectId();
     const bucket =
       process.env.GOOGLE_CLOUD_BUCKET || `${projectId}-speech-eval`;

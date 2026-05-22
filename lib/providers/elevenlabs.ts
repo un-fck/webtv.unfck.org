@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "./utils";
+import { downloadAudioToTemp, apiLanguage } from "./utils";
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY!;
 
@@ -28,8 +28,9 @@ export const elevenlabs: TranscriptionProvider = {
       form.append("file", blob, path.basename(filePath));
       form.append("diarize", "true");
       form.append("timestamps_granularity", "word");
-      if (opts?.language) {
-        form.append("language_code", opts.language);
+      const apiLang = apiLanguage(opts?.language);
+      if (apiLang) {
+        form.append("language_code", apiLang);
       }
 
       const res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {

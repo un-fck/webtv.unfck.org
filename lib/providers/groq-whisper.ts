@@ -1,7 +1,12 @@
 import fs from "fs";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp, splitAudio, parallelMap } from "./utils";
+import {
+  downloadAudioToTemp,
+  splitAudio,
+  parallelMap,
+  apiLanguage,
+} from "./utils";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY!;
 const MAX_FILE_SIZE = 24 * 1024 * 1024; // 24MB to stay under Groq's 25MB limit
@@ -60,6 +65,7 @@ export const groqWhisper: TranscriptionProvider = {
 
   async transcribe(audioUrl, opts) {
     const ownedPath = !opts?.audioFilePath;
+    const apiLang = apiLanguage(opts?.language);
     const tmpPath =
       opts?.audioFilePath || (await downloadAudioToTemp(audioUrl, "Groq"));
 
@@ -74,7 +80,7 @@ export const groqWhisper: TranscriptionProvider = {
 
       if (fileSize <= MAX_FILE_SIZE) {
         // Single file upload
-        const response = await transcribeFile(tmpPath, opts?.language);
+        const response = await transcribeFile(tmpPath, apiLang);
         allSegments =
           response.segments?.map((seg: any) => ({
             start: seg.start * 1000,
@@ -101,7 +107,7 @@ export const groqWhisper: TranscriptionProvider = {
           async (chunk, i) => {
             const chunkSize = fs.statSync(chunk.path).size;
             const tChunk = Date.now();
-            const response = await transcribeFile(chunk.path, opts?.language);
+            const response = await transcribeFile(chunk.path, apiLang);
             console.log(
               `  [Groq] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min, ${(chunkSize / 1024 / 1024).toFixed(0)}MB)`,
             );

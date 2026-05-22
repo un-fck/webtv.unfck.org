@@ -3,7 +3,7 @@ import { execSync } from "child_process";
 import os from "os";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "./utils";
+import { downloadAudioToTemp, apiLanguage } from "./utils";
 
 /** Convert audio to mp3 if needed (Cohere only supports flac, mp3, mpeg, mpga, ogg, wav) */
 function ensureMp3(inputPath: string): { path: string; needsCleanup: boolean } {
@@ -51,6 +51,7 @@ export const cohere: TranscriptionProvider = {
 
   async transcribe(audioUrl, opts) {
     const lang = opts?.language || "en";
+    const apiLang = apiLanguage(opts?.language);
     const ownedPath = !opts?.audioFilePath;
     const filePath =
       opts?.audioFilePath || (await downloadAudioToTemp(audioUrl, "Cohere"));
@@ -63,7 +64,7 @@ export const cohere: TranscriptionProvider = {
 
       const form = new FormData();
       form.append("model", "cohere-transcribe-03-2026");
-      if (lang) form.append("language", lang);
+      if (apiLang) form.append("language", apiLang);
       form.append("temperature", "0");
       form.append("file", blob, "audio.mp3");
 

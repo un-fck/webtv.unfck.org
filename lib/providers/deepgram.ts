@@ -1,6 +1,6 @@
 import fs from "fs";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "./utils";
+import { downloadAudioToTemp, apiLanguage } from "./utils";
 
 const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY!;
 
@@ -48,7 +48,9 @@ export const deepgram: TranscriptionProvider = {
 
       const params = new URLSearchParams({
         model: "nova-3",
-        language: lang,
+        // "floor" → "multi" (nova-3 multilingual auto-detect) rather than an
+        // invalid code; apiLanguage() drops "floor", we map the gap to "multi".
+        language: apiLanguage(opts?.language) ?? "multi",
         diarize: "true",
         utterances: "true",
         smart_format: "true",

@@ -1,7 +1,12 @@
 import fs from "fs";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp, splitAudio, parallelMap } from "./utils";
+import {
+  downloadAudioToTemp,
+  splitAudio,
+  parallelMap,
+  apiLanguage,
+} from "./utils";
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY!;
 const MAX_FILE_SIZE = 24 * 1024 * 1024; // 24MB — stay under Mistral's ~25MB request limit
@@ -58,6 +63,7 @@ export const mistral: TranscriptionProvider = {
 
   async transcribe(audioUrl, opts) {
     const lang = opts?.language || "en";
+    const apiLang = apiLanguage(opts?.language);
     const ownedPath = !opts?.audioFilePath;
     const filePath =
       opts?.audioFilePath || (await downloadAudioToTemp(audioUrl, "Mistral"));
@@ -72,7 +78,7 @@ export const mistral: TranscriptionProvider = {
 
       if (fileSize <= MAX_FILE_SIZE) {
         console.log(`  [Mistral] Transcribing with Voxtral...`);
-        const raw = await transcribeFile(filePath, lang);
+        const raw = await transcribeFile(filePath, apiLang);
         allSegments = (raw.segments || []).map((seg: any) => ({
           start: seg.start * 1000,
           end: seg.end * 1000,
@@ -100,7 +106,7 @@ export const mistral: TranscriptionProvider = {
           PARALLEL_CHUNKS,
           async (chunk, i) => {
             const tChunk = Date.now();
-            const raw = await transcribeFile(chunk.path, lang);
+            const raw = await transcribeFile(chunk.path, apiLang);
             console.log(
               `  [Mistral] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min)`,
             );

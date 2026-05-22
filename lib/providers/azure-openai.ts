@@ -2,7 +2,12 @@ import { AzureOpenAI } from "openai";
 import fs from "fs";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp, splitAudio, parallelMap } from "./utils";
+import {
+  downloadAudioToTemp,
+  splitAudio,
+  parallelMap,
+  apiLanguage,
+} from "./utils";
 
 const MAX_FILE_SIZE = 24 * 1024 * 1024; // 24MB — stay under Azure's 25MB limit
 const CHUNK_DURATION_SECS = 600; // 10 min chunks (well under 25min duration limit)
@@ -58,6 +63,7 @@ export const azureOpenai: TranscriptionProvider = {
 
   async transcribe(audioUrl, opts) {
     const ownedPath = !opts?.audioFilePath;
+    const apiLang = apiLanguage(opts?.language);
     const tmpPath =
       opts?.audioFilePath || (await downloadAudioToTemp(audioUrl, "Azure"));
 
@@ -71,7 +77,7 @@ export const azureOpenai: TranscriptionProvider = {
 
       if (fileSize <= MAX_FILE_SIZE) {
         console.log(`  [Azure] Transcribing...`);
-        const raw = await transcribeFile(tmpPath, opts?.language);
+        const raw = await transcribeFile(tmpPath, apiLang);
         utterances = segmentsToUtterances(raw.segments || []);
         fullText = raw.text || utterances.map((u) => u.text).join(" ");
         totalDurationMs =
@@ -96,7 +102,7 @@ export const azureOpenai: TranscriptionProvider = {
           PARALLEL_CHUNKS,
           async (chunk, i) => {
             const tChunk = Date.now();
-            const raw = await transcribeFile(chunk.path, opts?.language);
+            const raw = await transcribeFile(chunk.path, apiLang);
             console.log(
               `  [Azure] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (offset ${(chunk.offsetMs / 1000 / 60).toFixed(0)}min)`,
             );
