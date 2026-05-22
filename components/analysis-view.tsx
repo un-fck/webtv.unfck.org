@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { SpeakerMapping } from "@/lib/speakers";
 import type { Proposition } from "@/lib/pipeline";
+import { formatTimecodeMs } from "@/lib/transcript-formatting";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -107,12 +108,6 @@ export function AnalysisView({
     });
   };
 
-  const formatTime = (ms: number): string => {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs.toString().padStart(2, "0")}`;
-  };
 
   const getStatementData = (
     statementIndex: number,
@@ -255,7 +250,7 @@ export function AnalysisView({
                                       className="cursor-pointer text-xs text-muted-foreground transition-colors hover:text-primary hover:underline"
                                       title="Jump to this timestamp"
                                     >
-                                      [{formatTime(stmtData.start)}]
+                                      [{formatTimecodeMs(stmtData.start)}]
                                     </button>
                                   </div>
                                   <div

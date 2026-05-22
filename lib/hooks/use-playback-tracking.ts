@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { useRafPlaybackTime } from "@/lib/hooks/use-raf-playback-time";
 
 interface SpeakerSegment {
   speaker: string;
@@ -51,147 +52,88 @@ export function usePlaybackTracking(
   const [activeParagraphIndex, setActiveParagraphIndex] = useState(-1);
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(-1);
   const [activeWordIndex, setActiveWordIndex] = useState(-1);
-  const currentTimeRef = useRef<number>(0);
 
-  useEffect(() => {
-    if (!player) return;
+  // Compute the active segment/statement/paragraph/sentence/word for the given
+  // playback time. Setting an unchanged index is a no-op (React bails out), so
+  // no manual change-tracking is needed.
+  const currentTimeRef = useRafPlaybackTime(player, (time) => {
+    if (!segments || !statements || statements.length === 0) {
+      setActiveSegmentIndex(-1);
+      setActiveStatementIndex(-1);
+      setActiveParagraphIndex(-1);
+      setActiveSentenceIndex(-1);
+      setActiveWordIndex(-1);
+      return;
+    }
 
-    let animationFrameId: number;
-    let lastTime = -1;
-    let lastSegIdx = -1;
-    let lastStmtIdx = -1;
-    let lastParaIdx = -1;
-    let lastSentIdx = -1;
-    let lastWordIdx = -1;
+    let newSegIdx = -1;
+    for (let i = segments.length - 1; i >= 0; i--) {
+      if (time >= segments[i].timestamp) {
+        newSegIdx = i;
+        break;
+      }
+    }
 
-    const updateTime = () => {
-      try {
-        const time = player.currentTime;
-        if (Math.abs(time - lastTime) > 0.01) {
-          lastTime = time;
-          currentTimeRef.current = time;
+    let newStmtIdx = -1;
+    for (let i = statements.length - 1; i >= 0; i--) {
+      const stmt = statements[i];
+      if (stmt?.paragraphs?.[0]?.sentences?.[0]) {
+        if (time >= stmt.paragraphs[0].sentences[0].start / 1000) {
+          newStmtIdx = i;
+          break;
+        }
+      }
+    }
 
-          if (!segments || !statements || statements.length === 0) {
-            if (lastSegIdx !== -1) {
-              setActiveSegmentIndex(-1);
-              lastSegIdx = -1;
-            }
-            if (lastStmtIdx !== -1) {
-              setActiveStatementIndex(-1);
-              lastStmtIdx = -1;
-            }
-            if (lastParaIdx !== -1) {
-              setActiveParagraphIndex(-1);
-              lastParaIdx = -1;
-            }
-            if (lastSentIdx !== -1) {
-              setActiveSentenceIndex(-1);
-              lastSentIdx = -1;
-            }
-            if (lastWordIdx !== -1) {
-              setActiveWordIndex(-1);
-              lastWordIdx = -1;
-            }
-          } else {
-            let newSegIdx = -1;
-            for (let i = segments.length - 1; i >= 0; i--) {
-              if (time >= segments[i].timestamp) {
-                newSegIdx = i;
-                break;
-              }
-            }
-
-            let newStmtIdx = -1;
-            for (let i = statements.length - 1; i >= 0; i--) {
-              const stmt = statements[i];
-              if (stmt?.paragraphs?.[0]?.sentences?.[0]) {
-                if (time >= stmt.paragraphs[0].sentences[0].start / 1000) {
-                  newStmtIdx = i;
-                  break;
-                }
-              }
-            }
-
-            let newParaIdx = -1;
-            if (newStmtIdx >= 0) {
-              const stmt = statements[newStmtIdx];
-              if (stmt?.paragraphs) {
-                for (let i = stmt.paragraphs.length - 1; i >= 0; i--) {
-                  const para = stmt.paragraphs[i];
-                  if (
-                    para.sentences?.[0] &&
-                    time >= para.sentences[0].start / 1000
-                  ) {
-                    newParaIdx = i;
-                    break;
-                  }
-                }
-              }
-            }
-
-            let newSentIdx = -1;
-            if (newStmtIdx >= 0 && newParaIdx >= 0) {
-              const para = statements[newStmtIdx]?.paragraphs?.[newParaIdx];
-              if (para?.sentences) {
-                for (let i = para.sentences.length - 1; i >= 0; i--) {
-                  if (time >= para.sentences[i].start / 1000) {
-                    newSentIdx = i;
-                    break;
-                  }
-                }
-              }
-            }
-
-            let newWordIdx = -1;
-            if (newStmtIdx >= 0 && newParaIdx >= 0 && newSentIdx >= 0) {
-              const sentence =
-                statements[newStmtIdx]?.paragraphs?.[newParaIdx]?.sentences?.[
-                  newSentIdx
-                ];
-              if (sentence?.words) {
-                for (let i = sentence.words.length - 1; i >= 0; i--) {
-                  if (time >= sentence.words[i].start / 1000) {
-                    newWordIdx = i;
-                    break;
-                  }
-                }
-              }
-            }
-
-            if (newSegIdx !== lastSegIdx) {
-              setActiveSegmentIndex(newSegIdx);
-              lastSegIdx = newSegIdx;
-            }
-            if (newStmtIdx !== lastStmtIdx) {
-              setActiveStatementIndex(newStmtIdx);
-              lastStmtIdx = newStmtIdx;
-            }
-            if (newParaIdx !== lastParaIdx) {
-              setActiveParagraphIndex(newParaIdx);
-              lastParaIdx = newParaIdx;
-            }
-            if (newSentIdx !== lastSentIdx) {
-              setActiveSentenceIndex(newSentIdx);
-              lastSentIdx = newSentIdx;
-            }
-            if (newWordIdx !== lastWordIdx) {
-              setActiveWordIndex(newWordIdx);
-              lastWordIdx = newWordIdx;
-            }
+    let newParaIdx = -1;
+    if (newStmtIdx >= 0) {
+      const stmt = statements[newStmtIdx];
+      if (stmt?.paragraphs) {
+        for (let i = stmt.paragraphs.length - 1; i >= 0; i--) {
+          const para = stmt.paragraphs[i];
+          if (para.sentences?.[0] && time >= para.sentences[0].start / 1000) {
+            newParaIdx = i;
+            break;
           }
         }
-      } catch (err) {
-        console.log("Failed to get current time:", err);
       }
-      animationFrameId = requestAnimationFrame(updateTime);
-    };
+    }
 
-    animationFrameId = requestAnimationFrame(updateTime);
+    let newSentIdx = -1;
+    if (newStmtIdx >= 0 && newParaIdx >= 0) {
+      const para = statements[newStmtIdx]?.paragraphs?.[newParaIdx];
+      if (para?.sentences) {
+        for (let i = para.sentences.length - 1; i >= 0; i--) {
+          if (time >= para.sentences[i].start / 1000) {
+            newSentIdx = i;
+            break;
+          }
+        }
+      }
+    }
 
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [player, segments, statements]);
+    let newWordIdx = -1;
+    if (newStmtIdx >= 0 && newParaIdx >= 0 && newSentIdx >= 0) {
+      const sentence =
+        statements[newStmtIdx]?.paragraphs?.[newParaIdx]?.sentences?.[
+          newSentIdx
+        ];
+      if (sentence?.words) {
+        for (let i = sentence.words.length - 1; i >= 0; i--) {
+          if (time >= sentence.words[i].start / 1000) {
+            newWordIdx = i;
+            break;
+          }
+        }
+      }
+    }
+
+    setActiveSegmentIndex(newSegIdx);
+    setActiveStatementIndex(newStmtIdx);
+    setActiveParagraphIndex(newParaIdx);
+    setActiveSentenceIndex(newSentIdx);
+    setActiveWordIndex(newWordIdx);
+  });
 
   return {
     activeSegmentIndex,

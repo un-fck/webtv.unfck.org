@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { SpeakerMapping } from "@/lib/speakers";
 import type { Video } from "@/lib/un-api";
 import { getCountryName } from "@/lib/country-lookup";
+import { useScrollToActive } from "@/lib/hooks/use-scroll-to-active";
 import { BarChart3 } from "lucide-react";
 import { PVPanel, type PVSpeakerEntry } from "@/components/pv-panel";
 import ExcelJS from "exceljs";
@@ -655,66 +656,19 @@ export function TranscriptionPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kalturaId, selectedLanguage, loadCountryNames]);
 
-  // Auto-scroll to active paragraph
-  const lastScrolledKey = useRef<string | null>(null);
-  const lastTimeRef = useRef<number>(0);
-
-  useEffect(() => {
-    if (activeStatementIndex < 0 || activeParagraphIndex < 0) return;
-
-    const key = `${activeStatementIndex}-${activeParagraphIndex}`;
-    if (lastScrolledKey.current === key) return;
-
-    const element = document.querySelector<HTMLElement>(
-      `[data-paragraph-key="${key}"]`,
-    );
-    if (!element) return;
-
-    const time = currentTimeRef.current;
-    const timeDelta = Math.abs(time - lastTimeRef.current);
-    const isJump = timeDelta > 5;
-    lastTimeRef.current = time;
-
-    const scrollContainer = element.closest(".overflow-y-auto");
-
-    if (scrollContainer) {
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const elementRect = element.getBoundingClientRect();
-      const elementTopInContainer =
-        elementRect.top - containerRect.top + scrollContainer.scrollTop;
-      const containerHeight = scrollContainer.clientHeight;
-
-      const relativeTop = elementRect.top - containerRect.top;
-      const isRoughlyInView =
-        relativeTop > -containerHeight * 1.5 &&
-        relativeTop < containerHeight * 2.5;
-
-      if (isJump || isRoughlyInView) {
-        const offset = containerHeight / 3;
-        scrollContainer.scrollTo({
-          top: elementTopInContainer - offset,
-          behavior: isJump ? "instant" : "smooth",
-        });
-        lastScrolledKey.current = key;
-      }
-    } else {
-      const elementRect = element.getBoundingClientRect();
-      const absoluteTop = elementRect.top + window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const relativeTop = elementRect.top;
-      const isRoughlyInView =
-        relativeTop > -viewportHeight * 1.5 &&
-        relativeTop < viewportHeight * 2.5;
-
-      if (isJump || isRoughlyInView) {
-        window.scrollTo({
-          top: absoluteTop - viewportHeight / 3,
-          behavior: isJump ? "instant" : "smooth",
-        });
-        lastScrolledKey.current = key;
-      }
-    }
-  }, [activeStatementIndex, activeParagraphIndex]);
+  // Auto-scroll to the active paragraph as playback advances. Respects manual
+  // scrolling: won't yank the view if the user has scrolled the active
+  // paragraph far out of view during continuous playback.
+  useScrollToActive({
+    activeKey:
+      activeStatementIndex < 0 || activeParagraphIndex < 0
+        ? null
+        : `${activeStatementIndex}-${activeParagraphIndex}`,
+    getElement: (key) =>
+      document.querySelector<HTMLElement>(`[data-paragraph-key="${key}"]`),
+    currentTimeRef,
+    respectManualScroll: true,
+  });
 
   return (
     <div>

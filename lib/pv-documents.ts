@@ -102,8 +102,9 @@ export function parseMeetingSymbol(
 }
 
 /** Build a URL to access the PV document PDF from documents.un.org. */
-export function getPVDocumentUrl(symbol: string): string {
-  return `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}`;
+export function getPVDocumentUrl(symbol: string, lang?: string): string {
+  const base = `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}`;
+  return lang ? `${base}&l=${encodeURIComponent(lang)}` : base;
 }
 
 /**

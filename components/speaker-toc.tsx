@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import type { SpeakerMapping } from "@/lib/speakers";
+import { TocItem, useTocActiveScroll } from "@/components/toc-item";
+import { formatTimecode } from "@/lib/transcript-formatting";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -30,16 +31,6 @@ interface SpeakerTocProps {
   statements?: StatementForTopic[] | null;
 }
 
-function formatTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  }
-  return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-}
-
 function segmentHasTopic(
   segment: SpeakerSegment,
   statements: StatementForTopic[],
@@ -64,15 +55,7 @@ export function SpeakerToc({
   topicColor,
   statements,
 }: SpeakerTocProps) {
-  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
-
-  useEffect(() => {
-    if (activeSegmentIndex < 0) return;
-    const el = itemRefs.current[activeSegmentIndex];
-    if (el) {
-      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-  }, [activeSegmentIndex]);
+  const itemRefs = useTocActiveScroll(activeSegmentIndex);
 
   if (segments.length === 0) return null;
 
@@ -98,51 +81,47 @@ export function SpeakerToc({
             : false;
 
         return (
-          <button
+          <TocItem
             key={idx}
-            ref={(el) => {
+            buttonRef={(el) => {
               itemRefs.current[idx] = el;
             }}
+            isActive={isActive}
             onClick={() => onSeek(segment.timestamp)}
-            className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs transition-colors hover:bg-muted ${
-              isActive ? "bg-primary/10" : ""
-            }`}
+            timestamp={formatTimecode(segment.timestamp)}
+            trailing={
+              hasTopic && topicColor ? (
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: topicColor }}
+                />
+              ) : undefined
+            }
           >
-            <span className="shrink-0 text-muted-foreground tabular-nums">
-              {formatTime(segment.timestamp)}
-            </span>
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-              {hasAffiliation && (
-                <span
-                  className={cn(
-                    typography.label,
-                    "rounded bg-blue-100 px-1 py-px text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-                  )}
-                >
-                  {countryNames.get(info!.affiliation!) || info!.affiliation}
-                </span>
-              )}
-              {hasGroup && (
-                <span
-                  className={cn(
-                    typography.label,
-                    "rounded bg-purple-100 px-1 py-px text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-                  )}
-                >
-                  {info!.group}
-                </span>
-              )}
-              {hasFunction && (
-                <span className="text-muted-foreground">{info!.function}</span>
-              )}
-            </div>
-            {hasTopic && topicColor && (
+            {hasAffiliation && (
               <span
-                className="h-2 w-2 shrink-0 rounded-full"
-                style={{ backgroundColor: topicColor }}
-              />
+                className={cn(
+                  typography.label,
+                  "rounded bg-blue-100 px-1 py-px text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+                )}
+              >
+                {countryNames.get(info!.affiliation!) || info!.affiliation}
+              </span>
             )}
-          </button>
+            {hasGroup && (
+              <span
+                className={cn(
+                  typography.label,
+                  "rounded bg-purple-100 px-1 py-px text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+                )}
+              >
+                {info!.group}
+              </span>
+            )}
+            {hasFunction && (
+              <span className="text-muted-foreground">{info!.function}</span>
+            )}
+          </TocItem>
         );
       })}
     </div>

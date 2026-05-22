@@ -1,5 +1,6 @@
 "use client";
 
+import { formatTimecode } from "@/lib/transcript-formatting";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -9,17 +10,6 @@ interface RawParagraph {
   end: number;
   speaker?: string;
   words?: Array<{ text: string; start: number; end: number; speaker?: string }>;
-}
-
-function formatTime(seconds: number | null | undefined): string {
-  if (seconds === null || seconds === undefined || isNaN(seconds)) return "";
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  }
-  return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
 interface RawTranscriptViewProps {
@@ -53,7 +43,7 @@ export function RawTranscriptView({
                     "ml-2 hover:text-primary hover:underline",
                   )}
                 >
-                  [{formatTime(para.start / 1000)}]
+                  [{formatTimecode(para.start / 1000)}]
                 </button>
               </div>
             )}

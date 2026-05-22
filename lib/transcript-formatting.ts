@@ -18,6 +18,12 @@ export function formatTimecode(seconds: number | null | undefined): string {
   return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
+/** Format a duration in milliseconds as `M:SS` (or `H:MM:SS` past an hour). */
+export function formatTimecodeMs(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined || isNaN(ms)) return "";
+  return formatTimecode(ms / 1000);
+}
+
 /**
  * Build a human-readable speaker label from the resolved speaker mapping,
  * expanding ISO country codes via `countryNames` when available. Falls back to

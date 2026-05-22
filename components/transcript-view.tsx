@@ -2,6 +2,7 @@
 
 import type { SpeakerMapping } from "@/lib/speakers";
 import { getTopicColor } from "@/components/transcription-panel";
+import { formatTimecode } from "@/lib/transcript-formatting";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -34,17 +35,6 @@ interface SpeakerSegment {
   speaker: string;
   statementIndices: number[];
   timestamp: number;
-}
-
-function formatTime(seconds: number | null | undefined): string {
-  if (seconds === null || seconds === undefined || isNaN(seconds)) return "";
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  }
-  return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
 function renderSpeakerInfo(
@@ -155,7 +145,7 @@ export function TranscriptView({
                 )}
                 title="Jump to this timestamp"
               >
-                {formatTime(segment.timestamp)}
+                {formatTimecode(segment.timestamp)}
               </button>
             </div>
             <div
@@ -189,16 +179,18 @@ export function TranscriptView({
                           <p
                             key={paraIdx}
                             dir="auto"
-                            className="text-start"
+                            className="scroll-mt-[20vh] text-start"
                             data-paragraph-key={`${stmtIdx}-${paraIdx}`}
                           >
                             {para.sentences.map((sent, sentIdx) => {
                               const isSentActive =
                                 isParaActive && sentIdx === activeSentenceIndex;
-                              const isTopicHit = (s: (typeof para.sentences)[number]) =>
+                              const isTopicHit = (
+                                s: (typeof para.sentences)[number],
+                              ) =>
                                 Boolean(
                                   selectedTopic &&
-                                    s.topic_keys?.includes(selectedTopic),
+                                  s.topic_keys?.includes(selectedTopic),
                                 );
                               const isHighlighted = isTopicHit(sent);
 

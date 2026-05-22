@@ -11,6 +11,12 @@ import {
 import { ChevronDown, ChevronRight, AudioLines } from "lucide-react";
 import type { PVDocument, PVTurn } from "@/lib/pv-parser";
 import { findReferences } from "@/lib/pv-reference-linking";
+import { TocItem, useTocActiveScroll } from "@/components/toc-item";
+import { getPVDocumentUrl } from "@/lib/pv-documents";
+import { scrollElementIntoView } from "@/lib/scroll-into-view";
+import { useScrollToActive } from "@/lib/hooks/use-scroll-to-active";
+import { useRafPlaybackTime } from "@/lib/hooks/use-raf-playback-time";
+import { formatTimecodeMs } from "@/lib/transcript-formatting";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -39,16 +45,6 @@ type AlignedTurn = PVTurn & {
   proceduralParagraphs?: number[];
   paragraphTimestamps?: number[];
 };
-
-function formatTime(ms: number) {
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  if (h > 0)
-    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
 
 // ── Reference linking ──────────────────────────────────────────────────
 // Matching logic lives in lib/pv-reference-linking.ts; this renders the links.
@@ -96,9 +92,6 @@ export function PVPanel({
   const [activeTurnIndex, setActiveTurnIndex] = useState<number>(-1);
   const [activeParaIndex, setActiveParaIndex] = useState<number>(-1);
   const turnRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const currentTimeRef = useRef<number>(0);
-  const lastScrolledTurn = useRef<number>(-1);
-  const lastTimeRef = useRef<number>(0);
 
   // Fetch PV document
   useEffect(() => {
@@ -143,126 +136,53 @@ export function PVPanel({
       onSpeakersChange(pvSpeakers, activeTurnIndex);
   }, [pvSpeakers, activeTurnIndex, onSpeakersChange]);
 
-  // rAF-based time tracking at paragraph level.
-  // Build a flat sorted list of { turnIndex, paraIndex, startTime } for binary-ish lookup.
-  useEffect(() => {
-    if (!player || !pvDoc?.aligned) return;
-
+  // Flat list of paragraph start times, sorted, for active-turn lookup.
+  const paraEntries = useMemo(() => {
+    if (!pvDoc?.aligned) return [];
     const turns = pvDoc.turns as AlignedTurn[];
-    // Build flat list of paragraph timestamps sorted by time
-    const paraEntries: { turnIdx: number; paraIdx: number; startMs: number }[] =
-      [];
+    const entries: { turnIdx: number; paraIdx: number; startMs: number }[] = [];
     for (let ti = 0; ti < turns.length; ti++) {
       const pts = turns[ti].paragraphTimestamps;
       if (pts) {
         for (let pi = 0; pi < pts.length; pi++) {
           if (pts[pi] >= 0)
-            paraEntries.push({ turnIdx: ti, paraIdx: pi, startMs: pts[pi] });
+            entries.push({ turnIdx: ti, paraIdx: pi, startMs: pts[pi] });
         }
-      } else if (
-        turns[ti].startTime !== undefined &&
-        turns[ti].startTime! >= 0
-      ) {
+      } else if (turns[ti].startTime !== undefined && turns[ti].startTime! >= 0) {
         // Legacy: turn-level only
-        paraEntries.push({
-          turnIdx: ti,
-          paraIdx: -1,
-          startMs: turns[ti].startTime!,
-        });
+        entries.push({ turnIdx: ti, paraIdx: -1, startMs: turns[ti].startTime! });
       }
     }
-    paraEntries.sort((a, b) => a.startMs - b.startMs);
+    entries.sort((a, b) => a.startMs - b.startMs);
+    return entries;
+  }, [pvDoc]);
 
-    let rafId: number;
-    let lastTurnIdx = -1;
-    let lastParaIdx = -1;
-
-    const tick = () => {
-      try {
-        const time = player.currentTime;
-        if (Math.abs(time - currentTimeRef.current) > 0.01) {
-          currentTimeRef.current = time;
-          const timeMs = time * 1000;
-
-          let newTurn = -1;
-          let newPara = -1;
-          for (let i = paraEntries.length - 1; i >= 0; i--) {
-            if (timeMs >= paraEntries[i].startMs) {
-              newTurn = paraEntries[i].turnIdx;
-              newPara = paraEntries[i].paraIdx;
-              break;
-            }
-          }
-
-          if (newTurn !== lastTurnIdx || newPara !== lastParaIdx) {
-            lastTurnIdx = newTurn;
-            lastParaIdx = newPara;
-            setActiveTurnIndex(newTurn);
-            setActiveParaIndex(newPara);
-          }
+  // rAF-based time tracking at paragraph level (only while aligned). Setting an
+  // unchanged index is a no-op (React bails out), so no manual change-tracking.
+  const currentTimeRef = useRafPlaybackTime(
+    pvDoc?.aligned ? player : undefined,
+    (time) => {
+      const timeMs = time * 1000;
+      let newTurn = -1;
+      let newPara = -1;
+      for (let i = paraEntries.length - 1; i >= 0; i--) {
+        if (timeMs >= paraEntries[i].startMs) {
+          newTurn = paraEntries[i].turnIdx;
+          newPara = paraEntries[i].paraIdx;
+          break;
         }
-      } catch {}
-      rafId = requestAnimationFrame(tick);
-    };
-
-    rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
-  }, [player, pvDoc]);
-
-  // Auto-scroll to active turn — with jump detection
-  useEffect(() => {
-    if (activeTurnIndex < 0) return;
-    if (lastScrolledTurn.current === activeTurnIndex) return;
-
-    const el = turnRefs.current[activeTurnIndex];
-    if (!el) return;
-
-    // Detect if user jumped (time changed by > 5s in one update)
-    const time = currentTimeRef.current;
-    const timeDelta = Math.abs(time - lastTimeRef.current);
-    const isJump = timeDelta > 5;
-    lastTimeRef.current = time;
-
-    const scrollContainer = el.closest(".overflow-y-auto");
-
-    if (scrollContainer) {
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const elementRect = el.getBoundingClientRect();
-      const relativeTop = elementRect.top - containerRect.top;
-      const isRoughlyInView =
-        relativeTop > -containerRect.height * 1.5 &&
-        relativeTop < containerRect.height * 2.5;
-
-      if (isJump || !isRoughlyInView) {
-        // Instant scroll on jump or far away
-        const targetScroll =
-          elementRect.top -
-          containerRect.top +
-          scrollContainer.scrollTop -
-          containerRect.height * 0.3;
-        scrollContainer.scrollTo({
-          top: targetScroll,
-          behavior: isJump ? "instant" : "smooth",
-        });
-      } else {
-        // Gentle scroll during playback — keep near top third
-        const targetScroll =
-          elementRect.top -
-          containerRect.top +
-          scrollContainer.scrollTop -
-          containerRect.height * 0.3;
-        scrollContainer.scrollTo({ top: targetScroll, behavior: "smooth" });
       }
-    } else {
-      // No scroll container — use window scroll
-      el.scrollIntoView({
-        behavior: isJump ? "instant" : "smooth",
-        block: "center",
-      });
-    }
+      setActiveTurnIndex(newTurn);
+      setActiveParaIndex(newPara);
+    },
+  );
 
-    lastScrolledTurn.current = activeTurnIndex;
-  }, [activeTurnIndex]);
+  // Auto-scroll to the active turn as playback advances.
+  useScrollToActive({
+    activeKey: activeTurnIndex,
+    getElement: (key) => turnRefs.current[key as number] ?? null,
+    currentTimeRef,
+  });
 
   const seekToTimestamp = (timestampMs: number) => {
     if (!player) return;
@@ -407,6 +327,17 @@ export function PVPanel({
               </ul>
             </div>
           )}
+
+          <div className="pt-1">
+            <a
+              href={getPVDocumentUrl(pvDoc.symbol, language)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              {pvDoc.symbol} (PDF) →
+            </a>
+          </div>
         </div>
       )}
 
@@ -415,6 +346,7 @@ export function PVPanel({
         <PVTurnCard
           key={i}
           turn={turn as AlignedTurn}
+          turnIndex={i}
           ref={(el) => {
             turnRefs.current[i] = el;
           }}
@@ -430,6 +362,7 @@ export function PVPanel({
 
 interface PVTurnCardProps {
   turn: AlignedTurn;
+  turnIndex: number;
   isActive: boolean;
   activeParaIndex: number;
   isAligned: boolean;
@@ -438,7 +371,7 @@ interface PVTurnCardProps {
 
 const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
   function PVTurnCard(
-    { turn, isActive, activeParaIndex, isAligned, onSeek },
+    { turn, turnIndex, isActive, activeParaIndex, isAligned, onSeek },
     ref,
   ) {
     const hasTimestamp = turn.startTime !== undefined && turn.startTime >= 0;
@@ -448,7 +381,8 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
     return (
       <div
         ref={ref}
-        className="space-y-1 pt-2"
+        id={`pv-turn-${turnIndex}`}
+        className="scroll-mt-[20vh] space-y-1 pt-2"
         data-turn-start={turn.startTime}
       >
         {/* Speaker header */}
@@ -482,7 +416,7 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
               )}
               title="Jump to this timestamp"
             >
-              {formatTime(turn.startTime!)}
+              {formatTimecodeMs(turn.startTime!)}
             </button>
           )}
         </div>
@@ -544,7 +478,7 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
                       className="mr-1.5 text-[10px] text-muted-foreground"
                       title="Paragraph timestamp"
                     >
-                      {formatTime(paraTs!)}
+                      {formatTimecodeMs(paraTs!)}
                     </span>
                   )}
                   {linkifyReferences(paraText)}
@@ -571,50 +505,44 @@ export function PVSpeakerToc({
   activeTurnIndex,
   onSeek,
 }: PVSpeakerTocProps) {
-  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const itemRefs = useTocActiveScroll(
+    speakers.findIndex((s) => s.turnIndex === activeTurnIndex),
+  );
 
-  useEffect(() => {
-    if (activeTurnIndex < 0) return;
-    const idx = speakers.findIndex((s) => s.turnIndex === activeTurnIndex);
-    const el = idx >= 0 ? itemRefs.current[idx] : null;
-    if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [activeTurnIndex, speakers]);
+  // Jump to the speaker's turn bubble. Always scrolls the transcript (works even
+  // without audio alignment); also seeks the video when a timestamp exists.
+  const handleClick = (entry: PVSpeakerEntry) => {
+    const el = document.getElementById(`pv-turn-${entry.turnIndex}`);
+    if (el) scrollElementIntoView(el, "smooth");
+    if (entry.timestampMs >= 0) onSeek(entry.timestampMs);
+  };
 
   if (speakers.length === 0) return null;
 
   return (
     <div>
-      {speakers.map((entry, idx) => {
-        const isActive = entry.turnIndex === activeTurnIndex;
-        const hasTimestamp = entry.timestampMs >= 0;
-
-        return (
-          <button
-            key={idx}
-            ref={(el) => {
-              itemRefs.current[idx] = el;
-            }}
-            onClick={() => hasTimestamp && onSeek(entry.timestampMs)}
-            className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs transition-colors hover:bg-muted ${
-              isActive ? "bg-primary/10" : ""
-            } ${hasTimestamp ? "" : "opacity-60"}`}
-          >
-            {hasTimestamp && (
-              <span className="shrink-0 text-muted-foreground tabular-nums">
-                {formatTime(entry.timestampMs)}
-              </span>
-            )}
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-              {entry.affiliation && (
-                <span className="rounded bg-blue-100 px-1 py-px text-[10px] font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                  {entry.affiliation}
-                </span>
-              )}
-              <span className="truncate font-medium">{entry.speaker}</span>
-            </div>
-          </button>
-        );
-      })}
+      {speakers.map((entry, idx) => (
+        <TocItem
+          key={idx}
+          buttonRef={(el) => {
+            itemRefs.current[idx] = el;
+          }}
+          isActive={entry.turnIndex === activeTurnIndex}
+          onClick={() => handleClick(entry)}
+          timestamp={
+            entry.timestampMs >= 0
+              ? formatTimecodeMs(entry.timestampMs)
+              : undefined
+          }
+        >
+          {entry.affiliation && (
+            <span className="rounded bg-blue-100 px-1 py-px text-[10px] font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+              {entry.affiliation}
+            </span>
+          )}
+          <span className="truncate font-medium">{entry.speaker}</span>
+        </TocItem>
+      ))}
     </div>
   );
 }
