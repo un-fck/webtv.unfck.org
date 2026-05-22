@@ -55,6 +55,58 @@ export async function resolveEntryIdFromKaltura(
 }
 
 /**
+ * Fetch durations (in seconds) for a batch of Kaltura entry IDs via
+ * `baseEntry.list` — the same source the player uses. Entries that are
+ * missing or report no duration are simply absent from the returned map.
+ * Throws on a non-OK HTTP response so callers can treat the batch as failed.
+ */
+export async function fetchKalturaDurations(
+  entryIds: string[],
+): Promise<Map<string, number>> {
+  if (entryIds.length === 0) return new Map();
+  const response = await fetch(
+    "https://cdnapisec.kaltura.com/api_v3/service/multirequest",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        "1": {
+          service: "session",
+          action: "startWidgetSession",
+          widgetId: KALTURA_WIDGET_ID,
+        },
+        "2": {
+          service: "baseEntry",
+          action: "list",
+          ks: "{1:result:ks}",
+          filter: { idIn: entryIds.join(",") },
+          responseProfile: { type: 1, fields: "id,duration" },
+          pager: { pageSize: 500 },
+        },
+        apiVersion: "3.3.0",
+        format: 1,
+        ks: "",
+        clientTag: "html5:v3.17.30",
+        partnerId: KALTURA_PARTNER_ID,
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Kaltura API failed: ${response.status}`);
+  }
+  const data = await response.json();
+  const objects: Array<{ id: string; duration?: number }> =
+    data?.[1]?.objects ?? [];
+  const out = new Map<string, number>();
+  for (const o of objects) {
+    if (typeof o.duration === "number" && o.duration > 0) {
+      out.set(o.id, o.duration);
+    }
+  }
+  return out;
+}
+
+/**
  * Resolves an asset ID or Kaltura ID to an entry ID.
  * If cachedEntryId is provided (already stored in DB), returns it immediately.
  * Only calls Kaltura API when the entry ID is unknown.

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchVideosForDate, formatDate, videoToRecord } from "@/lib/un-api";
 import { resolveEntryId } from "@/lib/kaltura-helpers";
 import { saveVideo, getVideoByAssetId } from "@/lib/db";
+import { backfillDurations } from "@/lib/duration-backfill";
 import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
@@ -61,9 +62,23 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Backfill durations for recent rows still stuck at 0 — webtv often publishes
+  // the duration badge after a date has aged out of the scrape window above, so
+  // we read it straight from Kaltura instead. Bounded to the last 30 days so we
+  // don't re-poll permanently-zero/deleted entries forever.
+  let durationsBackfilled = 0;
+  try {
+    const r = await backfillDurations({ apply: true, lookbackDays: 30 });
+    durationsBackfilled = r.updated;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[sync-videos] Duration backfill failed: ${msg}`);
+  }
+
   console.log(
-    `[sync-videos] Done: ${synced} synced, ${resolved} new entry IDs resolved, ${errors.length} errors`,
+    `[sync-videos] Done: ${synced} synced, ${resolved} new entry IDs resolved, ` +
+      `${durationsBackfilled} durations backfilled, ${errors.length} errors`,
   );
 
-  return NextResponse.json({ synced, resolved, errors });
+  return NextResponse.json({ synced, resolved, durationsBackfilled, errors });
 }
