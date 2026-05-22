@@ -14,6 +14,7 @@
     "reidentify": "tsx scripts/reidentify.ts",
     "retranscribe": "tsx scripts/retranscribe.ts",
     "sync-videos": "tsx scripts/sync-videos.ts",
+    "backfill-kaltura-ids": "tsx scripts/backfill-kaltura-ids.ts",
     "fetch-video-metadata": "tsx scripts/fetch-video-metadata.ts",
     "usage-report": "tsx scripts/usage-report.ts",
     "usage-benchmark": "tsx scripts/usage-benchmark.ts",
