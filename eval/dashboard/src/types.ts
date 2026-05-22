@@ -87,19 +87,26 @@ export interface ProviderMeta {
   prompting: boolean;
 }
 
+// Pricing reflects batch / pre-recorded list rates as of May 2026 (matches how
+// the eval runs). gemini and assemblyai are grounded in this project's own
+// usage data: gemini ≈ $0.03/hr from measured throughput (~94k input + ~28k
+// output tokens/audio-hour at the gemini-3-flash-preview rate card in
+// lib/config.ts, $0.15/$0.60 per 1M); assemblyai = the $0.15/hr base rate the
+// pipeline actually bills. alibaba is token-priced: $0.000035/sec × 3600 ≈
+// $0.13/hr. Remaining providers use published batch list prices.
 export const PROVIDER_META: Record<string, ProviderMeta> = {
-  assemblyai: { pricing: "$0.27/hr", diarization: true, prompting: false },
-  "azure-openai": { pricing: "$0.06/hr", diarization: true, prompting: false },
+  assemblyai: { pricing: "$0.15/hr", diarization: true, prompting: false },
+  "azure-openai": { pricing: "$0.36/hr", diarization: true, prompting: false },
   elevenlabs: { pricing: "$0.40/hr", diarization: true, prompting: false },
-  "azure-speech": { pricing: "$0.36/hr", diarization: true, prompting: false },
+  "azure-speech": { pricing: "$0.18/hr", diarization: true, prompting: false },
   "google-chirp": {
-    pricing: "$0.96/hr",
+    pricing: "$0.24/hr",
     diarization: true,
     prompting: false,
   },
-  gemini: { pricing: "$0.01/hr", diarization: true, prompting: true },
-  "groq-whisper": { pricing: "$0.09/hr", diarization: false, prompting: false },
-  alibaba: { pricing: "$0.11/hr", diarization: true, prompting: false },
-  deepgram: { pricing: "$0.15/hr", diarization: true, prompting: false },
-  mistral: { pricing: "$0.06/hr", diarization: true, prompting: false },
+  gemini: { pricing: "$0.03/hr", diarization: true, prompting: true },
+  "groq-whisper": { pricing: "$0.11/hr", diarization: false, prompting: false },
+  alibaba: { pricing: "$0.13/hr", diarization: true, prompting: false },
+  deepgram: { pricing: "$0.31/hr", diarization: true, prompting: false },
+  mistral: { pricing: "$0.18/hr", diarization: true, prompting: false },
 };
