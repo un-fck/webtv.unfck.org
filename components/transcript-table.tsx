@@ -257,6 +257,135 @@ function SortArrow({
   );
 }
 
+// Search box, shared by the desktop and mobile filter bars. The wrapper width
+// is the only thing that differs between breakpoints (className).
+function SearchInput({
+  value,
+  onChange,
+  onSubmit,
+  isFocused,
+  setIsFocused,
+  className,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: (value: string) => void;
+  isFocused: boolean;
+  setIsFocused: (focused: boolean) => void;
+  className?: string;
+}) {
+  const highlighted = isFocused || value.trim().length > 0;
+  return (
+    <div className={`group relative ${className ?? ""}`}>
+      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+        <Search
+          className={`h-4 w-4 transition-colors ${highlighted ? "text-un-blue" : "text-slate-400 group-hover:text-un-blue"}`}
+          aria-hidden="true"
+        />
+      </div>
+      <input
+        type="text"
+        placeholder="Search all meetings…"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && onSubmit(value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => {
+          setIsFocused(false);
+          onSubmit(value);
+        }}
+        spellCheck={false}
+        autoCorrect="off"
+        autoCapitalize="none"
+        className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none ${
+          highlighted
+            ? "border-un-blue bg-un-blue/5 text-un-blue placeholder-un-blue/50"
+            : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-un-blue hover:text-un-blue hover:placeholder-un-blue/70"
+        }`}
+      />
+      {value && (
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            onSubmit("");
+          }}
+          className="absolute top-1/2 right-3 -translate-y-1/2 text-un-blue/50 hover:text-un-blue"
+          aria-label="Clear search"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Document-availability badges (AI transcript / verbatim / summary record).
+// Used in both the desktop table cell and the mobile card; `uppercase` is the
+// only visual difference between the two.
+function DocBadges({
+  hasTranscript,
+  pvAvailable,
+  pvSymbol,
+  uppercase,
+}: {
+  hasTranscript: boolean;
+  pvAvailable: boolean;
+  pvSymbol: string | null;
+  uppercase?: boolean;
+}) {
+  if (!hasTranscript && !pvAvailable) return null;
+  const isSR = pvSymbol?.includes("/SR.");
+  const caseClass = uppercase ? "uppercase" : "";
+  return (
+    <div className="flex flex-wrap gap-1">
+      {hasTranscript && (
+        <span
+          className={`inline-block rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary ${caseClass}`}
+        >
+          transcript
+        </span>
+      )}
+      {pvAvailable && (
+        <span
+          className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${caseClass} ${
+            isSR
+              ? "bg-violet-500/10 text-violet-700"
+              : "bg-amber-500/10 text-amber-700"
+          }`}
+        >
+          {isSR ? "summary" : "verbatim"}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// Binary/segmented toggle (e.g. Recent/Scheduled, All/Transcribed). Shared by
+// the desktop and mobile filter bars so both stay visually identical.
+function SegmentedToggle({
+  options,
+}: {
+  options: { label: string; active: boolean; onSelect: () => void }[];
+}) {
+  return (
+    <div className="flex h-10 rounded-lg border border-slate-300 bg-white p-0.5 text-xs font-medium">
+      {options.map(({ label, active, onSelect }) => (
+        <button
+          key={label}
+          onClick={() => !active && onSelect()}
+          className={`rounded-md px-4 py-1.5 transition-all ${
+            active
+              ? "bg-primary text-white shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // Any of these document types counts as "having a transcript" for the
 // coarse All / With transcript toggle.
 const ALL_DOC_TYPES = ["transcript", "pv", "sr"];
@@ -505,6 +634,28 @@ export function VideoTable({
   const toggleWithTranscript = () =>
     updateParams({ text: withTranscript ? undefined : ALL_DOC_TYPES });
 
+  const isScheduledView = serverParams.status === "scheduled";
+  const statusToggleOptions = [
+    {
+      label: "Recent",
+      active: !isScheduledView,
+      onSelect: () => updateParams({ status: "past" }),
+    },
+    {
+      label: "Scheduled",
+      active: isScheduledView,
+      onSelect: () => updateParams({ status: "scheduled", sort: "date_asc" }),
+    },
+  ];
+  const transcribedToggleOptions = [
+    { label: "All", active: !withTranscript, onSelect: toggleWithTranscript },
+    {
+      label: "Transcribed",
+      active: withTranscript,
+      onSelect: toggleWithTranscript,
+    },
+  ];
+
   // Parse current sort state (undefined = auto, no column actively sorted)
   const [currentSortBy, currentSortDir] = (
     serverParams.sort ? serverParams.sort.split("_") : [undefined, undefined]
@@ -616,31 +767,14 @@ export function VideoTable({
       columnHelper.display({
         id: "docs",
         header: "Transcripts",
-        cell: (info) => {
-          const hasTranscript = info.row.original.hasTranscript;
-          const hasPV = info.row.original.pvAvailable;
-          const isSR = info.row.original.pvSymbol?.includes("/SR.");
-          return (
-            <div className="flex flex-wrap gap-1">
-              {hasTranscript && (
-                <span className="inline-block rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary">
-                  TRANSCRIPT
-                </span>
-              )}
-              {hasPV && (
-                <span
-                  className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${
-                    isSR
-                      ? "bg-violet-500/10 text-violet-700"
-                      : "bg-amber-500/10 text-amber-700"
-                  }`}
-                >
-                  {isSR ? "SUMMARY" : "VERBATIM"}
-                </span>
-              )}
-            </div>
-          );
-        },
+        cell: (info) => (
+          <DocBadges
+            hasTranscript={info.row.original.hasTranscript}
+            pvAvailable={info.row.original.pvAvailable}
+            pvSymbol={info.row.original.pvSymbol}
+            uppercase
+          />
+        ),
         size: 140,
       }),
     ],
@@ -657,79 +791,16 @@ export function VideoTable({
     <div className="space-y-4">
       {/* Desktop: Search bar with count */}
       <div className="hidden items-center gap-4 lg:flex">
-        <div className="group relative w-1/2">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <Search
-              className={`h-4 w-4 transition-colors ${isSearchFocused || inputValue.trim().length > 0 ? "text-un-blue" : "text-slate-400 group-hover:text-un-blue"}`}
-              aria-hidden="true"
-            />
-          </div>
-          <input
-            type="text"
-            placeholder="Search all meetings…"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submitSearch(inputValue)}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => {
-              setIsSearchFocused(false);
-              submitSearch(inputValue);
-            }}
-            spellCheck={false}
-            autoCorrect="off"
-            autoCapitalize="none"
-            className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none ${
-              isSearchFocused || inputValue.trim().length > 0
-                ? "border-un-blue bg-un-blue/5 text-un-blue placeholder-un-blue/50"
-                : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-un-blue hover:text-un-blue hover:placeholder-un-blue/70"
-            }`}
-          />
-          {inputValue && (
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                submitSearch("");
-              }}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-un-blue/50 hover:text-un-blue"
-              aria-label="Clear search"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-        <div className="flex h-10 rounded-lg border border-slate-300 bg-white p-0.5 text-xs font-medium">
-          <button
-            onClick={() =>
-              serverParams.status !== "past" && updateParams({ status: "past" })
-            }
-            className={`rounded-md px-4 py-1.5 transition-all ${serverParams.status !== "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Recent
-          </button>
-          <button
-            onClick={() =>
-              serverParams.status !== "scheduled" &&
-              updateParams({ status: "scheduled", sort: "date_asc" })
-            }
-            className={`rounded-md px-4 py-1.5 transition-all ${serverParams.status === "scheduled" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Scheduled
-          </button>
-        </div>
-        <div className="flex h-10 rounded-lg border border-slate-300 bg-white p-0.5 text-xs font-medium">
-          <button
-            onClick={() => withTranscript && toggleWithTranscript()}
-            className={`rounded-md px-4 py-1.5 transition-all ${!withTranscript ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => !withTranscript && toggleWithTranscript()}
-            className={`rounded-md px-4 py-1.5 transition-all ${withTranscript ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Transcribed
-          </button>
-        </div>
+        <SearchInput
+          value={inputValue}
+          onChange={setInputValue}
+          onSubmit={submitSearch}
+          isFocused={isSearchFocused}
+          setIsFocused={setIsSearchFocused}
+          className="w-1/2"
+        />
+        <SegmentedToggle options={statusToggleOptions} />
+        <SegmentedToggle options={transcribedToggleOptions} />
         <div className="ml-auto text-sm whitespace-nowrap text-muted-foreground">
           {isSearching
             ? "Searching…"
@@ -771,46 +842,13 @@ export function VideoTable({
 
       {/* Mobile: All filters grouped */}
       <div className="space-y-3 lg:hidden">
-        <div className="group relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <Search
-              className={`h-4 w-4 transition-colors ${isSearchFocused || inputValue.trim().length > 0 ? "text-un-blue" : "text-slate-400 group-hover:text-un-blue"}`}
-              aria-hidden="true"
-            />
-          </div>
-          <input
-            type="text"
-            placeholder="Search all meetings…"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submitSearch(inputValue)}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => {
-              setIsSearchFocused(false);
-              submitSearch(inputValue);
-            }}
-            spellCheck={false}
-            autoCorrect="off"
-            autoCapitalize="none"
-            className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none ${
-              isSearchFocused || inputValue.trim().length > 0
-                ? "border-un-blue bg-un-blue/5 text-un-blue placeholder-un-blue/50"
-                : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-un-blue hover:text-un-blue hover:placeholder-un-blue/70"
-            }`}
-          />
-          {inputValue && (
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                submitSearch("");
-              }}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-un-blue/50 hover:text-un-blue"
-              aria-label="Clear search"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        <SearchInput
+          value={inputValue}
+          onChange={setInputValue}
+          onSubmit={submitSearch}
+          isFocused={isSearchFocused}
+          setIsFocused={setIsSearchFocused}
+        />
         <div className="flex flex-wrap gap-2">
           <select
             value={serverParams.date ?? ""}
@@ -874,40 +912,8 @@ export function VideoTable({
             <option value="pv">Verbatim Record</option>
             <option value="sr">Summary Record</option>
           </select>
-          <div className="flex rounded-lg bg-muted p-0.5 text-xs font-medium">
-            <button
-              onClick={() =>
-                serverParams.status !== "past" &&
-                updateParams({ status: "past" })
-              }
-              className={`rounded-md px-3 py-1.5 transition-colors ${serverParams.status !== "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Recent
-            </button>
-            <button
-              onClick={() =>
-                serverParams.status !== "scheduled" &&
-                updateParams({ status: "scheduled", sort: "date_asc" })
-              }
-              className={`rounded-md px-3 py-1.5 transition-colors ${serverParams.status === "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Scheduled
-            </button>
-          </div>
-          <div className="flex rounded-lg bg-muted p-0.5 text-xs font-medium">
-            <button
-              onClick={() => withTranscript && toggleWithTranscript()}
-              className={`rounded-md px-3 py-1.5 transition-colors ${!withTranscript ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => !withTranscript && toggleWithTranscript()}
-              className={`rounded-md px-3 py-1.5 transition-colors ${withTranscript ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Transcribed
-            </button>
-          </div>
+          <SegmentedToggle options={statusToggleOptions} />
+          <SegmentedToggle options={transcribedToggleOptions} />
         </div>
       </div>
 
@@ -937,28 +943,11 @@ export function VideoTable({
                   >
                     {video.cleanTitle}
                   </span>
-                  {(video.hasTranscript || video.pvAvailable) && (
-                    <div className="flex gap-1">
-                      {video.hasTranscript && (
-                        <span className="inline-block rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary">
-                          transcript
-                        </span>
-                      )}
-                      {video.pvAvailable && (
-                        <span
-                          className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${
-                            video.pvSymbol?.includes("/SR.")
-                              ? "bg-violet-500/10 text-violet-700"
-                              : "bg-amber-500/10 text-amber-700"
-                          }`}
-                        >
-                          {video.pvSymbol?.includes("/SR.")
-                            ? "summary"
-                            : "verbatim"}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  <DocBadges
+                    hasTranscript={video.hasTranscript}
+                    pvAvailable={video.pvAvailable}
+                    pvSymbol={video.pvSymbol}
+                  />
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {isLive ? (

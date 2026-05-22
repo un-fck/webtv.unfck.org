@@ -1,4 +1,4 @@
-import { SiteHeader } from "@/components/SiteHeader";
+import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
   title: "About — UN Web TV Transcripts",
@@ -10,7 +10,15 @@ export default function AboutPage() {
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
+      <div className="mx-auto max-w-7xl px-6 pb-12 sm:px-8">
+        <nav className="py-3">
+          <a
+            href="/"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            ← Back to schedule
+          </a>
+        </nav>
         <div className="max-w-2xl">
           <div className="mb-10">
             <h1 className="mb-3 text-3xl font-bold tracking-tight text-foreground">
