@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
       // Audio is available — reuse the existing scheduled row
       const { transcriptId } = await submitTranscription(kalturaId, {
         existingTranscriptId: item.transcript_id,
+        language: item.language_code || "en",
       });
 
       console.log(

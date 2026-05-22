@@ -245,36 +245,29 @@ export function TranscriptToolbar({
           stage === "idle" &&
           !starting && (
             <>
-              <button
-                onClick={onTranscribe}
-                className={cn(
-                  typography.label,
-                  "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
-                )}
-              >
-                Generate transcript
-              </button>
-              {(videoStatus === "live" || videoStatus === "scheduled") && (
+              {videoStatus === "live" || videoStatus === "scheduled" ? (
                 <button
                   onClick={onSchedule}
                   className={cn(
                     typography.label,
-                    "rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted",
+                    "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
                   )}
                   title="Queue transcript to start automatically when recording ends"
                 >
                   Schedule
                 </button>
+              ) : (
+                <button
+                  onClick={onTranscribe}
+                  className={cn(
+                    typography.label,
+                    "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
+                  )}
+                >
+                  Generate transcript
+                </button>
               )}
             </>
-          )}
-        {!hasSegments &&
-          !hasRawParagraphs &&
-          !checking &&
-          stage === "scheduled" && (
-            <span className={typography.caption}>
-              Transcript scheduled — starts automatically when recording ends
-            </span>
           )}
         {(hasSegments || hasRawParagraphs) && (
           <>

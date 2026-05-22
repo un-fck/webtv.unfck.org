@@ -345,7 +345,12 @@ export function TranscriptionPanel({
       const response = await fetch("/api/transcripts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kalturaId, assetId: video.id, schedule: true }),
+        body: JSON.stringify({
+          kalturaId,
+          assetId: video.id,
+          schedule: true,
+          language: selectedLanguage,
+        }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -804,13 +809,28 @@ export function TranscriptionPanel({
         !checking &&
         viewMode !== "pv" && (
           <div className="mt-2 rounded-lg border border-border bg-muted/30 px-5 py-6">
-            <p className="mb-1 text-sm font-medium text-foreground">
-              No transcript available yet
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Generate an AI transcript to read along with speaker
-              identification, topic tagging, and analysis.
-            </p>
+            {video.status === "live" || video.status === "scheduled" ? (
+              <>
+                <p className="mb-1 text-sm font-medium text-foreground">
+                  No transcript available yet
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  This meeting is still {video.status}. Schedule a transcript
+                  and it will be generated automatically once the recording is
+                  available.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mb-1 text-sm font-medium text-foreground">
+                  No transcript available yet
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Generate an AI transcript to read along with speaker
+                  identification, topic tagging, and analysis.
+                </p>
+              </>
+            )}
           </div>
         )}
     </div>

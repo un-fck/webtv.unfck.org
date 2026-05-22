@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
         kalturaId,
         null,
         null,
+        lang,
       );
       return NextResponse.json({ transcriptId, stage });
     }

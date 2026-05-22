@@ -379,11 +379,12 @@ export async function scheduleTranscript(
   kalturaId: string,
   startTime: number | null,
   endTime: number | null,
+  languageCode: string = "en",
 ): Promise<{ transcriptId: string; stage: TranscriptionStatus }> {
   return withVideoLock(kalturaId, null, async (client) => {
     const existing = await getActiveTranscriptByKalturaId(
       kalturaId,
-      undefined,
+      languageCode,
       client,
     );
     if (existing) {
@@ -396,7 +397,7 @@ export async function scheduleTranscript(
     await client.query(
       q(
         `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content)
-       VALUES (?, ?, ?, ?, ?, ?, 'scheduled', null, '{}')
+       VALUES (?, ?, ?, ?, ?, ?, 'scheduled', ?, '{}')
        ON CONFLICT(transcript_id) DO NOTHING`,
         [
           kalturaId,
@@ -405,6 +406,7 @@ export async function scheduleTranscript(
           startTime,
           endTime,
           `pending:${assetId}`,
+          languageCode,
         ],
       ),
     );
@@ -418,6 +420,7 @@ export interface ScheduledTranscript {
   start_time: number | null;
   end_time: number | null;
   audio_url: string;
+  language_code: string | null;
   created_at: Date;
 }
 
@@ -425,7 +428,7 @@ export async function getScheduledTranscripts(): Promise<
   ScheduledTranscript[]
 > {
   const result = await pool.query(
-    `SELECT transcript_id, entry_id, start_time, end_time, audio_url, created_at
+    `SELECT transcript_id, entry_id, start_time, end_time, audio_url, language_code, created_at
      FROM webtv.transcripts WHERE transcription_status = 'scheduled' ORDER BY created_at ASC`,
   );
   return result.rows.map((row) => ({
@@ -434,6 +437,7 @@ export async function getScheduledTranscripts(): Promise<
     start_time: row.start_time as number | null,
     end_time: row.end_time as number | null,
     audio_url: row.audio_url as string,
+    language_code: row.language_code as string | null,
     created_at: row.created_at as Date,
   }));
 }
