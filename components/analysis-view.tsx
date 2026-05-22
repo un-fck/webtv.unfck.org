@@ -211,7 +211,9 @@ export function AnalysisView({
                           </span>
                         </div>
                         <div className="mb-1 text-sm font-medium">
-                          {pos.stakeholders.join(", ")}
+                          {pos.stakeholders
+                            .map((s) => countryNames.get(s) || s)
+                            .join(", ")}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {pos.summary}
