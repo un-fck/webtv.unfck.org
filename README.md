@@ -148,7 +148,7 @@ lib/
     registry.ts, config.ts, models.ts, types.ts, convert.ts
     gemini-production.ts, gemini.ts, assemblyai.ts, ...
   hooks/
-    use-transcript.ts, use-playback-tracking.ts, use-timezone.tsx
+    use-playback-tracking.ts, use-timezone.tsx
   load-env.ts                       # Loads .env.local for scripts outside Next.js
 
 scripts/                            # CLI scripts (run via tsx, use lib/load-env)

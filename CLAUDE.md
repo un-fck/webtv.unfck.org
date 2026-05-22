@@ -201,7 +201,6 @@ Slug logic lives in `lib/meeting-slug.ts` with bidirectional conversion (`slugFr
 
 **Hooks (`lib/hooks/`):**
 
-- `use-transcript.ts` — transcript state machine (statements, segments, speakers, topics, propositions) and API interactions (transcribe, poll, schedule, analyze).
 - `use-playback-tracking.ts` — rAF-based playback position tracking; computes active segment/statement/paragraph/sentence/word indices.
 - `use-timezone.tsx` — timezone context for date/time formatting.
 
