@@ -44,9 +44,9 @@ Kaltura audio URL
 
 Separately, PV document alignment can run independently when an official verbatim record is available (`POST /api/pv/align`).
 
-The transcript `status` column transitions
-`scheduled → transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed | error`.
-`analyzing_propositions` is only reached when proposition analysis runs.
+The transcript has **two status columns** (since migration 003). `transcription_status` transitions
+`scheduled → transcribing → identifying_speakers → analyzing_topics → completed | error`.
+Proposition analysis is **never** part of this pipeline — it is always on-demand and tracked by a separate `analysis_status` column (`none | analyzing | completed | error`), which never moves the transcript off `completed`. A transcript is viewable as soon as its content (`statements`) exists, independent of either status, so running analysis doesn't hide it from other viewers.
 
 > Cross-chunk speaker normalization (described below as "Stage 2: speaker
 > normalization") is **not part of the production pipeline and the

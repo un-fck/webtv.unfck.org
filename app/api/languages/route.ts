@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // Get existing transcript statuses for this entry
     const transcriptInfos = await getTranscriptLanguagesForEntry(entryId);
     const statusByLang = new Map(
-      transcriptInfos.map((t) => [t.language_code, t.status]),
+      transcriptInfos.map((t) => [t.language_code, t.transcription_status]),
     );
 
     // Return all UN languages, marking which have audio tracks available

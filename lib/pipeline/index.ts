@@ -6,7 +6,7 @@ import { setSpeakerMapping, type SpeakerInfo } from "@/lib/speakers";
 import {
   getTranscriptById,
   updateTranscriptContent,
-  updateTranscriptStatus,
+  updateTranscriptionStatus,
   touchPipelineLock,
 } from "@/lib/db";
 import {
@@ -28,7 +28,6 @@ import {
 import { resegmentParagraph } from "./resegment";
 import { defineTopics } from "./define-topics";
 import { tagSentencesWithTopics } from "./tag-sentences";
-import { analyzePropositions } from "./analyze-propositions";
 
 // Re-exports preserve the historical public API of speaker-identification.ts.
 export {
@@ -98,7 +97,6 @@ export async function identifySpeakers(
   paragraphs: ParagraphInput[],
   transcriptId?: string,
   prebuiltMapping?: SpeakerMapping,
-  options?: { skipPropositions?: boolean },
 ) {
   if (!paragraphs?.length) {
     throw new Error("No paragraphs provided");
@@ -496,7 +494,7 @@ ${transcriptParts.join("\n\n")}`,
 
   if (statementsWithSentences.length > 0 && transcriptId) {
     // --- Stage: Analyzing topics ---
-    await updateTranscriptStatus(transcriptId, "analyzing_topics");
+    await updateTranscriptionStatus(transcriptId, "analyzing_topics");
     await touchPipelineLock(transcriptId); // heartbeat: keep the lock fresh
     console.log(`  → Analyzing topics...`);
 
@@ -533,41 +531,10 @@ ${transcriptParts.join("\n\n")}`,
       // Keep the statements without topics — still continue to propositions
     }
 
-    if (!options?.skipPropositions) {
-      // --- Stage: Analyzing propositions ---
-      await updateTranscriptStatus(transcriptId, "analyzing_propositions");
-      await touchPipelineLock(transcriptId); // heartbeat: keep the lock fresh
-      console.log(`  → Analyzing propositions...`);
-
-      try {
-        const propositions = await analyzePropositions(
-          finalParagraphs,
-          finalMapping,
-          client,
-          transcriptId,
-        );
-
-        const transcriptForProps = await getTranscriptById(transcriptId);
-        if (transcriptForProps) {
-          await updateTranscriptContent(transcriptId, {
-            raw_paragraphs: transcriptForProps.content.raw_paragraphs,
-            statements: taggedStatements,
-            topics,
-            propositions,
-          });
-          console.log(`  ✓ Saved propositions`);
-        }
-      } catch (error) {
-        console.warn(
-          `  ⚠ Failed to analyze propositions:`,
-          error instanceof Error ? error.message : error,
-        );
-      }
-    } else {
-      console.log(`  ℹ Skipping proposition analysis (on-demand)`);
-    }
-
-    await updateTranscriptStatus(transcriptId, "completed");
+    // Proposition analysis is intentionally NOT run here — it is always a
+    // separate, on-demand step (POST /api/transcripts/[id]/analysis) tracked
+    // by analysis_status, so it never blocks or hides the transcript.
+    await updateTranscriptionStatus(transcriptId, "completed");
   }
 
   return finalMapping;

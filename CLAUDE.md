@@ -39,9 +39,8 @@ pnpm compare-transcribe -- <assetId|entryId> [provider]  # One-off provider comp
 tsx scripts/test-pv-alignment.ts     # Validate PV alignment timestamps
 tsx scripts/test-pv-parser.ts        # Validate PV parser across 6 languages
 
-# Schema migrations (apply once per database)
-psql "$DATABASE_URL" -f sql/migrations/001_add_kaltura_id.sql
-psql "$DATABASE_URL" -f sql/migrations/002_add_auth_tables.sql   # magic-link auth tables
+# Schema migrations (apply once per database, in order; see sql/migrations/)
+psql "$DATABASE_URL" -f sql/migrations/<NNN_name>.sql
 
 # Eval system (independent from main app, see eval/README.md)
 pnpm eval -- --symbol=A/... --providers=assemblyai,gemini --languages=en
@@ -115,10 +114,10 @@ Triggered from the video page UI (`POST /api/transcripts`) or via the scheduled-
 2. **Speaker identification + resegmentation** — `lib/pipeline/index.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping. (Pipeline stages live in `lib/pipeline/`.)
 3. **Topic definition** — identifies 5–10 substantive policy topics across the meeting (GPT-5.4).
 4. **Sentence tagging** — tags each non-chair sentence with 0–3 topic keys (GPT-5.4-nano, batched; rate-limited via Bottleneck — 20 concurrent / 10 per sec).
-5. **Proposition analysis** *(on demand)* — `POST /api/transcripts/[id]/analysis` identifies stakeholder positions on concrete propositions, with fuzzy-match evidence verification.
+5. **Proposition analysis** *(always on demand, never in the main pipeline)* — `POST /api/transcripts/[id]/analysis` identifies stakeholder positions on concrete propositions, with fuzzy-match evidence verification. It is tracked on a separate `analysis_status` axis and **never** moves the transcript off `completed`, so running it doesn't hide the transcript from other viewers.
 6. **PV alignment** *(separate)* — `POST /api/pv/align` aligns an official UN verbatim record with the audio for timestamped speaker turns.
 
-Stages 2–4 run in `runAnalysisPipeline` (`lib/transcription.ts:316`) inside `identifySpeakers()`. The status column transitions `transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed` (or `error`); analyzing_propositions is only reached when proposition analysis runs.
+Stages 2–4 run in `runAnalysisPipeline` (`lib/transcription.ts`) inside `identifySpeakers()`. **Two status axes** (since migration 003): `transcription_status` transitions `scheduled → transcribing → identifying_speakers → analyzing_topics → completed` (or `error`); `analysis_status` (`none | analyzing | completed | error`) is driven only by the on-demand analysis route. **Viewability = content exists** (a transcript with `statements` is shown to everyone regardless of any later/in-progress stage), so the cache/check lookups use `getActiveTranscriptByKalturaId()` (latest non-error row) rather than keying strictly on `completed`. In-progress and scheduled transcripts are surfaced to all viewers (with their stage) via the same polling, so others see live progress instead of a duplicate Transcribe button. Starting transcription/scheduling is idempotent per video+language via `withVideoLock()` (a `pg_advisory_xact_lock`), so simultaneous clicks reuse one transcript row.
 
 The provider is selected via `STT_PROVIDER` (default `gemini`). Analysis model names are configurable via `STT_ANALYSIS_MODEL` / `_MINI` / `_NANO`. Provider implementations live in `lib/providers/` (shared with the eval system).
 
@@ -136,7 +135,7 @@ The provider is selected via `STT_PROVIDER` (default `gemini`). Analysis model n
 **Tables:**
 
 - `videos` — scraped video metadata, keyed by `asset_id`. Columns: `entry_id`, `title`, `clean_title`, `date`, `scheduled_time`, `duration`, `url`, `body`, `category`, `event_code`, `event_type`, `session_number`, `part_number`, `pv_symbol`, `pv_available`, `pv_checked_at`, `slug`, `last_seen`, `created_at`, `updated_at`, plus a generated `fts_vec tsvector` over `COALESCE(clean_title, title)`. Indexes: unique on `slug`; btree on `entry_id`, `date`, `last_seen`, `body`, `category`; GIN on `fts_vec`; GIN trigram on the title fallback.
-- `transcripts` — transcription results, keyed by `transcript_id`. Status lifecycle: `scheduled → transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed | error`. Has `pipeline_lock` column for concurrency control (30-min stale-lock timeout, refreshed by a heartbeat — `touchPipelineLock()` — at each pipeline stage boundary and throttled during the long resegmentation pass, so a job still making progress isn't re-entered). No FK to `videos`; the join is via `entry_id`.
+- `transcripts` — transcription results, keyed by `transcript_id`. Two status columns: `transcription_status` (`scheduled → transcribing → identifying_speakers → analyzing_topics → completed | error`) and `analysis_status` (`none | analyzing | completed | error`, for on-demand proposition analysis only). Has `pipeline_lock` column for concurrency control (30-min stale-lock timeout, refreshed by a heartbeat — `touchPipelineLock()` — at each pipeline stage boundary and throttled during the long resegmentation pass, so a job still making progress isn't re-entered). No FK to `videos`; the join is via `entry_id`.
 - `speaker_mappings` — AI-resolved speaker info per transcript (name, function, affiliation, group), one row per `transcript_id` with a JSONB `mapping` column.
 - `processing_usage_events` — per-operation API cost tracking (provider, stage, operation, status, model, tokens, hours, rate card, USD-derivable). 33 columns, SERIAL PK.
 - `pv_contents` — cached PV/SR document content, composite PK `(pv_symbol, language)`, JSONB `content` plus `fetched_at` / `parsed_at`. Populated by `app/api/pv/route.ts`.

@@ -51,6 +51,8 @@ async function respondWithCached(cached: Transcript) {
     language: cached.language_code,
     cached: true,
     transcriptId: cached.transcript_id,
+    stage: "completed",
+    analysis_status: cached.analysis_status,
     topics: cached.content.topics || {},
     propositions: user ? cached.content.propositions || [] : [],
     speakerMappings: speakerMappings || {},
@@ -68,22 +70,23 @@ export async function POST(request: NextRequest) {
 
     const lang = language || "en";
 
-    // Schedule action: queue transcript for later processing (video still live/upcoming)
+    // Schedule action: queue transcript for later processing (video still live/upcoming).
+    // Idempotent — returns the existing transcript if one is already queued/running/done.
     if (schedule) {
-      const transcriptId = await scheduleTranscript(
+      const { transcriptId, stage } = await scheduleTranscript(
         assetId || kalturaId,
         kalturaId,
         null,
         null,
       );
-      return NextResponse.json({ transcriptId, stage: "scheduled" });
+      return NextResponse.json({ transcriptId, stage });
     }
 
     // Fast cache check by stable player ID — avoids hitting Kaltura when we
     // already have a completed transcript locally.
     if (!force) {
       const cached = await getTranscriptByKalturaId(kalturaId, lang);
-      if (cached && cached.status === "completed") {
+      if (cached && cached.transcription_status === "completed") {
         return await respondWithCached(cached);
       }
     }
@@ -103,26 +106,31 @@ export async function POST(request: NextRequest) {
         lang,
       );
 
-      if (cached && cached.status === "completed") {
+      if (cached && cached.transcription_status === "completed") {
         return await respondWithCached(cached);
       }
     } else {
       await deleteTranscriptsForEntry(entryId, lang);
     }
 
-    const { transcriptId } = await submitTranscription(kalturaId, {
-      force,
-      language: lang,
-    });
+    // Idempotent: reuses an in-progress transcript if one already exists for
+    // this video, so concurrent viewers don't kick off duplicate runs.
+    const { transcriptId, stage, started } = await submitTranscription(
+      kalturaId,
+      {
+        force,
+        language: lang,
+      },
+    );
     console.log(
-      "Transcription started:",
+      started ? "Transcription started:" : "Reusing in-progress transcript:",
       transcriptId,
       "for entryId:",
       entryId,
     );
     return NextResponse.json({
       transcriptId,
-      stage: "transcribing",
+      stage,
     });
   } catch (error) {
     console.error("Transcription error:", error);

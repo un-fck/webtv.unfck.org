@@ -592,6 +592,10 @@ export function TranscriptionPanel({
               setSpeakerMappings(data.speakerMappings);
               await loadCountryNames(data.speakerMappings);
             }
+            // Analysis runs on its own axis — surface in-progress analysis so a
+            // viewer who loads mid-analysis sees "Analyzing…" rather than the
+            // Run button (and the transcript itself stays visible).
+            setAnalyzingPropositions(data.analysis_status === "analyzing");
             setStage("completed");
             onLanguagesRefresh?.();
           } else if (data.raw_paragraphs) {
@@ -605,6 +609,24 @@ export function TranscriptionPanel({
                 setStage("error");
               });
             }
+          } else if (data.stage === "scheduled") {
+            // Queued — the cron starts it once audio is available. Show the
+            // queued state to everyone but don't poll (nothing progresses yet).
+            setStage("scheduled");
+          } else if (
+            data.stage &&
+            data.stage !== "completed" &&
+            data.transcriptId
+          ) {
+            // Transcription is in progress (started by anyone) — show its stage
+            // and poll, so this viewer doesn't start a duplicate.
+            setStage(data.stage);
+            pollForCompletion(data.transcriptId).catch((err) => {
+              setErrorMessage(
+                err instanceof Error ? err.message : "Pipeline failed",
+              );
+              setStage("error");
+            });
           }
         }
       } catch (err) {
@@ -708,6 +730,16 @@ export function TranscriptionPanel({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
           <span>Checking for existing transcript...</span>
+        </div>
+      )}
+
+      {stage === "scheduled" && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60" />
+          <span>
+            Queued for transcription — it will start automatically once the
+            recording is available.
+          </span>
         </div>
       )}
 

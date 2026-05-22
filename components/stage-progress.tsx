@@ -8,7 +8,6 @@ export type Stage =
   | "transcribing"
   | "identifying_speakers"
   | "analyzing_topics"
-  | "analyzing_propositions"
   | "completed"
   | "error";
 

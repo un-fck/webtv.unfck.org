@@ -4,7 +4,7 @@ import { analyzePropositions } from "@/lib/pipeline";
 import {
   getTranscriptById,
   updateTranscriptContent,
-  updateTranscriptStatus,
+  updateAnalysisStatus,
   tryAcquirePipelineLock,
   releasePipelineLock,
 } from "@/lib/db";
@@ -52,7 +52,9 @@ export async function POST(
     }
 
     try {
-      await updateTranscriptStatus(transcriptId, "analyzing_propositions");
+      // Analysis runs on its own status axis — the transcript stays
+      // 'completed' and visible to everyone while propositions compute.
+      await updateAnalysisStatus(transcriptId, "analyzing");
 
       const client = new AzureOpenAI({
         apiKey: process.env.AZURE_OPENAI_API_KEY,
@@ -73,12 +75,12 @@ export async function POST(
         propositions,
       });
 
-      await updateTranscriptStatus(transcriptId, "completed");
+      await updateAnalysisStatus(transcriptId, "completed");
       await releasePipelineLock(transcriptId);
 
       return NextResponse.json({ propositions });
     } catch (error) {
-      await updateTranscriptStatus(
+      await updateAnalysisStatus(
         transcriptId,
         "error",
         error instanceof Error ? error.message : "Analysis failed",

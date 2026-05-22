@@ -3,14 +3,17 @@ import "@/lib/load-env";
 import { extractKalturaId } from "./kaltura";
 import { slugFromSymbol } from "./meeting-slug";
 
-export type TranscriptStatus =
+// Transcript production lifecycle. Proposition analysis is a separate axis
+// (`AnalysisStatus`) and intentionally not part of this enum.
+export type TranscriptionStatus =
   | "scheduled"
   | "transcribing"
   | "identifying_speakers"
   | "analyzing_topics"
-  | "analyzing_propositions"
   | "completed"
   | "error";
+// On-demand proposition analysis, independent of transcript viewability.
+export type AnalysisStatus = "none" | "analyzing" | "completed" | "error";
 export type ProcessingUsageProvider = "openai" | "gemini";
 export type ProcessingUsageStatus = "success" | "error";
 
@@ -117,7 +120,8 @@ export interface Transcript {
   start_time: number | null;
   end_time: number | null;
   audio_url: string;
-  status: TranscriptStatus;
+  transcription_status: TranscriptionStatus;
+  analysis_status: AnalysisStatus;
   language_code: string | null;
   content: TranscriptContent;
   pipeline_lock: Date | null;
@@ -202,7 +206,8 @@ function mapTranscriptRow(row: Record<string, unknown>): Transcript {
     start_time: row.start_time as number | null,
     end_time: row.end_time as number | null,
     audio_url: row.audio_url as string,
-    status: row.status as TranscriptStatus,
+    transcription_status: row.transcription_status as TranscriptionStatus,
+    analysis_status: (row.analysis_status as AnalysisStatus) ?? "none",
     language_code: row.language_code as string | null,
     content: row.content as TranscriptContent,
     pipeline_lock: row.pipeline_lock as Date | null,
@@ -219,7 +224,9 @@ export async function getTranscript(
   completedOnly = true,
   languageCode?: string,
 ): Promise<Transcript | null> {
-  const statusFilter = completedOnly ? "AND status = 'completed'" : "";
+  const statusFilter = completedOnly
+    ? "AND transcription_status = 'completed'"
+    : "";
   const langFilter = languageCode ? "AND language_code = ?" : "";
   const args: unknown[] = [entryId];
 
@@ -251,7 +258,7 @@ export async function getAllTranscriptsForEntry(
 
 export interface TranscriptLanguageInfo {
   language_code: string | null;
-  status: TranscriptStatus;
+  transcription_status: TranscriptionStatus;
   transcript_id: string;
 }
 
@@ -260,13 +267,13 @@ export async function getTranscriptLanguagesForEntry(
 ): Promise<TranscriptLanguageInfo[]> {
   const result = await pool.query(
     q(
-      "SELECT language_code, status, transcript_id FROM webtv.transcripts WHERE entry_id = ? ORDER BY language_code",
+      "SELECT language_code, transcription_status, transcript_id FROM webtv.transcripts WHERE entry_id = ? ORDER BY language_code",
       [entryId],
     ),
   );
   return result.rows.map((row) => ({
     language_code: row.language_code as string | null,
-    status: row.status as TranscriptStatus,
+    transcription_status: row.transcription_status as TranscriptionStatus,
     transcript_id: row.transcript_id as string,
   }));
 }
@@ -289,20 +296,23 @@ export async function saveTranscript(
   startTime: number | null,
   endTime: number | null,
   audioUrl: string,
-  status: TranscriptStatus,
+  status: TranscriptionStatus,
   languageCode: string | null,
   content: TranscriptContent,
   kalturaId: string | null = null,
+  // Optional executor so this can run inside an advisory-locked transaction
+  // (see withVideoLock) on the same connection as the lock.
+  executor: Pick<Pool, "query"> = pool,
 ): Promise<void> {
-  await pool.query(
+  await executor.query(
     q(
-      `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
+      `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(transcript_id) DO UPDATE SET
          entry_id = EXCLUDED.entry_id,
          kaltura_id = COALESCE(EXCLUDED.kaltura_id, transcripts.kaltura_id),
          audio_url = EXCLUDED.audio_url,
-         status = EXCLUDED.status,
+         transcription_status = EXCLUDED.transcription_status,
          language_code = EXCLUDED.language_code,
          content = EXCLUDED.content,
          updated_at = NOW()`,
@@ -321,14 +331,29 @@ export async function saveTranscript(
   );
 }
 
-export async function updateTranscriptStatus(
+export async function updateTranscriptionStatus(
   transcriptId: string,
-  status: TranscriptStatus,
+  status: TranscriptionStatus,
   errorMessage?: string,
 ): Promise<void> {
   await pool.query(
     q(
-      "UPDATE webtv.transcripts SET status = ?, error_message = ?, updated_at = NOW() WHERE transcript_id = ?",
+      "UPDATE webtv.transcripts SET transcription_status = ?, error_message = ?, updated_at = NOW() WHERE transcript_id = ?",
+      [status, errorMessage ?? null, transcriptId],
+    ),
+  );
+}
+
+// On-demand proposition analysis lives on its own axis so it never moves the
+// transcript off 'completed' (which would hide it from other viewers).
+export async function updateAnalysisStatus(
+  transcriptId: string,
+  status: AnalysisStatus,
+  errorMessage?: string,
+): Promise<void> {
+  await pool.query(
+    q(
+      "UPDATE webtv.transcripts SET analysis_status = ?, error_message = ?, updated_at = NOW() WHERE transcript_id = ?",
       [status, errorMessage ?? null, transcriptId],
     ),
   );
@@ -346,29 +371,45 @@ export async function updateTranscriptContent(
   );
 }
 
+// Idempotent + race-safe: if a non-error transcript already exists for this
+// video (queued, in-progress, or completed), reuse it instead of queuing a
+// duplicate. The advisory lock serializes concurrent Schedule clicks.
 export async function scheduleTranscript(
   assetId: string,
   kalturaId: string,
   startTime: number | null,
   endTime: number | null,
-): Promise<string> {
-  const transcriptId = `scheduled-${assetId}-${Date.now()}`;
-  await pool.query(
-    q(
-      `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, status, language_code, content)
+): Promise<{ transcriptId: string; stage: TranscriptionStatus }> {
+  return withVideoLock(kalturaId, null, async (client) => {
+    const existing = await getActiveTranscriptByKalturaId(
+      kalturaId,
+      undefined,
+      client,
+    );
+    if (existing) {
+      return {
+        transcriptId: existing.transcript_id,
+        stage: existing.transcription_status,
+      };
+    }
+    const transcriptId = `scheduled-${assetId}-${Date.now()}`;
+    await client.query(
+      q(
+        `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content)
        VALUES (?, ?, ?, ?, ?, ?, 'scheduled', null, '{}')
        ON CONFLICT(transcript_id) DO NOTHING`,
-      [
-        kalturaId,
-        kalturaId,
-        transcriptId,
-        startTime,
-        endTime,
-        `pending:${assetId}`,
-      ],
-    ),
-  );
-  return transcriptId;
+        [
+          kalturaId,
+          kalturaId,
+          transcriptId,
+          startTime,
+          endTime,
+          `pending:${assetId}`,
+        ],
+      ),
+    );
+    return { transcriptId, stage: "scheduled" as TranscriptionStatus };
+  });
 }
 
 export interface ScheduledTranscript {
@@ -385,7 +426,7 @@ export async function getScheduledTranscripts(): Promise<
 > {
   const result = await pool.query(
     `SELECT transcript_id, entry_id, start_time, end_time, audio_url, created_at
-     FROM webtv.transcripts WHERE status = 'scheduled' ORDER BY created_at ASC`,
+     FROM webtv.transcripts WHERE transcription_status = 'scheduled' ORDER BY created_at ASC`,
   );
   return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
@@ -450,6 +491,23 @@ async function withTransaction<T>(
   } finally {
     client.release();
   }
+}
+
+// Serialize the "start transcription / schedule" critical section for one
+// video+language so two simultaneous clicks can't create duplicate rows.
+// The advisory lock is held only for `fn`'s transaction; `fn` runs on the
+// lock's own connection (passed in) so it never needs a second pool
+// connection — avoiding deadlock under the small serverless pool.
+export async function withVideoLock<T>(
+  kalturaId: string,
+  language: string | null,
+  fn: (client: import("pg").PoolClient) => Promise<T>,
+): Promise<T> {
+  const key = `${kalturaId}:${language ?? ""}`;
+  return withTransaction(async (client) => {
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [key]);
+    return fn(client);
+  });
 }
 
 export async function deleteTranscript(transcriptId: string): Promise<void> {
@@ -621,12 +679,41 @@ export async function getTranscriptByKalturaId(
 ): Promise<Transcript | null> {
   const conditions: string[] = ["kaltura_id = ?"];
   const args: unknown[] = [kalturaId];
-  if (completedOnly) conditions.push("status = 'completed'");
+  if (completedOnly) conditions.push("transcription_status = 'completed'");
   if (languageCode) {
     conditions.push("language_code = ?");
     args.push(languageCode);
   }
   const result = await pool.query(
+    q(
+      `SELECT * FROM webtv.transcripts WHERE ${conditions.join(" AND ")}
+       ORDER BY updated_at DESC LIMIT 1`,
+      args,
+    ),
+  );
+  if (result.rows.length === 0) return null;
+  return mapTranscriptRow(result.rows[0]);
+}
+
+// Latest non-error transcript for a player ID — completed, in-progress, or
+// scheduled. Powers the viewability path: a transcript is shown whenever its
+// content exists, and in-progress/scheduled rows are surfaced to all viewers
+// (with their stage) so others don't start a duplicate.
+export async function getActiveTranscriptByKalturaId(
+  kalturaId: string,
+  languageCode?: string,
+  executor: Pick<Pool, "query"> = pool,
+): Promise<Transcript | null> {
+  const conditions: string[] = [
+    "kaltura_id = ?",
+    "transcription_status <> 'error'",
+  ];
+  const args: unknown[] = [kalturaId];
+  if (languageCode) {
+    conditions.push("language_code = ?");
+    args.push(languageCode);
+  }
+  const result = await executor.query(
     q(
       `SELECT * FROM webtv.transcripts WHERE ${conditions.join(" AND ")}
        ORDER BY updated_at DESC LIMIT 1`,
@@ -646,7 +733,7 @@ export async function getAllTranscriptedEntries(): Promise<string[]> {
     `SELECT DISTINCT v.entry_id
        FROM webtv.videos v
        JOIN webtv.transcripts t
-         ON t.status = 'completed'
+         ON t.transcription_status = 'completed'
         AND (t.entry_id = v.entry_id OR t.kaltura_id = v.kaltura_id)
       WHERE v.entry_id IS NOT NULL`,
   );
