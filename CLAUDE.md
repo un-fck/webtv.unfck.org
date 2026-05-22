@@ -109,7 +109,7 @@ See `docs/ai.md` for the full pipeline with model details and design decisions.
 Triggered from the video page UI (`POST /api/transcripts`) or via the scheduled-processing cron (`/api/cron/process-scheduled`):
 
 1. **Transcribe** — provider-agnostic via `lib/providers/` (default `gemini`). Audio is downloaded from Kaltura, uploaded to the provider, and transcribed with speaker diarization. Long audio (>10 min) is chunked by the Gemini provider and stitched.
-2. **Speaker identification + resegmentation** — `lib/speaker-identification.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping.
+2. **Speaker identification + resegmentation** — `lib/pipeline/index.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping. (Pipeline stages live in `lib/pipeline/`.)
 3. **Topic definition** — identifies 5–10 substantive policy topics across the meeting (GPT-5.4).
 4. **Sentence tagging** — tags each non-chair sentence with 0–3 topic keys (GPT-5.4-nano, batched; rate-limited via Bottleneck — 20 concurrent / 10 per sec).
 5. **Proposition analysis** *(on demand)* — `POST /api/transcripts/[id]/analysis` identifies stakeholder positions on concrete propositions, with fuzzy-match evidence verification.
@@ -184,9 +184,9 @@ Cron schedule (`vercel.json`): `process-scheduled` every 5 min, `sync-videos` ev
 
 Slug logic lives in `lib/meeting-slug.ts` with bidirectional conversion (`slugFromSymbol` / `symbolFromSlug`).
 
-**Components** (file naming is intentionally mixed PascalCase / kebab-case — match neighbours when editing, don't bulk-rename):
+**Components** (file naming is kebab-case throughout; exported component identifiers stay PascalCase, e.g. `transcript-table.tsx` exports `VideoTable`):
 
-- `components/TranscriptTable.tsx` — main schedule table (client, TanStack Table). Column filters (date popover, status, body, category, text search), pagination, scheduled-view toggle, search-archive mode.
+- `components/transcript-table.tsx` — main schedule table (client, TanStack Table), exports `VideoTable`. Column filters (date popover, status, body, category, text search), pagination, scheduled-view toggle, search-archive mode.
 - `components/transcription-panel.tsx` — orchestrates the transcribe → poll → display lifecycle, language switching, topic/proposition state.
 - `components/transcript-view.tsx`, `transcript-toolbar.tsx`, `raw-transcript-view.tsx` — transcript rendering surfaces.
 - `components/speaker-toc.tsx` — speaker table of contents.
@@ -195,8 +195,8 @@ Slug logic lives in `lib/meeting-slug.ts` with bidirectional conversion (`slugFr
 - `components/stage-progress.tsx` — pipeline progress indicator.
 - `components/video-page-client.tsx` — wraps video page client interactions (player docking, language selection, panels).
 - `components/video-player.tsx` — Kaltura embedded player (loads Kaltura SDK dynamically).
-- `components/SiteHeader.tsx` — header with `home` and `nav` variants.
-- `components/NavMenu.tsx`, `components/TimezonePicker.tsx`, `components/AnimatedCornerLogo.tsx` — header chrome.
+- `components/site-header.tsx` — header with `home` and `nav` variants (exports `SiteHeader`).
+- `components/nav-menu.tsx`, `components/timezone-picker.tsx`, `components/animated-corner-logo.tsx` — header chrome.
 - `components/ui/` — shadcn primitives (button, calendar, popover, switch, tooltip).
 
 **Hooks (`lib/hooks/`):**

@@ -14,7 +14,7 @@ import {
   type TranscriptContent,
   type RawParagraph,
 } from "./db";
-import { identifySpeakers } from "./speaker-identification";
+import { identifySpeakers } from "./pipeline";
 import type { SpeakerMapping } from "./speakers";
 import {
   trackGeminiTranscription,

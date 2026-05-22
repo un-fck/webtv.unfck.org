@@ -7,10 +7,11 @@ import { getCountryName } from "@/lib/country-lookup";
 import { BarChart3 } from "lucide-react";
 import { PVPanel, type PVSpeakerEntry } from "@/components/pv-panel";
 import ExcelJS from "exceljs";
-import type { Proposition } from "@/lib/speaker-identification";
+import type { Proposition } from "@/lib/pipeline";
 import { StageProgress, type Stage } from "@/components/stage-progress";
 import { AnalysisView } from "@/components/analysis-view";
 import { usePlaybackTracking } from "@/lib/hooks/use-playback-tracking";
+import { formatTimecode, formatSpeakerText } from "@/lib/transcript-formatting";
 import {
   TranscriptToolbar,
   type ViewMode,
@@ -180,35 +181,10 @@ export function TranscriptionPanel({
     stage !== "completed" &&
     stage !== "error";
 
-  const formatTime = (seconds: number | null | undefined): string => {
-    if (seconds === null || seconds === undefined || isNaN(seconds)) return "";
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-    }
-    return `${minutes}:${secs.toString().padStart(2, "0")}`;
-  };
+  const formatTime = formatTimecode;
 
-  const getSpeakerText = (statementIndex: number | undefined): string => {
-    if (statementIndex === undefined) return "Speaker";
-    const info = speakerMappings[statementIndex.toString()];
-    if (
-      !info ||
-      (!info.affiliation && !info.group && !info.function && !info.name)
-    ) {
-      return `Speaker ${statementIndex + 1}`;
-    }
-    const parts: string[] = [];
-    if (info.affiliation)
-      parts.push(countryNames.get(info.affiliation) || info.affiliation);
-    if (info.group) parts.push(info.group);
-    if (info.function && info.function.toLowerCase() !== "representative")
-      parts.push(info.function);
-    if (info.name) parts.push(info.name);
-    return parts.join(" · ");
-  };
+  const getSpeakerText = (statementIndex: number | undefined): string =>
+    formatSpeakerText(statementIndex, speakerMappings, countryNames);
 
   const seekToTimestamp = (timestamp: number) => {
     if (!player) return;

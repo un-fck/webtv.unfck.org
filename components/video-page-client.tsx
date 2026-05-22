@@ -10,7 +10,7 @@ import {
 } from "./transcription-panel";
 import { SpeakerToc } from "./speaker-toc";
 import { PVSpeakerToc } from "./pv-panel";
-import { SiteHeader } from "./SiteHeader";
+import { SiteHeader } from "./site-header";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
 import { useTimezone } from "@/lib/hooks/use-timezone";

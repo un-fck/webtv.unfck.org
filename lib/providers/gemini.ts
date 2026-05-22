@@ -1,48 +1,16 @@
 import fs from "fs";
-import https from "https";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
 import { downloadAudioToTemp } from "./utils";
-
-/** POST JSON via https module (avoids undici headers timeout on long requests) */
-function httpsPostJson(
-  url: string,
-  body: object,
-): Promise<{ status: number; body: string }> {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    const req = https.request(
-      url,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Content-Length": Buffer.byteLength(data),
-        },
-        timeout: 600_000,
-      },
-      (res) => {
-        const chunks: Buffer[] = [];
-        res.on("data", (chunk) => chunks.push(chunk));
-        res.on("end", () =>
-          resolve({
-            status: res.statusCode || 0,
-            body: Buffer.concat(chunks).toString(),
-          }),
-        );
-      },
-    );
-    req.on("error", reject);
-    req.on("timeout", () => {
-      req.destroy(new Error("Request timeout"));
-    });
-    req.write(data);
-    req.end();
-  });
-}
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
-const MODEL = "gemini-3-flash-preview";
-const BASE = "https://generativelanguage.googleapis.com";
+import {
+  GEMINI_API_KEY,
+  GEMINI_MODEL as MODEL,
+  GEMINI_BASE as BASE,
+  httpsPostJson,
+  uploadFileToGemini,
+  waitForGeminiFile,
+  deleteGeminiFile,
+  parseHHMMSSToMs,
+} from "../gemini-utils";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -52,77 +20,6 @@ const LANGUAGE_NAMES: Record<string, string> = {
   zh: "Chinese",
   ru: "Russian",
 };
-
-/** Upload audio file via Gemini Files API (resumable upload) */
-async function uploadFile(
-  filePath: string,
-): Promise<{ name: string; uri: string }> {
-  const fileSize = fs.statSync(filePath).size;
-  const fileData = fs.readFileSync(filePath);
-
-  // Start resumable upload
-  const startRes = await fetch(
-    `${BASE}/upload/v1beta/files?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: {
-        "X-Goog-Upload-Protocol": "resumable",
-        "X-Goog-Upload-Command": "start",
-        "X-Goog-Upload-Header-Content-Length": String(fileSize),
-        "X-Goog-Upload-Header-Content-Type": "audio/mp4",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ file: { displayName: `eval-${Date.now()}` } }),
-    },
-  );
-  if (!startRes.ok)
-    throw new Error(
-      `Gemini upload start failed ${startRes.status}: ${await startRes.text()}`,
-    );
-  const uploadUrl = startRes.headers.get("X-Goog-Upload-URL");
-  if (!uploadUrl) throw new Error("No upload URL returned");
-
-  // Upload the bytes
-  const uploadRes = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Length": String(fileSize),
-      "X-Goog-Upload-Offset": "0",
-      "X-Goog-Upload-Command": "upload, finalize",
-    },
-    body: fileData,
-  });
-  if (!uploadRes.ok)
-    throw new Error(
-      `Gemini upload failed ${uploadRes.status}: ${await uploadRes.text()}`,
-    );
-  const result = (await uploadRes.json()) as {
-    file: { name: string; uri: string; state: string };
-  };
-  return result.file;
-}
-
-/** Poll until file state is ACTIVE */
-async function waitForFile(name: string): Promise<void> {
-  for (let i = 0; ; i++) {
-    const res = await fetch(`${BASE}/v1beta/${name}?key=${GEMINI_API_KEY}`);
-    const file = (await res.json()) as { state: string };
-    if (file.state === "ACTIVE") return;
-    if (file.state === "FAILED") throw new Error("File processing failed");
-    if (i % 6 === 5)
-      console.log(`  [Gemini] File still processing... (${(i + 1) * 5}s)`);
-    await new Promise((r) => setTimeout(r, 5000));
-  }
-}
-
-/** Parse MM:SS or HH:MM:SS timestamp to milliseconds */
-function parseTimestamp(ts: string): number {
-  const parts = ts.split(":").map(Number);
-  if (parts.length === 3)
-    return (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
-  if (parts.length === 2) return (parts[0] * 60 + parts[1]) * 1000;
-  return 0;
-}
 
 interface GeminiSegment {
   speaker: string;
@@ -150,12 +47,12 @@ export const gemini: TranscriptionProvider = {
     try {
       // Upload to Gemini Files API
       console.log(`  [Gemini] Uploading audio...`);
-      const file = await uploadFile(filePath);
+      const file = await uploadFileToGemini(filePath, "eval");
       console.log(`  [Gemini] File uploaded: ${file.name}`);
 
       // Wait for processing
       console.log(`  [Gemini] File URI: ${file.uri}`);
-      await waitForFile(file.name);
+      await waitForGeminiFile(file.name, true);
 
       // Generate transcription with structured diarization output
       console.log(`  [Gemini] Transcribing with ${MODEL}...`);
@@ -243,7 +140,7 @@ export const gemini: TranscriptionProvider = {
       // Build utterances from segments
       const utterances: NormalizedTranscript["utterances"] = [];
       for (const seg of segments) {
-        const startMs = parseTimestamp(seg.timestamp);
+        const startMs = parseHHMMSSToMs(seg.timestamp);
         const last = utterances[utterances.length - 1];
         if (last && last.speaker === seg.speaker) {
           last.end = startMs;
@@ -277,9 +174,7 @@ export const gemini: TranscriptionProvider = {
       );
 
       // Clean up uploaded file
-      await fetch(`${BASE}/v1beta/${file.name}?key=${GEMINI_API_KEY}`, {
-        method: "DELETE",
-      }).catch(() => {});
+      await deleteGeminiFile(file.name);
 
       return {
         provider: "gemini",

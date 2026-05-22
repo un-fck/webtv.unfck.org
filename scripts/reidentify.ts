@@ -1,9 +1,6 @@
 #!/usr/bin/env tsx
 import "../lib/load-env";
-import {
-  identifySpeakers,
-  ParagraphInput,
-} from "../lib/speaker-identification";
+import { identifySpeakers, ParagraphInput } from "../lib/pipeline";
 import { pool, q } from "../lib/db";
 import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 

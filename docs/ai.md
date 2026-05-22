@@ -26,7 +26,7 @@ Kaltura audio URL
        │
        ▼
  2. Speaker identification + resegmentation (GPT-5.4)
-       │   Single call in lib/speaker-identification.ts:identifySpeakers().
+       │   Single call in lib/pipeline/index.ts:identifySpeakers().
        │   Per-paragraph speaker resolution; multi-speaker paragraphs are
        │   resegmented in parallel; speaker mapping persisted.
        │
@@ -101,7 +101,7 @@ Uses `reasoning_effort: 'minimal'`.
 
 ## 3. Speaker identification (legacy)
 
-**File:** `lib/speaker-identification.ts` — `identifySpeakers()`
+**File:** `lib/pipeline/index.ts` — `identifySpeakers()`
 **Model:** `gpt-5.4` via Azure OpenAI (structured output)
 **Only runs for non-Gemini transcripts** (Gemini already produces speaker mappings).
 
@@ -111,7 +111,7 @@ Identifies who is actually speaking each paragraph (not who is being mentioned o
 
 ## 4. Resegmentation
 
-**File:** `lib/speaker-identification.ts` — `resegmentParagraph()`
+**File:** `lib/pipeline/resegment.ts` — `resegmentParagraph()`
 **Model:** `gpt-5.4` via Azure OpenAI (structured output)
 **Only runs for paragraphs flagged as `has_multiple_speakers`.**
 
@@ -121,7 +121,7 @@ Low-confidence splits are discarded.
 
 ## 5. Topic definition
 
-**File:** `lib/speaker-identification.ts` — `defineTopics()`
+**File:** `lib/pipeline/define-topics.ts` — `defineTopics()`
 **Model:** `gpt-5.4` via Azure OpenAI (structured output)
 **Runs automatically after speaker identification.**
 
@@ -131,7 +131,7 @@ Identifies 5-10 substantive policy topics discussed in the transcript. Each topi
 
 ## 6. Sentence-level topic tagging
 
-**File:** `lib/speaker-identification.ts` — `tagSentencesWithTopics()`
+**File:** `lib/pipeline/tag-sentences.ts` — `tagSentencesWithTopics()`
 **Model:** `gpt-5.4-nano` via Azure OpenAI (structured output, `reasoning_effort: "none"`)
 **Runs immediately after topic definition, batched with rate-limited concurrency.**
 
@@ -139,7 +139,7 @@ Sentences are grouped into batches of 15 and tagged in parallel (up to 20 concur
 
 ## 7. Proposition analysis (on demand)
 
-**File:** `lib/speaker-identification.ts` — `analyzePropositions()`
+**File:** `lib/pipeline/analyze-propositions.ts` — `analyzePropositions()`
 **API route:** `POST /api/transcripts/[id]/analysis`
 **Model:** `gpt-5.4` via Azure OpenAI (structured output)
 **Not part of the automatic pipeline** — must be explicitly triggered.

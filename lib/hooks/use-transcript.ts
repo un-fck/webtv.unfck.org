@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { SpeakerMapping } from "@/lib/speakers";
 import { getCountryName } from "@/lib/country-lookup";
-import type { Proposition } from "@/lib/speaker-identification";
+import type { Proposition } from "@/lib/pipeline";
 import type { Stage } from "@/components/stage-progress";
 
 interface RawParagraph {

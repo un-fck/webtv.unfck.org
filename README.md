@@ -135,7 +135,7 @@ lib/
   un-api.ts                         # UN Web TV HTML scraper + metadata extraction
   transcription.ts                  # Transcription submission + audio URL resolution
   gemini-transcription.ts           # Gemini Files API transcription (chunked)
-  speaker-identification.ts         # Speaker mapping + topic + proposition pipeline
+  pipeline/                         # Analysis pipeline stages (speaker ID, resegment, topics, propositions)
   speakers.ts                       # Speaker mapping CRUD
   usage-tracking.ts                 # API cost tracking (Gemini + OpenAI)
   pv-alignment.ts, pv-documents.ts, pv-parser.ts  # PV document pipeline

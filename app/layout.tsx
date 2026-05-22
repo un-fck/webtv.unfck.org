@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
-import { AnimatedCornerLogo } from "@/components/AnimatedCornerLogo";
+import { AnimatedCornerLogo } from "@/components/animated-corner-logo";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TimezoneProvider } from "@/lib/hooks/use-timezone";
 

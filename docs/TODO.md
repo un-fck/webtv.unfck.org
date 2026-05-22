@@ -23,17 +23,17 @@ Backlog. Full justification + file:line references in [REVIEW.md](../REVIEW.md).
 
 ## P2 — refactor opportunities
 
-Deferred — these are large, mostly-mechanical refactors with broad surface area
-and no test coverage to catch regressions. Tackle as dedicated PRs.
+Now mostly done — a deterministic test net (Layer 1 + characterization tests)
+made these safe. See the sequenced refactor PRs.
 
 - [x] Stranded dev tools — `test-pv-parser` / `test-pv-alignment` now have `package.json` aliases (`compare-transcribe` already did).
 - [x] Documented "speaker normalization" stage — the `normalizeSpeakers()` helper no longer exists; removed the dead `openaiNormalizeSpeakers` usage key and corrected `docs/ai.md` to mark the stage as design-intent-only.
-- [ ] Split `lib/speaker-identification.ts` (~1,500 LOC) into one file per pipeline stage under `lib/pipeline/`.
-- [ ] Break up `components/TranscriptTable.tsx` (1,162 LOC), `transcription-panel.tsx` (836), `pv-panel.tsx` (662) into per-feature hooks + smaller components.
-- [ ] Move `lib/pv-parser.ts` (1,260 LOC) language patterns into a separate config keyed by language code.
-- [ ] Standardize component file naming (PascalCase vs kebab-case is currently mixed). CLAUDE.md explicitly says match neighbours / don't bulk-rename — needs a deliberate decision first.
-- [ ] Consolidate `gemini.ts` and `gemini-production.ts` providers — share the Files-API plumbing, parameterize the prompt schema.
-- [ ] Add `error.tsx` / `loading.tsx` boundaries under `app/` so transcription failures surface a useful UI.
+- [x] Split `lib/speaker-identification.ts` into `lib/pipeline/` (shared, identify-speakers orchestrator in `index.ts`, resegment, define-topics, tag-sentences, analyze-propositions). Public API preserved via `index.ts` re-exports; pure helpers pinned by `lib/pipeline/shared.test.ts`.
+- [x] Move `lib/pv-parser.ts` language patterns → `lib/pv-parser-patterns.ts` keyed by language code (Arabic line-scan handler stays as code). Covered by `lib/pv-parser.test.ts`.
+- [x] Standardize component file naming → kebab-case (renamed the 5 PascalCase files; exported identifiers unchanged). CLAUDE.md updated.
+- [x] Consolidate Gemini providers — `gemini.ts` (eval) now shares Files-API plumbing from `gemini-utils.ts`; kept as two providers (distinct output schemas), not merged.
+- [x] Add `error.tsx` / `loading.tsx` boundaries under `app/` (root + `[...meeting]`).
+- [~] Break up the big components. **Partly done:** pure logic extracted with unit tests — `findReferences` → `lib/pv-reference-linking.ts` (from `pv-panel`), `formatTimecode`/`formatSpeakerText` → `lib/transcript-formatting.ts` (from `transcription-panel`). Component test harness added (Vitest `projects` + jsdom + RTL; `transcript-table.test.tsx`). **Remaining (dedicated PRs):** the stateful-hook + sub-component decomposition of `transcript-table.tsx` (1.1k), `transcription-panel.tsx`, `pv-panel.tsx` — needs per-component characterization tests of the transcribe/poll/export/filter behaviour first.
 
 ## Original notes
 

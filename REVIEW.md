@@ -19,8 +19,19 @@ Each item lists `path:line` so it can be picked up directly.
 > P1-5 (`KALTURA_PARTNER_ID`/`KALTURA_WIDGET_ID` constants), P1-7 (usage-event
 > JSONL spool), P1-8 (FTS fallback warn), P1-9 (TODO already gone), P2-7 (dev-tool
 > aliases), P2-8 (`normalizeSpeakers` doc reconciled, dead usage key removed).
-> **Deferred:** P1-6 (Gemini word-cursor UI) and the large refactors P2-1/2/3/4/5/6
-> — large surface area, no test coverage; should be dedicated PRs.
+>
+> **Second pass — P2 refactors (behind a Layer 1 + characterization test net):**
+> P2-1 (`speaker-identification.ts` → `lib/pipeline/`), P2-3 (`pv-parser`
+> language patterns → `pv-parser-patterns.ts`), P2-4 (component filenames →
+> kebab-case), P2-5 (Gemini plumbing dedup via `gemini-utils`), P2-6
+> (`error.tsx`/`loading.tsx` boundaries). P2-2 (big component splits) **partly
+> done**: pure logic extracted with unit tests (`pv-reference-linking`,
+> `transcript-formatting`) + component test harness added; the stateful-hook /
+> sub-component decomposition of the three large components remains as dedicated
+> PRs (needs per-component characterization tests first).
+>
+> **Deferred:** P1-6 (Gemini word-cursor UI), and the remaining P2-2 component
+> decomposition described above.
 
 ---
 

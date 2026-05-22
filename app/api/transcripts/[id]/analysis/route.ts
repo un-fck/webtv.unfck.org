@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AzureOpenAI } from "openai";
-import { analyzePropositions } from "@/lib/speaker-identification";
+import { analyzePropositions } from "@/lib/pipeline";
 import {
   getTranscriptById,
   updateTranscriptContent,
