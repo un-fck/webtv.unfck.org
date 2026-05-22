@@ -86,7 +86,7 @@ Copy `.env.example` → `.env.local` and fill in values.
 Detailed docs live in `docs/` — read these before working on the relevant subsystem:
 
 - `docs/ai.md` — AI pipeline: models used, pipeline stages (transcription → speaker identification + resegmentation → topics → sentence tagging → propositions → PV alignment)
-- `docs/webtv.md` — UN Web TV scraping, Kaltura two-ID system, schedule scraping, per-video metadata, what gets stored
+- `docs/webtv-kaltura.md` — UN Web TV scraping and the **three-ID system** (`asset_id` → `kaltura_id` player ID → canonical `entry_id`), Kaltura redirects, audio flavors, schedule scraping, per-video metadata, what gets stored, and the legacy-data gotchas behind slow/missing-transcript lookups. **Read this before touching any Kaltura ID, entry resolution, or audio-URL code.**
 - `docs/eval.md` — Evaluation system: ground truth from PV documents, multi-provider STT, metrics (WER/CER), corpus, dashboard, HuggingFace datasets
 - `docs/official-transcripts.md` — Which UN organs produce PV vs SR records, document symbol patterns
 - `docs/api.md` — Public API: URL scheme, JSON endpoints, response shapes
@@ -98,7 +98,7 @@ For detailed architecture, see the `docs/` files above. Summary:
 
 ### Data Flow
 
-UN Web TV has no public API — `lib/un-api.ts` scrapes HTML directly. See `docs/webtv.md` for full details on scraping, Kaltura ID resolution, and what gets stored.
+UN Web TV has no public API — `lib/un-api.ts` scrapes HTML directly. See `docs/webtv-kaltura.md` for full details on scraping, the three-ID system, Kaltura redirect/entry resolution, audio flavors, and what gets stored.
 
 On page load, videos are fetched from PostgreSQL for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`, default 14 days), with cached helpers in `lib/cached-db.ts` (60s revalidate). All scraped videos are persisted via `scripts/sync-videos.ts` and the `/api/cron/sync-videos` cron (every 15 min).
 
@@ -227,4 +227,4 @@ Benchmarks ~12 STT providers (registered in `lib/providers/registry.ts`) against
 - **Scripts** in `scripts/` use `lib/load-env` (loads `.env.local` via dotenv) since they run outside Next.js
 - **Path alias**: `@/*` maps to project root (see `tsconfig.json`)
 - **Vercel cron**: configured in `vercel.json`, authenticated via `CRON_SECRET` Bearer token
-- **Two ID systems**: Asset IDs (UN Web TV URLs, DB primary key) vs Kaltura entry IDs (player/audio). Always be clear which one you're working with
+- **Three ID systems**: `asset_id` (UN Web TV URL, DB primary key) → `kaltura_id` (player ID, parsed from the asset) → canonical `entry_id` (what `kaltura_id` redirects to in Kaltura; equal unless redirected). Always be clear which one you're working with — see `docs/webtv-kaltura.md`

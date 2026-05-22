@@ -26,7 +26,7 @@ This app scrapes [UN Web TV](https://webtv.un.org/en/schedule) (which has no pub
 Detailed documentation lives in [`docs/`](docs/):
 
 - [AI Pipeline](docs/ai.md) — models, pipeline stages, design decisions
-- [UN Web TV & Kaltura](docs/webtv.md) — scraping, ID systems, data flow
+- [UN Web TV & Kaltura](docs/webtv-kaltura.md) — scraping, the three-ID system (asset → player → canonical entry), redirects, audio flavors, data flow
 - [Evaluation System](docs/eval.md) — STT benchmarking, metrics, dashboard
 - [Official Meeting Records](docs/official-transcripts.md) — PV vs SR records by UN organ
 - [Public API](docs/api.md) — URL scheme + JSON endpoints
@@ -164,7 +164,7 @@ sql/
 
 docs/
   ai.md                             # AI pipeline: models, stages, design decisions
-  webtv.md                          # UN Web TV scraping & Kaltura integration
+  webtv-kaltura.md                  # UN Web TV scraping & Kaltura three-ID system
   eval.md                           # Eval system: providers, metrics, corpus, dashboard
   official-transcripts.md           # PV vs SR records by UN organ
   api.md                            # Public JSON API + URL scheme
