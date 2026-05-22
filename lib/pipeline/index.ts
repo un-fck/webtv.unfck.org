@@ -117,8 +117,7 @@ export async function identifySpeakers(
     console.log(`  → Analyzing ${paragraphs.length} paragraphs...`);
 
     const transcriptParts = paragraphs.map((para, index) => {
-      const asrSpeaker =
-        para.speaker || para.words?.[0]?.speaker || "Unknown";
+      const asrSpeaker = para.speaker || para.words?.[0]?.speaker || "Unknown";
       return `[${index}] (ASR: Speaker ${asrSpeaker}) ${para.text}`;
     });
 

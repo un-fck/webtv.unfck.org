@@ -94,7 +94,9 @@ async function phase2(): Promise<void> {
      WHERE t.kaltura_id IS NULL AND v.entry_id IS NULL`,
   );
   const orphans = new Set(orphanRows.rows.map((r) => r.entry_id));
-  console.log(`Phase 2${tag}: ${orphans.size} orphan canonical entries to match`);
+  console.log(
+    `Phase 2${tag}: ${orphans.size} orphan canonical entries to match`,
+  );
   if (orphans.size === 0) return;
 
   // Candidate videos: those whose entry_id matches no transcript (so plausibly a
@@ -109,7 +111,9 @@ async function phase2(): Promise<void> {
      ${LIMIT > 0 ? `LIMIT ${LIMIT}` : ""}`,
   );
   const candidates = candRes.rows;
-  console.log(`  resolving up to ${candidates.length} candidate videos (concurrency ${CONCURRENCY})`);
+  console.log(
+    `  resolving up to ${candidates.length} candidate videos (concurrency ${CONCURRENCY})`,
+  );
 
   let resolved = 0;
   let matched = 0;
@@ -134,7 +138,9 @@ async function phase2(): Promise<void> {
       }
       resolved++;
       if (resolved % 250 === 0) {
-        console.log(`  …resolved ${resolved}, matched ${matched}, ${orphans.size} orphans left`);
+        console.log(
+          `  …resolved ${resolved}, matched ${matched}, ${orphans.size} orphans left`,
+        );
       }
       if (!canonical || !orphans.has(canonical)) continue;
 
@@ -190,7 +196,9 @@ async function main() {
   const remaining = await pool.query(
     `SELECT COUNT(*) FROM webtv.transcripts WHERE kaltura_id IS NULL`,
   );
-  console.log(`\nTranscripts still missing kaltura_id: ${remaining.rows[0].count}`);
+  console.log(
+    `\nTranscripts still missing kaltura_id: ${remaining.rows[0].count}`,
+  );
   await pool.end();
 }
 

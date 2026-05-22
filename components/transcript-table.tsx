@@ -576,9 +576,7 @@ export function VideoTable({
   // Remember the filtered schedule URL so the meeting page's "Back to
   // schedule" link can return here with filters intact.
   useEffect(() => {
-    rememberScheduleUrl(
-      `${window.location.pathname}${window.location.search}`,
-    );
+    rememberScheduleUrl(`${window.location.pathname}${window.location.search}`);
   }, [searchParams]);
 
   // Fetch search results when q param is set

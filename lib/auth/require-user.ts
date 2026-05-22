@@ -8,7 +8,8 @@ import { NextResponse } from "next/server";
  * return directly from the handler.
  */
 export async function requireUser(): Promise<
-  { user: AuthUser; response?: never } | { user?: never; response: NextResponse }
+  | { user: AuthUser; response?: never }
+  | { user?: never; response: NextResponse }
 > {
   const user = await getCurrentUser();
   if (!user) {
