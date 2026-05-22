@@ -2,14 +2,19 @@
 
 import { useTimezone } from "@/lib/hooks/use-timezone";
 import { getTimezoneOptions } from "@/lib/timezone";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Globe } from "lucide-react";
 
 export function TimezonePicker() {
   const { timezone, setTimezone } = useTimezone();
+  // Options depend on the browser timezone, which differs between the SSR
+  // environment and the client. Defer to a post-mount render to avoid a
+  // hydration mismatch (the server has no meaningful browser timezone).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const options = useMemo(() => getTimezoneOptions(), []);
 
-  if (options.length <= 1) return null;
+  if (!mounted || options.length <= 1) return null;
 
   return (
     <div className="flex items-center gap-1.5 text-sm text-muted-foreground">

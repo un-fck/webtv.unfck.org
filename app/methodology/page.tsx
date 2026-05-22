@@ -1,4 +1,4 @@
-import { SiteHeader } from "@/components/SiteHeader";
+import { SiteHeader } from "@/components/site-header";
 import Link from "next/link";
 
 export const metadata = {

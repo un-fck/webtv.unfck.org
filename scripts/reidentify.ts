@@ -1,9 +1,6 @@
 #!/usr/bin/env tsx
 import "../lib/load-env";
-import {
-  identifySpeakers,
-  ParagraphInput,
-} from "../lib/speaker-identification";
+import { identifySpeakers, ParagraphInput } from "../lib/pipeline";
 import { pool, q } from "../lib/db";
 import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 
@@ -109,9 +106,7 @@ async function run() {
 
   let completed = 0;
   const tasks = toProcess.map(async ({ row, paragraphs }) => {
-    await identifySpeakers(paragraphs, row.transcript_id, undefined, {
-      skipPropositions: true,
-    });
+    await identifySpeakers(paragraphs, row.transcript_id, undefined);
     completed++;
     console.log(
       `[${completed}/${total}] ✓ Re-identified ${row.entry_id} (${row.transcript_id})`,

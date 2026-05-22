@@ -25,8 +25,6 @@ jobs:
       # is injected by vitest.config.ts; nothing connects).
       - run: pnpm typecheck
       - run: pnpm test
-
-      # Non-blocking: the lint toolchain works again, but the codebase still
-      # has pre-existing react-hooks violations to clear out separately.
+      # Blocking: errors fail the build. The advisory React Compiler rules
+      # (set-state-in-effect, immutability) are configured as warnings.
       - run: pnpm lint
-        continue-on-error: true

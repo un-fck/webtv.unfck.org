@@ -1,21 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AzureOpenAI } from "openai";
-import { analyzePropositions } from "@/lib/speaker-identification";
+import { analyzePropositions } from "@/lib/pipeline";
 import {
   getTranscriptById,
   updateTranscriptContent,
-  updateTranscriptStatus,
+  updateAnalysisStatus,
   tryAcquirePipelineLock,
   releasePipelineLock,
 } from "@/lib/db";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { apiError } from "@/lib/api-error";
+import { requireUser } from "@/lib/auth/require-user";
 
 export async function POST(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    // Analysis is a private feature — only signed-in users may run it.
+    const auth = await requireUser();
+    if (auth.response) return auth.response;
+
     const { id: transcriptId } = await context.params;
 
     if (!transcriptId) {
@@ -47,7 +52,9 @@ export async function POST(
     }
 
     try {
-      await updateTranscriptStatus(transcriptId, "analyzing_propositions");
+      // Analysis runs on its own status axis — the transcript stays
+      // 'completed' and visible to everyone while propositions compute.
+      await updateAnalysisStatus(transcriptId, "analyzing");
 
       const client = new AzureOpenAI({
         apiKey: process.env.AZURE_OPENAI_API_KEY,
@@ -68,12 +75,12 @@ export async function POST(
         propositions,
       });
 
-      await updateTranscriptStatus(transcriptId, "completed");
+      await updateAnalysisStatus(transcriptId, "completed");
       await releasePipelineLock(transcriptId);
 
       return NextResponse.json({ propositions });
     } catch (error) {
-      await updateTranscriptStatus(
+      await updateAnalysisStatus(
         transcriptId,
         "error",
         error instanceof Error ? error.message : "Analysis failed",

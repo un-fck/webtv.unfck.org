@@ -10,7 +10,7 @@ import {
 } from "./transcription-panel";
 import { SpeakerToc } from "./speaker-toc";
 import { PVSpeakerToc } from "./pv-panel";
-import { SiteHeader } from "./SiteHeader";
+import { SiteHeader } from "./site-header";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
 import { useTimezone } from "@/lib/hooks/use-timezone";
@@ -22,12 +22,14 @@ interface VideoPageClientProps {
   kalturaId: string;
   video: Video;
   metadata: VideoMetadata;
+  isLoggedIn: boolean;
 }
 
 export function VideoPageClient({
   kalturaId,
   video,
   metadata,
+  isLoggedIn,
 }: VideoPageClientProps) {
   const { timezone } = useTimezone();
   const [player, setPlayer] = useState<{
@@ -383,6 +385,7 @@ export function VideoPageClient({
               topicCollapsed={topicCollapsed}
               onTopicCollapsedChange={setTopicCollapsed}
               onDataChange={setPanelData}
+              isLoggedIn={isLoggedIn}
               pvSymbol={
                 video.pvAvailable && video.pvSymbol ? video.pvSymbol : undefined
               }

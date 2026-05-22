@@ -6,8 +6,8 @@ import {
   getCachedAvailableDates,
   getCachedFilterOptions,
 } from "@/lib/cached-db";
-import { VideoTable } from "@/components/TranscriptTable";
-import { SiteHeader } from "@/components/SiteHeader";
+import { VideoTable } from "@/components/transcript-table";
+import { SiteHeader } from "@/components/site-header";
 
 export const dynamic = "force-dynamic";
 

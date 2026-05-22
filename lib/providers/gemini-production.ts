@@ -15,7 +15,7 @@ export const geminiProduction: TranscriptionProvider = {
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
-    wordTimestamps: false, // sentence-level interpolation, not real word timestamps
+    wordTimestamps: false, // real per-segment timing, no per-word timestamps
   },
 
   async transcribe(
@@ -34,7 +34,7 @@ export const geminiProduction: TranscriptionProvider = {
       language: opts?.language ?? "en",
       fullText: result.paragraphs.map((p) => p.text).join(" "),
       utterances: result.paragraphs.map((para) => ({
-        speaker: para.words[0]?.speaker ?? "0",
+        speaker: para.speaker ?? para.words?.[0]?.speaker ?? "0",
         start: para.start,
         end: para.end,
         text: para.text,

@@ -19,8 +19,27 @@ Each item lists `path:line` so it can be picked up directly.
 > P1-5 (`KALTURA_PARTNER_ID`/`KALTURA_WIDGET_ID` constants), P1-7 (usage-event
 > JSONL spool), P1-8 (FTS fallback warn), P1-9 (TODO already gone), P2-7 (dev-tool
 > aliases), P2-8 (`normalizeSpeakers` doc reconciled, dead usage key removed).
-> **Deferred:** P1-6 (Gemini word-cursor UI) and the large refactors P2-1/2/3/4/5/6
-> — large surface area, no test coverage; should be dedicated PRs.
+>
+> **Second pass — P2 refactors (behind a Layer 1 + characterization test net):**
+> P2-1 (`speaker-identification.ts` → `lib/pipeline/`), P2-3 (`pv-parser`
+> language patterns → `pv-parser-patterns.ts`), P2-4 (component filenames →
+> kebab-case), P2-5 (Gemini plumbing dedup via `gemini-utils`), P2-6
+> (`error.tsx`/`loading.tsx` boundaries). P2-2 (big component splits) **partly
+> done**: pure logic extracted with unit tests (`pv-reference-linking`,
+> `transcript-formatting`) + component test harness added; the stateful-hook /
+> sub-component decomposition of the three large components remains as dedicated
+> PRs (needs per-component characterization tests first).
+>
+> **Third pass — P1-6 (resolved, pipeline-wide).** Removed all fabricated
+> per-word interpolation. Providers without real word timing (gemini [default],
+> azure-openai, groq-whisper, alibaba, mistral) now carry their real
+> per-segment timestamps as the smallest timed unit; the UI seeks/highlights at
+> the sentence (segment) level instead of showing a drifting word cursor.
+> Providers with real word timing (assemblyai, deepgram, cohere, azure-speech,
+> elevenlabs, google-chirp) are unchanged. The inert `confidence: 0.6` field is
+> gone. See the updated P1-6 entry below.
+>
+> **Deferred:** the remaining P2-2 component decomposition described above.
 
 ---
 
@@ -137,15 +156,33 @@ single source of truth; if the UN ever rotates this, we have to grep.
 **Fix:** export `KALTURA_PARTNER_ID = 2503451` and `KALTURA_WIDGET_ID = "_2503451"`
 from `lib/kaltura.ts` and reuse.
 
-### P1-6. Word timestamps from Gemini are uniformly interpolated
-`lib/gemini-transcription.ts:92` — when the provider doesn't return word-level
-timing, words are spread evenly across the segment with confidence 0.6. The UI
-uses these for active-word highlighting, so during long segments the
-highlighting drifts visibly out of sync. This is a known design tradeoff for
-Gemini; flagging it because it surfaces visibly to users.
+### P1-6. Word timestamps from Gemini are uniformly interpolated — RESOLVED (pipeline-wide)
+**Was:** `lib/gemini-transcription.ts` and `lib/providers/convert.ts` spread
+words evenly across a segment with a fake `confidence: 0.6` when the provider
+returned no word-level timing. The UI used these for active-word highlighting,
+so the cursor drifted visibly. This affected every word-less provider, not just
+Gemini.
 
-**Fix (optional):** when there are no real word timestamps, render at the
-sentence (not word) level rather than show a misleading word cursor.
+**Fixed:** interpolation is removed everywhere. The branch point is the
+presence of real `words` (≡ the `ProviderCapabilities.wordTimestamps` flag):
+
+- Word-less providers (gemini [default], azure-openai, groq-whisper, alibaba,
+  mistral) now carry their real per-segment timestamps. The pipeline keeps each
+  provider segment as a sentence with its real start/end (no `sbd` re-split, no
+  fabricated word timing); same-speaker segments are still grouped into one
+  speaker-turn statement (`lib/pipeline/index.ts` carries a per-segment
+  `segments` list through the merge). Resegmentation is skipped for word-less
+  paragraphs (no timing basis to place a sub-split). The UI
+  (`components/transcript-view.tsx`, `raw-transcript-view.tsx`) seeks and
+  highlights at the sentence/segment level.
+- Real-word providers (assemblyai, deepgram, cohere, azure-speech, elevenlabs,
+  google-chirp) are unchanged: per-word render, active-word underline,
+  click-to-seek.
+
+`RawParagraph.words` is now optional, the inert `confidence` field is dropped
+from stored words, and `ParagraphInput` gained an optional `speaker` (the ASR
+label no longer rides on `words[0].speaker`). Covered by rewritten
+`lib/providers/convert.test.ts` and `lib/pipeline/shared.test.ts`.
 
 ### P1-7. `usage-tracking.ts:38-48` swallows DB errors silently
 Insert errors are caught and logged but never raised. This is intentional —

@@ -11,7 +11,7 @@ const transcript: NormalizedTranscript = JSON.parse(
   ),
 );
 
-describe("toRawParagraphs — interpolation branch (real Gemini transcript)", () => {
+describe("toRawParagraphs — no word timing (real Gemini transcript)", () => {
   const paras = toRawParagraphs(transcript);
 
   it("emits one paragraph per utterance, preserving text and span", () => {
@@ -23,34 +23,21 @@ describe("toRawParagraphs — interpolation branch (real Gemini transcript)", ()
     });
   });
 
-  it("interpolates one word per token, marked with confidence 0.6", () => {
-    paras.forEach((p, i) => {
-      const tokens = transcript.utterances[i].text.split(/\s+/).filter(Boolean);
-      expect(p.words.length).toBe(tokens.length);
-      expect(p.words.every((w) => w.confidence === 0.6)).toBe(true);
-      expect(
-        p.words.every((w) => w.speaker === transcript.utterances[i].speaker),
-      ).toBe(true);
+  it("fabricates no per-word timestamps — words is absent", () => {
+    paras.forEach((p) => {
+      expect(p.words).toBeUndefined();
     });
   });
 
-  it("produces monotonic, non-overlapping word timings within the span", () => {
-    for (const p of paras) {
-      expect(p.words[0].start).toBe(p.start);
-      for (let i = 0; i < p.words.length; i++) {
-        expect(p.words[i].end).toBeGreaterThanOrEqual(p.words[i].start);
-        if (i > 0) {
-          expect(p.words[i].start).toBe(p.words[i - 1].end);
-        }
-      }
-      expect(p.words[p.words.length - 1].end).toBeLessThanOrEqual(p.end + 1);
-    }
+  it("carries the ASR speaker label on the paragraph", () => {
+    paras.forEach((p, i) => {
+      expect(p.speaker).toBe(transcript.utterances[i].speaker);
+    });
   });
 });
 
 describe("toRawParagraphs — real word-timestamp branch", () => {
-  // Minimal structural case: providers that supply real word timing should
-  // have it passed through verbatim (confidence preserved, not 0.6).
+  // Providers that supply real word timing have it passed through verbatim.
   it("passes provider word timestamps through unchanged", () => {
     const withWords: NormalizedTranscript = {
       provider: "assemblyai",
@@ -73,9 +60,9 @@ describe("toRawParagraphs — real word-timestamp branch", () => {
     };
     const [p] = toRawParagraphs(withWords);
     expect(p.words).toHaveLength(2);
-    expect(p.words[0]).toMatchObject({ text: "hello", confidence: 0.99 });
-    expect(p.words[1]).toMatchObject({ start: 900, end: 1800 });
+    expect(p.words![0]).toMatchObject({ text: "hello", start: 0, end: 800 });
+    expect(p.words![1]).toMatchObject({ start: 900, end: 1800 });
     // Speaker falls back to the utterance speaker when the word lacks one.
-    expect(p.words[0].speaker).toBe("A");
+    expect(p.words![0].speaker).toBe("A");
   });
 });

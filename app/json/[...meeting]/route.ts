@@ -83,12 +83,12 @@ export async function GET(
       return response;
     }
 
-    if (transcript.status !== "completed") {
+    if (transcript.transcription_status !== "completed") {
       const response = NextResponse.json({
         video,
         metadata,
         transcript: {
-          status: transcript.status,
+          status: transcript.transcription_status,
           transcriptId: transcript.transcript_id,
         },
         message: "Transcript not completed",

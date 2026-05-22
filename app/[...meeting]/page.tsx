@@ -5,6 +5,7 @@ import { VideoPageClient } from "@/components/video-page-client";
 import { extractKalturaId } from "@/lib/kaltura";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { symbolFromSlug } from "@/lib/meeting-slug";
+import { getCurrentUser } from "@/lib/auth/service";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +68,7 @@ export default async function MeetingPage({
 
   const video = recordToVideo(record, hasTranscript);
   const metadata = await getVideoMetadata(record.asset_id);
+  const isLoggedIn = !!(await getCurrentUser());
 
   return (
     <main className="min-h-screen bg-background">
@@ -74,6 +76,7 @@ export default async function MeetingPage({
         kalturaId={kalturaId}
         video={video}
         metadata={metadata}
+        isLoggedIn={isLoggedIn}
       />
     </main>
   );

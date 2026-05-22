@@ -7,14 +7,17 @@ import {
   saveTranscript,
   deleteTranscriptsForEntry,
   getTranscriptById,
-  updateTranscriptStatus,
+  getActiveTranscriptByKalturaId,
+  updateTranscriptionStatus,
   tryAcquirePipelineLock,
   releasePipelineLock,
-  type TranscriptStatus,
+  withVideoLock,
+  type TranscriptionStatus,
+  type AnalysisStatus,
   type TranscriptContent,
   type RawParagraph,
 } from "./db";
-import { identifySpeakers } from "./speaker-identification";
+import { identifySpeakers } from "./pipeline";
 import type { SpeakerMapping } from "./speakers";
 import {
   trackGeminiTranscription,
@@ -29,10 +32,11 @@ import { getSTTProvider } from "./providers/config";
 import { toRawParagraphs } from "./providers/convert";
 import type { GeminiTranscriptionResult } from "./gemini-transcription";
 
-export { type TranscriptStatus } from "./db";
+export { type TranscriptionStatus } from "./db";
 
 export interface PollResult {
-  stage: TranscriptStatus;
+  stage: TranscriptionStatus;
+  analysis_status?: AnalysisStatus;
   raw_paragraphs?: RawParagraph[];
   statements?: TranscriptContent["statements"];
   topics?: TranscriptContent["topics"];
@@ -157,9 +161,10 @@ export async function pollTranscription(
   const transcript = await getTranscriptById(transcriptId);
   if (!transcript) throw new Error("Transcript not found");
 
-  if (transcript.status === "completed") {
+  if (transcript.transcription_status === "completed") {
     return {
       stage: "completed",
+      analysis_status: transcript.analysis_status,
       raw_paragraphs: transcript.content.raw_paragraphs,
       statements: transcript.content.statements,
       topics: transcript.content.topics,
@@ -167,9 +172,10 @@ export async function pollTranscription(
     };
   }
 
-  if (transcript.status === "error") {
+  if (transcript.transcription_status === "error") {
     return {
       stage: "error",
+      analysis_status: transcript.analysis_status,
       error_message: transcript.error_message || "Unknown error",
       raw_paragraphs: transcript.content.raw_paragraphs,
       statements: transcript.content.statements,
@@ -179,9 +185,8 @@ export async function pollTranscription(
   }
 
   if (
-    transcript.status === "identifying_speakers" ||
-    transcript.status === "analyzing_topics" ||
-    transcript.status === "analyzing_propositions"
+    transcript.transcription_status === "identifying_speakers" ||
+    transcript.transcription_status === "analyzing_topics"
   ) {
     // Try to restart stuck stages by re-acquiring a stale lock
     const paragraphs = transcript.content.raw_paragraphs;
@@ -189,12 +194,12 @@ export async function pollTranscription(
       const acquired = await tryAcquirePipelineLock(transcriptId);
       if (acquired) {
         plog(
-          `[Pipeline] Re-entering stuck stage ${transcript.status} for ${transcriptId}`,
+          `[Pipeline] Re-entering stuck stage ${transcript.transcription_status} for ${transcriptId}`,
         );
         runAnalysisPipeline(transcriptId, paragraphs, undefined).catch(
           (err) => {
             perr("[Pipeline] Re-entry error:", err);
-            updateTranscriptStatus(
+            updateTranscriptionStatus(
               transcriptId,
               "error",
               err instanceof Error ? err.message : "Re-entry failed",
@@ -206,7 +211,8 @@ export async function pollTranscription(
     }
 
     return {
-      stage: transcript.status,
+      stage: transcript.transcription_status,
+      analysis_status: transcript.analysis_status,
       raw_paragraphs: transcript.content.raw_paragraphs,
       statements: transcript.content.statements,
       topics: transcript.content.topics,
@@ -230,7 +236,7 @@ async function runTranscriptionPipeline(
 ): Promise<void> {
   try {
     const provider = getSTTProvider();
-    await updateTranscriptStatus(transcriptId, "transcribing");
+    await updateTranscriptionStatus(transcriptId, "transcribing");
     plog(
       `[Pipeline] Starting transcription with ${provider.name} for ${transcriptId}`,
     );
@@ -296,7 +302,7 @@ async function runTranscriptionPipeline(
       runAnalysisPipeline(transcriptId, paragraphs, speakerMapping).catch(
         (err) => {
           perr("[Pipeline] Analysis error:", err);
-          updateTranscriptStatus(
+          updateTranscriptionStatus(
             transcriptId,
             "error",
             err instanceof Error ? err.message : "Analysis failed",
@@ -307,7 +313,7 @@ async function runTranscriptionPipeline(
     }
   } catch (err) {
     perr("[Pipeline] Error:", err);
-    await updateTranscriptStatus(
+    await updateTranscriptionStatus(
       transcriptId,
       "error",
       err instanceof Error ? err.message : "Transcription failed",
@@ -322,14 +328,12 @@ async function runAnalysisPipeline(
   speakerMapping?: SpeakerMapping,
 ): Promise<void> {
   try {
-    await updateTranscriptStatus(transcriptId, "identifying_speakers");
-    await identifySpeakers(paragraphs, transcriptId, speakerMapping, {
-      skipPropositions: true,
-    });
-    await updateTranscriptStatus(transcriptId, "completed");
+    await updateTranscriptionStatus(transcriptId, "identifying_speakers");
+    await identifySpeakers(paragraphs, transcriptId, speakerMapping);
+    await updateTranscriptionStatus(transcriptId, "completed");
     await releasePipelineLock(transcriptId);
   } catch (err) {
-    await updateTranscriptStatus(
+    await updateTranscriptionStatus(
       transcriptId,
       "error",
       err instanceof Error ? err.message : "Analysis pipeline failed",
@@ -385,16 +389,9 @@ export async function runSpeakerIdentification(
   }
 
   try {
-    await updateTranscriptStatus(transcriptId, "identifying_speakers");
-    const mapping = await identifySpeakers(
-      paragraphs,
-      transcriptId,
-      undefined,
-      {
-        skipPropositions: true,
-      },
-    );
-    await updateTranscriptStatus(transcriptId, "completed");
+    await updateTranscriptionStatus(transcriptId, "identifying_speakers");
+    const mapping = await identifySpeakers(paragraphs, transcriptId, undefined);
+    await updateTranscriptionStatus(transcriptId, "completed");
     await releasePipelineLock(transcriptId);
 
     const updated = await getTranscriptById(transcriptId);
@@ -405,7 +402,7 @@ export async function runSpeakerIdentification(
       topics: updated?.content.topics || {},
     };
   } catch (error) {
-    await updateTranscriptStatus(
+    await updateTranscriptionStatus(
       transcriptId,
       "error",
       error instanceof Error ? error.message : "Pipeline failed",
@@ -425,7 +422,12 @@ export async function submitTranscription(
     force?: boolean;
     existingTranscriptId?: string;
   } = {},
-): Promise<{ entryId: string; transcriptId: string }> {
+): Promise<{
+  entryId: string;
+  transcriptId: string;
+  stage: TranscriptionStatus;
+  started: boolean;
+}> {
   const lang = options.language || "en";
   const kalturaLang = bcp47ToKalturaName(lang);
   const { entryId, audioUrl } = await getKalturaAudioUrl(
@@ -438,34 +440,64 @@ export async function submitTranscription(
   }
 
   const provider = getSTTProvider();
-  const transcriptId =
-    options.existingTranscriptId ?? `${provider.name}-${randomUUID()}`;
 
-  await saveTranscript(
-    entryId,
-    transcriptId,
-    null,
-    null,
-    audioUrl,
-    "transcribing",
-    lang,
-    {
-      statements: [],
-      topics: {},
-    },
-    kalturaId,
-  );
-
-  runTranscriptionPipeline(
-    transcriptId,
-    entryId,
-    audioUrl,
-    options,
-    lang,
-    kalturaId,
-  ).catch((err) => {
-    perr("[Pipeline] Unhandled error:", err);
+  // Serialize the start decision per video+language so two simultaneous
+  // requests can't each create a fresh transcript row. Reuse an existing
+  // in-progress/completed transcript instead of starting a duplicate — unless
+  // forcing, or resuming a specific (scheduled) row by id.
+  const result = await withVideoLock(kalturaId, lang, async (client) => {
+    if (!options.force && !options.existingTranscriptId) {
+      const existing = await getActiveTranscriptByKalturaId(
+        kalturaId,
+        lang,
+        client,
+      );
+      if (existing) {
+        return {
+          transcriptId: existing.transcript_id,
+          stage: existing.transcription_status,
+          started: false,
+        };
+      }
+    }
+    const transcriptId =
+      options.existingTranscriptId ?? `${provider.name}-${randomUUID()}`;
+    await saveTranscript(
+      entryId,
+      transcriptId,
+      null,
+      null,
+      audioUrl,
+      "transcribing",
+      lang,
+      { statements: [], topics: {} },
+      kalturaId,
+      client,
+    );
+    return {
+      transcriptId,
+      stage: "transcribing" as TranscriptionStatus,
+      started: true,
+    };
   });
 
-  return { entryId, transcriptId };
+  if (result.started) {
+    runTranscriptionPipeline(
+      result.transcriptId,
+      entryId,
+      audioUrl,
+      options,
+      lang,
+      kalturaId,
+    ).catch((err) => {
+      perr("[Pipeline] Unhandled error:", err);
+    });
+  }
+
+  return {
+    entryId,
+    transcriptId: result.transcriptId,
+    stage: result.stage,
+    started: result.started,
+  };
 }

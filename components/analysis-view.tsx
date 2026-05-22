@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { SpeakerMapping } from "@/lib/speakers";
-import type { Proposition } from "@/lib/speaker-identification";
+import type { Proposition } from "@/lib/pipeline";
 
 const STANCE_COLORS: Record<
   string,

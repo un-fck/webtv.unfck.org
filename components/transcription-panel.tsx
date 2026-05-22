@@ -7,10 +7,11 @@ import { getCountryName } from "@/lib/country-lookup";
 import { BarChart3 } from "lucide-react";
 import { PVPanel, type PVSpeakerEntry } from "@/components/pv-panel";
 import ExcelJS from "exceljs";
-import type { Proposition } from "@/lib/speaker-identification";
+import type { Proposition } from "@/lib/pipeline";
 import { StageProgress, type Stage } from "@/components/stage-progress";
 import { AnalysisView } from "@/components/analysis-view";
 import { usePlaybackTracking } from "@/lib/hooks/use-playback-tracking";
+import { formatTimecode, formatSpeakerText } from "@/lib/transcript-formatting";
 import {
   TranscriptToolbar,
   type ViewMode,
@@ -86,6 +87,7 @@ interface TranscriptionPanelProps {
   topicCollapsed: boolean;
   onTopicCollapsedChange: (collapsed: boolean) => void;
   onDataChange?: (data: TranscriptionPanelData) => void;
+  isLoggedIn: boolean;
   pvSymbol?: string;
 }
 
@@ -133,6 +135,7 @@ export function TranscriptionPanel({
   topicCollapsed,
   onTopicCollapsedChange,
   onDataChange,
+  isLoggedIn,
   pvSymbol,
 }: TranscriptionPanelProps) {
   const [segments, setSegments] = useState<SpeakerSegment[] | null>(null);
@@ -180,35 +183,10 @@ export function TranscriptionPanel({
     stage !== "completed" &&
     stage !== "error";
 
-  const formatTime = (seconds: number | null | undefined): string => {
-    if (seconds === null || seconds === undefined || isNaN(seconds)) return "";
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-    }
-    return `${minutes}:${secs.toString().padStart(2, "0")}`;
-  };
+  const formatTime = formatTimecode;
 
-  const getSpeakerText = (statementIndex: number | undefined): string => {
-    if (statementIndex === undefined) return "Speaker";
-    const info = speakerMappings[statementIndex.toString()];
-    if (
-      !info ||
-      (!info.affiliation && !info.group && !info.function && !info.name)
-    ) {
-      return `Speaker ${statementIndex + 1}`;
-    }
-    const parts: string[] = [];
-    if (info.affiliation)
-      parts.push(countryNames.get(info.affiliation) || info.affiliation);
-    if (info.group) parts.push(info.group);
-    if (info.function && info.function.toLowerCase() !== "representative")
-      parts.push(info.function);
-    if (info.name) parts.push(info.name);
-    return parts.join(" · ");
-  };
+  const getSpeakerText = (statementIndex: number | undefined): string =>
+    formatSpeakerText(statementIndex, speakerMappings, countryNames);
 
   const seekToTimestamp = (timestamp: number) => {
     if (!player) return;
@@ -614,6 +592,10 @@ export function TranscriptionPanel({
               setSpeakerMappings(data.speakerMappings);
               await loadCountryNames(data.speakerMappings);
             }
+            // Analysis runs on its own axis — surface in-progress analysis so a
+            // viewer who loads mid-analysis sees "Analyzing…" rather than the
+            // Run button (and the transcript itself stays visible).
+            setAnalyzingPropositions(data.analysis_status === "analyzing");
             setStage("completed");
             onLanguagesRefresh?.();
           } else if (data.raw_paragraphs) {
@@ -627,6 +609,24 @@ export function TranscriptionPanel({
                 setStage("error");
               });
             }
+          } else if (data.stage === "scheduled") {
+            // Queued — the cron starts it once audio is available. Show the
+            // queued state to everyone but don't poll (nothing progresses yet).
+            setStage("scheduled");
+          } else if (
+            data.stage &&
+            data.stage !== "completed" &&
+            data.transcriptId
+          ) {
+            // Transcription is in progress (started by anyone) — show its stage
+            // and poll, so this viewer doesn't start a duplicate.
+            setStage(data.stage);
+            pollForCompletion(data.transcriptId).catch((err) => {
+              setErrorMessage(
+                err instanceof Error ? err.message : "Pipeline failed",
+              );
+              setStage("error");
+            });
           }
         }
       } catch (err) {
@@ -714,6 +714,7 @@ export function TranscriptionPanel({
         hasRawParagraphs={!!rawParagraphs}
         hasPropositions={propositions.length > 0}
         hasTopics={Object.keys(topics).length > 0}
+        isLoggedIn={isLoggedIn}
         checking={checking}
         stage={stage}
         videoStatus={video.status}
@@ -732,6 +733,16 @@ export function TranscriptionPanel({
         </div>
       )}
 
+      {stage === "scheduled" && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60" />
+          <span>
+            Queued for transcription — it will start automatically once the
+            recording is available.
+          </span>
+        </div>
+      )}
+
       {isLoading && <StageProgress currentStage={stage} />}
 
       {stage === "error" && (
@@ -742,7 +753,7 @@ export function TranscriptionPanel({
         />
       )}
 
-      {viewMode === "analysis" && propositions.length > 0 && (
+      {isLoggedIn && viewMode === "analysis" && propositions.length > 0 && (
         <AnalysisView
           propositions={propositions}
           statements={statements}
@@ -752,7 +763,8 @@ export function TranscriptionPanel({
         />
       )}
 
-      {viewMode === "analysis" &&
+      {isLoggedIn &&
+        viewMode === "analysis" &&
         propositions.length === 0 &&
         stage === "completed" && (
           <div className="mt-8 flex flex-col items-center gap-4 text-center">

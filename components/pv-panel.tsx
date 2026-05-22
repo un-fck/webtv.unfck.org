@@ -10,6 +10,7 @@ import {
 } from "react";
 import { ChevronDown, ChevronRight, AudioLines } from "lucide-react";
 import type { PVDocument, PVTurn } from "@/lib/pv-parser";
+import { findReferences } from "@/lib/pv-reference-linking";
 
 export interface PVSpeakerEntry {
   speaker: string;
@@ -48,62 +49,11 @@ function formatTime(ms: number) {
 }
 
 // ── Reference linking ──────────────────────────────────────────────────
-
-const REFERENCE_PATTERNS = [
-  // Resolution references: "resolution 2231 (2015)" → S/RES/2231(2015)
-  {
-    regex: /resolution\s+(\d+)\s*\((\d{4})\)/gi,
-    url: (_match: string, num: string, year: string) =>
-      `https://undocs.org/S/RES/${num}(${year})`,
-    label: (match: string) => match,
-  },
-  // Document symbols: S/PV.10124, A/RES/79/1, S/2026/8, A/79/L.1, E/2024/SR.10, A/C.1/79/PV.7, A/ES-11/PV.23
-  {
-    regex:
-      /\b([SAEC]\/(?:[\w.-]+\/)*[\w.-]+\.\d+|[SAEC]\/(?:[\w.-]+\/)*\d+(?:\/[\w.-]+)*)\b/g,
-    url: (match: string) => `https://undocs.org/${match}`,
-    label: (match: string) => match,
-  },
-];
+// Matching logic lives in lib/pv-reference-linking.ts; this renders the links.
 
 function linkifyReferences(text: string): ReactNode[] {
-  // Build a combined regex from all patterns
-  const allMatches: {
-    start: number;
-    end: number;
-    url: string;
-    label: string;
-  }[] = [];
-
-  for (const pattern of REFERENCE_PATTERNS) {
-    let m: RegExpExecArray | null;
-    const re = new RegExp(pattern.regex.source, pattern.regex.flags);
-    while ((m = re.exec(text)) !== null) {
-      const url =
-        typeof pattern.url === "function"
-          ? pattern.url(m[0], m[1], m[2])
-          : pattern.url;
-      allMatches.push({
-        start: m.index,
-        end: m.index + m[0].length,
-        url,
-        label: pattern.label(m[0]),
-      });
-    }
-  }
-
-  if (allMatches.length === 0) return [text];
-
-  // Sort by position, remove overlaps (keep earlier/longer)
-  allMatches.sort((a, b) => a.start - b.start || b.end - a.end);
-  const filtered: typeof allMatches = [];
-  let lastEnd = 0;
-  for (const m of allMatches) {
-    if (m.start >= lastEnd) {
-      filtered.push(m);
-      lastEnd = m.end;
-    }
-  }
+  const filtered = findReferences(text);
+  if (filtered.length === 0) return [text];
 
   const result: ReactNode[] = [];
   let cursor = 0;

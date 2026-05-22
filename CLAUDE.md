@@ -2,6 +2,17 @@
 
 Agent instructions for working with this codebase.
 
+## Think before coding
+
+Don't assume, don't hide confusion, surface tradeoffs. Before implementing:
+
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them — don't pick one silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+(For trivial tasks, use judgment — this biases toward caution over speed.)
+
 ## Next.js: ALWAYS read docs before coding
 
 Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
@@ -28,8 +39,8 @@ pnpm compare-transcribe -- <assetId|entryId> [provider]  # One-off provider comp
 tsx scripts/test-pv-alignment.ts     # Validate PV alignment timestamps
 tsx scripts/test-pv-parser.ts        # Validate PV parser across 6 languages
 
-# Schema migrations (apply once per database)
-psql "$DATABASE_URL" -f sql/migrations/001_add_kaltura_id.sql
+# Schema migrations (apply once per database, in order; see sql/migrations/)
+psql "$DATABASE_URL" -f sql/migrations/<NNN_name>.sql
 
 # Eval system (independent from main app, see eval/README.md)
 pnpm eval -- --symbol=A/... --providers=assemblyai,gemini --languages=en
@@ -53,6 +64,8 @@ Copy `.env.example` → `.env.local` and fill in values.
 - `AZURE_OPENAI_ENDPOINT` — speaker identification, topics, propositions
 - `AZURE_OPENAI_API_KEY` — speaker identification, topics, propositions
 - `AZURE_OPENAI_API_VERSION` — defaults in `.env.example` (e.g. `2025-03-01-preview`)
+- `AUTH_SECRET` — HMAC secret signing login session cookies (`openssl rand -hex 32`). Required in production; falls back to a dev default otherwise.
+- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` — outbound email for magic-link login, which gates the private **analysis** feature. `SMTP_FROM` falls back to `SMTP_USER`; `SMTP_HOST` defaults to `smtp.mailbox.org`.
 
 **Production only:**
 
@@ -98,13 +111,13 @@ See `docs/ai.md` for the full pipeline with model details and design decisions.
 Triggered from the video page UI (`POST /api/transcripts`) or via the scheduled-processing cron (`/api/cron/process-scheduled`):
 
 1. **Transcribe** — provider-agnostic via `lib/providers/` (default `gemini`). Audio is downloaded from Kaltura, uploaded to the provider, and transcribed with speaker diarization. Long audio (>10 min) is chunked by the Gemini provider and stitched.
-2. **Speaker identification + resegmentation** — `lib/speaker-identification.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping.
+2. **Speaker identification + resegmentation** — `lib/pipeline/index.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping. (Pipeline stages live in `lib/pipeline/`.)
 3. **Topic definition** — identifies 5–10 substantive policy topics across the meeting (GPT-5.4).
 4. **Sentence tagging** — tags each non-chair sentence with 0–3 topic keys (GPT-5.4-nano, batched; rate-limited via Bottleneck — 20 concurrent / 10 per sec).
-5. **Proposition analysis** *(on demand)* — `POST /api/transcripts/[id]/analysis` identifies stakeholder positions on concrete propositions, with fuzzy-match evidence verification.
+5. **Proposition analysis** *(always on demand, never in the main pipeline)* — `POST /api/transcripts/[id]/analysis` identifies stakeholder positions on concrete propositions, with fuzzy-match evidence verification. It is tracked on a separate `analysis_status` axis and **never** moves the transcript off `completed`, so running it doesn't hide the transcript from other viewers.
 6. **PV alignment** *(separate)* — `POST /api/pv/align` aligns an official UN verbatim record with the audio for timestamped speaker turns.
 
-Stages 2–4 run in `runAnalysisPipeline` (`lib/transcription.ts:316`) inside `identifySpeakers()`. The status column transitions `transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed` (or `error`); analyzing_propositions is only reached when proposition analysis runs.
+Stages 2–4 run in `runAnalysisPipeline` (`lib/transcription.ts`) inside `identifySpeakers()`. **Two status axes** (since migration 003): `transcription_status` transitions `scheduled → transcribing → identifying_speakers → analyzing_topics → completed` (or `error`); `analysis_status` (`none | analyzing | completed | error`) is driven only by the on-demand analysis route. **Viewability = content exists** (a transcript with `statements` is shown to everyone regardless of any later/in-progress stage), so the cache/check lookups use `getActiveTranscriptByKalturaId()` (latest non-error row) rather than keying strictly on `completed`. In-progress and scheduled transcripts are surfaced to all viewers (with their stage) via the same polling, so others see live progress instead of a duplicate Transcribe button. Starting transcription/scheduling is idempotent per video+language via `withVideoLock()` (a `pg_advisory_xact_lock`), so simultaneous clicks reuse one transcript row.
 
 The provider is selected via `STT_PROVIDER` (default `gemini`). Analysis model names are configurable via `STT_ANALYSIS_MODEL` / `_MINI` / `_NANO`. Provider implementations live in `lib/providers/` (shared with the eval system).
 
@@ -122,7 +135,7 @@ The provider is selected via `STT_PROVIDER` (default `gemini`). Analysis model n
 **Tables:**
 
 - `videos` — scraped video metadata, keyed by `asset_id`. Columns: `entry_id`, `title`, `clean_title`, `date`, `scheduled_time`, `duration`, `url`, `body`, `category`, `event_code`, `event_type`, `session_number`, `part_number`, `pv_symbol`, `pv_available`, `pv_checked_at`, `slug`, `last_seen`, `created_at`, `updated_at`, plus a generated `fts_vec tsvector` over `COALESCE(clean_title, title)`. Indexes: unique on `slug`; btree on `entry_id`, `date`, `last_seen`, `body`, `category`; GIN on `fts_vec`; GIN trigram on the title fallback.
-- `transcripts` — transcription results, keyed by `transcript_id`. Status lifecycle: `scheduled → transcribing → identifying_speakers → analyzing_topics → analyzing_propositions → completed | error`. Has `pipeline_lock` column for concurrency control (30-min stale-lock timeout, refreshed by a heartbeat — `touchPipelineLock()` — at each pipeline stage boundary and throttled during the long resegmentation pass, so a job still making progress isn't re-entered). No FK to `videos`; the join is via `entry_id`.
+- `transcripts` — transcription results, keyed by `transcript_id`. Two status columns: `transcription_status` (`scheduled → transcribing → identifying_speakers → analyzing_topics → completed | error`) and `analysis_status` (`none | analyzing | completed | error`, for on-demand proposition analysis only). Has `pipeline_lock` column for concurrency control (30-min stale-lock timeout, refreshed by a heartbeat — `touchPipelineLock()` — at each pipeline stage boundary and throttled during the long resegmentation pass, so a job still making progress isn't re-entered). No FK to `videos`; the join is via `entry_id`.
 - `speaker_mappings` — AI-resolved speaker info per transcript (name, function, affiliation, group), one row per `transcript_id` with a JSONB `mapping` column.
 - `processing_usage_events` — per-operation API cost tracking (provider, stage, operation, status, model, tokens, hours, rate card, USD-derivable). 33 columns, SERIAL PK.
 - `pv_contents` — cached PV/SR document content, composite PK `(pv_symbol, language)`, JSONB `content` plus `fetched_at` / `parsed_at`. Populated by `app/api/pv/route.ts`.
@@ -173,9 +186,9 @@ Cron schedule (`vercel.json`): `process-scheduled` every 5 min, `sync-videos` ev
 
 Slug logic lives in `lib/meeting-slug.ts` with bidirectional conversion (`slugFromSymbol` / `symbolFromSlug`).
 
-**Components** (file naming is intentionally mixed PascalCase / kebab-case — match neighbours when editing, don't bulk-rename):
+**Components** (file naming is kebab-case throughout; exported component identifiers stay PascalCase, e.g. `transcript-table.tsx` exports `VideoTable`):
 
-- `components/TranscriptTable.tsx` — main schedule table (client, TanStack Table). Column filters (date popover, status, body, category, text search), pagination, scheduled-view toggle, search-archive mode.
+- `components/transcript-table.tsx` — main schedule table (client, TanStack Table), exports `VideoTable`. Column filters (date popover, status, body, category, text search), pagination, scheduled-view toggle, search-archive mode.
 - `components/transcription-panel.tsx` — orchestrates the transcribe → poll → display lifecycle, language switching, topic/proposition state.
 - `components/transcript-view.tsx`, `transcript-toolbar.tsx`, `raw-transcript-view.tsx` — transcript rendering surfaces.
 - `components/speaker-toc.tsx` — speaker table of contents.
@@ -184,13 +197,12 @@ Slug logic lives in `lib/meeting-slug.ts` with bidirectional conversion (`slugFr
 - `components/stage-progress.tsx` — pipeline progress indicator.
 - `components/video-page-client.tsx` — wraps video page client interactions (player docking, language selection, panels).
 - `components/video-player.tsx` — Kaltura embedded player (loads Kaltura SDK dynamically).
-- `components/SiteHeader.tsx` — header with `home` and `nav` variants.
-- `components/NavMenu.tsx`, `components/TimezonePicker.tsx`, `components/AnimatedCornerLogo.tsx` — header chrome.
+- `components/site-header.tsx` — header with `home` and `nav` variants (exports `SiteHeader`).
+- `components/nav-menu.tsx`, `components/timezone-picker.tsx`, `components/animated-corner-logo.tsx` — header chrome.
 - `components/ui/` — shadcn primitives (button, calendar, popover, switch, tooltip).
 
 **Hooks (`lib/hooks/`):**
 
-- `use-transcript.ts` — transcript state machine (statements, segments, speakers, topics, propositions) and API interactions (transcribe, poll, schedule, analyze).
 - `use-playback-tracking.ts` — rAF-based playback position tracking; computes active segment/statement/paragraph/sentence/word indices.
 - `use-timezone.tsx` — timezone context for date/time formatting.
 
@@ -216,4 +228,3 @@ Benchmarks ~12 STT providers (registered in `lib/providers/registry.ts`) against
 - **Path alias**: `@/*` maps to project root (see `tsconfig.json`)
 - **Vercel cron**: configured in `vercel.json`, authenticated via `CRON_SECRET` Bearer token
 - **Two ID systems**: Asset IDs (UN Web TV URLs, DB primary key) vs Kaltura entry IDs (player/audio). Always be clear which one you're working with
-- **Component file naming is intentionally mixed** (`TranscriptTable.tsx` vs `transcription-panel.tsx`) — match neighbours when editing, don't bulk-rename

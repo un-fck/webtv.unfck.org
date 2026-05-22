@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { NavMenu } from "@/components/NavMenu";
-import { TimezonePicker } from "@/components/TimezonePicker";
+import { TimezonePicker } from "@/components/timezone-picker";
+import { AuthControl } from "@/components/auth-control";
 
 export function SiteHeader() {
   return (
@@ -19,19 +19,25 @@ export function SiteHeader() {
             className="h-8 w-auto shrink-0"
           />
           <div className="h-8 w-px shrink-0 bg-border" />
-          <div className="flex items-end gap-2">
+          <div className="flex items-center gap-2">
             <span className="text-2xl tracking-tight text-foreground">
               <span className="font-bold">WebTV</span>
               <span className="font-normal"> Transcripts</span>
             </span>
-            <span className="mb-1 self-start rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-[8pt] font-bold tracking-wide text-un-blue uppercase">
+            <span className="rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-[8pt] font-bold tracking-wide text-un-blue uppercase">
               Public Preview
             </span>
           </div>
         </Link>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-4">
           <TimezonePicker />
-          <NavMenu />
+          <Link
+            href="/about"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            About
+          </Link>
+          <AuthControl />
         </div>
       </div>
     </header>

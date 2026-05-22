@@ -25,6 +25,7 @@ interface TranscriptToolbarProps {
   hasRawParagraphs: boolean;
   hasPropositions: boolean;
   hasTopics: boolean;
+  isLoggedIn: boolean;
   checking: boolean;
   stage: Stage;
   videoStatus?: string;
@@ -47,6 +48,7 @@ export function TranscriptToolbar({
   hasRawParagraphs,
   hasPropositions,
   hasTopics,
+  isLoggedIn,
   checking,
   stage,
   videoStatus,
@@ -95,6 +97,11 @@ export function TranscriptToolbar({
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 4000);
   };
+
+  // View tabs that will actually render: Transcript (always) + Analysis
+  // (signed-in only) + Verbatim/Summary record (when a PV symbol exists).
+  // Hide the toggle entirely when it would offer only a single option.
+  const viewTabCount = 1 + (isLoggedIn ? 1 : 0) + (pvSymbol ? 1 : 0);
 
   return (
     <div className="mb-3 flex items-center gap-3">
@@ -163,53 +170,56 @@ export function TranscriptToolbar({
         </div>
       )}
 
-      {(pvSymbol || (hasSegments && (hasPropositions || hasTopics))) && (
-        <div className="flex rounded-md border border-border bg-muted">
-          <button
-            onClick={() => onViewModeChange("transcript")}
-            className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
-              viewMode === "transcript"
-                ? "bg-background text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <FileText className="h-3 w-3" />
-            Transcript
-          </button>
-          <button
-            onClick={() => onViewModeChange("analysis")}
-            className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
-              viewMode === "analysis"
-                ? "bg-background text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            disabled={stage !== "completed" && !hasPropositions}
-            title={
-              stage !== "completed" && !hasPropositions
-                ? "Transcription must complete before analysis"
-                : undefined
-            }
-          >
-            <BarChart3 className="h-3 w-3" />
-            Analysis
-          </button>
-          {pvSymbol && (
+      {(pvSymbol || (hasSegments && (hasPropositions || hasTopics))) &&
+        viewTabCount >= 2 && (
+          <div className="flex rounded-md border border-border bg-muted">
             <button
-              onClick={() => onViewModeChange("pv")}
+              onClick={() => onViewModeChange("transcript")}
               className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
-                viewMode === "pv"
+                viewMode === "transcript"
                   ? "bg-background text-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <BookOpen className="h-3 w-3" />
-              {pvSymbol?.includes("/SR.")
-                ? "Summary Record"
-                : "Verbatim Record"}
+              <FileText className="h-3 w-3" />
+              Transcript
             </button>
-          )}
-        </div>
-      )}
+            {isLoggedIn && (
+              <button
+                onClick={() => onViewModeChange("analysis")}
+                className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
+                  viewMode === "analysis"
+                    ? "bg-background text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                disabled={stage !== "completed" && !hasPropositions}
+                title={
+                  stage !== "completed" && !hasPropositions
+                    ? "Transcription must complete before analysis"
+                    : undefined
+                }
+              >
+                <BarChart3 className="h-3 w-3" />
+                Analysis
+              </button>
+            )}
+            {pvSymbol && (
+              <button
+                onClick={() => onViewModeChange("pv")}
+                className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
+                  viewMode === "pv"
+                    ? "bg-background text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <BookOpen className="h-3 w-3" />
+                {pvSymbol?.includes("/SR.")
+                  ? "Summary Record"
+                  : "Verbatim Record"}
+              </button>
+            )}
+          </div>
+        )}
 
       <div className="ml-auto flex gap-2">
         {!hasSegments && !hasRawParagraphs && !checking && stage === "idle" && (

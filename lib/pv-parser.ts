@@ -5,6 +5,16 @@
 import * as pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.mjs";
 (globalThis as Record<string, unknown>).pdfjsWorker = pdfjsWorker;
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import {
+  type LangCode,
+  LANG_HINTS,
+  SPEAKER_PATTERNS,
+  AR_SPEAKER_WITH_COUNTRY,
+  AR_SPEAKER_NO_COUNTRY,
+  SPOKEN_LANG_PATTERNS,
+  PROCEDURAL_PARAGRAPH_PATTERNS,
+  PROCEDURAL_PATTERNS,
+} from "./pv-parser-patterns";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -39,30 +49,9 @@ export interface PVTurn {
 }
 
 // ── Language detection ─────────────────────────────────────────────────
-
-const LANG_HINTS: Array<{ lang: string; pattern: RegExp }> = [
-  {
-    lang: "fr",
-    pattern:
-      /Le Président|La Présidente|Conseil de sécurité|Conseil économique et social/,
-  },
-  {
-    lang: "es",
-    pattern:
-      /El Presidente|La Presidenta|Consejo de Seguridad|Consejo Económico y Social/,
-  },
-  {
-    lang: "ru",
-    pattern: /Председатель|Совет Безопасности|Экономический и Социальный Совет/,
-  },
-  { lang: "zh", pattern: /安全理事会|主席|经济及社会理事会/ },
-  { lang: "ar", pattern: /مجلس الأمن|الرئيس|المجلس الاقتصادي والاجتماعي/ },
-  {
-    lang: "en",
-    pattern:
-      /Security Council|General Assembly|Economic and Social Council|The President/,
-  },
-];
+//
+// Per-language regex patterns live in `pv-parser-patterns.ts`; this file is the
+// dispatcher that selects patterns by language code.
 
 function detectLanguage(text: string): string {
   for (const { lang, pattern } of LANG_HINTS) {
@@ -71,139 +60,7 @@ function detectLanguage(text: string): string {
   return "en";
 }
 
-// ── Speaker patterns per language ──────────────────────────────────────
-//
-// Each pattern captures:
-//   group 1 = speaker name (e.g. "The President", "Ms. DiCarlo", "主席")
-//   group 2 = first parenthetical (could be affiliation or spoken-language annotation)
-//   group 3 = second parenthetical (if present)
-//
-// The interpretation of groups 2/3 depends on context — see interpretSpeakerMatch.
-
-// EN: "The President:", "Mr. Fletcher (United Kingdom of Great Britain and Northern Ireland):"
-// Also handles continued/resumed: "The President (spoke in English):"
-const EN_SPEAKER =
-  /^(The (?:President|Chairperson|Chairman|Chairwoman|Acting President|Secretary-General)|(?:Mr|Mrs|Ms|Dr|Sir|Dame|Lord|Lady|Ambassador|Minister)\.\s+[\p{L}\s''-]+?)(?:\s*\(([^)]+)\))?(?:\s*\(([^)]+)\))?\s*:\s*/mu;
-
-// FR: "Le Président (parle en anglais) :", "M. Bonnafont (France) (parle en anglais) :"
-const FR_SPEAKER =
-  /^(Le (?:Président|Secrétaire général)|La (?:Présidente|Secrétaire générale)|(?:M|Mme|Mlle)\.\s+[\p{L}\s''-]+?)(?:\s*\(([^)]+)\))?(?:\s*\(([^)]+)\))?\s*:\s*/mu;
-
-// ES: "El Presidente (habla en inglés):", "Sra. Zalabata Torres (Colombia) (habla en inglés):"
-const ES_SPEAKER =
-  /^(El (?:Presidente|Secretario General)|La (?:Presidenta|Secretaria General)|(?:Sr|Sra|Srta)\.\s+[\p{L}\s''-]+?)(?:\s*\(([^)]+)\))?(?:\s*\(([^)]+)\))?\s*:\s*/mu;
-
-// RU: "Председатель (говорит по-английски):", "Г-жа Дикарло (говорит по-английски):",
-//     "Г-н Небензя (Российская Федерация):"
-const RU_SPEAKER =
-  /^(Председатель(?:ница)?|(?:Г-н|Г-жа)\s+[\p{L}\s''-]+?)(?:\s*\(([^)]+)\))?(?:\s*\(([^)]+)\))?\s*:\s*/mu;
-
-// ZH: "主席（以英语发言）：", "迪卡洛女士（以英语发言）：", "孙磊先生（中国）："
-//     "拉森女士（丹麦）（以英语发言）："
-const ZH_SPEAKER =
-  /^(主席|[\p{Script=Han}·\s]+?(?:先生|女士|夫人))(?:\s*（([^）]+)）)?(?:\s*（([^）]+)）)?\s*：\s*/mu;
-
-// AR: Due to RTL PDF extraction, Arabic speaker patterns appear differently:
-// 1. No country: "تكلم باإلنكليزية( الرئيس" or "تكلمت باإلنكليزية( السيدة ديكارلو"
-// 2. With country: "تكلمت باإلنكليزية (التفيا) ( السيدة بافلوتا - ديسالنديس"
-// The colon "): " appears on a nearby line.
-// We handle Arabic specially in the parser using line-based detection.
-
 // ── Spoken-language annotation detection ───────────────────────────────
-
-const SPOKEN_LANG_PATTERNS: Array<{
-  pattern: RegExp;
-  extract: (m: string) => string;
-}> = [
-  // EN: "spoke in French", "interpretation from French"
-  { pattern: /spoke in (\w+)/i, extract: (m) => langNameToCode(m) },
-  { pattern: /interpretation from (\w+)/i, extract: (m) => langNameToCode(m) },
-  // FR: "parle en anglais", "parle en français"
-  { pattern: /parle en (\w+)/i, extract: (m) => langNameToCode(m) },
-  // ES: "habla en inglés", "habla en francés"
-  { pattern: /habla en (\w+)/i, extract: (m) => langNameToCode(m) },
-  // RU: "говорит по-английски", "говорит по-французски"
-  { pattern: /говорит по-([\p{L}]+)/iu, extract: (m) => ruLangToCode(m) },
-  // ZH: "以英语发言", "以法语发言"
-  { pattern: /以(\S+?)语?发言/, extract: (m) => zhLangToCode(m) },
-  // AR: "تكلم باإلنكليزية", "تكلمت بالفرنسية" — "با" prefix, not always "بال"
-  { pattern: /تكلم[ت]?\s+با([\p{L}]+)/u, extract: (m) => arLangToCode(m) },
-];
-
-function langNameToCode(name: string): string {
-  const map: Record<string, string> = {
-    english: "en",
-    french: "fr",
-    spanish: "es",
-    russian: "ru",
-    chinese: "zh",
-    arabic: "ar",
-    anglais: "en",
-    français: "fr",
-    espagnol: "es",
-    russe: "ru",
-    chinois: "zh",
-    arabe: "ar",
-    inglés: "en",
-    francés: "fr",
-    español: "es",
-    ruso: "ru",
-    chino: "zh",
-    árabe: "ar",
-  };
-  return map[name.toLowerCase()] || name.toLowerCase();
-}
-
-function ruLangToCode(name: string): string {
-  const map: Record<string, string> = {
-    английски: "en",
-    французски: "fr",
-    испански: "es",
-    русски: "ru",
-    китайски: "zh",
-    арабски: "ar",
-  };
-  return map[name.toLowerCase()] || name.toLowerCase();
-}
-
-function zhLangToCode(name: string): string {
-  const map: Record<string, string> = {
-    英: "en",
-    法: "fr",
-    西班牙: "es",
-    俄: "ru",
-    中: "zh",
-    阿拉伯: "ar",
-  };
-  return map[name] || name;
-}
-
-function arLangToCode(name: string): string {
-  // The extracted text may have "إلنكليزية" or "لفرنسية" etc. (with ال prefix)
-  const map: Record<string, string> = {
-    إنكليزية: "en",
-    انكليزية: "en",
-    إلنكليزية: "en",
-    لنكليزية: "en", // variant after ال
-    فرنسية: "fr",
-    لفرنسية: "fr",
-    إسبانية: "es",
-    اسبانية: "es",
-    إلسبانية: "es",
-    لسبانية: "es",
-    روسية: "ru",
-    لروسية: "ru",
-    صينية: "zh",
-    لصينية: "zh",
-    عربية: "ar",
-    لعربية: "ar",
-  };
-  // Try exact match first, then try removing leading ل or إل
-  if (map[name]) return map[name];
-  const stripped = name.replace(/^[إال]+/, "");
-  if (map[stripped]) return map[stripped];
-  return name;
-}
 
 function extractSpokenLanguage(text: string): string | undefined {
   for (const { pattern, extract } of SPOKEN_LANG_PATTERNS) {
@@ -611,51 +468,20 @@ interface RawSpeakerMatch {
   paragraphNumber?: number;
 }
 
-// SR (Summary Record) speaker patterns — numbered paragraphs with third-person narrative
-// EN: "1. Mr. Steiner (Under-Secretary-General...)" or "13. Ms. Sandström (Observer for Finland)"
-// Groups: (1)=speaker name, (2)=parenthetical (affiliation/role). Paragraph number is non-capturing.
-// Name capture uses greedy `+` (not lazy `+?`) and requires a `(` after the name.
-// In SR docs, a parenthetical (role or country) is virtually always present.
-const EN_SR_SPEAKER =
-  /^(?:\d+)\.\s+(The (?:President|Chairperson|Chairman|Chairwoman|Acting President|Secretary-General)|(?:Mr|Mrs|Ms|Dr|Sir|Dame)\.\s+[\p{L}''-][\p{L}\s''-]*[\p{L}''-])\s*\(([^)]+)\)/mu;
-const FR_SR_SPEAKER =
-  /^(?:\d+)\.\s+(Le (?:Président|Secrétaire général)|La (?:Présidente|Secrétaire générale)|(?:M|Mme|Mlle)\.\s+[\p{L}''-][\p{L}\s''-]*[\p{L}''-])\s*\(([^)]+)\)/mu;
-// ES SR: "1. La Sra. Schantz (...)" — note "La/El" article before title in SR format
-const ES_SR_SPEAKER =
-  /^(?:\d+)\.\s+(El (?:Presidente|Secretario General)|La (?:Presidenta|Secretaria General)|(?:(?:El |La )?(?:Sr|Sra|Srta))\.\s+[\p{L}''-][\p{L}\s''-]*[\p{L}''-])\s*\(([^)]+)\)/mu;
-const RU_SR_SPEAKER =
-  /^(?:\d+)\.\s+(Председатель(?:ница)?|(?:Г-н|Г-жа)\s+[\p{L}''-][\p{L}\s''-]*[\p{L}''-])\s*\(([^)]+)\)/mu;
-const ZH_SR_SPEAKER =
-  /^(?:\d+)\.\s+(主席|[\p{L}·\s]+?(?:先生|女士|夫人))(?:\s*[（(]([^）)]+)[）)])?\s*/mu;
-
 function findSpeakerTurns(text: string, lang: string): RawSpeakerMatch[] {
   if (lang === "ar") return findArabicSpeakerTurns(text);
 
-  // Choose patterns based on document type (PV vs SR)
-  const patterns: Record<string, RegExp[]> = {
-    en: [EN_SPEAKER],
-    fr: [FR_SPEAKER],
-    es: [ES_SPEAKER],
-    ru: [RU_SPEAKER],
-    zh: [ZH_SPEAKER],
-  };
-
-  const srPatterns: Record<string, RegExp[]> = {
-    en: [EN_SR_SPEAKER],
-    fr: [FR_SR_SPEAKER],
-    es: [ES_SR_SPEAKER],
-    ru: [RU_SR_SPEAKER],
-    zh: [ZH_SR_SPEAKER],
-  };
+  // Patterns are keyed by language in pv-parser-patterns.ts; default to English.
+  const set = SPEAKER_PATTERNS[lang as LangCode] ?? SPEAKER_PATTERNS.en;
 
   // Try PV patterns first; if no matches found, try SR patterns
-  let langPatterns = patterns[lang] || [EN_SPEAKER];
-  let matches = findWithPatterns(text, langPatterns);
+  const pvPattern = set.pv ?? SPEAKER_PATTERNS.en.pv!;
+  let matches = findWithPatterns(text, [pvPattern]);
 
   // If we found very few matches with PV patterns, try SR patterns
   if (matches.length < 2) {
-    const srLangPatterns = srPatterns[lang] || [EN_SR_SPEAKER];
-    const srMatches = findWithPatterns(text, srLangPatterns);
+    const srPattern = set.sr ?? SPEAKER_PATTERNS.en.sr!;
+    const srMatches = findWithPatterns(text, [srPattern]);
     if (srMatches.length > matches.length) {
       // Extract paragraph numbers from SR matches (e.g. "1. Mr. X" → 1)
       for (const m of srMatches) {
@@ -730,9 +556,7 @@ function findArabicSpeakerTurns(text: string): RawSpeakerMatch[] {
     // Match speaker ID lines
     // Pattern 1: with country — "تكلم[ت]? با[lang] ([country]) ( [speaker]"
     // Note: "با" not "بال" because "باإلنكليزية" has hamza: باإل not بال
-    const withCountry = line.match(
-      /^(تكلم[ت]?\s+با[\p{L}]+)\s+\(([^)]+)\)\s*\(\s*(الرئيس(?:ة)?|(?:السيد|السيدة)\s+[\p{L}\s''-]+)/u,
-    );
+    const withCountry = line.match(AR_SPEAKER_WITH_COUNTRY);
     if (withCountry) {
       // Find the "): " on the preceding line to get the actual turn start
       const turnStart = findArabicTurnStart(lines, i, lineStart, text);
@@ -747,9 +571,7 @@ function findArabicSpeakerTurns(text: string): RawSpeakerMatch[] {
     }
 
     // Pattern 2: no country — "تكلم[ت]? با[lang]( [speaker]"
-    const noCountry = line.match(
-      /^(تكلم[ت]?\s+با[\p{L}]+)\(\s*(الرئيس(?:ة)?|(?:السيد|السيدة)\s+[\p{L}\s''-]+)/u,
-    );
+    const noCountry = line.match(AR_SPEAKER_NO_COUNTRY);
     if (noCountry) {
       const turnStart = findArabicTurnStart(lines, i, lineStart, text);
       matches.push({
@@ -978,74 +800,12 @@ function simplifyAffiliation(aff: string): string {
   return norm;
 }
 
-// ── Procedural paragraph detection ───────────────────────────────────
-// These patterns identify paragraphs that are procedural/italic annotations
-// within a speech turn (stage directions, procedural notes).
-
-const PROCEDURAL_PARAGRAPH_PATTERNS = [
-  // EN
-  /^The meeting (?:was called to order|rose) at/i,
-  /^\((?:spoke|continued) in \w+\)/i,
-  /^\(interpretation from \w+\)/i,
-  /^\(Mr\.|Mrs\.|Ms\..*(?:took the Chair|resumed the Chair)\)/i,
-  /^A (?:recorded )?vote was taken/i,
-  /^The draft (?:resolution|decision) was (?:adopted|rejected)/i,
-  /^In favour:/i,
-  /^Against:/i,
-  /^Abstaining:/i,
-  /^The result of the vote was as follows:/i,
-  // FR
-  /^La séance est (?:ouverte|levée)/i,
-  /^Il est procédé au vote/i,
-  /^Le projet de résolution est adopté/i,
-  /^Votent pour\s*:/i,
-  /^Votent contre\s*:/i,
-  /^S'abstiennent\s*:/i,
-  // ES
-  /^Se (?:abre|declara abierta|levanta) la sesión/i,
-  /^Se procede a votación/i,
-  /^Votos a favor\s*:/i,
-  /^Votos en contra\s*:/i,
-  /^Abstenciones\s*:/i,
-  // RU
-  /^Заседание (?:открывается|закрывается)/i,
-  /^Проводится голосование/i,
-  // ZH
-  /^(?:开会|散会)/,
-  /^进行(?:记录)?表决/,
-  // Cross-language: parenthetical notes
-  /^\([^)]{5,}\)$/,
-];
+// ── Procedural detection ─────────────────────────────────────────────
+// Pattern arrays live in pv-parser-patterns.ts.
 
 function isProceduralParagraph(text: string): boolean {
   return PROCEDURAL_PARAGRAPH_PATTERNS.some((p) => p.test(text.trim()));
 }
-
-// ── Turn-level procedural detection ──────────────────────────────────
-
-const PROCEDURAL_PATTERNS = [
-  // EN — only strong procedural indicators
-  /adopted as resolution/i,
-  /a vote was taken/i,
-  /the agenda was adopted/i,
-  /the meeting rose at/i,
-  /I shall put the draft/i,
-  /proceed to the vote/i,
-  // FR
-  /il est procédé au vote/i,
-  /l'ordre du jour est adopté/i,
-  /la séance est levée/i,
-  // ES
-  /se procede a votación/i,
-  /queda aprobado el orden del día/i,
-  /se levanta la sesión/i,
-  // RU
-  /повестка дня утверждается/i,
-  /заседание закрывается/i,
-  // ZH
-  /议程通过/,
-  /散会/,
-];
 
 function isProcedural(text: string, speaker: string): boolean {
   // Only mark as procedural if it's a short turn from the President/Chair that contains

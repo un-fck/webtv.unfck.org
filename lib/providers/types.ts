@@ -3,7 +3,7 @@ export interface TranscriptWord {
   text: string;
   start: number; // ms
   end: number; // ms
-  confidence: number;
+  confidence?: number;
   speaker?: string; // opaque label, carried as ASR hint
 }
 

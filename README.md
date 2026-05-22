@@ -135,7 +135,7 @@ lib/
   un-api.ts                         # UN Web TV HTML scraper + metadata extraction
   transcription.ts                  # Transcription submission + audio URL resolution
   gemini-transcription.ts           # Gemini Files API transcription (chunked)
-  speaker-identification.ts         # Speaker mapping + topic + proposition pipeline
+  pipeline/                         # Analysis pipeline stages (speaker ID, resegment, topics, propositions)
   speakers.ts                       # Speaker mapping CRUD
   usage-tracking.ts                 # API cost tracking (Gemini + OpenAI)
   pv-alignment.ts, pv-documents.ts, pv-parser.ts  # PV document pipeline
@@ -148,7 +148,7 @@ lib/
     registry.ts, config.ts, models.ts, types.ts, convert.ts
     gemini-production.ts, gemini.ts, assemblyai.ts, ...
   hooks/
-    use-transcript.ts, use-playback-tracking.ts, use-timezone.tsx
+    use-playback-tracking.ts, use-timezone.tsx
   load-env.ts                       # Loads .env.local for scripts outside Next.js
 
 scripts/                            # CLI scripts (run via tsx, use lib/load-env)
