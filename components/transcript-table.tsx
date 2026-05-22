@@ -31,6 +31,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTimezone } from "@/lib/hooks/use-timezone";
+import { rememberScheduleUrl } from "@/lib/schedule-return";
 import {
   formatMeetingTime,
   formatMeetingDate,
@@ -568,6 +569,14 @@ export function VideoTable({
   useEffect(() => {
     const urlQuery = searchParams.get("q") || "";
     setInputValue(urlQuery);
+  }, [searchParams]);
+
+  // Remember the filtered schedule URL so the meeting page's "Back to
+  // schedule" link can return here with filters intact.
+  useEffect(() => {
+    rememberScheduleUrl(
+      `${window.location.pathname}${window.location.search}`,
+    );
   }, [searchParams]);
 
   // Fetch search results when q param is set

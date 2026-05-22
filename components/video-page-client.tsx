@@ -17,6 +17,7 @@ import { useTimezone } from "@/lib/hooks/use-timezone";
 import { formatMeetingTime, formatMeetingDate } from "@/lib/timezone";
 import { getPVDocumentUrl } from "@/lib/pv-documents";
 import { UN_LANGUAGES } from "@/lib/languages";
+import { getScheduleReturnUrl } from "@/lib/schedule-return";
 
 interface VideoPageClientProps {
   kalturaId: string;
@@ -36,6 +37,13 @@ export function VideoPageClient({
     currentTime: number;
     play: () => void;
   }>();
+
+  // Back link: return to the last filtered schedule view if we have one,
+  // otherwise the plain homepage. Read after mount to avoid SSR mismatch.
+  const [backHref, setBackHref] = useState("/");
+  useEffect(() => {
+    setBackHref(getScheduleReturnUrl());
+  }, []);
 
   // Video docking: when main video scrolls out, dock into sidebar
   const [isVideoDocked, setIsVideoDocked] = useState(false);
@@ -283,7 +291,7 @@ export function VideoPageClient({
       <div className="mx-auto max-w-7xl px-6 pb-16 sm:px-8">
         <nav className="py-3">
           <a
-            href="/"
+            href={backHref}
             className="text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             ← Back to schedule
