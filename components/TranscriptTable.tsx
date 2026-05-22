@@ -257,6 +257,10 @@ function SortArrow({
   );
 }
 
+// Any of these document types counts as "having a transcript" for the
+// coarse All / With transcript toggle.
+const ALL_DOC_TYPES = ["transcript", "pv", "sr"];
+
 const DOCS_LABELS: Record<string, string> = {
   transcript: "Transcript",
   pv: "Verbatim Record",
@@ -493,6 +497,14 @@ export function VideoTable({
   const tableData = searchResults ?? videos;
   const isSearchMode = !!serverParams.q;
 
+  // Coarse "With transcript" toggle: on when every doc type is selected (any
+  // of transcript / PV / SR counts as a transcript).
+  const withTranscript = ALL_DOC_TYPES.every((d) =>
+    (serverParams.text ?? []).includes(d),
+  );
+  const toggleWithTranscript = () =>
+    updateParams({ text: withTranscript ? undefined : ALL_DOC_TYPES });
+
   // Parse current sort state (undefined = auto, no column actively sorted)
   const [currentSortBy, currentSortDir] = (
     serverParams.sort ? serverParams.sort.split("_") : [undefined, undefined]
@@ -704,6 +716,20 @@ export function VideoTable({
             Scheduled
           </button>
         </div>
+        <div className="flex h-10 rounded-lg border border-slate-300 bg-white p-0.5 text-xs font-medium">
+          <button
+            onClick={() => withTranscript && toggleWithTranscript()}
+            className={`rounded-md px-4 py-1.5 transition-all ${!withTranscript ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => !withTranscript && toggleWithTranscript()}
+            className={`rounded-md px-4 py-1.5 transition-all ${withTranscript ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Transcribed
+          </button>
+        </div>
         <div className="ml-auto text-sm whitespace-nowrap text-muted-foreground">
           {isSearching
             ? "Searching…"
@@ -866,6 +892,20 @@ export function VideoTable({
               className={`rounded-md px-3 py-1.5 transition-colors ${serverParams.status === "scheduled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             >
               Scheduled
+            </button>
+          </div>
+          <div className="flex rounded-lg bg-muted p-0.5 text-xs font-medium">
+            <button
+              onClick={() => withTranscript && toggleWithTranscript()}
+              className={`rounded-md px-3 py-1.5 transition-colors ${!withTranscript ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => !withTranscript && toggleWithTranscript()}
+              className={`rounded-md px-3 py-1.5 transition-colors ${withTranscript ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Transcribed
             </button>
           </div>
         </div>
