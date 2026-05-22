@@ -25,6 +25,7 @@ interface TranscriptToolbarProps {
   hasRawParagraphs: boolean;
   hasPropositions: boolean;
   hasTopics: boolean;
+  isLoggedIn: boolean;
   checking: boolean;
   stage: Stage;
   videoStatus?: string;
@@ -47,6 +48,7 @@ export function TranscriptToolbar({
   hasRawParagraphs,
   hasPropositions,
   hasTopics,
+  isLoggedIn,
   checking,
   stage,
   videoStatus,
@@ -176,23 +178,25 @@ export function TranscriptToolbar({
             <FileText className="h-3 w-3" />
             Transcript
           </button>
-          <button
-            onClick={() => onViewModeChange("analysis")}
-            className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
-              viewMode === "analysis"
-                ? "bg-background text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            disabled={stage !== "completed" && !hasPropositions}
-            title={
-              stage !== "completed" && !hasPropositions
-                ? "Transcription must complete before analysis"
-                : undefined
-            }
-          >
-            <BarChart3 className="h-3 w-3" />
-            Analysis
-          </button>
+          {isLoggedIn && (
+            <button
+              onClick={() => onViewModeChange("analysis")}
+              className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
+                viewMode === "analysis"
+                  ? "bg-background text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              disabled={stage !== "completed" && !hasPropositions}
+              title={
+                stage !== "completed" && !hasPropositions
+                  ? "Transcription must complete before analysis"
+                  : undefined
+              }
+            >
+              <BarChart3 className="h-3 w-3" />
+              Analysis
+            </button>
+          )}
           {pvSymbol && (
             <button
               onClick={() => onViewModeChange("pv")}

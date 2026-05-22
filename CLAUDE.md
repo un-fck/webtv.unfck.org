@@ -41,6 +41,7 @@ tsx scripts/test-pv-parser.ts        # Validate PV parser across 6 languages
 
 # Schema migrations (apply once per database)
 psql "$DATABASE_URL" -f sql/migrations/001_add_kaltura_id.sql
+psql "$DATABASE_URL" -f sql/migrations/002_add_auth_tables.sql   # magic-link auth tables
 
 # Eval system (independent from main app, see eval/README.md)
 pnpm eval -- --symbol=A/... --providers=assemblyai,gemini --languages=en
@@ -64,6 +65,8 @@ Copy `.env.example` → `.env.local` and fill in values.
 - `AZURE_OPENAI_ENDPOINT` — speaker identification, topics, propositions
 - `AZURE_OPENAI_API_KEY` — speaker identification, topics, propositions
 - `AZURE_OPENAI_API_VERSION` — defaults in `.env.example` (e.g. `2025-03-01-preview`)
+- `AUTH_SECRET` — HMAC secret signing login session cookies (`openssl rand -hex 32`). Required in production; falls back to a dev default otherwise.
+- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` — outbound email for magic-link login, which gates the private **analysis** feature. `SMTP_FROM` falls back to `SMTP_USER`; `SMTP_HOST` defaults to `smtp.mailbox.org`.
 
 **Production only:**
 

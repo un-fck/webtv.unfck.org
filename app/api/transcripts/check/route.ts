@@ -7,6 +7,7 @@ import {
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";
 import { apiError } from "@/lib/api-error";
+import { getCurrentUser } from "@/lib/auth/service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,13 +70,15 @@ export async function GET(request: NextRequest) {
     }
 
     const speakerMappings = await getSpeakerMapping(cached.transcript_id);
+    // Propositions ("analysis") are private — only return them to signed-in users.
+    const user = await getCurrentUser();
     return NextResponse.json({
       statements: cached.content.statements,
       language: cached.language_code,
       cached: true,
       transcriptId: cached.transcript_id,
       topics: cached.content.topics || {},
-      propositions: cached.content.propositions || [],
+      propositions: user ? cached.content.propositions || [] : [],
       speakerMappings: speakerMappings || {},
     });
   } catch (error) {

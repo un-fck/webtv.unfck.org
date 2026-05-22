@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { TimezonePicker } from "@/components/timezone-picker";
+import { AuthControl } from "@/components/auth-control";
 
 export function SiteHeader() {
   return (
@@ -36,6 +37,7 @@ export function SiteHeader() {
           >
             About
           </Link>
+          <AuthControl />
         </div>
       </div>
     </header>

@@ -87,6 +87,7 @@ interface TranscriptionPanelProps {
   topicCollapsed: boolean;
   onTopicCollapsedChange: (collapsed: boolean) => void;
   onDataChange?: (data: TranscriptionPanelData) => void;
+  isLoggedIn: boolean;
   pvSymbol?: string;
 }
 
@@ -134,6 +135,7 @@ export function TranscriptionPanel({
   topicCollapsed,
   onTopicCollapsedChange,
   onDataChange,
+  isLoggedIn,
   pvSymbol,
 }: TranscriptionPanelProps) {
   const [segments, setSegments] = useState<SpeakerSegment[] | null>(null);
@@ -690,6 +692,7 @@ export function TranscriptionPanel({
         hasRawParagraphs={!!rawParagraphs}
         hasPropositions={propositions.length > 0}
         hasTopics={Object.keys(topics).length > 0}
+        isLoggedIn={isLoggedIn}
         checking={checking}
         stage={stage}
         videoStatus={video.status}
@@ -718,7 +721,7 @@ export function TranscriptionPanel({
         />
       )}
 
-      {viewMode === "analysis" && propositions.length > 0 && (
+      {isLoggedIn && viewMode === "analysis" && propositions.length > 0 && (
         <AnalysisView
           propositions={propositions}
           statements={statements}
@@ -728,7 +731,8 @@ export function TranscriptionPanel({
         />
       )}
 
-      {viewMode === "analysis" &&
+      {isLoggedIn &&
+        viewMode === "analysis" &&
         propositions.length === 0 &&
         stage === "completed" && (
           <div className="mt-8 flex flex-col items-center gap-4 text-center">
