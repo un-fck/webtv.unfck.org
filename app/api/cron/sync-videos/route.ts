@@ -9,6 +9,7 @@ import {
 } from "@/lib/db";
 import { matchFeeds } from "@/lib/feeds";
 import { backfillDurations } from "@/lib/duration-backfill";
+import { reapRemovedVideos } from "@/lib/removed-videos";
 import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
@@ -100,9 +101,24 @@ export async function GET(request: NextRequest) {
     console.error(`[sync-videos] Duration backfill failed: ${msg}`);
   }
 
+  // Soft-disable videos whose Kaltura entry was deleted (status 3) so they drop
+  // out of schedule/search instead of rendering a dead "Video has been removed"
+  // player. Bounded to the last 30 days, same window as the duration backfill.
+  let videosRemoved = 0;
+  let videosRestored = 0;
+  try {
+    const r = await reapRemovedVideos({ apply: true, lookbackDays: 30 });
+    videosRemoved = r.removed;
+    videosRestored = r.restored;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[sync-videos] Removed-video reap failed: ${msg}`);
+  }
+
   console.log(
     `[sync-videos] Done: ${synced} synced, ${resolved} new entry IDs resolved, ` +
-      `${autoScheduled} auto-scheduled, ${durationsBackfilled} durations backfilled, ${errors.length} errors`,
+      `${autoScheduled} auto-scheduled, ${durationsBackfilled} durations backfilled, ` +
+      `${videosRemoved} removed, ${videosRestored} restored, ${errors.length} errors`,
   );
 
   return NextResponse.json({
@@ -110,6 +126,8 @@ export async function GET(request: NextRequest) {
     resolved,
     autoScheduled,
     durationsBackfilled,
+    videosRemoved,
+    videosRestored,
     errors,
   });
 }

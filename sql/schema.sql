@@ -30,6 +30,9 @@ CREATE TABLE IF NOT EXISTS videos (
     pv_available BOOLEAN,
     pv_checked_at TIMESTAMPTZ,
     slug TEXT,
+    -- Set when the underlying Kaltura entry reports status 3 (DELETED); such
+    -- rows are hidden from listings (see migration 006_removed_videos.sql).
+    removed_at TIMESTAMPTZ,
     last_seen DATE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -46,6 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_videos_last_seen ON videos(last_seen);
 CREATE INDEX IF NOT EXISTS idx_videos_body ON videos(body);
 CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category);
 CREATE INDEX IF NOT EXISTS idx_videos_fts ON videos USING GIN(fts_vec);
+CREATE INDEX IF NOT EXISTS idx_videos_removed_at ON videos(removed_at) WHERE removed_at IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_videos_trgm ON videos USING GIN (COALESCE(clean_title, title) gin_trgm_ops);
 -- ── transcripts ───────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS transcripts (
@@ -114,7 +118,7 @@ CREATE TABLE IF NOT EXISTS pv_contents (
     parsed_at TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (pv_symbol, language)
 );
--- ── subscriptions (see migration 005) ─────────────────────────────────────────
+-- ── subscriptions (see migration 004) ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS feeds (
     key TEXT PRIMARY KEY,
     label TEXT NOT NULL,
@@ -145,3 +149,4 @@ CREATE TABLE IF NOT EXISTS sent_transcript_notifications (
     transcript_id TEXT NOT NULL,
     sent_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (user_id, transcript_id)
+);

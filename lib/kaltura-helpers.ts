@@ -106,6 +106,65 @@ export async function fetchKalturaDurations(
   return out;
 }
 
+/** Kaltura entry status: 3 = DELETED (the player shows "Video has been removed"). */
+export const KALTURA_STATUS_DELETED = 3;
+
+/**
+ * Fetch the entry `status` for a batch of Kaltura entry IDs via
+ * `baseEntry.list`. Deleted entries are still returned by the API (with
+ * `status === 3`), which is exactly the signal we need to detect removals.
+ * Entries the API doesn't return at all are simply absent from the map.
+ * Throws on a non-OK HTTP response so callers can treat the batch as failed.
+ */
+export async function fetchKalturaEntryStatuses(
+  entryIds: string[],
+): Promise<Map<string, number>> {
+  if (entryIds.length === 0) return new Map();
+  const response = await fetch(
+    "https://cdnapisec.kaltura.com/api_v3/service/multirequest",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        "1": {
+          service: "session",
+          action: "startWidgetSession",
+          widgetId: KALTURA_WIDGET_ID,
+        },
+        "2": {
+          service: "baseEntry",
+          action: "list",
+          ks: "{1:result:ks}",
+          // `statusIn` is required: baseEntry.list defaults to excluding DELETED
+          // (status 3) entries, which are exactly the ones we need to detect.
+          filter: {
+            idIn: entryIds.join(","),
+            statusIn: "-2,-1,0,1,2,3,4,5,6,7",
+          },
+          responseProfile: { type: 1, fields: "id,status" },
+          pager: { pageSize: 500 },
+        },
+        apiVersion: "3.3.0",
+        format: 1,
+        ks: "",
+        clientTag: "html5:v3.17.30",
+        partnerId: KALTURA_PARTNER_ID,
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Kaltura API failed: ${response.status}`);
+  }
+  const data = await response.json();
+  const objects: Array<{ id: string; status?: number }> =
+    data?.[1]?.objects ?? [];
+  const out = new Map<string, number>();
+  for (const o of objects) {
+    if (typeof o.status === "number") out.set(o.id, o.status);
+  }
+  return out;
+}
+
 /**
  * Resolves an asset ID or Kaltura ID to an entry ID.
  * If cachedEntryId is provided (already stored in DB), returns it immediately.

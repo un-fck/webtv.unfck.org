@@ -795,6 +795,7 @@ export interface VideoRecord {
   pv_available: boolean | null;
   pv_checked_at: Date | null;
   slug: string | null;
+  removed_at: Date | null;
   last_seen: string;
   created_at: Date;
   updated_at: Date;
@@ -821,6 +822,7 @@ function mapVideoRow(row: Record<string, unknown>): VideoRecord {
     pv_available: (row.pv_available as boolean | null) ?? null,
     pv_checked_at: (row.pv_checked_at as Date | null) ?? null,
     slug: (row.slug as string | null) ?? null,
+    removed_at: (row.removed_at as Date | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as Date,
     updated_at: row.updated_at as Date,
@@ -867,7 +869,7 @@ async function resolveVideoSlug(
 }
 
 export async function saveVideo(
-  video: Omit<VideoRecord, "created_at" | "updated_at">,
+  video: Omit<VideoRecord, "created_at" | "updated_at" | "removed_at">,
 ): Promise<void> {
   // Up to a few attempts to absorb a race where a concurrent save claims the
   // slug we picked between our SELECT and INSERT (slug UNIQUE index → 23505).
@@ -959,16 +961,78 @@ export async function getVideoBySlug(
   return mapVideoRow(result.rows[0]);
 }
 
+// Listing visibility: a video whose Kaltura entry was deleted (`removed_at`)
+// is hidden — UNLESS we already produced a completed transcript from it, in
+// which case the page stays valuable even though the source video is gone.
+// References the unaliased `videos` table, matching the listing queries below.
+const VISIBLE_VIDEO = `(
+  videos.removed_at IS NULL
+  OR EXISTS (
+    SELECT 1 FROM webtv.transcripts t
+    WHERE t.transcription_status = 'completed'
+      AND (t.entry_id = videos.entry_id OR t.kaltura_id = videos.kaltura_id)
+  )
+)`;
+
 export async function getRecentVideos(
   daysBack: number = 365,
 ): Promise<VideoRecord[]> {
   const result = await pool.query(
     q(
-      "SELECT * FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC, scheduled_time DESC",
+      `SELECT * FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int
+       AND ${VISIBLE_VIDEO} ORDER BY date DESC, scheduled_time DESC`,
       [daysBack],
     ),
   );
   return result.rows.map(mapVideoRow);
+}
+
+/**
+ * Rows to reconcile against Kaltura entry status during sync: those with a
+ * resolved entry_id seen within `lookbackDays`. Returns both currently-removed
+ * and not-yet-removed rows so the reaper can both flag deletions and clear
+ * false positives. `removed_at` lets the caller skip no-op updates.
+ */
+export async function getRemovalCandidates(
+  lookbackDays: number,
+): Promise<Array<{ asset_id: string; entry_id: string; removed_at: Date | null }>> {
+  const result = await pool.query(
+    q(
+      `SELECT asset_id, entry_id, removed_at
+         FROM webtv.videos
+        WHERE entry_id IS NOT NULL
+          AND last_seen >= CURRENT_DATE - ?::int
+        ORDER BY date DESC NULLS LAST`,
+      [lookbackDays],
+    ),
+  );
+  return result.rows as Array<{
+    asset_id: string;
+    entry_id: string;
+    removed_at: Date | null;
+  }>;
+}
+
+/** Soft-disable a video (Kaltura entry deleted). No-op if already removed. */
+export async function markVideoRemoved(assetId: string): Promise<void> {
+  await pool.query(
+    q(
+      `UPDATE webtv.videos SET removed_at = NOW(), updated_at = NOW()
+       WHERE asset_id = ? AND removed_at IS NULL`,
+      [assetId],
+    ),
+  );
+}
+
+/** Clear a removal flag (entry came back / was a false positive). */
+export async function clearVideoRemoved(assetId: string): Promise<void> {
+  await pool.query(
+    q(
+      `UPDATE webtv.videos SET removed_at = NULL, updated_at = NOW()
+       WHERE asset_id = ? AND removed_at IS NOT NULL`,
+      [assetId],
+    ),
+  );
 }
 
 export async function updateVideoEntryId(
@@ -1015,6 +1079,7 @@ export async function searchVideos(
           `SELECT *, ts_rank(fts_vec, websearch_to_tsquery('english', ?)) AS rank
            FROM webtv.videos
            WHERE fts_vec @@ websearch_to_tsquery('english', ?)
+             AND ${VISIBLE_VIDEO}
            ORDER BY ${orderBy ?? "rank DESC, date DESC"}
            LIMIT ? OFFSET ?`,
           [query, query, limit, offset],
@@ -1037,7 +1102,8 @@ export async function searchVideos(
   const pattern = `%${query}%`;
   const result = await pool.query(
     q(
-      `SELECT * FROM webtv.videos WHERE title ILIKE ? OR clean_title ILIKE ?
+      `SELECT * FROM webtv.videos WHERE (title ILIKE ? OR clean_title ILIKE ?)
+       AND ${VISIBLE_VIDEO}
        ORDER BY ${orderBy ?? "date DESC, scheduled_time DESC"}
        LIMIT ? OFFSET ?`,
       [pattern, pattern, limit, offset],
@@ -1084,7 +1150,7 @@ export async function getVideosPage(
     transcriptedEntryIds,
   } = params;
 
-  const conditions: string[] = ["last_seen >= CURRENT_DATE - ?::int"];
+  const conditions: string[] = ["last_seen >= CURRENT_DATE - ?::int", VISIBLE_VIDEO];
   const args: unknown[] = [daysBack];
 
   if (date) {

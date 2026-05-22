@@ -311,14 +311,27 @@ export function VideoPageClient({
             className="aspect-video min-w-0 bg-black lg:flex-3"
           >
             <div ref={videoWrapperRef} className="h-full w-full">
-              <VideoPlayer
-                kalturaId={kalturaId}
-                partnerId={2503451}
-                uiConfId={49754663}
-                audioLanguage={selectedLanguage}
-                onPlayerReady={setPlayer}
-                onAudioTracksReady={handleAudioTracksReady}
-              />
+              {video.removed ? (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-6 text-center text-white">
+                  <p className={typography.body}>
+                    This video has been removed from UN Web TV.
+                  </p>
+                  <p className={cn(typography.caption, "text-white/70")}>
+                    {video.hasTranscript
+                      ? "The transcript below was generated while the recording was still available."
+                      : "The recording is no longer available to play or transcribe."}
+                  </p>
+                </div>
+              ) : (
+                <VideoPlayer
+                  kalturaId={kalturaId}
+                  partnerId={2503451}
+                  uiConfId={49754663}
+                  audioLanguage={selectedLanguage}
+                  onPlayerReady={setPlayer}
+                  onAudioTracksReady={handleAudioTracksReady}
+                />
+              )}
             </div>
           </div>
 

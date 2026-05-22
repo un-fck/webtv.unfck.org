@@ -75,6 +75,7 @@ describe("videoToRecord (real rows)", () => {
       pvAvailable: false,
       slug: "",
       hasTranscript: false,
+      removed: false,
     };
   }
 

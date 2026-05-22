@@ -58,6 +58,7 @@ const videos: Video[] = fixtures.slice(0, 6).map((fx) => ({
   pvAvailable: false,
   slug: fx.expected.pvSymbol ? "x" : `meeting/${fx.id}`,
   hasTranscript: false,
+  removed: false,
 }));
 
 function renderTable() {

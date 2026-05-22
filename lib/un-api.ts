@@ -22,6 +22,7 @@ export interface Video {
   pvAvailable: boolean;
   slug: string;
   hasTranscript: boolean;
+  removed: boolean; // Kaltura entry deleted — source video no longer available
 }
 
 function extractTextContent(html: string): string {
@@ -45,7 +46,7 @@ export function formatDate(date: Date): string {
 
 export function videoToRecord(
   video: Video,
-): Omit<VideoRecord, "created_at" | "updated_at"> {
+): Omit<VideoRecord, "created_at" | "updated_at" | "removed_at"> {
   // Parse duration: can be "HH:MM:SS" or "XX min" format, convert to seconds
   let durationSeconds: number | null = null;
   if (video.duration) {
@@ -127,6 +128,7 @@ export function recordToVideo(
     pvAvailable: record.pv_available === true,
     slug: record.slug ?? meetingSlugFromVideo(record),
     hasTranscript,
+    removed: record.removed_at !== null,
   };
 }
 
@@ -348,6 +350,7 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
         asset_id: assetId,
       }),
       hasTranscript: false, // Will be updated later
+      removed: false, // Freshly scraped from the live schedule
     });
   }
 
