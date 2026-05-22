@@ -10,6 +10,7 @@ import {
 import { getAnalysisModel } from "@/lib/providers/models";
 import {
   type ParagraphInput,
+  type ParagraphWord,
   normalizeText,
   IDENTIFICATION_RULES,
   COMMON_ABBREVIATIONS,
@@ -52,7 +53,7 @@ export async function resegmentParagraph(
   };
 
   const formatPara = (p: ParagraphInput, s: SpeakerInfo, label: string) => {
-    const text = p.words.map((w) => w.text).join(" ");
+    const text = p.text;
     const preview = text.length > 150 ? text.substring(0, 150) + "..." : text;
     return `${label}:\nSpeaker: ${formatSpeaker(s)}\nText: ${preview}`;
   };
@@ -282,6 +283,25 @@ If you determine the CURRENT paragraph should be split, copy the exact text from
     );
   }
 
+  // Splitting requires per-word timing to place each segment's boundary in
+  // time. Word-less paragraphs are never sent here (see index.ts), but guard
+  // anyway: keep them unsplit rather than fabricate sub-timing.
+  const paraWords = paragraph.words;
+  if (!paraWords || paraWords.length === 0) {
+    const current = contextParas.find((c) => c.position === "current");
+    return {
+      segments: [paragraph],
+      speakers: [
+        current?.speaker ?? {
+          name: null,
+          function: null,
+          affiliation: null,
+          group: null,
+        },
+      ],
+    };
+  }
+
   // Match segment texts to words
   const segments: ParagraphInput[] = [];
   const speakers: SpeakerInfo[] = [];
@@ -289,14 +309,14 @@ If you determine the CURRENT paragraph should be split, copy the exact text from
 
   for (const seg of parsed.segments) {
     const segNormalized = normalizeText(seg.text);
-    const words: typeof paragraph.words = [];
+    const words: ParagraphWord[] = [];
     let matchedNormalized = "";
 
     while (
-      wordOffset < paragraph.words.length &&
+      wordOffset < paraWords.length &&
       matchedNormalized.length < segNormalized.length
     ) {
-      words.push(paragraph.words[wordOffset]);
+      words.push(paraWords[wordOffset]);
       matchedNormalized = normalizeText(words.map((w) => w.text).join(" "));
       wordOffset++;
     }

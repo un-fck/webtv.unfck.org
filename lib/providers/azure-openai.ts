@@ -34,22 +34,18 @@ function segmentsToUtterances(
   segments: any[],
   offsetMs = 0,
 ): NormalizedTranscript["utterances"] {
-  const utterances: NormalizedTranscript["utterances"] = [];
-  for (const seg of segments) {
-    const last = utterances[utterances.length - 1];
-    if (last && last.speaker === seg.speaker) {
-      last.end = seg.end * 1000 + offsetMs;
-      last.text += " " + seg.text.trim();
-    } else {
-      utterances.push({
-        speaker: seg.speaker,
-        start: seg.start * 1000 + offsetMs,
-        end: seg.end * 1000 + offsetMs,
-        text: seg.text.trim(),
-      });
-    }
-  }
-  return utterances;
+  // One utterance per segment: each segment carries its own real start/end,
+  // which is the smallest honest timed unit for this provider (no word timing).
+  // We deliberately do not merge consecutive same-speaker segments so that
+  // segment-level seek/highlight granularity survives into the pipeline.
+  return segments
+    .map((seg) => ({
+      speaker: seg.speaker,
+      start: seg.start * 1000 + offsetMs,
+      end: seg.end * 1000 + offsetMs,
+      text: seg.text.trim(),
+    }))
+    .filter((u) => u.text);
 }
 
 export const azureOpenai: TranscriptionProvider = {

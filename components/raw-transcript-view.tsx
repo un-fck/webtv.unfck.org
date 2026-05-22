@@ -4,7 +4,8 @@ interface RawParagraph {
   text: string;
   start: number;
   end: number;
-  words: Array<{ text: string; start: number; end: number; speaker?: string }>;
+  speaker?: string;
+  words?: Array<{ text: string; start: number; end: number; speaker?: string }>;
 }
 
 function formatTime(seconds: number | null | undefined): string {
@@ -30,9 +31,11 @@ export function RawTranscriptView({
   return (
     <div className="space-y-3">
       {rawParagraphs.map((para, idx) => {
-        const speaker = para.words[0]?.speaker || "A";
-        const prevSpeaker =
-          idx > 0 ? rawParagraphs[idx - 1].words[0]?.speaker || "A" : null;
+        const speaker = para.speaker ?? para.words?.[0]?.speaker ?? "A";
+        const prev = idx > 0 ? rawParagraphs[idx - 1] : null;
+        const prevSpeaker = prev
+          ? (prev.speaker ?? prev.words?.[0]?.speaker ?? "A")
+          : null;
         const showHeader = speaker !== prevSpeaker;
 
         return (
@@ -52,15 +55,25 @@ export function RawTranscriptView({
               dir="auto"
               className="rounded-lg bg-muted/50 p-4 text-start text-sm leading-relaxed"
             >
-              {para.words.map((word, wIdx) => (
+              {para.words && para.words.length > 0 ? (
+                para.words.map((word, wIdx) => (
+                  <span
+                    key={wIdx}
+                    onClick={() => onSeek(word.start / 1000)}
+                    className="cursor-pointer hover:opacity-70"
+                  >
+                    {word.text}{" "}
+                  </span>
+                ))
+              ) : (
+                // No per-word timing: the whole segment is one seekable unit.
                 <span
-                  key={wIdx}
-                  onClick={() => onSeek(word.start / 1000)}
+                  onClick={() => onSeek(para.start / 1000)}
                   className="cursor-pointer hover:opacity-70"
                 >
-                  {word.text}{" "}
+                  {para.text}
                 </span>
-              ))}
+              )}
             </div>
           </div>
         );

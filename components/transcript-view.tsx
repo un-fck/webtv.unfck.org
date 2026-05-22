@@ -267,23 +267,33 @@ export function TranscriptView({
                                 });
                               }
 
+                              // No per-word timing: seek/highlight at the
+                              // sentence (provider segment) level — its real
+                              // start/end is the smallest honest timed unit.
                               return (
                                 <span
                                   key={sentIdx}
-                                  className={
-                                    isHighlighted
-                                      ? "rounded-full px-2 py-1"
-                                      : ""
-                                  }
-                                  style={
-                                    isHighlighted && highlightColor
+                                  onClick={() => onSeek(sent.start / 1000)}
+                                  className={`cursor-pointer hover:opacity-70 ${
+                                    isHighlighted ? "rounded-full px-2 py-1" : ""
+                                  }`}
+                                  style={{
+                                    ...(isHighlighted && highlightColor
                                       ? {
                                           backgroundColor:
                                             highlightColor + "30",
                                           display: "inline",
                                         }
-                                      : undefined
-                                  }
+                                      : {}),
+                                    textDecorationLine: isSentActive
+                                      ? "underline"
+                                      : "none",
+                                    textDecorationColor: isSentActive
+                                      ? "hsl(var(--primary))"
+                                      : "transparent",
+                                    textDecorationThickness: "2px",
+                                    textUnderlineOffset: "3px",
+                                  }}
                                 >
                                   {sent.text}{" "}
                                 </span>

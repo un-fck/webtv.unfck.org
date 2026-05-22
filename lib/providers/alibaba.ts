@@ -191,13 +191,18 @@ export const alibaba: TranscriptionProvider = {
 
       for (const { sentences, offsetMs } of chunkResults) {
         for (const s of sentences) {
-          utterances.push({
-            speaker: s.speaker_id ?? "0",
-            start: s.begin_time + offsetMs,
-            end: s.end_time + offsetMs,
-            text: s.text.trim(),
-          });
-          fullTextParts.push(s.text.trim());
+          const text = s.text.trim();
+          if (!text) continue;
+          const start = s.begin_time + offsetMs;
+          // Plain-text fallback (alibaba.ts transcribeChunk) emits a single
+          // sentence with begin_time/end_time = 0; clamp its span to the whole
+          // chunk so it doesn't render as a zero-width unit that seeks to 0.
+          const end =
+            s.end_time > s.begin_time
+              ? s.end_time + offsetMs
+              : offsetMs + MAX_CHUNK_SECS * 1000;
+          utterances.push({ speaker: s.speaker_id ?? "0", start, end, text });
+          fullTextParts.push(text);
         }
       }
 

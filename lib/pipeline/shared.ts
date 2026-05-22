@@ -70,7 +70,6 @@ export interface ParagraphWord {
   text: string;
   start: number;
   end: number;
-  confidence: number;
   speaker?: string;
 }
 
@@ -78,7 +77,18 @@ export interface ParagraphInput {
   text: string;
   start: number;
   end: number;
-  words: ParagraphWord[];
+  /** ASR speaker label for the whole paragraph (used when there are no words). */
+  speaker?: string;
+  /** Real per-word timestamps. Absent for segment-level-only providers. */
+  words?: ParagraphWord[];
+  /**
+   * For word-less providers: the original provider segments merged into this
+   * paragraph during same-speaker grouping, each with its real start/end.
+   * Used to emit per-segment sentences with honest timing (no fabrication).
+   * Absent on un-merged single-segment paragraphs (the paragraph itself is the
+   * segment).
+   */
+  segments?: Array<{ text: string; start: number; end: number }>;
 }
 
 export function normalizeText(text: string): string {
@@ -101,15 +111,15 @@ export interface StatementWithSentences {
       start: number;
       end: number;
       topic_keys?: string[];
-      words: ParagraphWord[];
+      words?: ParagraphWord[];
     }>;
     start: number;
     end: number;
-    words: ParagraphWord[];
+    words?: ParagraphWord[];
   }>;
   start: number;
   end: number;
-  words: ParagraphWord[];
+  words?: ParagraphWord[];
 }
 
 export function matchWordsToText(
@@ -142,20 +152,38 @@ export function buildStatementsWithSentences(
 ): StatementWithSentences[] {
   return paragraphInputs.map((paraInput) => {
     // Split by \n\n to create separate paragraphs
-    const parts = paraInput.text.split("\n\n");
+    const parts = paraInput.text.split("\n\n").filter((p) => p.trim());
 
-    const paragraphs: Array<{
-      sentences: Array<{
-        text: string;
-        start: number;
-        end: number;
-        words: ParagraphWord[];
-      }>;
-      start: number;
-      end: number;
-      words: ParagraphWord[];
-    }> = [];
+    const paragraphs: StatementWithSentences["paragraphs"] = [];
 
+    // No real word timestamps: the provider segment is the smallest honest
+    // timed unit. Emit one sentence per provider segment, each carrying its
+    // real start/end — no sbd splitting, no fabricated timing. Segments of a
+    // speaker turn live in one paragraph so they render as flowing text.
+    if (!paraInput.words || paraInput.words.length === 0) {
+      const segs = paraInput.segments ?? [
+        { text: paraInput.text, start: paraInput.start, end: paraInput.end },
+      ];
+      const sentences = segs
+        .map((s) => ({ text: s.text.trim(), start: s.start, end: s.end }))
+        .filter((s) => s.text);
+      if (sentences.length > 0) {
+        paragraphs.push({
+          sentences,
+          start: paraInput.start,
+          end: paraInput.end,
+        });
+      }
+      return {
+        paragraphs,
+        start: paraInput.start,
+        end: paraInput.end,
+      };
+    }
+
+    // Real word timestamps: split into sentences and derive per-sentence
+    // timing by matching each sentence's text against the word stream.
+    const words = paraInput.words;
     let wordOffset = 0;
 
     parts.forEach((part) => {
@@ -171,11 +199,7 @@ export function buildStatementsWithSentences(
 
       partSentences.forEach((sentText: string) => {
         // Match sentence to words
-        const sentWords = matchWordsToText(
-          paraInput.words,
-          wordOffset,
-          sentText,
-        );
+        const sentWords = matchWordsToText(words, wordOffset, sentText);
         if (sentWords.length > 0) {
           sentences.push({
             text: sentText,
@@ -201,7 +225,7 @@ export function buildStatementsWithSentences(
       paragraphs,
       start: paraInput.start,
       end: paraInput.end,
-      words: paraInput.words,
+      words,
     };
   });
 }

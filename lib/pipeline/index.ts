@@ -119,9 +119,9 @@ export async function identifySpeakers(
     console.log(`  → Analyzing ${paragraphs.length} paragraphs...`);
 
     const transcriptParts = paragraphs.map((para, index) => {
-      const text = para.words.map((word) => word.text).join(" ");
-      const asrSpeaker = para.words?.[0]?.speaker || "Unknown";
-      return `[${index}] (ASR: Speaker ${asrSpeaker}) ${text}`;
+      const asrSpeaker =
+        para.speaker || para.words?.[0]?.speaker || "Unknown";
+      return `[${index}] (ASR: Speaker ${asrSpeaker}) ${para.text}`;
     });
 
     const completion = await trackOpenAIChatCompletion({
@@ -245,10 +245,14 @@ ${transcriptParts.join("\n\n")}`,
       );
     }
 
-    // Collect paragraphs needing resegmentation
+    // Collect paragraphs needing resegmentation. Splitting a paragraph into
+    // sub-segments requires per-word timing to place the split boundary in
+    // time; without words a paragraph is already the smallest honest unit, so
+    // skip it (no fabricated sub-timing).
     const toResegment = parsed.paragraphs
       .filter((p) => p.has_multiple_speakers)
-      .map((p) => p.index);
+      .map((p) => p.index)
+      .filter((idx) => (paragraphs[idx]?.words?.length ?? 0) > 0);
 
     // Build initial mapping
     parsed.paragraphs.forEach((para) => {
@@ -411,13 +415,37 @@ ${transcriptParts.join("\n\n")}`,
       const speaker = finalMapping[i.toString()];
 
       if (speakersEqual(currentSpeaker, speaker)) {
-        // Merge with current group
-        currentGroup = {
-          text: currentGroup.text + "\n\n" + para.text,
-          start: currentGroup.start,
-          end: para.end,
-          words: [...currentGroup.words, ...para.words],
-        };
+        const hasWords =
+          (currentGroup.words?.length ?? 0) > 0 &&
+          (para.words?.length ?? 0) > 0;
+        if (hasWords) {
+          // Merge with current group, concatenating real word timestamps.
+          currentGroup = {
+            ...currentGroup,
+            text: currentGroup.text + "\n\n" + para.text,
+            end: para.end,
+            words: [...(currentGroup.words ?? []), ...(para.words ?? [])],
+          };
+        } else {
+          // No word timing: merge text but preserve each provider segment's
+          // real start/end as a segment so per-segment sentences can be built.
+          const existingSegs = currentGroup.segments ?? [
+            {
+              text: currentGroup.text,
+              start: currentGroup.start,
+              end: currentGroup.end,
+            },
+          ];
+          currentGroup = {
+            ...currentGroup,
+            text: currentGroup.text + "\n\n" + para.text,
+            end: para.end,
+            segments: [
+              ...existingSegs,
+              { text: para.text, start: para.start, end: para.end },
+            ],
+          };
+        }
       } else {
         // Save current group and start new
         groupedParagraphs.push(currentGroup);

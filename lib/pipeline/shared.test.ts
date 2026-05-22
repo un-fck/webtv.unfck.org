@@ -22,7 +22,10 @@ const transcript: NormalizedTranscript = JSON.parse(
 );
 const paragraphs = toRawParagraphs(transcript);
 
-describe("buildStatementsWithSentences (real transcript-derived paragraphs)", () => {
+describe("buildStatementsWithSentences — no word timing (Gemini transcript)", () => {
+  // The fixture is a Gemini transcript with no per-word timestamps, so each
+  // provider segment is the smallest honest timed unit: no sbd splitting, no
+  // fabricated timing, no words on the resulting sentences.
   const statements = buildStatementsWithSentences(paragraphs);
 
   it("emits one statement per input paragraph, preserving the span", () => {
@@ -33,39 +36,93 @@ describe("buildStatementsWithSentences (real transcript-derived paragraphs)", ()
     });
   });
 
-  it("splits into paragraphs→sentences whose words cover the sentence text", () => {
+  it("emits one sentence per segment carrying the real paragraph span", () => {
+    statements.forEach((s, i) => {
+      expect(s.paragraphs.length).toBe(1);
+      const p = s.paragraphs[0];
+      expect(p.sentences.length).toBe(1);
+      const sent = p.sentences[0];
+      expect(sent.text).toBe(paragraphs[i].text.trim());
+      expect(sent.start).toBe(paragraphs[i].start);
+      expect(sent.end).toBe(paragraphs[i].end);
+    });
+  });
+
+  it("fabricates no per-word timestamps on sentences", () => {
     for (const s of statements) {
-      expect(s.paragraphs.length).toBeGreaterThan(0);
       for (const p of s.paragraphs) {
-        expect(p.sentences.length).toBeGreaterThan(0);
         for (const sent of p.sentences) {
-          expect(sent.words.length).toBeGreaterThan(0);
-          // matched words normalize to a prefix of the sentence text
-          const joined = normalizeText(sent.words.map((w) => w.text).join(" "));
-          expect(normalizeText(sent.text).startsWith(joined)).toBe(true);
-          // sentence timing derives from its first/last word
-          expect(sent.start).toBe(sent.words[0].start);
-          expect(sent.end).toBe(sent.words[sent.words.length - 1].end);
+          expect(sent.words).toBeUndefined();
         }
       }
     }
   });
+});
 
-  it("never consumes more words than the paragraph provides", () => {
-    statements.forEach((s, i) => {
-      const used = s.paragraphs
-        .flatMap((p) => p.sentences)
-        .flatMap((sent) => sent.words).length;
-      expect(used).toBeLessThanOrEqual(paragraphs[i].words.length);
+describe("buildStatementsWithSentences — merged segments (no word timing)", () => {
+  // Same-speaker provider segments are grouped upstream into a single paragraph
+  // carrying a `segments` list; each becomes a sentence with its real span.
+  it("emits one sentence per merged segment with its own real span", () => {
+    const [s] = buildStatementsWithSentences([
+      {
+        text: "First clause.\n\nSecond clause.",
+        start: 1000,
+        end: 5000,
+        speaker: "1",
+        segments: [
+          { text: "First clause.", start: 1000, end: 2500 },
+          { text: "Second clause.", start: 2500, end: 5000 },
+        ],
+      },
+    ]);
+    expect(s.paragraphs).toHaveLength(1);
+    const sents = s.paragraphs[0].sentences;
+    expect(sents).toHaveLength(2);
+    expect(sents[0]).toMatchObject({
+      text: "First clause.",
+      start: 1000,
+      end: 2500,
     });
+    expect(sents[1]).toMatchObject({
+      text: "Second clause.",
+      start: 2500,
+      end: 5000,
+    });
+    expect(sents[0].words).toBeUndefined();
+  });
+});
+
+describe("buildStatementsWithSentences — real word timing", () => {
+  // Providers with real word timing keep the sbd-split + word-match path.
+  it("derives sentence timing from matched words", () => {
+    const [s] = buildStatementsWithSentences([
+      {
+        text: "Hello world. Bye now.",
+        start: 0,
+        end: 400,
+        words: [
+          { text: "Hello", start: 0, end: 100 },
+          { text: "world.", start: 100, end: 200 },
+          { text: "Bye", start: 200, end: 300 },
+          { text: "now.", start: 300, end: 400 },
+        ],
+      },
+    ]);
+    const sents = s.paragraphs.flatMap((p) => p.sentences);
+    expect(sents.length).toBeGreaterThanOrEqual(2);
+    for (const sent of sents) {
+      expect(sent.words!.length).toBeGreaterThan(0);
+      expect(sent.start).toBe(sent.words![0].start);
+      expect(sent.end).toBe(sent.words![sent.words!.length - 1].end);
+    }
   });
 });
 
 describe("matchWordsToText", () => {
   const words = [
-    { text: "Hello", start: 0, end: 100, confidence: 1 },
-    { text: "world,", start: 100, end: 200, confidence: 1 },
-    { text: "again", start: 200, end: 300, confidence: 1 },
+    { text: "Hello", start: 0, end: 100 },
+    { text: "world,", start: 100, end: 200 },
+    { text: "again", start: 200, end: 300 },
   ];
 
   it("greedily matches words until the normalized target is covered", () => {

@@ -2,8 +2,10 @@
  * Gemini-based transcription for UN proceedings.
  *
  * Transcribes audio verbatim with diarization (numeric speaker IDs) and
- * sentence-level timestamps. Word timestamps are interpolated uniformly
- * across each segment's [start, end].
+ * real per-segment timestamps (Gemini emits one sentence/clause per segment
+ * with its own start_time/end_time). Each segment becomes one paragraph; we do
+ * NOT synthesize per-word timestamps — the segment is the smallest honest
+ * timed unit and the UI renders/seeks at that granularity.
  *
  * Speaker identification is handled downstream by the OpenAI pipeline,
  * the same as all other providers.
@@ -75,29 +77,10 @@ export interface GeminiTranscriptionResult {
 }
 
 /**
- * Interpolate word timestamps uniformly across [startMs, endMs].
- * Used as a fallback when Gemini didn't provide per-word timestamps.
- * Confidence 0.6 = interpolated estimate.
+ * Convert Gemini segments to RawParagraph[]. Each segment is one paragraph
+ * carrying its real start/end and the numeric speaker_id. No per-word
+ * timestamps are synthesized — the segment is the smallest honest timed unit.
  */
-function interpolateWords(
-  wordTexts: string[],
-  startMs: number,
-  endMs: number,
-  confidence = 0.6,
-): RawParagraph["words"] {
-  if (wordTexts.length === 0) return [];
-  const durationMs = Math.max(0, endMs - startMs);
-  const msPerWord =
-    wordTexts.length > 1 ? durationMs / wordTexts.length : durationMs;
-  return wordTexts.map((text, i) => ({
-    text,
-    start: Math.round(startMs + i * msPerWord),
-    end: Math.round(startMs + (i + 1) * msPerWord),
-    confidence,
-  }));
-}
-
-/** Convert Gemini segments to RawParagraph[], tagging each word with its numeric speaker_id. */
 function segmentsToOutput(
   segments: GeminiSegment[],
   chunkOffsetMs = 0,
@@ -105,20 +88,17 @@ function segmentsToOutput(
   const paragraphs: RawParagraph[] = [];
 
   for (const seg of segments) {
+    const text = seg.text.trim();
+    if (!text) continue;
+
     const segStart = parseHHMMSS(seg.start_time) + chunkOffsetMs;
     const segEnd = parseHHMMSS(seg.end_time) + chunkOffsetMs;
 
-    const wordTexts = seg.text.split(/\s+/).filter(Boolean);
-    const words = interpolateWords(wordTexts, segStart, segEnd);
-
-    if (words.length === 0) continue;
-
-    const speakerLabel = (seg.speaker_id ?? 0).toString();
     paragraphs.push({
       text: seg.text,
       start: segStart,
       end: segEnd,
-      words: words.map((w) => ({ ...w, speaker: speakerLabel })),
+      speaker: (seg.speaker_id ?? 0).toString(),
     });
   }
 

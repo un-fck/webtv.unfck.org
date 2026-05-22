@@ -50,11 +50,13 @@ export interface RawParagraph {
   text: string;
   start: number;
   end: number;
-  words: Array<{
+  /** ASR speaker label for the whole paragraph (used when there are no words). */
+  speaker?: string;
+  /** Real per-word timestamps. Absent for providers that only return segment-level timing. */
+  words?: Array<{
     text: string;
     start: number;
     end: number;
-    confidence: number;
     speaker?: string;
   }>;
 }
@@ -68,29 +70,26 @@ export interface TranscriptContent {
         start: number;
         end: number;
         topic_keys?: string[];
-        words: Array<{
+        words?: Array<{
           text: string;
           start: number;
           end: number;
-          confidence: number;
         }>;
       }>;
       start: number;
       end: number;
-      words: Array<{
+      words?: Array<{
         text: string;
         start: number;
         end: number;
-        confidence: number;
       }>;
     }>;
     start: number;
     end: number;
-    words: Array<{
+    words?: Array<{
       text: string;
       start: number;
       end: number;
-      confidence: number;
     }>;
   }>;
   topics?: Record<string, { key: string; label: string; description: string }>;
