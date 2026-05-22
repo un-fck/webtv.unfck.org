@@ -642,7 +642,7 @@ export function VideoTable({
       onSelect: () => updateParams({ status: "past" }),
     },
     {
-      label: "Scheduled",
+      label: "Upcoming",
       active: isScheduledView,
       onSelect: () => updateParams({ status: "scheduled", sort: "date_asc" }),
     },
