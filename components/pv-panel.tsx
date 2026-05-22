@@ -11,6 +11,8 @@ import {
 import { ChevronDown, ChevronRight, AudioLines } from "lucide-react";
 import type { PVDocument, PVTurn } from "@/lib/pv-parser";
 import { findReferences } from "@/lib/pv-reference-linking";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 export interface PVSpeakerEntry {
   speaker: string;
@@ -451,10 +453,15 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
       >
         {/* Speaker header */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="text-sm font-semibold tracking-wide text-foreground">
+          <div className={typography.speakerLabel}>
             <div className="flex flex-wrap items-center gap-1.5">
               {turn.affiliation && (
-                <span className="inline-flex items-center rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                <span
+                  className={cn(
+                    typography.label,
+                    "inline-flex items-center rounded-md bg-blue-100 px-2 py-0.5 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+                  )}
+                >
                   {turn.affiliation}
                 </span>
               )}
@@ -469,7 +476,10 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
           {hasTimestamp && !hasParagraphTimestamps && (
             <button
               onClick={() => onSeek(turn.startTime!)}
-              className="rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+              className={cn(
+                typography.caption,
+                "rounded px-1.5 py-0.5 transition-colors hover:bg-muted hover:text-primary",
+              )}
               title="Jump to this timestamp"
             >
               {formatTime(turn.startTime!)}
@@ -479,9 +489,7 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
 
         {/* On behalf of preamble */}
         {turn.onBehalfOf && (
-          <p className="text-xs text-muted-foreground italic">
-            {turn.onBehalfOf}
-          </p>
+          <p className={cn(typography.caption, "italic")}>{turn.onBehalfOf}</p>
         )}
 
         {/* Content — each paragraph individually clickable when aligned */}
@@ -512,7 +520,7 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
               <div
                 key={j}
                 onClick={isParaClickable ? () => onSeek(paraTs!) : undefined}
-                className={`rounded-lg border p-3 text-sm leading-relaxed transition-colors duration-200 ${
+                className={`${cn(typography.body, "rounded-lg border p-3 transition-colors duration-200")} ${
                   isParaClickable ? "cursor-pointer" : ""
                 } ${
                   turn.type === "procedural"

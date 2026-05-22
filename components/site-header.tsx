@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { TimezonePicker } from "@/components/timezone-picker";
 import { AuthControl } from "@/components/auth-control";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   return (
@@ -33,7 +35,10 @@ export function SiteHeader() {
           <TimezonePicker />
           <Link
             href="/about"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className={cn(
+              typography.meta,
+              "transition-colors hover:text-foreground",
+            )}
           >
             About
           </Link>

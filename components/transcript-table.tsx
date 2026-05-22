@@ -37,6 +37,8 @@ import {
   formatMeetingDate,
   formatMeetingDateTime,
 } from "@/lib/timezone";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData, TValue> {
@@ -963,14 +965,19 @@ export function VideoTable({
                     <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />
                   ) : (
                     duration && (
-                      <span className="text-xs text-muted-foreground tabular-nums">
+                      <span className={cn(typography.caption, "tabular-nums")}>
                         {duration}
                       </span>
                     )
                   )}
                 </div>
               </div>
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <div
+                className={cn(
+                  typography.caption,
+                  "mt-2 flex flex-wrap gap-x-3 gap-y-1",
+                )}
+              >
                 <span>{dateTime}</span>
                 {video.body && <span>• {video.body}</span>}
                 {video.category && <span>• {video.category}</span>}
@@ -988,7 +995,7 @@ export function VideoTable({
               <tr className="border-b border-gray-200 bg-gray-50">
                 {/* Date */}
                 <th
-                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
+                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
                   style={{ width: 120, minWidth: 120, maxWidth: 120 }}
                 >
                   <div className="flex items-center gap-1">
@@ -1011,20 +1018,22 @@ export function VideoTable({
                 </th>
                 {/* Time */}
                 <th
-                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
+                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
                   style={{ width: 70, minWidth: 70, maxWidth: 70 }}
                 >
                   <span>Time</span>
                 </th>
                 {/* Duration */}
                 <th
-                  className="px-4 py-2 text-right text-xs font-medium tracking-wider text-gray-400 uppercase"
+                  className={cn(typography.tableHeader, "px-4 py-2 text-right")}
                   style={{ width: 80, minWidth: 80, maxWidth: 80 }}
                 >
                   <span>Duration</span>
                 </th>
                 {/* Title */}
-                <th className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase">
+                <th
+                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
+                >
                   <div className="flex items-center gap-1">
                     <span>Title</span>
                     <SortArrow
@@ -1040,7 +1049,7 @@ export function VideoTable({
                 </th>
                 {/* Body */}
                 <th
-                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
+                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
                   style={{ width: 140, minWidth: 140, maxWidth: 140 }}
                 >
                   <div className="flex items-center gap-1">
@@ -1057,7 +1066,7 @@ export function VideoTable({
                 </th>
                 {/* Category */}
                 <th
-                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
+                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
                   style={{ width: 140, minWidth: 140, maxWidth: 140 }}
                 >
                   <div className="flex items-center gap-1">
@@ -1076,7 +1085,7 @@ export function VideoTable({
                 </th>
                 {/* Transcripts */}
                 <th
-                  className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-400 uppercase"
+                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
                   style={{ width: 140, minWidth: 140, maxWidth: 140 }}
                 >
                   <div className="flex items-center gap-1">

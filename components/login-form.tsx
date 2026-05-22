@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { requestMagicLink } from "@/lib/auth/commands";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -27,7 +29,7 @@ export function LoginForm() {
     <div className="flex flex-1 items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="rounded-2xl border border-border bg-white p-8 shadow-sm">
-          <h2 className="mb-1 text-2xl font-bold text-foreground">Sign In</h2>
+          <h2 className={cn(typography.cardTitle, "mb-1")}>Sign In</h2>
           <p className="mb-8 text-sm text-muted-foreground">
             Enter your UN entity email address to receive a sign-in link.
           </p>
@@ -46,7 +48,7 @@ export function LoginForm() {
               <div className="space-y-2">
                 <label
                   htmlFor="email"
-                  className="block text-xs font-medium text-foreground"
+                  className={cn(typography.label, "block text-foreground")}
                 >
                   Email address
                 </label>

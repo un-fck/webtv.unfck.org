@@ -1,4 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "About — UN Web TV Transcripts",
@@ -14,24 +16,27 @@ export default function AboutPage() {
         <nav className="py-3">
           <a
             href="/"
-            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className={cn(
+              typography.caption,
+              "transition-colors hover:text-foreground",
+            )}
           >
             ← Back to schedule
           </a>
         </nav>
         <div className="max-w-2xl">
           <div className="mb-10">
-            <h1 className="mb-3 text-3xl font-bold tracking-tight text-foreground">
-              About
-            </h1>
-            <p className="text-lg text-muted-foreground">
+            <h1 className={cn(typography.pageTitle, "mb-3")}>About</h1>
+            <p className={typography.lead}>
               Automatic transcripts for UN Web TV meetings.
             </p>
           </div>
 
-          <div className="space-y-10 text-base leading-relaxed text-foreground">
+          <div className={cn(typography.prose, "space-y-10")}>
             <section>
-              <h2 className="mb-3 text-xl font-semibold">What is this?</h2>
+              <h2 className={cn(typography.sectionTitle, "mb-3")}>
+                What is this?
+              </h2>
               <p className="text-muted-foreground">
                 UN Web TV Transcripts is a public preview tool that
                 automatically generates searchable text transcripts from United
@@ -49,7 +54,9 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="mb-3 text-xl font-semibold">Who is it for?</h2>
+              <h2 className={cn(typography.sectionTitle, "mb-3")}>
+                Who is it for?
+              </h2>
               <p className="mb-3 text-muted-foreground">
                 The tool is designed to help anyone who needs quick access to
                 the spoken content of UN meetings, including:
@@ -68,7 +75,7 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="mb-3 text-xl font-semibold">
+              <h2 className={cn(typography.sectionTitle, "mb-3")}>
                 What meetings are covered?
               </h2>
               <p className="mb-3 text-muted-foreground">
@@ -93,7 +100,7 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="mb-3 text-xl font-semibold">Languages</h2>
+              <h2 className={cn(typography.sectionTitle, "mb-3")}>Languages</h2>
               <p className="text-muted-foreground">
                 Transcripts are generated primarily in English. Speeches
                 delivered in other official UN languages (Arabic, Chinese,
@@ -104,7 +111,7 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="mb-3 text-xl font-semibold">
+              <h2 className={cn(typography.sectionTitle, "mb-3")}>
                 Important limitations
               </h2>
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -130,7 +137,7 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="mb-3 text-xl font-semibold">Status</h2>
+              <h2 className={cn(typography.sectionTitle, "mb-3")}>Status</h2>
               <p className="text-muted-foreground">
                 This tool is in <strong>Public Preview</strong>. Features,
                 coverage, and accuracy are actively being improved. Feedback is

@@ -18,6 +18,8 @@ import { formatMeetingTime, formatMeetingDate } from "@/lib/timezone";
 import { getPVDocumentUrl } from "@/lib/pv-documents";
 import { UN_LANGUAGES } from "@/lib/languages";
 import { getScheduleReturnUrl } from "@/lib/schedule-return";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 interface VideoPageClientProps {
   kalturaId: string;
@@ -211,7 +213,10 @@ export function VideoPageClient({
       <div className="mb-4">
         <button
           onClick={() => setTopicsOpen((v) => !v)}
-          className="mb-1 flex w-full items-center gap-1 text-sm font-semibold tracking-wide text-foreground"
+          className={cn(
+            typography.speakerLabel,
+            "mb-1 flex w-full items-center gap-1",
+          )}
         >
           <ChevronDown
             className={`h-3 w-3 transition-transform ${topicsOpen ? "" : "-rotate-90"}`}
@@ -319,11 +324,16 @@ export function VideoPageClient({
 
           {/* Metadata — right column width */}
           <div className="lg:flex-2">
-            <h1 className="text-xl leading-tight font-semibold">
+            <h1 className={cn(typography.sectionTitle, "leading-tight")}>
               {video.cleanTitle}
             </h1>
 
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+            <div
+              className={cn(
+                typography.meta,
+                "mt-1.5 flex flex-wrap items-center gap-x-2",
+              )}
+            >
               {[
                 video.date &&
                   formatMeetingDate(
@@ -425,7 +435,10 @@ export function VideoPageClient({
                 <div className="flex min-h-0 flex-1 flex-col">
                   <button
                     onClick={() => setSpeakersOpen((v) => !v)}
-                    className="mb-1 flex shrink-0 items-center gap-1 text-sm font-semibold tracking-wide text-foreground"
+                    className={cn(
+                      typography.speakerLabel,
+                      "mb-1 flex shrink-0 items-center gap-1",
+                    )}
                   >
                     <ChevronDown
                       className={`h-3 w-3 transition-transform ${speakersOpen ? "" : "-rotate-90"}`}

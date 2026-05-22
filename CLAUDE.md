@@ -222,6 +222,7 @@ Benchmarks ~12 STT providers (registered in `lib/providers/registry.ts`) against
 - **shadcn components**: `npx shadcn@latest add <component>`
 - **UN colors**: defined in `app/globals.css` (`--color-un-blue`, `--color-un-gray`, etc.), used via Tailwind theme tokens
 - **Font**: Roboto (loaded via `next/font/google` in layout)
+- **Typography**: text sizes/weights come from the semantic scale in `lib/typography.ts` (e.g. `typography.sectionTitle`, `typography.body`, `typography.caption`), composed with `cn()`. New text should use a token rather than raw `text-*`/`font-*` utilities. Intentionally bespoke and excluded: the brand logo / "Public Preview" badge in `site-header.tsx`, and the shadcn button's own `cva` sizing in `components/ui/button.tsx`.
 - **Left-align** UI elements; follow clear design hierarchy
 - **Global solutions** over parallel infrastructures; avoid hardcoding values
 - **Scripts** in `scripts/` use `lib/load-env` (loads `.env.local` via dotenv) since they run outside Next.js

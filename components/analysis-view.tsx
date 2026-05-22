@@ -4,6 +4,8 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { SpeakerMapping } from "@/lib/speakers";
 import type { Proposition } from "@/lib/pipeline";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 const STANCE_COLORS: Record<
   string,
@@ -205,7 +207,11 @@ export function AnalysisView({
                       <div className="px-4 py-3">
                         <div className="mb-1 flex items-center gap-2">
                           <span
-                            className={`text-xs font-medium uppercase ${colors.text}`}
+                            className={cn(
+                              typography.label,
+                              "uppercase",
+                              colors.text,
+                            )}
                           >
                             {STANCE_LABELS[pos.stance]}
                           </span>
@@ -215,9 +221,7 @@ export function AnalysisView({
                             .map((s) => countryNames.get(s) || s)
                             .join(", ")}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {pos.summary}
-                        </p>
+                        <p className={typography.meta}>{pos.summary}</p>
 
                         {pos.evidence && pos.evidence.length > 0 && (
                           <button
@@ -263,7 +267,10 @@ export function AnalysisView({
                                   >
                                     <p
                                       dir="auto"
-                                      className="text-start text-sm leading-relaxed text-foreground italic"
+                                      className={cn(
+                                        typography.body,
+                                        "text-start text-foreground italic",
+                                      )}
                                     >
                                       &ldquo;{ev.quote}&rdquo;
                                     </p>

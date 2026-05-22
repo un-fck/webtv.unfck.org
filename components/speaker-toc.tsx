@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import type { SpeakerMapping } from "@/lib/speakers";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 interface SpeakerSegment {
   speaker: string;
@@ -111,12 +113,22 @@ export function SpeakerToc({
             </span>
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
               {hasAffiliation && (
-                <span className="rounded bg-blue-100 px-1 py-px text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                <span
+                  className={cn(
+                    typography.label,
+                    "rounded bg-blue-100 px-1 py-px text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+                  )}
+                >
                   {countryNames.get(info!.affiliation!) || info!.affiliation}
                 </span>
               )}
               {hasGroup && (
-                <span className="rounded bg-purple-100 px-1 py-px text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                <span
+                  className={cn(
+                    typography.label,
+                    "rounded bg-purple-100 px-1 py-px text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+                  )}
+                >
                   {info!.group}
                 </span>
               )}

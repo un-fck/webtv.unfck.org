@@ -1,4 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export const metadata = {
@@ -22,7 +24,7 @@ function Step({
         {number}
       </div>
       <div className="pt-0.5">
-        <h3 className="mb-1.5 font-semibold text-foreground">{title}</h3>
+        <h3 className={cn(typography.subTitle, "mb-1.5")}>{title}</h3>
         <div className="text-sm leading-relaxed text-muted-foreground">
           {children}
         </div>
@@ -37,17 +39,15 @@ export default function MethodologyPage() {
       <SiteHeader />
       <div className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <div className="mb-10">
-          <h1 className="mb-3 text-3xl font-bold tracking-tight text-foreground">
-            Methodology
-          </h1>
-          <p className="text-lg text-muted-foreground">
+          <h1 className={cn(typography.pageTitle, "mb-3")}>Methodology</h1>
+          <p className={typography.lead}>
             How meeting recordings become searchable transcripts.
           </p>
         </div>
 
-        <div className="space-y-10 text-base leading-relaxed text-foreground">
+        <div className={cn(typography.prose, "space-y-10")}>
           <section>
-            <h2 className="mb-3 text-xl font-semibold">Overview</h2>
+            <h2 className={cn(typography.sectionTitle, "mb-3")}>Overview</h2>
             <p className="text-muted-foreground">
               The system automatically collects recordings published on UN Web
               TV, transcribes the audio using AI, identifies speakers, and makes
@@ -56,7 +56,7 @@ export default function MethodologyPage() {
           </section>
 
           <section>
-            <h2 className="mb-5 text-xl font-semibold">
+            <h2 className={cn(typography.sectionTitle, "mb-5")}>
               How it works, step by step
             </h2>
             <div className="space-y-6">
@@ -101,7 +101,9 @@ export default function MethodologyPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xl font-semibold">Data sources</h2>
+            <h2 className={cn(typography.sectionTitle, "mb-3")}>
+              Data sources
+            </h2>
             <ul className="space-y-3 text-muted-foreground">
               {[
                 {
@@ -128,7 +130,7 @@ export default function MethodologyPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xl font-semibold">
+            <h2 className={cn(typography.sectionTitle, "mb-3")}>
               Accuracy and limitations
             </h2>
             <p className="mb-4 text-muted-foreground">
@@ -153,7 +155,7 @@ export default function MethodologyPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xl font-semibold">
+            <h2 className={cn(typography.sectionTitle, "mb-3")}>
               Relationship to official UN records
             </h2>
             <div className="rounded-lg border border-border bg-muted/40 p-5 text-sm text-muted-foreground">
@@ -186,7 +188,7 @@ export default function MethodologyPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xl font-semibold">
+            <h2 className={cn(typography.sectionTitle, "mb-3")}>
               Independence and affiliation
             </h2>
             <p className="text-muted-foreground">

@@ -1,6 +1,7 @@
 "use client"; // Error boundaries must be Client Components
 
 import { useEffect } from "react";
+import { typography } from "@/lib/typography";
 
 export default function Error({
   error,
@@ -15,7 +16,7 @@ export default function Error({
 
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-start justify-center gap-4 px-6">
-      <h1 className="text-2xl font-semibold">Something went wrong</h1>
+      <h1 className={typography.cardTitle}>Something went wrong</h1>
       <p className="text-muted-foreground">
         The schedule could not be loaded. This is usually temporary — please try
         again.

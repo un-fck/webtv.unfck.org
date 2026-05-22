@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { typography } from "@/lib/typography";
 
 export default function MeetingError({
   error,
@@ -16,7 +17,7 @@ export default function MeetingError({
 
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-start justify-center gap-4 px-6">
-      <h1 className="text-2xl font-semibold">Could not load this meeting</h1>
+      <h1 className={typography.cardTitle}>Could not load this meeting</h1>
       <p className="text-muted-foreground">
         The meeting metadata could not be fetched. This is usually temporary.
       </p>

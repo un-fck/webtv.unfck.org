@@ -2,6 +2,8 @@
 
 import type { SpeakerMapping } from "@/lib/speakers";
 import { getTopicColor } from "@/components/transcription-panel";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 interface Word {
   text: string;
@@ -138,7 +140,7 @@ export function TranscriptView({
         return (
           <div key={segmentIndex} className="space-y-1 pt-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="text-sm font-semibold tracking-wide text-foreground">
+              <div className={typography.speakerLabel}>
                 {renderSpeakerInfo(
                   firstStmtIndex,
                   speakerMappings,
@@ -147,7 +149,10 @@ export function TranscriptView({
               </div>
               <button
                 onClick={() => onSeek(segment.timestamp)}
-                className="rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+                className={cn(
+                  typography.caption,
+                  "rounded px-1.5 py-0.5 transition-colors hover:bg-muted hover:text-primary",
+                )}
                 title="Jump to this timestamp"
               >
                 {formatTime(segment.timestamp)}
@@ -160,7 +165,7 @@ export function TranscriptView({
                   : "border-transparent bg-muted/40"
               }`}
             >
-              <div className="space-y-2 text-sm leading-relaxed">
+              <div className={cn(typography.body, "space-y-2")}>
                 {segment.statementIndices.map((stmtIdx, indexInSegment) => {
                   const stmt = statements?.[stmtIdx];
                   if (!stmt) return null;

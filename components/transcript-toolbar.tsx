@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import type { LanguageOption } from "@/components/transcription-panel";
 import type { Stage } from "@/components/stage-progress";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 export type ViewMode = "transcript" | "analysis" | "pv";
 
@@ -107,15 +109,16 @@ export function TranscriptToolbar({
 
   return (
     <div className="mb-3 flex items-center gap-3">
-      <h2 className="text-lg font-semibold tracking-tight text-foreground">
-        Transcript
-      </h2>
+      <h2 className={typography.sectionTitle}>Transcript</h2>
 
       {availableLanguages.length > 0 && (
         <div className="relative" ref={languageButtonRef}>
           <button
             onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-            className="flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted/50"
+            className={cn(
+              typography.label,
+              "flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 transition-colors hover:bg-muted/50",
+            )}
           >
             <Globe className="h-3 w-3" />
             {selectedLangName}
@@ -227,7 +230,10 @@ export function TranscriptToolbar({
         {starting && (
           <button
             disabled
-            className="flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground opacity-70"
+            className={cn(
+              typography.label,
+              "flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1 text-primary-foreground opacity-70",
+            )}
           >
             <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
             Generating…
@@ -241,14 +247,20 @@ export function TranscriptToolbar({
             <>
               <button
                 onClick={onTranscribe}
-                className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                className={cn(
+                  typography.label,
+                  "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
+                )}
               >
-                Generate
+                Generate transcript
               </button>
               {(videoStatus === "live" || videoStatus === "scheduled") && (
                 <button
                   onClick={onSchedule}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
+                  className={cn(
+                    typography.label,
+                    "rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted",
+                  )}
                   title="Queue transcript to start automatically when recording ends"
                 >
                   Schedule
@@ -260,7 +272,7 @@ export function TranscriptToolbar({
           !hasRawParagraphs &&
           !checking &&
           stage === "scheduled" && (
-            <span className="text-xs text-muted-foreground">
+            <span className={typography.caption}>
               Transcript scheduled — starts automatically when recording ends
             </span>
           )}
@@ -269,7 +281,10 @@ export function TranscriptToolbar({
             <div className="relative">
               <button
                 onClick={handleShare}
-                className="rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
+                className={cn(
+                  typography.label,
+                  "rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted",
+                )}
               >
                 Share
               </button>
@@ -282,7 +297,10 @@ export function TranscriptToolbar({
             <div className="relative" ref={downloadButtonRef}>
               <button
                 onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
+                className={cn(
+                  typography.label,
+                  "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted",
+                )}
               >
                 Download
                 <ChevronDown className="h-3 w-3" />

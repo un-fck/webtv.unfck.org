@@ -1,5 +1,8 @@
 "use client";
 
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
+
 interface RawParagraph {
   text: string;
   start: number;
@@ -41,11 +44,14 @@ export function RawTranscriptView({
         return (
           <div key={idx}>
             {showHeader && (
-              <div className="mb-2 pt-3 text-sm font-semibold tracking-wide text-foreground">
+              <div className={cn(typography.speakerLabel, "mb-2 pt-3")}>
                 Speaker {speaker}
                 <button
                   onClick={() => onSeek(para.start / 1000)}
-                  className="ml-2 text-xs text-muted-foreground hover:text-primary hover:underline"
+                  className={cn(
+                    typography.caption,
+                    "ml-2 hover:text-primary hover:underline",
+                  )}
                 >
                   [{formatTime(para.start / 1000)}]
                 </button>
@@ -53,7 +59,10 @@ export function RawTranscriptView({
             )}
             <div
               dir="auto"
-              className="rounded-lg bg-muted/50 p-4 text-start text-sm leading-relaxed"
+              className={cn(
+                typography.body,
+                "rounded-lg bg-muted/50 p-4 text-start",
+              )}
             >
               {para.words && para.words.length > 0 ? (
                 para.words.map((word, wIdx) => (
