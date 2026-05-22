@@ -28,6 +28,7 @@ import { bcp47ToKalturaName } from "./languages";
 import type { GeminiTranscriptionOptions } from "./gemini-transcription";
 import { setSpeakerMapping } from "./speakers";
 import { KALTURA_PARTNER_ID, KALTURA_WIDGET_ID } from "./kaltura";
+import { politeFetch } from "./polite-fetch";
 import { getSTTProvider } from "./providers/config";
 import { toRawParagraphs } from "./providers/convert";
 import type { GeminiTranscriptionResult } from "./gemini-transcription";
@@ -45,7 +46,7 @@ export interface PollResult {
 }
 
 async function fetchKalturaFlavors(kalturaId: string) {
-  const apiResponse = await fetch(
+  const apiResponse = await politeFetch(
     "https://cdnapisec.kaltura.com/api_v3/service/multirequest",
     {
       method: "POST",

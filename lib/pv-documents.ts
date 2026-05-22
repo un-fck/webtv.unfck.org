@@ -7,6 +7,8 @@
  * See docs/official-transcripts.md for which organs use PV vs SR.
  */
 
+import { politeFetch } from "./polite-fetch";
+
 /**
  * Derive an official record symbol from a video's title and category.
  *
@@ -123,7 +125,7 @@ export async function fetchPVDocument(
 ): Promise<Buffer | null> {
   try {
     const url = `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}&l=${encodeURIComponent(lang)}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+    const res = await politeFetch(url, { signal: AbortSignal.timeout(20000) });
     if (!res.ok) return null;
 
     const contentType = res.headers.get("content-type") || "";
@@ -166,7 +168,7 @@ export async function pvDocumentExists(
 ): Promise<boolean> {
   try {
     const url = `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}&l=${encodeURIComponent(lang)}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    const res = await politeFetch(url, { signal: AbortSignal.timeout(15000) });
     if (!res.ok) return false;
 
     const contentType = res.headers.get("content-type") || "";

@@ -2,6 +2,7 @@ import { getVideoByAssetId, saveVideo, type VideoRecord } from "./db";
 import { parseMeetingSymbol } from "./pv-documents";
 import { meetingSlugFromVideo } from "./meeting-slug";
 import { extractKalturaId } from "./kaltura";
+import { politeFetch } from "./polite-fetch";
 
 export interface Video {
   id: string;
@@ -256,9 +257,12 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
   const yesterday = formatDate(new Date(Date.now() - 86400000));
   const revalidate = date >= today ? 300 : date === yesterday ? 3600 : 86400;
 
-  const response = await fetch(`https://webtv.un.org/en/schedule/${date}`, {
-    next: { revalidate },
-  });
+  const response = await politeFetch(
+    `https://webtv.un.org/en/schedule/${date}`,
+    {
+      next: { revalidate },
+    } as RequestInit,
+  );
 
   const html = await response.text();
   const videos: Video[] = [];
@@ -461,9 +465,12 @@ export async function getVideoMetadata(
   assetId: string,
 ): Promise<VideoMetadata> {
   try {
-    const response = await fetch(`https://webtv.un.org/en/asset/${assetId}`, {
-      next: { revalidate: 3600 }, // 1 hour cache
-    });
+    const response = await politeFetch(
+      `https://webtv.un.org/en/asset/${assetId}`,
+      {
+        next: { revalidate: 3600 }, // 1 hour cache
+      } as RequestInit,
+    );
 
     if (!response.ok) {
       return createEmptyMetadata();

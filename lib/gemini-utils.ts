@@ -10,6 +10,7 @@ import https from "https";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import path from "path";
+import { politeFetch } from "./polite-fetch";
 import os from "os";
 
 const execFileAsync = promisify(execFile);
@@ -198,7 +199,7 @@ export async function downloadAudioToTemp(
 ): Promise<string> {
   const tag = label ? `[${label}] ` : "";
   console.log(`  ${tag}Downloading audio...`);
-  const res = await fetch(audioUrl, { redirect: "follow" });
+  const res = await politeFetch(audioUrl, { redirect: "follow" });
   if (!res.ok)
     throw new Error(`Download failed: ${res.status} ${res.statusText}`);
   const buffer = Buffer.from(await res.arrayBuffer());

@@ -4,6 +4,7 @@ import {
   KALTURA_PARTNER_ID,
   KALTURA_WIDGET_ID,
 } from "./kaltura";
+import { politeFetch } from "./polite-fetch";
 
 /**
  * Low-level Kaltura lookup: resolve a Kaltura player ID to its canonical
@@ -14,7 +15,7 @@ export async function resolveEntryIdFromKaltura(
   kalturaId: string,
 ): Promise<string | null> {
   try {
-    const response = await fetch(
+    const response = await politeFetch(
       "https://cdnapisec.kaltura.com/api_v3/service/multirequest",
       {
         method: "POST",
@@ -64,7 +65,7 @@ export async function fetchKalturaDurations(
   entryIds: string[],
 ): Promise<Map<string, number>> {
   if (entryIds.length === 0) return new Map();
-  const response = await fetch(
+  const response = await politeFetch(
     "https://cdnapisec.kaltura.com/api_v3/service/multirequest",
     {
       method: "POST",
