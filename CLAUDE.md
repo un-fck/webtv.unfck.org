@@ -2,6 +2,17 @@
 
 Agent instructions for working with this codebase.
 
+## Think before coding
+
+Don't assume, don't hide confusion, surface tradeoffs. Before implementing:
+
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them — don't pick one silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+(For trivial tasks, use judgment — this biases toward caution over speed.)
+
 ## Next.js: ALWAYS read docs before coding
 
 Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
@@ -216,4 +227,3 @@ Benchmarks ~12 STT providers (registered in `lib/providers/registry.ts`) against
 - **Path alias**: `@/*` maps to project root (see `tsconfig.json`)
 - **Vercel cron**: configured in `vercel.json`, authenticated via `CRON_SECRET` Bearer token
 - **Two ID systems**: Asset IDs (UN Web TV URLs, DB primary key) vs Kaltura entry IDs (player/audio). Always be clear which one you're working with
-- **Component file naming is intentionally mixed** (`TranscriptTable.tsx` vs `transcription-panel.tsx`) — match neighbours when editing, don't bulk-rename
