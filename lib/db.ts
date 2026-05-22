@@ -1334,3 +1334,273 @@ export async function setSpeakerMapping(
     ),
   );
 }
+
+// Resolve a video by its stable player ID (or canonical entry as a fallback),
+// matching the join semantics used elsewhere between transcripts and videos.
+export async function getVideoByKalturaId(
+  kalturaId: string,
+): Promise<VideoRecord | null> {
+  const result = await pool.query(
+    q(
+      `SELECT * FROM webtv.videos
+        WHERE kaltura_id = ? OR entry_id = ?
+        ORDER BY (kaltura_id = ?) DESC
+        LIMIT 1`,
+      [kalturaId, kalturaId, kalturaId],
+    ),
+  );
+  if (result.rows.length === 0) return null;
+  return mapVideoRow(result.rows[0]);
+}
+
+// ── Feeds & subscriptions (migration 004) ─────────────────────────────────────
+
+export interface Feed {
+  key: string;
+  label: string;
+  description: string | null;
+  enabled: boolean;
+  match_categories: string[] | null;
+  match_title_ilike: string | null;
+  match_event_type: string | null;
+}
+
+function mapFeedRow(row: Record<string, unknown>): Feed {
+  return {
+    key: row.key as string,
+    label: row.label as string,
+    description: (row.description as string | null) ?? null,
+    enabled: row.enabled as boolean,
+    match_categories: (row.match_categories as string[] | null) ?? null,
+    match_title_ilike: (row.match_title_ilike as string | null) ?? null,
+    match_event_type: (row.match_event_type as string | null) ?? null,
+  };
+}
+
+export async function getAllFeeds(): Promise<Feed[]> {
+  const result = await pool.query(
+    `SELECT * FROM webtv.feeds ORDER BY label ASC`,
+  );
+  return result.rows.map(mapFeedRow);
+}
+
+export async function getEnabledFeeds(): Promise<Feed[]> {
+  const result = await pool.query(
+    `SELECT * FROM webtv.feeds WHERE enabled = TRUE ORDER BY label ASC`,
+  );
+  return result.rows.map(mapFeedRow);
+}
+
+export async function addVideoSubscription(
+  userId: string,
+  kalturaId: string,
+  language: string,
+): Promise<void> {
+  await pool.query(
+    q(
+      `INSERT INTO webtv.video_subscriptions (user_id, kaltura_id, language)
+       VALUES (?, ?, ?) ON CONFLICT DO NOTHING`,
+      [userId, kalturaId, language],
+    ),
+  );
+}
+
+export async function removeVideoSubscription(
+  userId: string,
+  kalturaId: string,
+  language: string,
+): Promise<void> {
+  await pool.query(
+    q(
+      `DELETE FROM webtv.video_subscriptions
+        WHERE user_id = ? AND kaltura_id = ? AND language = ?`,
+      [userId, kalturaId, language],
+    ),
+  );
+}
+
+export async function getVideoSubscription(
+  userId: string,
+  kalturaId: string,
+  language: string,
+): Promise<boolean> {
+  const result = await pool.query(
+    q(
+      `SELECT 1 FROM webtv.video_subscriptions
+        WHERE user_id = ? AND kaltura_id = ? AND language = ? LIMIT 1`,
+      [userId, kalturaId, language],
+    ),
+  );
+  return result.rows.length > 0;
+}
+
+export interface UserVideoSubscription {
+  kaltura_id: string;
+  language: string;
+  title: string | null;
+  slug: string | null;
+  created_at: Date;
+}
+
+export async function getUserVideoSubscriptions(
+  userId: string,
+): Promise<UserVideoSubscription[]> {
+  const result = await pool.query(
+    q(
+      `SELECT vs.kaltura_id, vs.language, vs.created_at,
+              COALESCE(v.clean_title, v.title) AS title, v.slug
+         FROM webtv.video_subscriptions vs
+         LEFT JOIN webtv.videos v
+           ON v.kaltura_id = vs.kaltura_id OR v.entry_id = vs.kaltura_id
+        WHERE vs.user_id = ?
+        ORDER BY vs.created_at DESC`,
+      [userId],
+    ),
+  );
+  return result.rows.map((row) => ({
+    kaltura_id: row.kaltura_id as string,
+    language: row.language as string,
+    title: (row.title as string | null) ?? null,
+    slug: (row.slug as string | null) ?? null,
+    created_at: row.created_at as Date,
+  }));
+}
+
+export async function addFeedSubscription(
+  userId: string,
+  feedKey: string,
+): Promise<void> {
+  await pool.query(
+    q(
+      `INSERT INTO webtv.feed_subscriptions (user_id, feed_key)
+       VALUES (?, ?) ON CONFLICT DO NOTHING`,
+      [userId, feedKey],
+    ),
+  );
+}
+
+export async function removeFeedSubscription(
+  userId: string,
+  feedKey: string,
+): Promise<void> {
+  await pool.query(
+    q(
+      `DELETE FROM webtv.feed_subscriptions WHERE user_id = ? AND feed_key = ?`,
+      [userId, feedKey],
+    ),
+  );
+}
+
+export async function getUserFeedSubscriptions(
+  userId: string,
+): Promise<string[]> {
+  const result = await pool.query(
+    q(`SELECT feed_key FROM webtv.feed_subscriptions WHERE user_id = ?`, [
+      userId,
+    ]),
+  );
+  return result.rows.map((row) => row.feed_key as string);
+}
+
+// ── Notification engine queries ───────────────────────────────────────────────
+
+export interface CompletedTranscriptRef {
+  transcript_id: string;
+  kaltura_id: string | null;
+  entry_id: string;
+  language_code: string | null;
+}
+
+// Recently-completed transcripts with content, candidates for notification.
+export async function getRecentlyCompletedTranscripts(
+  sinceHours: number,
+): Promise<CompletedTranscriptRef[]> {
+  const result = await pool.query(
+    q(
+      `SELECT transcript_id, kaltura_id, entry_id, language_code
+         FROM webtv.transcripts
+        WHERE transcription_status = 'completed'
+          AND updated_at > NOW() - (? || ' hours')::interval
+          AND jsonb_exists(content, 'statements')`,
+      [String(sinceHours)],
+    ),
+  );
+  return result.rows.map((row) => ({
+    transcript_id: row.transcript_id as string,
+    kaltura_id: (row.kaltura_id as string | null) ?? null,
+    entry_id: row.entry_id as string,
+    language_code: (row.language_code as string | null) ?? null,
+  }));
+}
+
+export interface Recipient {
+  user_id: string;
+  email: string;
+}
+
+// Users with a per-video subscription matching this player ID (any language).
+export async function getVideoSubscribers(
+  kalturaId: string,
+): Promise<Recipient[]> {
+  const result = await pool.query(
+    q(
+      `SELECT DISTINCT u.id AS user_id, u.email
+         FROM webtv.video_subscriptions vs
+         JOIN webtv.users u ON u.id = vs.user_id
+        WHERE vs.kaltura_id = ?`,
+      [kalturaId],
+    ),
+  );
+  return result.rows.map((row) => ({
+    user_id: row.user_id as string,
+    email: row.email as string,
+  }));
+}
+
+// Users subscribed to any of the given feed keys.
+export async function getFeedSubscribers(
+  feedKeys: string[],
+): Promise<Recipient[]> {
+  if (feedKeys.length === 0) return [];
+  const result = await pool.query(
+    q(
+      `SELECT DISTINCT u.id AS user_id, u.email
+         FROM webtv.feed_subscriptions fs
+         JOIN webtv.users u ON u.id = fs.user_id
+        WHERE fs.feed_key = ANY(?)`,
+      [feedKeys],
+    ),
+  );
+  return result.rows.map((row) => ({
+    user_id: row.user_id as string,
+    email: row.email as string,
+  }));
+}
+
+// User IDs already emailed for a transcript (so we don't re-send).
+export async function getNotifiedUserIds(
+  transcriptId: string,
+): Promise<Set<string>> {
+  const result = await pool.query(
+    q(
+      `SELECT user_id FROM webtv.sent_transcript_notifications
+        WHERE transcript_id = ?`,
+      [transcriptId],
+    ),
+  );
+  return new Set(result.rows.map((row) => row.user_id as string));
+}
+
+// Record that (user, transcript) has been emailed. Idempotent.
+export async function markTranscriptNotified(
+  userId: string,
+  transcriptId: string,
+): Promise<void> {
+  await pool.query(
+    q(
+      `INSERT INTO webtv.sent_transcript_notifications (user_id, transcript_id)
+       VALUES (?, ?) ON CONFLICT DO NOTHING`,
+      [userId, transcriptId],
+    ),
+  );
+}

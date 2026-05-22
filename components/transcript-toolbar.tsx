@@ -13,6 +13,7 @@ import type { LanguageOption } from "@/components/transcription-panel";
 import type { Stage } from "@/components/stage-progress";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
+import { SubscribeToggle } from "@/components/subscribe-toggle";
 
 export type ViewMode = "transcript" | "analysis" | "pv";
 
@@ -31,6 +32,7 @@ interface TranscriptToolbarProps {
   checking: boolean;
   stage: Stage;
   starting: boolean;
+  kalturaId: string;
   videoStatus?: string;
   videoSlug?: string;
   onTranscribe: () => void;
@@ -55,6 +57,7 @@ export function TranscriptToolbar({
   checking,
   stage,
   starting,
+  kalturaId,
   videoStatus,
   videoSlug,
   onTranscribe,
@@ -101,6 +104,22 @@ export function TranscriptToolbar({
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 4000);
   };
+
+  // No recording yet → can only queue ("generate when available"); otherwise
+  // generate now.
+  const audioAvailable =
+    videoStatus !== "live" && videoStatus !== "scheduled";
+
+  const hasContent = hasSegments || hasRawParagraphs;
+  // The bell is a pure subscribe toggle, shown only when a transcript is
+  // genuinely pending (queued or running) — that's the only time a "notify me
+  // when ready" promise can actually resolve. Logged-in users only.
+  const isPending =
+    stage === "scheduled" ||
+    stage === "transcribing" ||
+    stage === "identifying_speakers" ||
+    stage === "analyzing_topics";
+  const showBell = isLoggedIn && !hasContent && !checking && isPending;
 
   // View tabs that will actually render: Transcript (always) + Analysis
   // (signed-in only) + Verbatim/Summary record (when a PV symbol exists).
@@ -239,36 +258,33 @@ export function TranscriptToolbar({
             Generating…
           </button>
         )}
-        {!hasSegments &&
-          !hasRawParagraphs &&
-          !checking &&
-          stage === "idle" &&
-          !starting && (
-            <>
-              {videoStatus === "live" || videoStatus === "scheduled" ? (
-                <button
-                  onClick={onSchedule}
-                  className={cn(
-                    typography.label,
-                    "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
-                  )}
-                  title="Queue transcript to start automatically when recording ends"
-                >
-                  Schedule
-                </button>
-              ) : (
-                <button
-                  onClick={onTranscribe}
-                  className={cn(
-                    typography.label,
-                    "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
-                  )}
-                >
-                  Generate transcript
-                </button>
-              )}
-            </>
-          )}
+
+        {/* Idle: production trigger. Generate now if the recording exists,
+            else queue it to run automatically once it does. */}
+        {!hasContent && !checking && stage === "idle" && !starting && (
+          <button
+            onClick={audioAvailable ? onTranscribe : onSchedule}
+            className={cn(
+              typography.label,
+              "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
+            )}
+            title={
+              audioAvailable
+                ? undefined
+                : "Queues the transcript to be generated automatically once the recording is available"
+            }
+          >
+            {audioAvailable ? "Generate transcript" : "Generate when available"}
+          </button>
+        )}
+
+        {/* Bell: pure subscribe toggle, only while a transcript is pending. */}
+        {showBell && (
+          <SubscribeToggle
+            kalturaId={kalturaId}
+            language={selectedLanguage}
+          />
+        )}
         {(hasSegments || hasRawParagraphs) && (
           <>
             <div className="relative">

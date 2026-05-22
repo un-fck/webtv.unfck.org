@@ -39,6 +39,12 @@ export function AuthControl() {
 
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <Link
+        href="/subscriptions"
+        className="transition-colors hover:text-foreground"
+      >
+        Subscriptions
+      </Link>
       <span className="hidden sm:inline">{email}</span>
       <button
         onClick={handleLogout}

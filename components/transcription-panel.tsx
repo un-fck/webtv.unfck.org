@@ -692,6 +692,7 @@ export function TranscriptionPanel({
         checking={checking}
         stage={stage}
         starting={starting}
+        kalturaId={kalturaId}
         videoStatus={video.status}
         videoSlug={video.slug}
         onTranscribe={() => handleTranscribe()}
@@ -815,9 +816,10 @@ export function TranscriptionPanel({
                   No transcript available yet
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  This meeting is still {video.status}. Schedule a transcript
-                  and it will be generated automatically once the recording is
-                  available.
+                  This meeting hasn&apos;t finished yet. Use{" "}
+                  <span className="font-medium">Generate when available</span> to
+                  queue it — the transcript will be generated automatically once
+                  the recording is available.
                 </p>
               </>
             ) : (

@@ -114,3 +114,34 @@ CREATE TABLE IF NOT EXISTS pv_contents (
     parsed_at TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (pv_symbol, language)
 );
+-- ── subscriptions (see migration 005) ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS feeds (
+    key TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    description TEXT,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    match_categories TEXT[],
+    match_title_ilike TEXT,
+    match_event_type TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS feed_subscriptions (
+    user_id UUID NOT NULL,
+    feed_key TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, feed_key)
+);
+CREATE INDEX IF NOT EXISTS idx_feed_subscriptions_feed ON feed_subscriptions (feed_key);
+CREATE TABLE IF NOT EXISTS video_subscriptions (
+    user_id UUID NOT NULL,
+    kaltura_id TEXT NOT NULL,
+    language TEXT NOT NULL DEFAULT 'en',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, kaltura_id, language)
+);
+CREATE INDEX IF NOT EXISTS idx_video_subscriptions_kaltura ON video_subscriptions (kaltura_id);
+CREATE TABLE IF NOT EXISTS sent_transcript_notifications (
+    user_id UUID NOT NULL,
+    transcript_id TEXT NOT NULL,
+    sent_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, transcript_id)

@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchVideosForDate, formatDate, videoToRecord } from "@/lib/un-api";
 import { resolveEntryId } from "@/lib/kaltura-helpers";
-import { saveVideo, getVideoByAssetId } from "@/lib/db";
+import {
+  saveVideo,
+  getVideoByAssetId,
+  getEnabledFeeds,
+  scheduleTranscript,
+} from "@/lib/db";
+import { matchFeeds } from "@/lib/feeds";
 import { backfillDurations } from "@/lib/duration-backfill";
 import { apiError } from "@/lib/api-error";
 
@@ -37,7 +43,11 @@ export async function GET(request: NextRequest) {
 
   let synced = 0;
   let resolved = 0;
+  let autoScheduled = 0;
   const errors: string[] = [];
+
+  // Enabled feeds drive proactive transcription of newly-discovered matches.
+  const enabledFeeds = await getEnabledFeeds();
 
   for (const video of uniqueVideos) {
     try {
@@ -55,6 +65,21 @@ export async function GET(request: NextRequest) {
 
       await saveVideo(record);
       synced++;
+
+      // Newly-discovered video matching an enabled feed → queue transcription.
+      // scheduleTranscript is idempotent; process-scheduled picks it up once
+      // audio is available. Scoped to first-seen videos so enabling a feed
+      // never bursts over the existing backlog.
+      if (!existing && record.kaltura_id) {
+        const matched = matchFeeds(record, enabledFeeds);
+        if (matched.length > 0) {
+          await scheduleTranscript(video.id, record.kaltura_id, null, null);
+          autoScheduled++;
+          console.log(
+            `[sync-videos] Auto-scheduled ${video.id} for feeds: ${matched.join(", ")}`,
+          );
+        }
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[sync-videos] Error syncing ${video.id}: ${msg}`);
@@ -77,8 +102,14 @@ export async function GET(request: NextRequest) {
 
   console.log(
     `[sync-videos] Done: ${synced} synced, ${resolved} new entry IDs resolved, ` +
-      `${durationsBackfilled} durations backfilled, ${errors.length} errors`,
+      `${autoScheduled} auto-scheduled, ${durationsBackfilled} durations backfilled, ${errors.length} errors`,
   );
 
-  return NextResponse.json({ synced, resolved, durationsBackfilled, errors });
+  return NextResponse.json({
+    synced,
+    resolved,
+    autoScheduled,
+    durationsBackfilled,
+    errors,
+  });
 }

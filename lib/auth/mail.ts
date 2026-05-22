@@ -2,10 +2,13 @@ import nodemailer from "nodemailer";
 
 export const SITE_TITLE = "UN Web TV Transcripts";
 
-const baseUrl = () =>
+export const baseUrl = () =>
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-const transporter = nodemailer.createTransport({
+export const mailFrom = () =>
+  `"${SITE_TITLE}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`;
+
+export const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.mailbox.org",
   port: Number(process.env.SMTP_PORT) || 587,
   secure: false,
@@ -16,7 +19,7 @@ export async function sendMagicLink(email: string, token: string) {
   const link = `${baseUrl()}/verify?token=${token}`;
 
   await transporter.sendMail({
-    from: `"${SITE_TITLE}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+    from: mailFrom(),
     to: email,
     subject: `Sign in to ${SITE_TITLE}`,
     text: `${SITE_TITLE}\n\nClick here to sign in: ${link}\n\nThis link expires in 15 minutes.\n\nIf you did not request this email, you can safely ignore it.`,

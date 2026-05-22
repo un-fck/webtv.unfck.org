@@ -13,6 +13,14 @@ Don't assume, don't hide confusion, surface tradeoffs. Before implementing:
 
 (For trivial tasks, use judgment — this biases toward caution over speed.)
 
+## Never apply database changes yourself
+
+Do NOT run migrations or any write/DDL against a database (no `psql -f`, no
+`ALTER`/`CREATE`/`INSERT`/`UPDATE`/`DELETE` against a live DB) unless the user
+has explicitly asked or approved it in this conversation. Write the migration
+file and hand the apply command to the user; let them run it. Read-only queries
+for investigation are fine.
+
 ## Next.js: ALWAYS read docs before coding
 
 Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
@@ -40,6 +48,10 @@ tsx scripts/test-pv-alignment.ts     # Validate PV alignment timestamps
 tsx scripts/test-pv-parser.ts        # Validate PV parser across 6 languages
 
 # Schema migrations (apply once per database, in order; see sql/migrations/)
+# NOTE: the agent must NOT run these — the user applies them (see rule below).
+# DATABASE_URL lives in .env (loaded by lib/load-env), NOT the shell and NOT
+# .env.local. A bare `psql "$DATABASE_URL"` in the shell sees an empty string
+# and silently connects to the LOCAL postgres instead of Azure.
 psql "$DATABASE_URL" -f sql/migrations/<NNN_name>.sql
 
 # Eval system (independent from main app, see eval/README.md)
@@ -56,6 +68,12 @@ pnpm hf:push-dashboard        # Push dashboard to HuggingFace (requires uv)
 ## Environment Variables
 
 Copy `.env.example` → `.env.local` and fill in values.
+
+> **Where the real credentials live:** in this checkout the actual secrets
+> (including `DATABASE_URL` for the Azure dev DB) are in **`.env`**, not
+> `.env.local` (which does not exist here). `lib/load-env` loads `.env.local`
+> first, then `.env`. The shell does NOT export these, so `$DATABASE_URL` is
+> empty in a bare terminal — never trust it for `psql`.
 
 **Required for the web app:**
 
