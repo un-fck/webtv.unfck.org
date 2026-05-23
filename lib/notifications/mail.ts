@@ -1,13 +1,10 @@
-import {
-  SITE_TITLE,
-  baseUrl,
-  mailFrom,
-  transporter,
-} from "@/lib/auth/mail";
+import { SITE_TITLE, baseUrl, mailFrom, transporter } from "@/lib/auth/mail";
 import type { VideoRecord } from "@/lib/db";
 
 /** Public URL for a video, preferring its human-readable slug. */
-export function videoUrl(video: Pick<VideoRecord, "slug" | "asset_id">): string {
+export function videoUrl(
+  video: Pick<VideoRecord, "slug" | "asset_id">,
+): string {
   const path = video.slug || `meeting/${video.asset_id}`;
   return `${baseUrl()}/${path}`;
 }

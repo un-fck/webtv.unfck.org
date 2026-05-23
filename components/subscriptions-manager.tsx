@@ -104,7 +104,9 @@ export function SubscriptionsManager() {
         </p>
         <div className="divide-y divide-border rounded-lg border border-border">
           {feeds.length === 0 && (
-            <p className={cn(typography.body, "px-4 py-6 text-muted-foreground")}>
+            <p
+              className={cn(typography.body, "px-4 py-6 text-muted-foreground")}
+            >
               No feeds available.
             </p>
           )}
@@ -116,7 +118,9 @@ export function SubscriptionsManager() {
               <div>
                 <p className={typography.body}>{feed.label}</p>
                 {feed.description && (
-                  <p className={cn(typography.caption, "text-muted-foreground")}>
+                  <p
+                    className={cn(typography.caption, "text-muted-foreground")}
+                  >
                     {feed.description}
                   </p>
                 )}
@@ -131,7 +135,9 @@ export function SubscriptionsManager() {
       </section>
 
       <section>
-        <h2 className={cn(typography.sectionTitle, "mb-1")}>Followed meetings</h2>
+        <h2 className={cn(typography.sectionTitle, "mb-1")}>
+          Followed meetings
+        </h2>
         <p className={cn(typography.caption, "mb-4 text-muted-foreground")}>
           Individual meetings you asked to be emailed about.
         </p>
@@ -163,7 +169,9 @@ export function SubscriptionsManager() {
                       {sub.title || sub.kaltura_id}
                     </span>
                   )}
-                  <p className={cn(typography.caption, "text-muted-foreground")}>
+                  <p
+                    className={cn(typography.caption, "text-muted-foreground")}
+                  >
                     {sub.emailed_at ? (
                       <span className="text-un-blue">
                         Emailed {formatEmailedAt(sub.emailed_at)}

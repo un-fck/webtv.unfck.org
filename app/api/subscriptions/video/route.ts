@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/require-user";
-import {
-  addVideoSubscription,
-  removeVideoSubscription,
-} from "@/lib/db";
+import { addVideoSubscription, removeVideoSubscription } from "@/lib/db";
 import { apiError } from "@/lib/api-error";
 
 async function parse(request: NextRequest) {
   const { kalturaId, language } = await request.json();
   if (!kalturaId || typeof kalturaId !== "string") {
-    return { error: apiError(400, "missing_parameter", "kalturaId is required") };
+    return {
+      error: apiError(400, "missing_parameter", "kalturaId is required"),
+    };
   }
-  return { kalturaId, language: typeof language === "string" ? language : "en" };
+  return {
+    kalturaId,
+    language: typeof language === "string" ? language : "en",
+  };
 }
 
 export async function POST(request: NextRequest) {

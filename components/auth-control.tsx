@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, Users } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -75,6 +75,14 @@ export function AuthControl() {
           </p>
         </div>
         <div className="pt-1.5">
+          <Link
+            href="/speakers"
+            onClick={() => setOpen(false)}
+            className={itemClass}
+          >
+            <Users className="h-4 w-4 text-muted-foreground" />
+            Speakers
+          </Link>
           <Link
             href="/subscriptions"
             onClick={() => setOpen(false)}

@@ -995,7 +995,9 @@ export async function getRecentVideos(
  */
 export async function getRemovalCandidates(
   lookbackDays: number,
-): Promise<Array<{ asset_id: string; entry_id: string; removed_at: Date | null }>> {
+): Promise<
+  Array<{ asset_id: string; entry_id: string; removed_at: Date | null }>
+> {
   const result = await pool.query(
     q(
       `SELECT asset_id, entry_id, removed_at
@@ -1150,7 +1152,10 @@ export async function getVideosPage(
     transcriptedEntryIds,
   } = params;
 
-  const conditions: string[] = ["last_seen >= CURRENT_DATE - ?::int", VISIBLE_VIDEO];
+  const conditions: string[] = [
+    "last_seen >= CURRENT_DATE - ?::int",
+    VISIBLE_VIDEO,
+  ];
   const args: unknown[] = [daysBack];
 
   if (date) {
@@ -1399,6 +1404,109 @@ export async function setSpeakerMapping(
       [transcriptId, mapping],
     ),
   );
+}
+
+/** One speaker mapping plus the meeting metadata needed to build links. */
+export interface SpeakerMappingWithMeta {
+  transcript_id: string;
+  mapping: SpeakerMapping;
+  entry_id: string;
+  language_code: string | null;
+  asset_id: string | null;
+  pv_symbol: string | null;
+  part_number: string | null;
+  title: string | null;
+  date: string | null;
+}
+
+/**
+ * Every speaker mapping joined to its meeting metadata, for the cross-transcript
+ * speaker directory. A meeting (`entry_id`) can have several transcripts — extra
+ * languages or re-transcription runs — which would otherwise surface the same
+ * statement multiple times. `DISTINCT ON (entry_id)` keeps a single
+ * representative transcript per meeting (completed → English → newest). The
+ * LATERAL picks one `videos` row per entry (most-recently-seen). Returns the
+ * small JSONB mappings only — never the heavy `content` blob.
+ */
+export async function getSpeakerMappingsWithMeta(): Promise<
+  SpeakerMappingWithMeta[]
+> {
+  const result = await pool.query(
+    `SELECT DISTINCT ON (t.entry_id)
+            sm.transcript_id, sm.mapping,
+            t.entry_id, t.language_code,
+            v.asset_id, v.pv_symbol, v.part_number,
+            COALESCE(v.clean_title, v.title) AS title, v.date
+       FROM webtv.speaker_mappings sm
+       JOIN webtv.transcripts t ON t.transcript_id = sm.transcript_id
+       LEFT JOIN LATERAL (
+         SELECT * FROM webtv.videos v
+          WHERE v.entry_id = t.entry_id
+          ORDER BY v.last_seen DESC NULLS LAST
+          LIMIT 1
+       ) v ON TRUE
+      WHERE t.transcription_status <> 'error'
+      ORDER BY t.entry_id,
+               (t.transcription_status = 'completed') DESC,
+               (t.language_code = 'en') DESC,
+               t.updated_at DESC`,
+  );
+  return result.rows.map((row) => ({
+    transcript_id: row.transcript_id as string,
+    mapping: row.mapping as SpeakerMapping,
+    entry_id: row.entry_id as string,
+    language_code: (row.language_code as string | null) ?? null,
+    asset_id: (row.asset_id as string | null) ?? null,
+    pv_symbol: (row.pv_symbol as string | null) ?? null,
+    part_number: (row.part_number as string | null) ?? null,
+    title: (row.title as string | null) ?? null,
+    date: row.date ? String(row.date) : null,
+  }));
+}
+
+export interface ExtractedStatement {
+  start: number | null;
+  text: string;
+}
+
+/**
+ * Extract only the specific statements we need (by transcript + index),
+ * pulling just the start time and concatenated sentence text out of the JSONB
+ * server-side. Avoids transferring whole `content` blobs (avg ~550KB each) when
+ * a speaker profile only needs a handful of statements per transcript.
+ * Keyed by `${transcriptId}:${statementIndex}`.
+ */
+export async function getStatementsForRefs(
+  refs: Array<{ transcriptId: string; statementIndex: number }>,
+): Promise<Map<string, ExtractedStatement>> {
+  const out = new Map<string, ExtractedStatement>();
+  if (refs.length === 0) return out;
+
+  const tids = refs.map((r) => r.transcriptId);
+  const idxs = refs.map((r) => r.statementIndex);
+  const result = await pool.query(
+    `SELECT p.tid AS transcript_id,
+            p.idx AS statement_index,
+            (t.content->'statements'->p.idx->>'start')::float8 AS start,
+            (
+              SELECT string_agg(sent->>'text', ' ')
+                FROM jsonb_array_elements(
+                       t.content->'statements'->p.idx->'paragraphs'
+                     ) AS para,
+                     jsonb_array_elements(para->'sentences') AS sent
+            ) AS text
+       FROM webtv.transcripts t
+       JOIN unnest($1::text[], $2::int[]) AS p(tid, idx)
+         ON p.tid = t.transcript_id`,
+    [tids, idxs],
+  );
+  for (const row of result.rows) {
+    out.set(`${row.transcript_id}:${row.statement_index}`, {
+      start: row.start != null ? Number(row.start) : null,
+      text: (row.text as string | null)?.trim() ?? "",
+    });
+  }
+  return out;
 }
 
 // Resolve a video by its stable player ID (or canonical entry as a fallback),

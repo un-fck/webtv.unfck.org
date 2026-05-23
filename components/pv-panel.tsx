@@ -148,9 +148,16 @@ export function PVPanel({
           if (pts[pi] >= 0)
             entries.push({ turnIdx: ti, paraIdx: pi, startMs: pts[pi] });
         }
-      } else if (turns[ti].startTime !== undefined && turns[ti].startTime! >= 0) {
+      } else if (
+        turns[ti].startTime !== undefined &&
+        turns[ti].startTime! >= 0
+      ) {
         // Legacy: turn-level only
-        entries.push({ turnIdx: ti, paraIdx: -1, startMs: turns[ti].startTime! });
+        entries.push({
+          turnIdx: ti,
+          paraIdx: -1,
+          startMs: turns[ti].startTime!,
+        });
       }
     }
     entries.sort((a, b) => a.startMs - b.startMs);

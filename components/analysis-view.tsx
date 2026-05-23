@@ -108,7 +108,6 @@ export function AnalysisView({
     });
   };
 
-
   const getStatementData = (
     statementIndex: number,
   ): { text: string; start: number; statementIndex: number } | null => {

@@ -107,8 +107,7 @@ export function TranscriptToolbar({
 
   // No recording yet → can only queue ("generate when available"); otherwise
   // generate now.
-  const audioAvailable =
-    videoStatus !== "live" && videoStatus !== "scheduled";
+  const audioAvailable = videoStatus !== "live" && videoStatus !== "scheduled";
 
   const hasContent = hasSegments || hasRawParagraphs;
   // The bell is a pure subscribe toggle, shown only when a transcript is
@@ -280,10 +279,7 @@ export function TranscriptToolbar({
 
         {/* Bell: pure subscribe toggle, only while a transcript is pending. */}
         {showBell && (
-          <SubscribeToggle
-            kalturaId={kalturaId}
-            language={selectedLanguage}
-          />
+          <SubscribeToggle kalturaId={kalturaId} language={selectedLanguage} />
         )}
         {(hasSegments || hasRawParagraphs) && (
           <>

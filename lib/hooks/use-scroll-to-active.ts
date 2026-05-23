@@ -9,8 +9,7 @@ function isRoughlyInView(el: HTMLElement): boolean {
     : { top: 0, height: window.innerHeight };
   const relativeTop = el.getBoundingClientRect().top - viewport.top;
   return (
-    relativeTop > -viewport.height * 1.5 &&
-    relativeTop < viewport.height * 2.5
+    relativeTop > -viewport.height * 1.5 && relativeTop < viewport.height * 2.5
   );
 }
 

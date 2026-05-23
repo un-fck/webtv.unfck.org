@@ -817,9 +817,9 @@ export function TranscriptionPanel({
                 </p>
                 <p className="text-sm text-muted-foreground">
                   This meeting hasn&apos;t finished yet. Use{" "}
-                  <span className="font-medium">Generate when available</span> to
-                  queue it — the transcript will be generated automatically once
-                  the recording is available.
+                  <span className="font-medium">Generate when available</span>{" "}
+                  to queue it — the transcript will be generated automatically
+                  once the recording is available.
                 </p>
               </>
             ) : (

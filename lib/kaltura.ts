@@ -2,6 +2,18 @@
 // these, change them here only.
 export const KALTURA_PARTNER_ID = 2503451;
 export const KALTURA_WIDGET_ID = `_${KALTURA_PARTNER_ID}`;
+// Player UI config used for embeds (matches the one wired in video-page-client).
+export const KALTURA_UICONF_ID = 49754663;
+
+/** Still frame from a Kaltura entry at a given second (used as a video poster). */
+export function kalturaThumbnailUrl(
+  entryId: string,
+  vidSec: number,
+  width = 480,
+): string {
+  return `https://cdnapisec.kaltura.com/p/${KALTURA_PARTNER_ID}/thumbnail/entry_id/${entryId}/width/${width}/vid_sec/${Math.max(0, Math.floor(vidSec))}`;
+}
+
 
 export function extractKalturaId(assetId: string): string | null {
   if (!assetId) return null;

@@ -14,10 +14,7 @@ interface SubscribeToggleProps {
 // while a transcript is already pending (queued/running), so there's always a
 // notification that can resolve. Toggling off only unsubscribes; it never
 // cancels a running job. Renders nothing for logged-out users.
-export function SubscribeToggle({
-  kalturaId,
-  language,
-}: SubscribeToggleProps) {
+export function SubscribeToggle({ kalturaId, language }: SubscribeToggleProps) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
