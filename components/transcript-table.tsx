@@ -16,11 +16,6 @@ import { Video } from "@/lib/un-api";
 import {
   CalendarIcon,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  ChevronUp,
   Filter,
   Info,
   Search,
@@ -46,23 +41,41 @@ import {
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
-const BODY_ORDER: Record<string, number> = {
-  "General Assembly": 0,
-  "Security Council": 1,
-  "Economic and Social Council": 2,
-  "Trusteeship Council": 3,
-  "First Committee": 4,
-  "Second Committee": 5,
-  "Third Committee": 6,
-  "Fourth Committee": 7,
-  "Fifth Committee": 8,
-  "Sixth Committee": 9,
-};
+// Semantic ordering for category group headers within a day. Anything not
+// listed sorts after these (alphabetically); uncategorized ("") sorts last.
+const CATEGORY_ORDER: string[] = [
+  "Press Conferences",
+  "Media Stakeouts",
+  "General Assembly",
+  "Security Council",
+  "Economic and Social Council",
+  "Human Rights Council",
+  "Human Rights Treaty Bodies",
+  "Trusteeship Council",
+  "International Court of Justice",
+  "Agencies, Funds & Programmes",
+  "High-level Events",
+  "Conferences",
+  "Side Events",
+  "Meetings & Events",
+  "Media",
+  "Concerts",
+  "Goals Lounge",
+  "SDG Studio",
+  "Features",
+];
+const CATEGORY_RANK = new Map(CATEGORY_ORDER.map((c, i) => [c, i]));
 
-function sortBodies(bodies: string[]): string[] {
-  return [...bodies].sort(
-    (a, b) => (BODY_ORDER[a] ?? 99) - (BODY_ORDER[b] ?? 99),
-  );
+// Sort categories by the hardcoded order; unknown categories go after the known
+// ones (alphabetically), and the empty/uncategorized bucket goes dead last.
+function compareCategories(a: string, b: string): number {
+  if (a === b) return 0;
+  if (a === "") return 1;
+  if (b === "") return -1;
+  const ra = CATEGORY_RANK.get(a) ?? Number.POSITIVE_INFINITY;
+  const rb = CATEGORY_RANK.get(b) ?? Number.POSITIVE_INFINITY;
+  if (ra !== rb) return ra - rb;
+  return a.localeCompare(b);
 }
 
 // Format an "HH:MM:SS" duration: decimal hours over an hour ("3.5h", "2h"),
@@ -83,6 +96,17 @@ function formatDuration(duration: string): string | null {
 }
 
 // --- Filter popovers ---
+
+// Shared trigger styling for the filter-toolbar dropdown buttons.
+const TOOLBAR_TRIGGER =
+  "inline-flex h-10 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors";
+const toolbarTriggerClass = (active: boolean) =>
+  cn(
+    TOOLBAR_TRIGGER,
+    active
+      ? "border-primary/40 bg-primary/10 text-primary"
+      : "border-slate-300 bg-white text-muted-foreground hover:text-foreground",
+  );
 
 function DateFilterPopover({
   availableDates,
@@ -120,14 +144,10 @@ function DateFilterPopover({
 
   return (
     <Popover>
-      <PopoverTrigger
-        className={`inline-flex h-5 w-5 items-center justify-center rounded transition-colors ${
-          isActive
-            ? "bg-primary text-white"
-            : "text-gray-400 hover:bg-gray-200 hover:text-gray-600"
-        }`}
-      >
-        <CalendarIcon className="h-3 w-3" />
+      <PopoverTrigger className={toolbarTriggerClass(isActive)}>
+        <CalendarIcon className="h-4 w-4" />
+        <span>Date</span>
+        <ChevronDown className="h-3.5 w-3.5 opacity-60" />
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         {selectedDate && (
@@ -160,6 +180,7 @@ function DateFilterPopover({
 }
 
 function MultiFilterPopover({
+  label,
   options,
   selected,
   onChange,
@@ -167,6 +188,7 @@ function MultiFilterPopover({
   labels,
   tooltips,
 }: {
+  label: string;
   options: string[];
   selected: string[];
   onChange: (values: string[]) => void;
@@ -190,14 +212,15 @@ function MultiFilterPopover({
 
   return (
     <Popover>
-      <PopoverTrigger
-        className={`inline-flex h-5 w-5 items-center justify-center rounded transition-colors ${
-          isActive
-            ? "bg-primary text-white"
-            : "text-gray-400 hover:bg-gray-200 hover:text-gray-600"
-        }`}
-      >
-        <Filter className="h-3 w-3" />
+      <PopoverTrigger className={toolbarTriggerClass(isActive)}>
+        <Filter className="h-4 w-4" />
+        <span>{label}</span>
+        {isActive && (
+          <span className="rounded-full bg-primary px-1.5 text-xs text-white">
+            {selected.length}
+          </span>
+        )}
+        <ChevronDown className="h-3.5 w-3.5 opacity-60" />
       </PopoverTrigger>
       <PopoverContent className="w-56 p-2" align="start">
         <div className="space-y-1">
@@ -249,28 +272,6 @@ function MultiFilterPopover({
         </div>
       </PopoverContent>
     </Popover>
-  );
-}
-
-function SortArrow({
-  active,
-  direction,
-  onClick,
-}: {
-  active: boolean;
-  direction: "asc" | "desc";
-  onClick: () => void;
-}) {
-  return (
-    <button onClick={onClick} className="transition-colors hover:text-gray-600">
-      {active && direction === "asc" ? (
-        <ChevronUp className="h-3.5 w-3.5 text-primary" />
-      ) : active && direction === "desc" ? (
-        <ChevronDown className="h-3.5 w-3.5 text-primary" />
-      ) : (
-        <ChevronDown className="h-3.5 w-3.5 opacity-40" />
-      )}
-    </button>
   );
 }
 
@@ -416,7 +417,7 @@ function DocChips({
     );
   }
   return (
-    <div className="flex gap-1">
+    <span className="mr-1.5 inline-flex gap-1 align-middle">
       {chips.map((chip) => (
         <Tooltip key={chip.letter}>
           <TooltipTrigger asChild>
@@ -434,7 +435,7 @@ function DocChips({
           </TooltipContent>
         </Tooltip>
       ))}
-    </div>
+    </span>
   );
 }
 
@@ -601,11 +602,6 @@ export function VideoTable({
   const searchParams = useSearchParams();
   const { timezone } = useTimezone();
 
-  const sortedBodies = useMemo(
-    () => sortBodies(filterOptions.bodies),
-    [filterOptions.bodies],
-  );
-
   // Search state (client-side, uses /api/search)
   const [inputValue, setInputValue] = useState(serverParams.q || "");
   const [searchResults, setSearchResults] = useState<Video[] | null>(
@@ -616,6 +612,19 @@ export function VideoTable({
   const [hasMoreResults, setHasMoreResults] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Browse-feed infinite scroll (non-search). Seeded with the server-rendered
+  // first chunk; further chunks append via /api/videos. Re-seeded whenever a
+  // fresh SSR payload arrives (filter/sort/status change → new `videos`).
+  const [browseRows, setBrowseRows] = useState<Video[]>(videos);
+  const [browseLoading, setBrowseLoading] = useState(false);
+  const [browseHasMore, setBrowseHasMore] = useState(
+    videos.length < totalCount,
+  );
+  useEffect(() => {
+    setBrowseRows(videos);
+    setBrowseHasMore(videos.length < totalCount);
+  }, [videos, totalCount]);
 
   // URL-driven param updater
   const updateParams = useCallback(
@@ -738,9 +747,66 @@ export function VideoTable({
     }
   };
 
-  // Data: use search results when searching, otherwise server-provided videos
-  const tableData = searchResults ?? videos;
   const isSearchMode = !!serverParams.q;
+
+  // Append the next browse chunk from /api/videos using the current filters.
+  const loadMoreBrowse = useCallback(() => {
+    if (isSearchMode || browseLoading || !browseHasMore) return;
+    setBrowseLoading(true);
+    const sp = new URLSearchParams();
+    sp.set("offset", String(browseRows.length));
+    if (serverParams.sort) sp.set("sort", serverParams.sort);
+    if (serverParams.status !== "past") sp.set("status", serverParams.status);
+    if (serverParams.date) sp.set("date", serverParams.date);
+    serverParams.body?.forEach((v) => sp.append("body", v));
+    serverParams.category?.forEach((v) => sp.append("category", v));
+    serverParams.text?.forEach((v) => sp.append("text", v));
+    fetch(`/api/videos?${sp}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setBrowseRows((prev) => [...prev, ...data.videos]);
+        setBrowseHasMore(Boolean(data.hasMore));
+      })
+      .catch(() => {})
+      .finally(() => setBrowseLoading(false));
+  }, [
+    isSearchMode,
+    browseLoading,
+    browseHasMore,
+    browseRows.length,
+    serverParams,
+  ]);
+
+  // Data: search results when searching, else the (growing) browse feed.
+  const tableData = isSearchMode ? (searchResults ?? []) : browseRows;
+
+  // Unified infinite-scroll controls for whichever mode is active.
+  const hasMore = isSearchMode ? hasMoreResults : browseHasMore;
+  const loadingMore = isSearchMode ? isLoadingMore : browseLoading;
+  const loadMoreCurrent = isSearchMode ? loadMore : loadMoreBrowse;
+
+  // Auto-load the next chunk when the bottom sentinel nears the viewport. The
+  // callback is held in a ref so the observer doesn't reattach every render;
+  // re-running on tableData.length re-fires if the sentinel is still in view
+  // after a short append (so the feed keeps filling until the viewport scrolls).
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef(loadMoreCurrent);
+  useEffect(() => {
+    loadMoreRef.current = loadMoreCurrent;
+  });
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMoreRef.current();
+      },
+      { rootMargin: "800px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isSearchMode, tableData.length]);
 
   // Coarse "With transcript" toggle: on when every doc type is selected (any
   // of transcript / PV / SR counts as a transcript).
@@ -755,7 +821,8 @@ export function VideoTable({
     {
       label: "Recent",
       active: !isScheduledView,
-      onSelect: () => updateParams({ status: "past" }),
+      // Reset the ascending sort that Upcoming sets, back to newest-first.
+      onSelect: () => updateParams({ status: "past", sort: undefined }),
     },
     {
       label: "Upcoming",
@@ -772,33 +839,19 @@ export function VideoTable({
     },
   ];
 
-  // Parse current sort state (undefined = auto, no column actively sorted)
-  const [currentSortBy, currentSortDir] = (
-    serverParams.sort ? serverParams.sort.split("_") : [undefined, undefined]
-  ) as [string | undefined, "asc" | "desc" | undefined];
-
-  const toggleSort = (column: "date" | "title") => {
-    if (currentSortBy === column) {
-      updateParams({
-        sort: `${column}_${currentSortDir === "desc" ? "asc" : "desc"}`,
-      });
-    } else {
-      updateParams({
-        sort: `${column}_${column === "date" ? "desc" : "asc"}`,
-      });
-    }
-  };
-
-  // Mobile date options from availableDates
-  const mobileDateOptions = useMemo(() => {
-    return availableDates.map((dateStr) => ({
-      value: dateStr,
-      label: formatMeetingDate(dateStr, timezone),
-    }));
-  }, [availableDates, timezone]);
-
-  // Pagination
-  const pageCount = Math.max(1, Math.ceil(totalCount / serverParams.pageSize));
+  // Search-result ordering: relevance (default, no sort param) vs newest-first.
+  const searchSortOptions = [
+    {
+      label: "Relevance",
+      active: !serverParams.sort,
+      onSelect: () => updateParams({ sort: undefined }),
+    },
+    {
+      label: "Date",
+      active: !!serverParams.sort?.startsWith("date"),
+      onSelect: () => updateParams({ sort: "date_desc" }),
+    },
+  ];
 
   const rows = tableData;
   const hasActiveFilters =
@@ -808,9 +861,193 @@ export function VideoTable({
     (serverParams.text?.length ?? 0) > 0;
   // Don't flash "no results" while a search request is still in flight.
   const showEmptyState = rows.length === 0 && !isSearching;
-  // Day-separator grouping only makes sense when rows are in date order;
+  // Day/category grouping only makes sense when rows are in date order;
   // relevance-sorted search results would fragment into 1-row groups.
   const groupByDate = !isSearchMode;
+
+  // When grouping, reorder rows so that within each day they're bucketed by
+  // category (categories in first-appearance order, time order kept inside each
+  // bucket; day order preserved from the server's date sort). Each row carries
+  // precomputed day/category labels and whether it starts a new day/category
+  // group, so rendering stays a pure map (no render-time mutation).
+  const displayRows = useMemo<
+    {
+      video: Video;
+      dateLabel: string;
+      category: string;
+      showDay: boolean;
+      showCategory: boolean;
+    }[]
+  >(() => {
+    const labelOf = (v: Video) =>
+      formatMeetingDate(v.scheduledTime ?? v.date, timezone);
+
+    // In search mode rows stay as-is and no group headers are emitted.
+    const ordered = rows.map((video) => ({
+      video,
+      dateLabel: labelOf(video),
+      category: video.category ?? "",
+    }));
+
+    if (!groupByDate) {
+      return ordered.map((r) => ({
+        ...r,
+        showDay: false,
+        showCategory: false,
+      }));
+    }
+
+    const dayOrder: string[] = [];
+    const byDay = new Map<string, typeof ordered>();
+    for (const r of ordered) {
+      if (!byDay.has(r.dateLabel)) {
+        byDay.set(r.dateLabel, []);
+        dayOrder.push(r.dateLabel);
+      }
+      byDay.get(r.dateLabel)!.push(r);
+    }
+
+    const out: {
+      video: Video;
+      dateLabel: string;
+      category: string;
+      showDay: boolean;
+      showCategory: boolean;
+    }[] = [];
+    for (const day of dayOrder) {
+      const catOrder: string[] = [];
+      const byCat = new Map<string, typeof ordered>();
+      for (const r of byDay.get(day)!) {
+        if (!byCat.has(r.category)) {
+          byCat.set(r.category, []);
+          catOrder.push(r.category);
+        }
+        byCat.get(r.category)!.push(r);
+      }
+      catOrder.sort(compareCategories);
+      let firstOfDay = true;
+      for (const cat of catOrder) {
+        let firstOfCat = true;
+        for (const r of byCat.get(cat)!) {
+          out.push({
+            ...r,
+            showDay: firstOfDay,
+            showCategory: firstOfDay || firstOfCat,
+          });
+          firstOfDay = false;
+          firstOfCat = false;
+        }
+      }
+    }
+    return out;
+  }, [rows, groupByDate, timezone]);
+
+  // Split the rows into per-day groups (one rendered table each) when grouping.
+  type DisplayRow = (typeof displayRows)[number];
+  const dayGroups = useMemo<{ day: string; rows: DisplayRow[] }[] | null>(() => {
+    if (!groupByDate) return null;
+    const groups: { day: string; rows: DisplayRow[] }[] = [];
+    for (const r of displayRows) {
+      if (r.showDay || groups.length === 0) {
+        groups.push({ day: r.dateLabel, rows: [] });
+      }
+      groups[groups.length - 1].rows.push(r);
+    }
+    return groups;
+  }, [displayRows, groupByDate]);
+
+  // Renders one meeting's table rows: an optional category subheader followed by
+  // the data row. The day heading lives outside the table (one table per day).
+  const renderMeetingRow = ({
+    video,
+    dateLabel,
+    category,
+    showCategory,
+  }: DisplayRow) => {
+    const isScheduled = video.status === "scheduled";
+    const isLive = video.status === "live";
+    const time = video.scheduledTime;
+    const duration = formatDuration(video.duration);
+    const activeCategory =
+      (serverParams.category ?? []).length === 1 &&
+      serverParams.category![0] === category;
+
+    return (
+      <Fragment key={video.slug}>
+        {showCategory && (
+          <tr className="bg-gray-50">
+            <td colSpan={2} className="px-4 pt-2 pb-1">
+              {category ? (
+                <button
+                  onClick={() =>
+                    updateParams({
+                      category: activeCategory ? undefined : [category],
+                    })
+                  }
+                  className={cn(
+                    typography.tableHeader,
+                    "transition-colors hover:text-foreground",
+                    activeCategory && "text-primary",
+                  )}
+                >
+                  {category}
+                </button>
+              ) : (
+                <span className={typography.tableHeader}>Uncategorized</span>
+              )}
+            </td>
+          </tr>
+        )}
+        <tr
+          onClick={() => router.push(`/${video.slug}`)}
+          className={cn(
+            "cursor-pointer border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50",
+            isScheduled && "opacity-40",
+          )}
+        >
+          {/* Date (search mode only — grouped mode shows it as a heading) */}
+          {!groupByDate && (
+            <td className="px-4 py-2.5 align-top whitespace-nowrap text-muted-foreground">
+              {dateLabel}
+            </td>
+          )}
+          {/* Time + duration */}
+          <td className="px-4 py-2.5 align-top">
+            <div className="flex items-baseline justify-between gap-2 tabular-nums">
+              {time ? (
+                <span>{formatMeetingTime(time, timezone)}</span>
+              ) : (
+                <span className="text-black/20">—</span>
+              )}
+              {duration ? (
+                <span className="text-muted-foreground">{duration}</span>
+              ) : (
+                <span className="text-black/20">—</span>
+              )}
+            </div>
+          </td>
+          {/* Title, prefixed with record badges */}
+          <td className="px-4 py-2.5 align-top">
+            {isLive && (
+              <span className="mr-1.5 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500 align-middle" />
+            )}
+            <DocChips
+              hasTranscript={video.hasTranscript}
+              pvAvailable={video.pvAvailable}
+              pvSymbol={video.pvSymbol}
+            />
+            <a
+              href={`/${video.slug}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-black underline-offset-2 hover:underline"
+            >
+              {video.cleanTitle}
+            </a>
+          </td>
+        </tr>
+      </Fragment>
+    );
+  };
 
   const searchStatus = isSearching
     ? "Searching…"
@@ -880,24 +1117,41 @@ export function VideoTable({
 
   return (
     <div className="space-y-4">
-      {/* Desktop: search fills the row; toggles grouped flush right */}
-      <div className="hidden items-center gap-3 lg:flex">
+      {/* Unified filter toolbar — search on its own row, controls below */}
+      <div className="space-y-3">
         <SearchInput
           value={inputValue}
           onChange={setInputValue}
           onSubmit={submitSearch}
           isFocused={isSearchFocused}
           setIsFocused={setIsSearchFocused}
-          className="flex-1"
+          className="w-full lg:w-1/2"
         />
-        <SegmentedToggle options={statusToggleOptions} />
-        <SegmentedToggle options={transcribedToggleOptions} />
+        <div className="flex flex-wrap items-center gap-2">
+          <SegmentedToggle options={statusToggleOptions} />
+          <SegmentedToggle options={transcribedToggleOptions} />
+          <DateFilterPopover
+            availableDates={availableDates}
+            selectedDate={serverParams.date}
+            onChange={(val) => updateParams({ date: val })}
+          />
+          <MultiFilterPopover
+            label="Category"
+            options={filterOptions.categories}
+            selected={serverParams.category ?? []}
+            onChange={(vals) =>
+              updateParams({ category: vals.length ? vals : undefined })
+            }
+            counts={filterOptions.categoryCounts}
+          />
+        </div>
       </div>
 
-      {/* Search result count / status (only while searching) */}
-      {searchStatus && (
-        <div className="hidden text-sm text-muted-foreground lg:block">
-          {searchStatus}
+      {/* Search results: count + sort (relevance vs date) */}
+      {isSearchMode && (
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm text-muted-foreground">{searchStatus}</div>
+          <SegmentedToggle options={searchSortOptions} />
         </div>
       )}
 
@@ -927,85 +1181,12 @@ export function VideoTable({
         onClearSearch={() => submitSearch("")}
       />
 
-      {/* Mobile: All filters grouped */}
-      <div className="space-y-3 lg:hidden">
-        <SearchInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSubmit={submitSearch}
-          isFocused={isSearchFocused}
-          setIsFocused={setIsSearchFocused}
-        />
-        <div className="flex flex-wrap gap-2">
-          <select
-            value={serverParams.date ?? ""}
-            onChange={(e) =>
-              updateParams({ date: e.target.value || undefined })
-            }
-            className="min-w-30 flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
-          >
-            <option value="">All Dates</option>
-            {mobileDateOptions.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <select
-            value={(serverParams.body ?? [])[0] || ""}
-            onChange={(e) =>
-              updateParams({
-                body: e.target.value ? [e.target.value] : undefined,
-              })
-            }
-            className="min-w-30 flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
-          >
-            <option value="">All Bodies</option>
-            {sortedBodies.map((body) => (
-              <option key={body} value={body}>
-                {body}
-              </option>
-            ))}
-          </select>
-          <select
-            value={(serverParams.category ?? [])[0] || ""}
-            onChange={(e) =>
-              updateParams({
-                category: e.target.value ? [e.target.value] : undefined,
-              })
-            }
-            className="min-w-30 flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
-          >
-            <option value="">All Categories</option>
-            {filterOptions.categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={(serverParams.text ?? [])[0] || ""}
-            onChange={(e) =>
-              updateParams({
-                text: e.target.value ? [e.target.value] : undefined,
-              })
-            }
-            className="min-w-30 flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
-          >
-            <option value="">All Text</option>
-            <option value="transcript">Transcript</option>
-            <option value="pv">Verbatim Record</option>
-            <option value="sr">Summary Record</option>
-          </select>
-          <SegmentedToggle options={statusToggleOptions} />
-          <SegmentedToggle options={transcribedToggleOptions} />
-        </div>
-      </div>
-
       {/* Mobile Card View */}
-      {showEmptyState && <div className="lg:hidden">{emptyState}</div>}
+      {showEmptyState && (
+        <div className="overflow-hidden rounded-lg border border-gray-200 lg:hidden">
+          {emptyState}
+        </div>
+      )}
       <div className={cn("grid gap-3 lg:hidden", showEmptyState && "hidden")}>
         {rows.map((video) => {
           const isLive = video.status === "live";
@@ -1063,279 +1244,64 @@ export function VideoTable({
         })}
       </div>
 
-      {/* Desktop Table View */}
-      <div className="hidden overflow-hidden rounded-lg border border-gray-200 lg:block">
-        <div className="overflow-x-auto">
-          <table className="w-full table-fixed text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                {/* Time (date + clock + duration) */}
-                <th
-                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
-                  style={{ width: 140, minWidth: 140, maxWidth: 140 }}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Time</span>
-                    <DateFilterPopover
-                      availableDates={availableDates}
-                      selectedDate={serverParams.date}
-                      onChange={(val) => updateParams({ date: val })}
-                    />
-                    <SortArrow
-                      active={currentSortBy === "date"}
-                      direction={
-                        currentSortBy === "date"
-                          ? (currentSortDir ?? "desc")
-                          : "desc"
-                      }
-                      onClick={() => toggleSort("date")}
-                    />
-                  </div>
-                </th>
-                {/* Title */}
-                <th
-                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Title</span>
-                    <SortArrow
-                      active={currentSortBy === "title"}
-                      direction={
-                        currentSortBy === "title"
-                          ? (currentSortDir ?? "asc")
-                          : "asc"
-                      }
-                      onClick={() => toggleSort("title")}
-                    />
-                  </div>
-                </th>
-                {/* Category */}
-                <th
-                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
-                  style={{ width: 190, minWidth: 190, maxWidth: 190 }}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Category</span>
-                    <MultiFilterPopover
-                      options={filterOptions.categories}
-                      selected={serverParams.category ?? []}
-                      onChange={(vals) =>
-                        updateParams({
-                          category: vals.length ? vals : undefined,
-                        })
-                      }
-                      counts={filterOptions.categoryCounts}
-                    />
-                  </div>
-                </th>
-                {/* Records (T / V / S chips) */}
-                <th
-                  className={cn(typography.tableHeader, "px-3 py-2 text-left")}
-                  style={{ width: 84, minWidth: 84, maxWidth: 84 }}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Docs</span>
-                    <MultiFilterPopover
-                      options={["transcript", "pv", "sr"]}
-                      selected={serverParams.text ?? []}
-                      onChange={(vals) =>
-                        updateParams({ text: vals.length ? vals : undefined })
-                      }
-                      labels={DOCS_LABELS}
-                      tooltips={DOCS_TOOLTIPS}
-                    />
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {showEmptyState && (
-                <tr>
-                  <td colSpan={4}>{emptyState}</td>
-                </tr>
-              )}
-              {(() => {
-                // Group consecutive rows by day (only when results are in date
-                // order — relevance-sorted search results aren't grouped).
-                let lastDate: string | null = null;
-                return rows.map((video) => {
-                  const isScheduled = video.status === "scheduled";
-                  const isLive = video.status === "live";
-                  const time = video.scheduledTime;
-                  const dateLabel = formatMeetingDate(
-                    time ?? video.date,
-                    timezone,
-                  );
-                  const duration = formatDuration(video.duration);
-                  const showSeparator = groupByDate && dateLabel !== lastDate;
-                  lastDate = dateLabel;
-
-                  return (
-                    <Fragment key={video.slug}>
-                      {showSeparator && (
-                        <tr className="border-y border-gray-200 bg-gray-100">
-                          <td
-                            colSpan={4}
-                            className="px-4 py-2 text-sm font-semibold text-foreground"
-                          >
-                            {dateLabel}
-                          </td>
-                        </tr>
-                      )}
-                      <tr
-                        onClick={() => router.push(`/${video.slug}`)}
-                        className={cn(
-                          "cursor-pointer border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50",
-                          isScheduled && "opacity-40",
-                        )}
-                      >
-                        {/* Time + duration */}
-                        <td className="px-4 py-2.5 align-top">
-                          {!groupByDate && (
-                            <div className="text-xs text-muted-foreground">
-                              {dateLabel}
-                            </div>
-                          )}
-                          <div className="flex items-baseline justify-between gap-2 tabular-nums">
-                            {time ? (
-                              <span>{formatMeetingTime(time, timezone)}</span>
-                            ) : (
-                              <span className="text-black/20">—</span>
-                            )}
-                            {duration ? (
-                              <span className="text-muted-foreground">
-                                {duration}
-                              </span>
-                            ) : (
-                              <span className="text-black/20">—</span>
-                            )}
-                          </div>
-                        </td>
-                        {/* Title */}
-                        <td className="px-4 py-2.5 align-top">
-                          <a
-                            href={`/${video.slug}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-black underline-offset-2 hover:underline"
-                          >
-                            {isLive && (
-                              <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500 align-middle" />
-                            )}
-                            {video.cleanTitle}
-                          </a>
-                        </td>
-                        {/* Category */}
-                        <td className="px-4 py-2.5 align-top">
-                          {video.category && (
-                            <div className="truncate text-muted-foreground">
-                              {video.category}
-                            </div>
-                          )}
-                        </td>
-                        {/* Records */}
-                        <td className="px-3 py-2.5 align-top">
-                          <DocChips
-                            hasTranscript={video.hasTranscript}
-                            pvAvailable={video.pvAvailable}
-                            pvSymbol={video.pvSymbol}
-                          />
-                        </td>
-                      </tr>
-                    </Fragment>
-                  );
-                });
-              })()}
-            </tbody>
-          </table>
-        </div>
+      {/* Desktop view: one table per day, with the day as a text heading */}
+      <div className="hidden pt-2 lg:block">
+        {showEmptyState ? (
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            {emptyState}
+          </div>
+        ) : dayGroups ? (
+          <div className="space-y-10">
+            {dayGroups.map((group) => (
+              <div key={group.day}>
+                <h2 className="mb-3 text-xl font-bold tracking-tight text-foreground">
+                  {group.day}
+                </h2>
+                <div className="overflow-hidden rounded-lg border border-gray-200">
+                  <table className="w-full table-fixed text-sm">
+                    <colgroup>
+                      <col style={{ width: 132 }} />
+                      <col />
+                    </colgroup>
+                    <tbody>{group.rows.map(renderMeetingRow)}</tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Search mode: a single ungrouped table with a leading Date column.
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col style={{ width: 120 }} />
+                <col style={{ width: 132 }} />
+                <col />
+              </colgroup>
+              <tbody>{displayRows.map(renderMeetingRow)}</tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Load more (search mode) */}
-      {isSearchMode && searchResults !== null && hasMoreResults && (
-        <div className="flex justify-center pt-2">
+      {/* Infinite scroll: sentinel auto-loads the next chunk; the button is a
+          fallback / explicit control. */}
+      {hasMore && (
+        <div ref={sentinelRef} className="flex justify-center pt-4">
           <button
-            onClick={loadMore}
-            disabled={isLoadingMore}
+            onClick={() => loadMoreCurrent()}
+            disabled={loadingMore}
             className="rounded-full border border-border px-6 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isLoadingMore ? "Loading…" : "Load more"}
+            {loadingMore ? "Loading…" : "Load more"}
           </button>
         </div>
       )}
-
-      {/* Pagination (non-search mode) */}
-      {!isSearchMode && (
-        <div className="flex items-center justify-between pt-1 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span>Show</span>
-            <select
-              value={serverParams.pageSize}
-              onChange={(e) =>
-                updateParams({ pageSize: Number(e.target.value) })
-              }
-              className="rounded-lg border border-border/60 bg-transparent px-2 py-1 text-sm text-muted-foreground focus:border-primary/50 focus:outline-none"
-            >
-              {[25, 50, 100, 200].map((pageSize) => (
-                <option key={pageSize} value={pageSize}>
-                  {pageSize}
-                </option>
-              ))}
-            </select>
-            <span>per page</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span>
-              Page {serverParams.page} of {pageCount} (
-              {totalCount.toLocaleString()} items)
-            </span>
-            <div className="flex gap-0.5">
-              <button
-                onClick={() => updateParams({ page: 1, resetPage: false })}
-                disabled={serverParams.page <= 1}
-                aria-label="First page"
-                className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:text-muted-foreground/40"
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() =>
-                  updateParams({
-                    page: serverParams.page - 1,
-                    resetPage: false,
-                  })
-                }
-                disabled={serverParams.page <= 1}
-                aria-label="Previous page"
-                className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:text-muted-foreground/40"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() =>
-                  updateParams({
-                    page: serverParams.page + 1,
-                    resetPage: false,
-                  })
-                }
-                disabled={serverParams.page >= pageCount}
-                aria-label="Next page"
-                className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:text-muted-foreground/40"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() =>
-                  updateParams({ page: pageCount, resetPage: false })
-                }
-                disabled={serverParams.page >= pageCount}
-                aria-label="Last page"
-                className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:text-muted-foreground/40"
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+      {!hasMore && tableData.length > 0 && (
+        <div className="pt-4 text-center text-sm text-muted-foreground">
+          {isSearchMode
+            ? `${tableData.length.toLocaleString()} ${tableData.length === 1 ? "result" : "results"}`
+            : `${totalCount.toLocaleString()} ${totalCount === 1 ? "meeting" : "meetings"}`}
         </div>
       )}
     </div>

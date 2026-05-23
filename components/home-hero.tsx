@@ -17,7 +17,7 @@ export function HomeHero() {
         Security Council, General Assembly, Human Rights Council and more —
         generated from UN Web TV recordings.
       </p>
-      <p className={cn(typography.caption, "mt-3")}>
+      <p className={cn(typography.meta, "mt-3")}>
         Public Preview · AI-generated, not official UN records ·{" "}
         <Link
           href="/about"

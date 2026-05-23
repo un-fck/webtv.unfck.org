@@ -124,8 +124,10 @@ export default async function Home({
     docs: params.text,
     sortBy,
     sortDir,
-    page: params.page,
-    pageSize: params.pageSize,
+    // Initial chunk only; further rows load client-side via /api/videos
+    // (infinite scroll). Keep in sync with CHUNK in app/api/videos/route.ts.
+    page: 1,
+    pageSize: 50,
     transcriptedEntryIds: params.text?.includes("transcript")
       ? transcriptedEntries
       : undefined,
