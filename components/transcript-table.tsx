@@ -557,7 +557,18 @@ function ActiveFilters({
           key={d}
           className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
         >
-          {DOCS_LABELS[d] || d}
+          {DOCS_TOOLTIPS[d] ? (
+            <Tooltip>
+              <TooltipTrigger className="cursor-help">
+                {DOCS_LABELS[d] || d}
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-56 text-xs">
+                {DOCS_TOOLTIPS[d]}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            (DOCS_LABELS[d] || d)
+          )}
           <button
             onClick={() => onClearDocs(d)}
             className="hover:text-primary/70"
