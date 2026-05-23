@@ -299,7 +299,7 @@ export function VideoPageClient({
             href={backHref}
             className="text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            ← Back to schedule
+            ← Back to homepage
           </a>
         </nav>
 

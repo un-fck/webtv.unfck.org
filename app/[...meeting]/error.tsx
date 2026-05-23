@@ -32,7 +32,7 @@ export default function MeetingError({
           href="/"
           className="rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
         >
-          Back to schedule
+          Back to homepage
         </Link>
       </div>
     </main>

@@ -8,6 +8,7 @@ import {
 } from "@/lib/cached-db";
 import { VideoTable } from "@/components/transcript-table";
 import { SiteHeader } from "@/components/site-header";
+import { HomeHero } from "@/components/home-hero";
 
 export const dynamic = "force-dynamic";
 
@@ -161,7 +162,8 @@ function PageShell({ children }: { children: React.ReactNode }) {
     <main className="min-h-screen bg-background">
       <SiteHeader />
       <div className="mx-auto max-w-7xl px-6 sm:px-8">
-        <div className="py-6 pb-24">
+        <HomeHero />
+        <div className="pb-24">
           <Suspense fallback={null}>{children}</Suspense>
         </div>
       </div>

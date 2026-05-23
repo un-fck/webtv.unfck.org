@@ -25,7 +25,7 @@ export default async function SubscriptionsPage() {
               "transition-colors hover:text-foreground",
             )}
           >
-            ← Back to schedule
+            ← Back to homepage
           </a>
         </nav>
         <div className="max-w-2xl">

@@ -14,22 +14,28 @@ import {
 } from "@/components/ui/tooltip";
 import { Video } from "@/lib/un-api";
 import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
   CalendarIcon,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   ChevronUp,
   Filter,
   Info,
   Search,
+  SearchX,
   X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTimezone } from "@/lib/hooks/use-timezone";
 import { rememberScheduleUrl } from "@/lib/schedule-return";
 import {
@@ -39,14 +45,6 @@ import {
 } from "@/lib/timezone";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
-
-declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData, TValue> {
-    align?: "left" | "right" | "center";
-  }
-}
-
-const columnHelper = createColumnHelper<Video>();
 
 const BODY_ORDER: Record<string, number> = {
   "General Assembly": 0,
@@ -67,10 +65,21 @@ function sortBodies(bodies: string[]): string[] {
   );
 }
 
-// Helper to format duration for card view
+// Format an "HH:MM:SS" duration: decimal hours over an hour ("3.5h", "2h"),
+// minutes under an hour ("44min").
 function formatDuration(duration: string): string | null {
   if (!duration || duration === "00:00:00") return null;
-  return duration.replace(/^0+:?/, "").replace(/^0/, "");
+  const parts = duration.split(":").map(Number);
+  if (parts.some(Number.isNaN)) return null;
+  let h = 0;
+  let m = 0;
+  if (parts.length === 3) [h, m] = parts;
+  else if (parts.length === 2) [m] = parts;
+  const totalMin = h * 60 + m;
+  if (totalMin === 0) return "<1min";
+  if (totalMin < 60) return `${m}min`;
+  const hours = Math.round((totalMin / 60) * 10) / 10;
+  return `${hours}h`;
 }
 
 // --- Filter popovers ---
@@ -368,6 +377,67 @@ function DocBadges({
   );
 }
 
+// Compact letter chips for the desktop Transcripts column: T (AI transcript),
+// V (verbatim record), S (summary record). Color matches DocBadges; the full
+// name is in a hover tooltip. Letters distinguish the three types far more
+// legibly than icons would at this size.
+function DocChips({
+  hasTranscript,
+  pvAvailable,
+  pvSymbol,
+}: {
+  hasTranscript: boolean;
+  pvAvailable: boolean;
+  pvSymbol: string | null;
+}) {
+  if (!hasTranscript && !pvAvailable) return null;
+  const isSR = pvSymbol?.includes("/SR.");
+  const chips: { letter: string; label: string; className: string }[] = [];
+  if (hasTranscript) {
+    chips.push({
+      letter: "T",
+      label: DOCS_TOOLTIPS.transcript,
+      className: "bg-primary/10 text-primary",
+    });
+  }
+  if (pvAvailable) {
+    chips.push(
+      isSR
+        ? {
+            letter: "S",
+            label: DOCS_TOOLTIPS.sr,
+            className: "bg-violet-500/10 text-violet-700",
+          }
+        : {
+            letter: "V",
+            label: DOCS_TOOLTIPS.pv,
+            className: "bg-amber-500/10 text-amber-700",
+          },
+    );
+  }
+  return (
+    <div className="flex gap-1">
+      {chips.map((chip) => (
+        <Tooltip key={chip.letter}>
+          <TooltipTrigger asChild>
+            <span
+              className={cn(
+                "inline-flex h-5 w-5 items-center justify-center rounded text-[11px] font-bold",
+                chip.className,
+              )}
+            >
+              {chip.letter}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-56 text-xs">
+            {chip.label}
+          </TooltipContent>
+        </Tooltip>
+      ))}
+    </div>
+  );
+}
+
 // Binary/segmented toggle (e.g. Recent/Scheduled, All/Transcribed). Shared by
 // the desktop and mobile filter bars so both stay visually identical.
 function SegmentedToggle({
@@ -549,8 +619,13 @@ export function VideoTable({
 
   // URL-driven param updater
   const updateParams = useCallback(
-    (updates: Partial<ServerParams> & { resetPage?: boolean }) => {
-      const { resetPage = true, ...paramUpdates } = updates;
+    (
+      updates: Partial<ServerParams> & {
+        resetPage?: boolean;
+        replace?: boolean;
+      },
+    ) => {
+      const { resetPage = true, replace = false, ...paramUpdates } = updates;
       const next = { ...serverParams, ...paramUpdates };
       if (resetPage && !("page" in paramUpdates)) {
         next.page = 1;
@@ -567,16 +642,39 @@ export function VideoTable({
       next.text?.forEach((v) => sp.append("text", v));
       if (next.q) sp.set("q", next.q);
 
-      router.push(sp.toString() ? `?${sp}` : "/", { scroll: false });
+      const href = sp.toString() ? `?${sp}` : "/";
+      // Search updates use replace() so typing doesn't flood browser history.
+      if (replace) router.replace(href, { scroll: false });
+      else router.push(href, { scroll: false });
     },
     [serverParams, router],
   );
 
-  // Sync search input from URL changes (back/forward)
+  // Tracks the q value we last wrote to the URL ourselves, so the sync effect
+  // below can tell our own live-search writes apart from external navigation.
+  const lastWrittenQuery = useRef(serverParams.q ?? "");
+
+  // Sync search input from genuine URL changes (back/forward) only — our own
+  // live-search writes are ignored so they can't clobber in-progress typing.
   useEffect(() => {
     const urlQuery = searchParams.get("q") || "";
-    setInputValue(urlQuery);
+    if (urlQuery !== lastWrittenQuery.current) {
+      lastWrittenQuery.current = urlQuery;
+      setInputValue(urlQuery);
+    }
   }, [searchParams]);
+
+  // Live search: debounce typed input → q param (replace, no history spam).
+  useEffect(() => {
+    const trimmed = inputValue.trim();
+    if (trimmed === lastWrittenQuery.current) return; // already in sync
+    if (trimmed.length === 1) return; // too short to query, but don't clear yet
+    const id = setTimeout(() => {
+      lastWrittenQuery.current = trimmed;
+      updateParams({ q: trimmed || undefined, replace: true });
+    }, 300);
+    return () => clearTimeout(id);
+  }, [inputValue, updateParams]);
 
   // Remember the filtered schedule URL so the meeting page's "Back to
   // schedule" link can return here with filters intact.
@@ -624,14 +722,18 @@ export function VideoTable({
       .finally(() => setIsLoadingMore(false));
   };
 
+  // Immediate flush (Enter / blur / clear) — bypasses the debounce. Uses
+  // replace() like the live-search path so search never floods history.
   const submitSearch = (value: string) => {
     const trimmed = value.trim();
     setInputValue(trimmed);
+    if (trimmed === lastWrittenQuery.current) return;
+    lastWrittenQuery.current = trimmed;
     if (trimmed) {
-      updateParams({ q: trimmed });
+      updateParams({ q: trimmed, replace: true });
     } else {
       // Clear search — remove q param, go back to normal view
-      updateParams({ q: undefined });
+      updateParams({ q: undefined, replace: true });
       setSearchResults(null);
     }
   };
@@ -698,135 +800,106 @@ export function VideoTable({
   // Pagination
   const pageCount = Math.max(1, Math.ceil(totalCount / serverParams.pageSize));
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor("scheduledTime", {
-        id: "date",
-        header: "Date",
-        cell: (info) => {
-          const time = info.getValue();
-          return formatMeetingDate(time ?? info.row.original.date, timezone);
-        },
-        size: 120,
-      }),
-      columnHelper.accessor("scheduledTime", {
-        id: "time",
-        header: "Time",
-        cell: (info) => {
-          const time = info.getValue();
-          if (!time) return <span className="text-black/20">—</span>;
-          return (
-            <span className="tabular-nums">
-              {formatMeetingTime(time, timezone)}
-            </span>
-          );
-        },
-        size: 70,
-      }),
-      columnHelper.accessor("duration", {
-        header: "Duration",
-        cell: (info) => {
-          const duration = info.getValue();
-          if (!duration || duration === "00:00:00")
-            return <span className="text-black/20">—</span>;
-          return (
-            <span className="tabular-nums">
-              {duration.replace(/^0+:?/, "").replace(/^0/, "")}
-            </span>
-          );
-        },
-        size: 80,
-        maxSize: 80,
-        meta: {
-          align: "right" as const,
-        },
-      }),
-      columnHelper.accessor("cleanTitle", {
-        header: "Title",
-        cell: (info) => {
-          const slug = info.row.original.slug;
-          const isLive = info.row.original.status === "live";
-          return (
-            <a
-              href={`/${slug}`}
-              className="text-sm text-black underline-offset-2 hover:underline"
-            >
-              {isLive && (
-                <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500 align-middle" />
-              )}
-              {info.getValue()}
-            </a>
-          );
-        },
-        size: 400,
-      }),
-      columnHelper.accessor("body", {
-        header: "Body",
-        cell: (info) => {
-          const val = info.getValue();
-          if (!val) return null;
-          return <div className="truncate text-black">{val}</div>;
-        },
-        size: 140,
-      }),
-      columnHelper.accessor("category", {
-        header: "Category",
-        cell: (info) => {
-          const val = info.getValue();
-          if (!val) return null;
-          return <div className="truncate text-black">{val}</div>;
-        },
-        size: 160,
-      }),
-      columnHelper.display({
-        id: "docs",
-        header: "Transcripts",
-        cell: (info) => (
-          <DocBadges
-            hasTranscript={info.row.original.hasTranscript}
-            pvAvailable={info.row.original.pvAvailable}
-            pvSymbol={info.row.original.pvSymbol}
-            uppercase
-          />
-        ),
-        size: 140,
-      }),
-    ],
-    [timezone],
-  );
+  const rows = tableData;
+  const hasActiveFilters =
+    !!serverParams.date ||
+    (serverParams.body?.length ?? 0) > 0 ||
+    (serverParams.category?.length ?? 0) > 0 ||
+    (serverParams.text?.length ?? 0) > 0;
+  // Don't flash "no results" while a search request is still in flight.
+  const showEmptyState = rows.length === 0 && !isSearching;
+  // Day-separator grouping only makes sense when rows are in date order;
+  // relevance-sorted search results would fragment into 1-row groups.
+  const groupByDate = !isSearchMode;
 
-  const table = useReactTable({
-    data: tableData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+  const searchStatus = isSearching
+    ? "Searching…"
+    : isSearchMode && searchResults !== null && searchResults.length > 0
+      ? hasMoreResults
+        ? `Showing ${searchResults.length.toLocaleString()} meetings`
+        : `${searchResults.length.toLocaleString()} meetings in total`
+      : null;
+
+  const clearAllFilters = () =>
+    updateParams({
+      date: undefined,
+      body: undefined,
+      category: undefined,
+      text: undefined,
+      q: undefined,
+    });
+
+  const emptyState = (
+    <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
+      <SearchX className="h-8 w-8 text-muted-foreground/40" />
+      {isSearchMode ? (
+        <>
+          <p className="text-sm text-muted-foreground">
+            No meetings match{" "}
+            <span className="font-medium text-foreground">
+              &ldquo;{serverParams.q}&rdquo;
+            </span>
+            .
+          </p>
+          <button
+            onClick={() => submitSearch("")}
+            className="text-sm text-un-blue underline-offset-4 hover:underline"
+          >
+            Clear search
+          </button>
+        </>
+      ) : hasActiveFilters ? (
+        <>
+          <p className="text-sm text-muted-foreground">
+            No meetings match the current filters.
+          </p>
+          <button
+            onClick={clearAllFilters}
+            className="text-sm text-un-blue underline-offset-4 hover:underline"
+          >
+            Clear all filters
+          </button>
+        </>
+      ) : isScheduledView ? (
+        <p className="text-sm text-muted-foreground">
+          No upcoming meetings are scheduled right now. Check back soon, or
+          switch to{" "}
+          <button
+            onClick={() => updateParams({ status: "past" })}
+            className="text-un-blue underline-offset-4 hover:underline"
+          >
+            recent meetings
+          </button>
+          .
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">No meetings found.</p>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-4">
-      {/* Desktop: Search bar with count */}
-      <div className="hidden items-center gap-4 lg:flex">
+      {/* Desktop: search fills the row; toggles grouped flush right */}
+      <div className="hidden items-center gap-3 lg:flex">
         <SearchInput
           value={inputValue}
           onChange={setInputValue}
           onSubmit={submitSearch}
           isFocused={isSearchFocused}
           setIsFocused={setIsSearchFocused}
-          className="w-1/2"
+          className="flex-1"
         />
         <SegmentedToggle options={statusToggleOptions} />
         <SegmentedToggle options={transcribedToggleOptions} />
-        <div className="ml-auto text-sm whitespace-nowrap text-muted-foreground">
-          {isSearching
-            ? "Searching…"
-            : isSearchMode && searchResults !== null
-              ? hasMoreResults
-                ? `Showing ${searchResults.length.toLocaleString()} meetings`
-                : `${searchResults.length.toLocaleString()} meetings in total`
-              : totalCount > 0
-                ? `${totalCount.toLocaleString()} meetings`
-                : null}
-        </div>
       </div>
+
+      {/* Search result count / status (only while searching) */}
+      {searchStatus && (
+        <div className="hidden text-sm text-muted-foreground lg:block">
+          {searchStatus}
+        </div>
+      )}
 
       {/* Active filter pills */}
       <ActiveFilters
@@ -932,9 +1005,9 @@ export function VideoTable({
       </div>
 
       {/* Mobile Card View */}
-      <div className="grid gap-3 lg:hidden">
-        {table.getRowModel().rows.map((row) => {
-          const video = row.original;
+      {showEmptyState && <div className="lg:hidden">{emptyState}</div>}
+      <div className={cn("grid gap-3 lg:hidden", showEmptyState && "hidden")}>
+        {rows.map((video) => {
           const isLive = video.status === "live";
           const isScheduled = video.status === "scheduled";
           const duration = formatDuration(video.duration);
@@ -946,7 +1019,7 @@ export function VideoTable({
 
           return (
             <a
-              key={row.id}
+              key={video.slug}
               href={`/${video.slug}`}
               className={`block rounded-lg border p-4 transition-colors hover:bg-muted/50 ${isScheduled ? "opacity-50" : ""}`}
             >
@@ -993,16 +1066,16 @@ export function VideoTable({
       {/* Desktop Table View */}
       <div className="hidden overflow-hidden rounded-lg border border-gray-200 lg:block">
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed text-xs">
+          <table className="w-full table-fixed text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                {/* Date */}
+                {/* Time (date + clock + duration) */}
                 <th
                   className={cn(typography.tableHeader, "px-4 py-2 text-left")}
-                  style={{ width: 120, minWidth: 120, maxWidth: 120 }}
+                  style={{ width: 140, minWidth: 140, maxWidth: 140 }}
                 >
                   <div className="flex items-center gap-1">
-                    <span>Date</span>
+                    <span>Time</span>
                     <DateFilterPopover
                       availableDates={availableDates}
                       selectedDate={serverParams.date}
@@ -1018,20 +1091,6 @@ export function VideoTable({
                       onClick={() => toggleSort("date")}
                     />
                   </div>
-                </th>
-                {/* Time */}
-                <th
-                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
-                  style={{ width: 70, minWidth: 70, maxWidth: 70 }}
-                >
-                  <span>Time</span>
-                </th>
-                {/* Duration */}
-                <th
-                  className={cn(typography.tableHeader, "px-4 py-2 text-right")}
-                  style={{ width: 80, minWidth: 80, maxWidth: 80 }}
-                >
-                  <span>Duration</span>
                 </th>
                 {/* Title */}
                 <th
@@ -1050,27 +1109,10 @@ export function VideoTable({
                     />
                   </div>
                 </th>
-                {/* Body */}
-                <th
-                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
-                  style={{ width: 140, minWidth: 140, maxWidth: 140 }}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Body</span>
-                    <MultiFilterPopover
-                      options={sortedBodies}
-                      selected={serverParams.body ?? []}
-                      onChange={(vals) =>
-                        updateParams({ body: vals.length ? vals : undefined })
-                      }
-                      counts={filterOptions.bodyCounts}
-                    />
-                  </div>
-                </th>
                 {/* Category */}
                 <th
                   className={cn(typography.tableHeader, "px-4 py-2 text-left")}
-                  style={{ width: 140, minWidth: 140, maxWidth: 140 }}
+                  style={{ width: 190, minWidth: 190, maxWidth: 190 }}
                 >
                   <div className="flex items-center gap-1">
                     <span>Category</span>
@@ -1086,13 +1128,13 @@ export function VideoTable({
                     />
                   </div>
                 </th>
-                {/* Transcripts */}
+                {/* Records (T / V / S chips) */}
                 <th
-                  className={cn(typography.tableHeader, "px-4 py-2 text-left")}
-                  style={{ width: 140, minWidth: 140, maxWidth: 140 }}
+                  className={cn(typography.tableHeader, "px-3 py-2 text-left")}
+                  style={{ width: 84, minWidth: 84, maxWidth: 84 }}
                 >
                   <div className="flex items-center gap-1">
-                    <span>Transcripts</span>
+                    <span>Docs</span>
                     <MultiFilterPopover
                       options={["transcript", "pv", "sr"]}
                       selected={serverParams.text ?? []}
@@ -1107,30 +1149,102 @@ export function VideoTable({
               </tr>
             </thead>
             <tbody>
-              {table.getRowModel().rows.map((row) => {
-                const isScheduled = row.original.status === "scheduled";
-                return (
-                  <tr
-                    key={row.id}
-                    className={`border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50 ${isScheduled ? "opacity-40" : ""}`}
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      const align = cell.column.columnDef.meta?.align;
-                      return (
-                        <td
-                          key={cell.id}
-                          className={`px-4 py-3 ${align === "right" ? "text-right" : align === "center" ? "text-center" : ""}`}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
+              {showEmptyState && (
+                <tr>
+                  <td colSpan={4}>{emptyState}</td>
+                </tr>
+              )}
+              {(() => {
+                // Group consecutive rows by day (only when results are in date
+                // order — relevance-sorted search results aren't grouped).
+                let lastDate: string | null = null;
+                return rows.map((video) => {
+                  const isScheduled = video.status === "scheduled";
+                  const isLive = video.status === "live";
+                  const time = video.scheduledTime;
+                  const dateLabel = formatMeetingDate(
+                    time ?? video.date,
+                    timezone,
+                  );
+                  const duration = formatDuration(video.duration);
+                  const showSeparator = groupByDate && dateLabel !== lastDate;
+                  lastDate = dateLabel;
+
+                  return (
+                    <Fragment key={video.slug}>
+                      {showSeparator && (
+                        <tr className="border-y border-gray-200 bg-gray-100">
+                          <td
+                            colSpan={4}
+                            className="px-4 py-2 text-sm font-semibold text-foreground"
+                          >
+                            {dateLabel}
+                          </td>
+                        </tr>
+                      )}
+                      <tr
+                        onClick={() => router.push(`/${video.slug}`)}
+                        className={cn(
+                          "cursor-pointer border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50",
+                          isScheduled && "opacity-40",
+                        )}
+                      >
+                        {/* Time + duration */}
+                        <td className="px-4 py-2.5 align-top">
+                          {!groupByDate && (
+                            <div className="text-xs text-muted-foreground">
+                              {dateLabel}
+                            </div>
+                          )}
+                          <div className="flex items-baseline justify-between gap-2 tabular-nums">
+                            {time ? (
+                              <span>{formatMeetingTime(time, timezone)}</span>
+                            ) : (
+                              <span className="text-black/20">—</span>
+                            )}
+                            {duration ? (
+                              <span className="text-muted-foreground">
+                                {duration}
+                              </span>
+                            ) : (
+                              <span className="text-black/20">—</span>
+                            )}
+                          </div>
+                        </td>
+                        {/* Title */}
+                        <td className="px-4 py-2.5 align-top">
+                          <a
+                            href={`/${video.slug}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-black underline-offset-2 hover:underline"
+                          >
+                            {isLive && (
+                              <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500 align-middle" />
+                            )}
+                            {video.cleanTitle}
+                          </a>
+                        </td>
+                        {/* Category */}
+                        <td className="px-4 py-2.5 align-top">
+                          {video.category && (
+                            <div className="truncate text-muted-foreground">
+                              {video.category}
+                            </div>
                           )}
                         </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
+                        {/* Records */}
+                        <td className="px-3 py-2.5 align-top">
+                          <DocChips
+                            hasTranscript={video.hasTranscript}
+                            pvAvailable={video.pvAvailable}
+                            pvSymbol={video.pvSymbol}
+                          />
+                        </td>
+                      </tr>
+                    </Fragment>
+                  );
+                });
+              })()}
             </tbody>
           </table>
         </div>
@@ -1151,65 +1265,77 @@ export function VideoTable({
 
       {/* Pagination (non-search mode) */}
       {!isSearchMode && (
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex gap-0.5">
-            <button
-              onClick={() => updateParams({ page: 1, resetPage: false })}
-              disabled={serverParams.page <= 1}
-              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
-            >
-              ««
-            </button>
-            <button
-              onClick={() =>
-                updateParams({
-                  page: serverParams.page - 1,
-                  resetPage: false,
-                })
+        <div className="flex items-center justify-between pt-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span>Show</span>
+            <select
+              value={serverParams.pageSize}
+              onChange={(e) =>
+                updateParams({ pageSize: Number(e.target.value) })
               }
-              disabled={serverParams.page <= 1}
-              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
+              className="rounded-lg border border-border/60 bg-transparent px-2 py-1 text-sm text-muted-foreground focus:border-primary/50 focus:outline-none"
             >
-              «
-            </button>
-            <button
-              onClick={() =>
-                updateParams({
-                  page: serverParams.page + 1,
-                  resetPage: false,
-                })
-              }
-              disabled={serverParams.page >= pageCount}
-              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
-            >
-              »
-            </button>
-            <button
-              onClick={() =>
-                updateParams({ page: pageCount, resetPage: false })
-              }
-              disabled={serverParams.page >= pageCount}
-              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
-            >
-              »»
-            </button>
+              {[25, 50, 100, 200].map((pageSize) => (
+                <option key={pageSize} value={pageSize}>
+                  {pageSize}
+                </option>
+              ))}
+            </select>
+            <span>per page</span>
           </div>
 
-          <div className="text-sm text-muted-foreground">
-            Page {serverParams.page} of {pageCount}
+          <div className="flex items-center gap-3">
+            <span>
+              Page {serverParams.page} of {pageCount} (
+              {totalCount.toLocaleString()} items)
+            </span>
+            <div className="flex gap-0.5">
+              <button
+                onClick={() => updateParams({ page: 1, resetPage: false })}
+                disabled={serverParams.page <= 1}
+                aria-label="First page"
+                className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:text-muted-foreground/40"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() =>
+                  updateParams({
+                    page: serverParams.page - 1,
+                    resetPage: false,
+                  })
+                }
+                disabled={serverParams.page <= 1}
+                aria-label="Previous page"
+                className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:text-muted-foreground/40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() =>
+                  updateParams({
+                    page: serverParams.page + 1,
+                    resetPage: false,
+                  })
+                }
+                disabled={serverParams.page >= pageCount}
+                aria-label="Next page"
+                className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:text-muted-foreground/40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() =>
+                  updateParams({ page: pageCount, resetPage: false })
+                }
+                disabled={serverParams.page >= pageCount}
+                aria-label="Last page"
+                className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:text-muted-foreground/40"
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-
-          <select
-            value={serverParams.pageSize}
-            onChange={(e) => updateParams({ pageSize: Number(e.target.value) })}
-            className="rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm text-muted-foreground focus:border-primary/50 focus:outline-none"
-          >
-            {[25, 50, 100, 200].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
-              </option>
-            ))}
-          </select>
         </div>
       )}
     </div>

@@ -40,7 +40,7 @@ export default async function MeetingPage({
             href="/"
             className="mb-4 inline-block text-primary hover:underline"
           >
-            &larr; Back to Schedule
+            &larr; Back to homepage
           </Link>
           <div className="space-y-2">
             <p className="text-red-600">Unable to extract video ID</p>

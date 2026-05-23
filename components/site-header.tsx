@@ -21,12 +21,12 @@ export function SiteHeader() {
             className="h-8 w-auto shrink-0"
           />
           <div className="h-8 w-px shrink-0 bg-border" />
-          <div className="flex items-center gap-2">
-            <span className="text-2xl tracking-tight text-foreground">
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl leading-none tracking-tight text-foreground">
               <span className="font-bold">WebTV</span>
               <span className="font-normal"> Transcripts</span>
             </span>
-            <span className="rounded-sm bg-un-blue/10 px-1.5 py-0.5 text-[8pt] font-bold tracking-wide text-un-blue uppercase">
+            <span className="rounded bg-un-blue/10 px-2 py-1 text-[11px] leading-none font-bold tracking-wide text-un-blue uppercase">
               Public Preview
             </span>
           </div>
