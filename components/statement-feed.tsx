@@ -65,11 +65,12 @@ function SpeakerBadges({ bubble }: { bubble: ProfileBubble }) {
           {bubble.group}
         </span>
       )}
-      {bubble.function && bubble.function.toLowerCase() !== "representative" && (
-        <span className="text-sm font-medium text-muted-foreground">
-          {bubble.function}
-        </span>
-      )}
+      {bubble.function &&
+        bubble.function.toLowerCase() !== "representative" && (
+          <span className="text-sm font-medium text-muted-foreground">
+            {bubble.function}
+          </span>
+        )}
     </div>
   );
 }
@@ -175,7 +176,10 @@ export function StatementFeed({
     <>
       <ul className="space-y-5">
         {bubbles.map((b) => (
-          <StatementCard key={`${b.transcriptId}-${b.statementIndex}`} bubble={b} />
+          <StatementCard
+            key={`${b.transcriptId}-${b.statementIndex}`}
+            bubble={b}
+          />
         ))}
       </ul>
 

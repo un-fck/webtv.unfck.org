@@ -22,7 +22,11 @@ export async function GET(request: NextRequest) {
   const offset = Math.max(0, Number(searchParams.get("offset") ?? "0") || 0);
   const limit = Math.min(
     SPEAKER_PAGE_SIZE,
-    Math.max(1, Number(searchParams.get("limit") ?? SPEAKER_PAGE_SIZE) || SPEAKER_PAGE_SIZE),
+    Math.max(
+      1,
+      Number(searchParams.get("limit") ?? SPEAKER_PAGE_SIZE) ||
+        SPEAKER_PAGE_SIZE,
+    ),
   );
 
   const profile = await getEntityProfile(key, person ?? null);

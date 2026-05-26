@@ -14,7 +14,6 @@ export function kalturaThumbnailUrl(
   return `https://cdnapisec.kaltura.com/p/${KALTURA_PARTNER_ID}/thumbnail/entry_id/${entryId}/width/${width}/vid_sec/${Math.max(0, Math.floor(vidSec))}`;
 }
 
-
 export function extractKalturaId(assetId: string): string | null {
   if (!assetId) return null;
 

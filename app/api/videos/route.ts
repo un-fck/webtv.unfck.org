@@ -67,6 +67,9 @@ export async function GET(request: NextRequest) {
   const hasMore = offset + videos.length < total;
 
   const response = NextResponse.json({ videos, total, hasMore });
-  response.headers.set("Cache-Control", "s-maxage=30, stale-while-revalidate=60");
+  response.headers.set(
+    "Cache-Control",
+    "s-maxage=30, stale-while-revalidate=60",
+  );
   return response;
 }
