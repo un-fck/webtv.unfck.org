@@ -1,9 +1,8 @@
 import nodemailer from "nodemailer";
 
-export const SITE_TITLE = "UN Web TV Transcripts";
+import { getBaseUrl } from "@/lib/get-base-url";
 
-export const baseUrl = () =>
-  process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+export const SITE_TITLE = "UN Web TV Transcripts";
 
 export const mailFrom = () =>
   `"${SITE_TITLE}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`;
@@ -16,7 +15,7 @@ export const transporter = nodemailer.createTransport({
 });
 
 export async function sendMagicLink(email: string, token: string) {
-  const link = `${baseUrl()}/verify?token=${token}`;
+  const link = `${await getBaseUrl()}/verify?token=${token}`;
 
   await transporter.sendMail({
     from: mailFrom(),
