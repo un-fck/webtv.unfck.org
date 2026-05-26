@@ -4,6 +4,7 @@ import { SpeakerOverview } from "@/components/speaker-overview";
 import { getCurrentUser } from "@/lib/auth/service";
 import { getEntitySummaries } from "@/lib/speaker-index";
 import { typography } from "@/lib/typography";
+import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export default async function SpeakersPage() {
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className="mx-auto max-w-7xl px-6 pb-12 sm:px-8">
+      <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
           <a
             href="/"

@@ -2,16 +2,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { TimezonePicker } from "@/components/timezone-picker";
 import { AuthControl } from "@/components/auth-control";
+import { AuthNavLinks } from "@/components/auth-nav-links";
 import { typography } from "@/lib/typography";
+import { pageWidth, widePageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
-export function SiteHeader({ narrow = false }: { narrow?: boolean }) {
+export function SiteHeader({ wide = false }: { wide?: boolean }) {
   return (
     <header className="border-b border-border py-3">
       <div
         className={cn(
           "mx-auto flex items-center gap-4 px-6 sm:px-8",
-          narrow ? "max-w-5xl" : "max-w-7xl",
+          wide ? widePageWidth : pageWidth,
         )}
       >
         <Link
@@ -38,6 +40,7 @@ export function SiteHeader({ narrow = false }: { narrow?: boolean }) {
         </Link>
         <div className="ml-auto flex items-center gap-4">
           <TimezonePicker />
+          <AuthNavLinks />
           <Link
             href="/about"
             className={cn(

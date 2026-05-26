@@ -10,6 +10,7 @@ import {
   SPEAKER_PAGE_SIZE,
 } from "@/lib/speaker-index";
 import { typography } from "@/lib/typography";
+import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export default async function SpeakerProfilePage({
     return (
       <main className="min-h-screen bg-background">
         <SiteHeader />
-        <div className="mx-auto max-w-7xl px-6 pb-12 sm:px-8">
+        <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
           <p className={cn(typography.body, "py-8 text-muted-foreground")}>
             Please{" "}
             <Link href="/login" className="text-un-blue hover:underline">
@@ -55,7 +56,7 @@ export default async function SpeakerProfilePage({
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className="mx-auto max-w-5xl px-6 pb-12 sm:px-8">
+      <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
           <Link
             href="/speakers"

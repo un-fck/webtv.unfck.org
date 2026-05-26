@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
-import { Bell, LogOut, Users } from "lucide-react";
+import { LogOut } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useAuth } from "@/lib/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 // "david.pomerenke@un.org" → "DP"
@@ -22,24 +22,15 @@ function initialsFromEmail(email: string): string {
 }
 
 export function AuthControl() {
-  const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const { email, loaded } = useAuth();
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setEmail(data?.user?.email ?? null))
-      .catch(() => {})
-      .finally(() => setLoaded(true));
-  }, []);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    setEmail(null);
     setOpen(false);
-    router.refresh();
+    // Full navigation so every session-aware header component (avatar + the
+    // Speakers nav link) re-reads the cleared session.
+    window.location.assign("/");
   }
 
   // Avoid a flash of the wrong state before the session check resolves.
@@ -75,22 +66,6 @@ export function AuthControl() {
           </p>
         </div>
         <div className="pt-1.5">
-          <Link
-            href="/speakers"
-            onClick={() => setOpen(false)}
-            className={itemClass}
-          >
-            <Users className="h-4 w-4 text-muted-foreground" />
-            Speakers
-          </Link>
-          <Link
-            href="/subscriptions"
-            onClick={() => setOpen(false)}
-            className={itemClass}
-          >
-            <Bell className="h-4 w-4 text-muted-foreground" />
-            Subscriptions
-          </Link>
           <button
             onClick={handleLogout}
             className={cn(itemClass, "w-full text-left")}

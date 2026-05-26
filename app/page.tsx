@@ -9,6 +9,8 @@ import {
 import { VideoTable } from "@/components/transcript-table";
 import { SiteHeader } from "@/components/site-header";
 import { HomeHero } from "@/components/home-hero";
+import { pageWidth } from "@/lib/layout";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -162,10 +164,8 @@ export default async function Home({
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-background">
-      <SiteHeader narrow />
-      {/* Home content is centered in a 1024px column, aligned with the
-          likewise-narrowed header. */}
-      <div className="mx-auto max-w-5xl px-6 sm:px-8">
+      <SiteHeader />
+      <div className={cn("mx-auto px-6 sm:px-8", pageWidth)}>
         <HomeHero />
         <div className="pb-24">
           <Suspense fallback={null}>{children}</Suspense>

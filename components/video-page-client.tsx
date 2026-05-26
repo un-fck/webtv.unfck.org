@@ -20,6 +20,7 @@ import { UN_LANGUAGES } from "@/lib/languages";
 import { getScheduleReturnUrl } from "@/lib/schedule-return";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
+import { widePageWidth } from "@/lib/layout";
 
 interface VideoPageClientProps {
   kalturaId: string;
@@ -291,9 +292,9 @@ export function VideoPageClient({
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader wide />
 
-      <div className="mx-auto max-w-7xl px-6 pb-16 sm:px-8">
+      <div className={cn("mx-auto px-6 pb-16 sm:px-8", widePageWidth)}>
         <nav className="py-3">
           <a
             href={backHref}

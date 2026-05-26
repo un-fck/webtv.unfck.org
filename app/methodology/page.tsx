@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
 import { typography } from "@/lib/typography";
+import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -37,7 +38,7 @@ export default function MethodologyPage() {
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
+      <div className={cn("mx-auto px-6 py-12 sm:px-8", pageWidth)}>
         <div className="mb-10">
           <h1 className={cn(typography.pageTitle, "mb-3")}>Methodology</h1>
           <p className={typography.lead}>

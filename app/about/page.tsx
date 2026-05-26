@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
 import { typography } from "@/lib/typography";
+import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
@@ -12,7 +13,7 @@ export default function AboutPage() {
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className="mx-auto max-w-7xl px-6 pb-12 sm:px-8">
+      <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
           <a
             href="/"
