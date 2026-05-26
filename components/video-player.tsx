@@ -82,27 +82,47 @@ export function VideoPlayer({
   }, [audioLanguage]);
 
   useEffect(() => {
-    // Load Kaltura Player script
-    const script = document.createElement("script");
-    script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/embedPlaykitJs/uiconf_id/${uiConfId}`;
-    script.async = true;
+    // Guards so a teardown that races the async setup doesn't leave the player
+    // container bound (which makes the next setup() throw "target id already in
+    // use"). `cancelled` short-circuits work scheduled before cleanup ran;
+    // `checkPlayer` is tracked so the readiness poll is cleared on cleanup.
+    let cancelled = false;
+    let checkPlayer: ReturnType<typeof setInterval> | undefined;
 
-    script.onload = () => {
-      // Wait for KalturaPlayer to be available
-      const checkPlayer = setInterval(() => {
+    // Wait for window.KalturaPlayer (set by the SDK script), then init.
+    const waitForPlayer = () => {
+      if (cancelled) return;
+      checkPlayer = setInterval(() => {
         const windowWithKaltura = window as Window & {
           KalturaPlayer?: { setup: (config: unknown) => KalturaPlayer };
         };
         if (typeof windowWithKaltura.KalturaPlayer !== "undefined") {
           clearInterval(checkPlayer);
+          checkPlayer = undefined;
           initializePlayer();
         }
       }, 100);
     };
 
-    document.body.appendChild(script);
+    // Load the SDK script once and reuse it across mounts. Appending a fresh
+    // <script> on every mount leaked tags and re-ran the SDK bootstrap; the
+    // global window.KalturaPlayer it installs is shared anyway.
+    const scriptSrc = `https://cdnapisec.kaltura.com/p/${partnerId}/embedPlaykitJs/uiconf_id/${uiConfId}`;
+    const existing = document.querySelector<HTMLScriptElement>(
+      `script[src="${scriptSrc}"]`,
+    );
+    if (existing) {
+      waitForPlayer();
+    } else {
+      const script = document.createElement("script");
+      script.src = scriptSrc;
+      script.async = true;
+      script.onload = waitForPlayer;
+      document.body.appendChild(script);
+    }
 
     const initializePlayer = () => {
+      if (cancelled) return;
       try {
         const windowWithKaltura = window as Window & {
           KalturaPlayer?: { setup: (config: unknown) => KalturaPlayer };
@@ -136,13 +156,17 @@ export function VideoPlayer({
         };
 
         const player = KalturaPlayerGlobal.setup(config);
+        // Track the instance immediately so cleanup can destroy it even if the
+        // loadMedia promise below hasn't resolved yet.
+        playerRef.current = player;
 
         player.loadMedia({ entryId: kalturaId }).then(() => {
-          playerRef.current = player;
+          if (cancelled) return;
           onPlayerReady?.(player);
 
           // Report audio tracks, retrying until the HLS manifest is parsed
           const tryReportTracks = (retries = 5) => {
+            if (cancelled) return;
             try {
               const tracks = player.getTracks("audio");
               if (tracks.length > 0) {
@@ -162,6 +186,11 @@ export function VideoPlayer({
     };
 
     return () => {
+      cancelled = true;
+      if (checkPlayer) {
+        clearInterval(checkPlayer);
+        checkPlayer = undefined;
+      }
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
