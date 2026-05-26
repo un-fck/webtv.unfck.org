@@ -166,7 +166,7 @@ export default function MethodologyPage() {
                 said in a meeting.
               </p>
               <p>
-                AI-generated transcripts on this site are{" "}
+                Automatically generated transcripts on this site are{" "}
                 <strong className="text-foreground">
                   not a substitute for official records
                 </strong>

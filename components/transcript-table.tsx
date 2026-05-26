@@ -476,7 +476,7 @@ const DOCS_LABELS: Record<string, string> = {
 };
 
 const DOCS_TOOLTIPS: Record<string, string> = {
-  transcript: "AI-generated transcript from the audio recording",
+  transcript: "Agenerated transcript from the audio recording",
   pv: "Official word-for-word record of the meeting, produced by the UN Secretariat",
   sr: "Official condensed record of the meeting, produced by the UN Secretariat",
 };
@@ -567,7 +567,7 @@ function ActiveFilters({
               </TooltipContent>
             </Tooltip>
           ) : (
-            (DOCS_LABELS[d] || d)
+            DOCS_LABELS[d] || d
           )}
           <button
             onClick={() => onClearDocs(d)}
@@ -955,7 +955,9 @@ export function VideoTable({
 
   // Split the rows into per-day groups (one rendered table each) when grouping.
   type DisplayRow = (typeof displayRows)[number];
-  const dayGroups = useMemo<{ day: string; rows: DisplayRow[] }[] | null>(() => {
+  const dayGroups = useMemo<
+    { day: string; rows: DisplayRow[] }[] | null
+  >(() => {
     if (!groupByDate) return null;
     const groups: { day: string; rows: DisplayRow[] }[] = [];
     for (const r of displayRows) {
