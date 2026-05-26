@@ -734,7 +734,12 @@ export function VideoTable({
     )
       .then((res) => res.json())
       .then((data) => {
-        setSearchResults((prev) => [...(prev ?? []), ...data.videos]);
+        setSearchResults((prev) => {
+          const base = prev ?? [];
+          const seen = new Set(base.map((v) => v.id));
+          const fresh = (data.videos as Video[]).filter((v) => !seen.has(v.id));
+          return [...base, ...fresh];
+        });
         setHasMoreResults(data.hasMore);
         setSearchOffset((prev) => prev + data.videos.length);
       })
@@ -775,7 +780,13 @@ export function VideoTable({
     fetch(`/api/videos?${sp}`)
       .then((res) => res.json())
       .then((data) => {
-        setBrowseRows((prev) => [...prev, ...data.videos]);
+        // Dedup by asset_id (Video.id): pagination ties or overlapping chunks
+        // can re-deliver a row we already have, which would collide on key.
+        setBrowseRows((prev) => {
+          const seen = new Set(prev.map((v) => v.id));
+          const fresh = (data.videos as Video[]).filter((v) => !seen.has(v.id));
+          return [...prev, ...fresh];
+        });
         setBrowseHasMore(Boolean(data.hasMore));
       })
       .catch(() => {})
@@ -986,7 +997,7 @@ export function VideoTable({
       serverParams.category![0] === category;
 
     return (
-      <Fragment key={video.slug}>
+      <Fragment key={video.id}>
         {showCategory && (
           <tr className="bg-gray-50">
             <td colSpan={2} className="px-4 pt-2 pb-1">
@@ -1213,7 +1224,7 @@ export function VideoTable({
 
           return (
             <a
-              key={video.slug}
+              key={video.id}
               href={`/${video.slug}`}
               className={`block rounded-lg border p-4 transition-colors hover:bg-muted/50 ${isScheduled ? "opacity-50" : ""}`}
             >

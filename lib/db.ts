@@ -1059,8 +1059,10 @@ export interface SearchSort {
 function searchOrderBy(sort?: SearchSort): string | null {
   if (!sort) return null;
   const dir = sort.dir === "asc" ? "ASC" : "DESC";
-  if (sort.by === "title") return `COALESCE(clean_title, title) ${dir}`;
-  return `date ${dir}, scheduled_time ${dir}`;
+  // asset_id tiebreaker keeps OFFSET pagination stable across requests.
+  if (sort.by === "title")
+    return `COALESCE(clean_title, title) ${dir}, asset_id ASC`;
+  return `date ${dir}, scheduled_time ${dir}, asset_id ASC`;
 }
 
 export async function searchVideos(
@@ -1082,7 +1084,7 @@ export async function searchVideos(
            FROM webtv.videos
            WHERE fts_vec @@ websearch_to_tsquery('english', ?)
              AND ${VISIBLE_VIDEO}
-           ORDER BY ${orderBy ?? "rank DESC, date DESC"}
+           ORDER BY ${orderBy ?? "rank DESC, date DESC, asset_id ASC"}
            LIMIT ? OFFSET ?`,
           [query, query, limit, offset],
         ),
@@ -1106,7 +1108,7 @@ export async function searchVideos(
     q(
       `SELECT * FROM webtv.videos WHERE (title ILIKE ? OR clean_title ILIKE ?)
        AND ${VISIBLE_VIDEO}
-       ORDER BY ${orderBy ?? "date DESC, scheduled_time DESC"}
+       ORDER BY ${orderBy ?? "date DESC, scheduled_time DESC, asset_id ASC"}
        LIMIT ? OFFSET ?`,
       [pattern, pattern, limit, offset],
     ),
@@ -1224,6 +1226,10 @@ export async function getVideosPage(
       orderBy = `date ${sortDir === "asc" ? "ASC" : "DESC"}, scheduled_time ${sortDir === "asc" ? "ASC" : "DESC"}`;
     }
   }
+  // Stable tiebreaker on the primary key so OFFSET pagination never repeats or
+  // skips rows that share the same date/scheduled_time (otherwise the same
+  // asset can appear on two infinite-scroll pages → duplicate React keys).
+  orderBy += ", asset_id ASC";
 
   const offsetVal = (page - 1) * pageSize;
   const countArgs = [...args];
