@@ -16,8 +16,6 @@ import { Video } from "@/lib/un-api";
 import {
   CalendarIcon,
   ChevronDown,
-  Filter,
-  Info,
   Search,
   SearchX,
   X,
@@ -41,29 +39,41 @@ import {
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
-// Semantic ordering for category group headers within a day. Anything not
-// listed sorts after these (alphabetically); uncategorized ("") sorts last.
-const CATEGORY_ORDER: string[] = [
-  "Press Conferences",
-  "Media Stakeouts",
-  "General Assembly",
-  "Security Council",
-  "Economic and Social Council",
-  "Human Rights Council",
-  "Human Rights Treaty Bodies",
-  "Trusteeship Council",
-  "International Court of Justice",
-  "Agencies, Funds & Programmes",
-  "High-level Events",
-  "Conferences",
-  "Side Events",
-  "Meetings & Events",
-  "Media",
-  "Concerts",
-  "Goals Lounge",
-  "SDG Studio",
-  "Features",
+// Semantic grouping for the category filter rows. Each inner array is one row,
+// in display order. This also drives the day/category header ordering within
+// the schedule (CATEGORY_ORDER is the flattened form). Anything not listed
+// sorts after these (alphabetically); uncategorized ("") sorts last.
+const CATEGORY_GROUPS: string[][] = [
+  // Press & media
+  [
+    "Press Conferences",
+    "Media Stakeouts",
+    "Media",
+    "Concerts",
+    "Goals Lounge",
+    "SDG Studio",
+    "Features",
+  ],
+  // Principal organs & bodies
+  [
+    "General Assembly",
+    "Security Council",
+    "Economic and Social Council",
+    "Human Rights Council",
+    "Human Rights Treaty Bodies",
+    "Trusteeship Council",
+    "International Court of Justice",
+  ],
+  // Events & agencies
+  [
+    "Agencies, Funds & Programmes",
+    "High-level Events",
+    "Conferences",
+    "Side Events",
+    "Meetings & Events",
+  ],
 ];
+const CATEGORY_ORDER: string[] = CATEGORY_GROUPS.flat();
 const CATEGORY_RANK = new Map(CATEGORY_ORDER.map((c, i) => [c, i]));
 
 // Sort categories by the hardcoded order; unknown categories go after the known
@@ -117,6 +127,7 @@ function DateFilterPopover({
   selectedDate: string | undefined;
   onChange: (date: string | undefined) => void;
 }) {
+  const { timezone } = useTimezone();
   const isActive = !!selectedDate;
 
   // Build set of date strings that have videos
@@ -146,8 +157,19 @@ function DateFilterPopover({
     <Popover>
       <PopoverTrigger className={toolbarTriggerClass(isActive)}>
         <CalendarIcon className="h-4 w-4" />
-        <span>Date</span>
-        <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+        <span>{selectedDate ? formatMeetingDate(selectedDate, timezone) : "Date"}</span>
+        {selectedDate ? (
+          <X
+            className="h-3.5 w-3.5 opacity-60 hover:opacity-100"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onChange(undefined);
+            }}
+          />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+        )}
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         {selectedDate && (
@@ -179,24 +201,21 @@ function DateFilterPopover({
   );
 }
 
-function MultiFilterPopover({
-  label,
+// Category filter rendered inline as grouped rows of toggle pills (no dropdown).
+// Categories are bucketed into the semantic CATEGORY_GROUPS rows; only those
+// present in the data are shown. Any present category not in a defined group is
+// appended as a trailing row so nothing is dropped.
+function CategoryFilterRows({
   options,
   selected,
   onChange,
   counts,
-  labels,
-  tooltips,
 }: {
-  label: string;
   options: string[];
   selected: string[];
   onChange: (values: string[]) => void;
   counts?: Record<string, number>;
-  labels?: Record<string, string>;
-  tooltips?: Record<string, string>;
 }) {
-  const isActive = selected.length > 0;
   const toggle = (value: string) => {
     onChange(
       selected.includes(value)
@@ -205,73 +224,51 @@ function MultiFilterPopover({
     );
   };
 
-  // When counts are available, show the most common options first.
-  const sortedOptions = counts
-    ? [...options].sort((a, b) => (counts[b] ?? 0) - (counts[a] ?? 0))
-    : options;
+  // Hide rarely-used categories (fewer than 10 meetings) to keep the rows tidy.
+  const present = new Set(options.filter((c) => (counts?.[c] ?? 0) >= 10));
+  const rows: string[][] = CATEGORY_GROUPS.map((group) =>
+    group.filter((c) => present.has(c)),
+  ).filter((row) => row.length > 0);
+
+  // Any present category not in a defined group (incl. unknown future ones).
+  const grouped = new Set(CATEGORY_GROUPS.flat());
+  const ungrouped = [...present]
+    .filter((c) => !grouped.has(c))
+    .sort((a, b) => (counts?.[b] ?? 0) - (counts?.[a] ?? 0));
+  if (ungrouped.length > 0) rows.push(ungrouped);
+
+  if (rows.length === 0) return null;
 
   return (
-    <Popover>
-      <PopoverTrigger className={toolbarTriggerClass(isActive)}>
-        <Filter className="h-4 w-4" />
-        <span>{label}</span>
-        {isActive && (
-          <span className="rounded-full bg-primary px-1.5 text-xs text-white">
-            {selected.length}
-          </span>
-        )}
-        <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-      </PopoverTrigger>
-      <PopoverContent className="w-56 p-2" align="start">
-        <div className="space-y-1">
-          {selected.length > 0 && (
+    <div className="space-y-1.5">
+      {rows.map((row, i) => (
+        <div key={i} className="flex flex-wrap gap-1.5">
+          {row.map((opt) => (
             <button
-              onClick={() => onChange([])}
-              className="mb-2 flex w-full items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+              key={opt}
+              onClick={() => toggle(opt)}
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors ${
+                selected.includes(opt)
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
             >
-              <X className="h-3 w-3" /> Clear {selected.length} selected
+              {opt}
+              {counts?.[opt] !== undefined && (
+                <span
+                  className={cn(
+                    "ml-1",
+                    selected.includes(opt) ? "opacity-75" : "opacity-50",
+                  )}
+                >
+                  {counts[opt]}
+                </span>
+              )}
             </button>
-          )}
-          <div className="flex flex-wrap gap-1.5">
-            {sortedOptions.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => toggle(opt)}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-colors ${
-                  selected.includes(opt)
-                    ? "bg-primary text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {labels?.[opt] ?? opt}
-                {counts?.[opt] !== undefined && (
-                  <span className="ml-1 opacity-50">{counts[opt]}</span>
-                )}
-                {tooltips?.[opt] && (
-                  <Tooltip>
-                    <TooltipTrigger
-                      asChild
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Info
-                        className={`h-3 w-3 shrink-0 cursor-help ${
-                          selected.includes(opt)
-                            ? "opacity-60 hover:opacity-100"
-                            : "text-gray-400 hover:text-gray-600"
-                        }`}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-56 text-xs">
-                      {tooltips[opt]}
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
-      </PopoverContent>
-    </Popover>
+      ))}
+    </div>
   );
 }
 
@@ -469,125 +466,11 @@ function SegmentedToggle({
 // coarse All / With transcript toggle.
 const ALL_DOC_TYPES = ["transcript", "pv", "sr"];
 
-const DOCS_LABELS: Record<string, string> = {
-  transcript: "Transcript",
-  pv: "Verbatim Record",
-  sr: "Summary Record",
-};
-
 const DOCS_TOOLTIPS: Record<string, string> = {
-  transcript: "Agenerated transcript from the audio recording",
+  transcript: "Automatically generated transcript from the audio recording",
   pv: "Official word-for-word record of the meeting, produced by the UN Secretariat",
   sr: "Official condensed record of the meeting, produced by the UN Secretariat",
 };
-
-// Active filter pills display
-function ActiveFilters({
-  dateFilter,
-  bodyFilter,
-  categoryFilter,
-  textFilter,
-  searchQuery,
-  onClearDate,
-  onClearBody,
-  onClearCategory,
-  onClearDocs,
-  onClearSearch,
-}: {
-  dateFilter: string | undefined;
-  bodyFilter: string[];
-  categoryFilter: string[];
-  textFilter: string[];
-  searchQuery?: string;
-  onClearDate: () => void;
-  onClearBody: (value: string) => void;
-  onClearCategory: (value: string) => void;
-  onClearDocs: (value: string) => void;
-  onClearSearch: () => void;
-}) {
-  const { timezone } = useTimezone();
-  const hasAny =
-    !!dateFilter ||
-    bodyFilter.length > 0 ||
-    categoryFilter.length > 0 ||
-    textFilter.length > 0 ||
-    !!searchQuery;
-  if (!hasAny) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {dateFilter && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-          {formatMeetingDate(dateFilter, timezone)}
-          <button onClick={onClearDate} className="hover:text-primary/70">
-            <X className="h-3 w-3" />
-          </button>
-        </span>
-      )}
-      {bodyFilter.map((b) => (
-        <span
-          key={b}
-          className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
-        >
-          {b}
-          <button
-            onClick={() => onClearBody(b)}
-            className="hover:text-primary/70"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </span>
-      ))}
-      {categoryFilter.map((c) => (
-        <span
-          key={c}
-          className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
-        >
-          {c}
-          <button
-            onClick={() => onClearCategory(c)}
-            className="hover:text-primary/70"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </span>
-      ))}
-      {textFilter.map((d) => (
-        <span
-          key={d}
-          className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
-        >
-          {DOCS_TOOLTIPS[d] ? (
-            <Tooltip>
-              <TooltipTrigger className="cursor-help">
-                {DOCS_LABELS[d] || d}
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-56 text-xs">
-                {DOCS_TOOLTIPS[d]}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            DOCS_LABELS[d] || d
-          )}
-          <button
-            onClick={() => onClearDocs(d)}
-            className="hover:text-primary/70"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </span>
-      ))}
-      {searchQuery && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-          &ldquo;{searchQuery}&rdquo;
-          <button onClick={onClearSearch} className="hover:text-primary/70">
-            <X className="h-3 w-3" />
-          </button>
-        </span>
-      )}
-    </div>
-  );
-}
 
 interface VideoTableProps {
   videos: Video[];
@@ -734,12 +617,7 @@ export function VideoTable({
     )
       .then((res) => res.json())
       .then((data) => {
-        setSearchResults((prev) => {
-          const base = prev ?? [];
-          const seen = new Set(base.map((v) => v.id));
-          const fresh = (data.videos as Video[]).filter((v) => !seen.has(v.id));
-          return [...base, ...fresh];
-        });
+        setSearchResults((prev) => [...(prev ?? []), ...data.videos]);
         setHasMoreResults(data.hasMore);
         setSearchOffset((prev) => prev + data.videos.length);
       })
@@ -780,13 +658,7 @@ export function VideoTable({
     fetch(`/api/videos?${sp}`)
       .then((res) => res.json())
       .then((data) => {
-        // Dedup by asset_id (Video.id): pagination ties or overlapping chunks
-        // can re-deliver a row we already have, which would collide on key.
-        setBrowseRows((prev) => {
-          const seen = new Set(prev.map((v) => v.id));
-          const fresh = (data.videos as Video[]).filter((v) => !seen.has(v.id));
-          return [...prev, ...fresh];
-        });
+        setBrowseRows((prev) => [...prev, ...data.videos]);
         setBrowseHasMore(Boolean(data.hasMore));
       })
       .catch(() => {})
@@ -966,9 +838,7 @@ export function VideoTable({
 
   // Split the rows into per-day groups (one rendered table each) when grouping.
   type DisplayRow = (typeof displayRows)[number];
-  const dayGroups = useMemo<
-    { day: string; rows: DisplayRow[] }[] | null
-  >(() => {
+  const dayGroups = useMemo<{ day: string; rows: DisplayRow[] }[] | null>(() => {
     if (!groupByDate) return null;
     const groups: { day: string; rows: DisplayRow[] }[] = [];
     for (const r of displayRows) {
@@ -997,7 +867,7 @@ export function VideoTable({
       serverParams.category![0] === category;
 
     return (
-      <Fragment key={video.id}>
+      <Fragment key={video.slug}>
         {showCategory && (
           <tr className="bg-gray-50">
             <td colSpan={2} className="px-4 pt-2 pb-1">
@@ -1159,16 +1029,15 @@ export function VideoTable({
             selectedDate={serverParams.date}
             onChange={(val) => updateParams({ date: val })}
           />
-          <MultiFilterPopover
-            label="Category"
-            options={filterOptions.categories}
-            selected={serverParams.category ?? []}
-            onChange={(vals) =>
-              updateParams({ category: vals.length ? vals : undefined })
-            }
-            counts={filterOptions.categoryCounts}
-          />
         </div>
+        <CategoryFilterRows
+          options={filterOptions.categories}
+          selected={serverParams.category ?? []}
+          onChange={(vals) =>
+            updateParams({ category: vals.length ? vals : undefined })
+          }
+          counts={filterOptions.categoryCounts}
+        />
       </div>
 
       {/* Search results: count + sort (relevance vs date) */}
@@ -1178,32 +1047,6 @@ export function VideoTable({
           <SegmentedToggle options={searchSortOptions} />
         </div>
       )}
-
-      {/* Active filter pills */}
-      <ActiveFilters
-        dateFilter={serverParams.date}
-        bodyFilter={serverParams.body ?? []}
-        categoryFilter={serverParams.category ?? []}
-        textFilter={serverParams.text ?? []}
-        searchQuery={serverParams.q}
-        onClearDate={() => updateParams({ date: undefined })}
-        onClearBody={(v) =>
-          updateParams({
-            body: (serverParams.body ?? []).filter((b) => b !== v),
-          })
-        }
-        onClearCategory={(v) =>
-          updateParams({
-            category: (serverParams.category ?? []).filter((c) => c !== v),
-          })
-        }
-        onClearDocs={(v) =>
-          updateParams({
-            text: (serverParams.text ?? []).filter((d) => d !== v),
-          })
-        }
-        onClearSearch={() => submitSearch("")}
-      />
 
       {/* Mobile Card View */}
       {showEmptyState && (
@@ -1224,7 +1067,7 @@ export function VideoTable({
 
           return (
             <a
-              key={video.id}
+              key={video.slug}
               href={`/${video.slug}`}
               className={`block rounded-lg border p-4 transition-colors hover:bg-muted/50 ${isScheduled ? "opacity-50" : ""}`}
             >

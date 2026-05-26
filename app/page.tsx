@@ -162,8 +162,10 @@ export default async function Home({
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-background">
-      <SiteHeader />
-      <div className="mx-auto max-w-7xl px-6 sm:px-8">
+      <SiteHeader narrow />
+      {/* Home content is centered in a 1024px column, aligned with the
+          likewise-narrowed header. */}
+      <div className="mx-auto max-w-5xl px-6 sm:px-8">
         <HomeHero />
         <div className="pb-24">
           <Suspense fallback={null}>{children}</Suspense>

@@ -5,10 +5,15 @@ import { AuthControl } from "@/components/auth-control";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
-export function SiteHeader() {
+export function SiteHeader({ narrow = false }: { narrow?: boolean }) {
   return (
     <header className="border-b border-border py-3">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 sm:px-8">
+      <div
+        className={cn(
+          "mx-auto flex items-center gap-4 px-6 sm:px-8",
+          narrow ? "max-w-5xl" : "max-w-7xl",
+        )}
+      >
         <Link
           href="/"
           className="inline-flex items-center gap-4 transition-opacity hover:opacity-75"
