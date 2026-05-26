@@ -18,7 +18,8 @@ export function HomeHero() {
         generated from UN Web TV recordings.
       </p>
       <p className={cn(typography.meta, "mt-3")}>
-        Public Preview · Automatically generated transcripts, not official UN records ·{" "}
+        Public Preview · Automatically generated transcripts, not official UN
+        records ·{" "}
         <Link
           href="/about"
           className="text-un-blue underline underline-offset-4 hover:opacity-75"

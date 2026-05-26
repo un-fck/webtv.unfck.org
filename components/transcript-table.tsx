@@ -13,13 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Video } from "@/lib/un-api";
-import {
-  CalendarIcon,
-  ChevronDown,
-  Search,
-  SearchX,
-  X,
-} from "lucide-react";
+import { CalendarIcon, ChevronDown, Search, SearchX, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Fragment,
@@ -157,7 +151,9 @@ function DateFilterPopover({
     <Popover>
       <PopoverTrigger className={toolbarTriggerClass(isActive)}>
         <CalendarIcon className="h-4 w-4" />
-        <span>{selectedDate ? formatMeetingDate(selectedDate, timezone) : "Date"}</span>
+        <span>
+          {selectedDate ? formatMeetingDate(selectedDate, timezone) : "Date"}
+        </span>
         {selectedDate ? (
           <X
             className="h-3.5 w-3.5 opacity-60 hover:opacity-100"
@@ -838,7 +834,9 @@ export function VideoTable({
 
   // Split the rows into per-day groups (one rendered table each) when grouping.
   type DisplayRow = (typeof displayRows)[number];
-  const dayGroups = useMemo<{ day: string; rows: DisplayRow[] }[] | null>(() => {
+  const dayGroups = useMemo<
+    { day: string; rows: DisplayRow[] }[] | null
+  >(() => {
     if (!groupByDate) return null;
     const groups: { day: string; rows: DisplayRow[] }[] = [];
     for (const r of displayRows) {

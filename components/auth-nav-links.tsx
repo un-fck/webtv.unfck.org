@@ -5,7 +5,10 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
-const linkClass = cn(typography.meta, "transition-colors hover:text-foreground");
+const linkClass = cn(
+  typography.meta,
+  "transition-colors hover:text-foreground",
+);
 
 // Top-level header links shown only to signed-in users.
 export function AuthNavLinks() {
