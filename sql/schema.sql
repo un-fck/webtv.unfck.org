@@ -64,6 +64,17 @@ CREATE TABLE IF NOT EXISTS transcripts (
     content JSONB NOT NULL DEFAULT '{}',
     pipeline_lock TIMESTAMPTZ,
     error_message TEXT,
+    -- Audio length we transcribed, frozen at transcription time (migration 008).
+    -- Baseline for detecting WebTV re-cuts; videos.duration is overwritten on sync.
+    source_duration_ms INTEGER,
+    -- Constant shift to ADD to stored timestamps to realign to the current audio
+    -- (negative when content was trimmed from the front). NULL = no shift.
+    time_offset_ms INTEGER,
+    -- Audio duration (ms) the realignment was last evaluated against (migration
+    -- 009). Re-align fires when the live duration drops below this; set to the
+    -- current duration after each (re)align so a row self-quiesces. Set with
+    -- time_offset_ms NULL = checked but not a clean front-shift (needs reprocess).
+    aligned_duration_ms INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

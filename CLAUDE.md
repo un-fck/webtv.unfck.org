@@ -108,6 +108,7 @@ Detailed docs live in `docs/` — read these before working on the relevant subs
 - `docs/eval.md` — Evaluation system: ground truth from PV documents, multi-provider STT, metrics (WER/CER), corpus, dashboard, HuggingFace datasets
 - `docs/official-transcripts.md` — Which UN organs produce PV vs SR records, document symbol patterns
 - `docs/api.md` — Public API: URL scheme, JSON endpoints, response shapes
+- `docs/realignment.md` — Realigning transcript timestamps after WebTV re-cuts a video: detection (duration reduction), Gemini-computed front-shift offset, geometric validation, `source_duration_ms`/`time_offset_ms`/`aligned_duration_ms`, and where the offset is applied
 - `REVIEW.md` (project root) — current code review, known issues, ranked refactor opportunities
 
 ## Architecture

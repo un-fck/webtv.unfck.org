@@ -119,6 +119,8 @@ export async function GET(
 
     const topics = transcript.content.topics || {};
 
+    // Timestamps are already realignment-shifted by the display getter
+    // (getTranscriptByKalturaId / getTranscript).
     const transcriptData = transcript.content.statements.map(
       (stmt, index: number) => {
         const info = speakerMappings[index.toString()];

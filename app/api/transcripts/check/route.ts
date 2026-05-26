@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
 
     // Viewable as soon as content exists — independent of any later stage
     // (e.g. on-demand analysis) so the transcript never disappears for others.
+    // Timestamps are already realignment-shifted by the display getter above.
     const statements = cached.content.statements;
     if (statements && statements.length > 0) {
       const speakerMappings = await getSpeakerMapping(cached.transcript_id);

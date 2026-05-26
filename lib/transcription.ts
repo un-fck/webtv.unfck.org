@@ -30,6 +30,7 @@ import { setSpeakerMapping } from "./speakers";
 import { KALTURA_PARTNER_ID, KALTURA_WIDGET_ID } from "./kaltura";
 import { getSTTProvider } from "./providers/config";
 import { toRawParagraphs } from "./providers/convert";
+import { applyTimeOffset } from "./transcript-offset";
 import type { GeminiTranscriptionResult } from "./gemini-transcription";
 
 export { type TranscriptionStatus } from "./db";
@@ -161,14 +162,21 @@ export async function pollTranscription(
   const transcript = await getTranscriptById(transcriptId);
   if (!transcript) throw new Error("Transcript not found");
 
+  // Realignment offset (WebTV re-cut the audio after transcription) is applied
+  // here at the serving boundary; downstream consumers see aligned timestamps.
+  const content = applyTimeOffset(
+    transcript.content,
+    transcript.time_offset_ms,
+  );
+
   if (transcript.transcription_status === "completed") {
     return {
       stage: "completed",
       analysis_status: transcript.analysis_status,
-      raw_paragraphs: transcript.content.raw_paragraphs,
-      statements: transcript.content.statements,
-      topics: transcript.content.topics,
-      propositions: transcript.content.propositions,
+      raw_paragraphs: content.raw_paragraphs,
+      statements: content.statements,
+      topics: content.topics,
+      propositions: content.propositions,
     };
   }
 
@@ -177,10 +185,10 @@ export async function pollTranscription(
       stage: "error",
       analysis_status: transcript.analysis_status,
       error_message: transcript.error_message || "Unknown error",
-      raw_paragraphs: transcript.content.raw_paragraphs,
-      statements: transcript.content.statements,
-      topics: transcript.content.topics,
-      propositions: transcript.content.propositions,
+      raw_paragraphs: content.raw_paragraphs,
+      statements: content.statements,
+      topics: content.topics,
+      propositions: content.propositions,
     };
   }
 
@@ -188,7 +196,8 @@ export async function pollTranscription(
     transcript.transcription_status === "identifying_speakers" ||
     transcript.transcription_status === "analyzing_topics"
   ) {
-    // Try to restart stuck stages by re-acquiring a stale lock
+    // Try to restart stuck stages by re-acquiring a stale lock (use raw,
+    // unshifted paragraphs — these feed re-processing, not display).
     const paragraphs = transcript.content.raw_paragraphs;
     if (paragraphs && paragraphs.length > 0) {
       const acquired = await tryAcquirePipelineLock(transcriptId);
@@ -213,10 +222,10 @@ export async function pollTranscription(
     return {
       stage: transcript.transcription_status,
       analysis_status: transcript.analysis_status,
-      raw_paragraphs: transcript.content.raw_paragraphs,
-      statements: transcript.content.statements,
-      topics: transcript.content.topics,
-      propositions: transcript.content.propositions,
+      raw_paragraphs: content.raw_paragraphs,
+      statements: content.statements,
+      topics: content.topics,
+      propositions: content.propositions,
     };
   }
 
@@ -290,6 +299,8 @@ async function runTranscriptionPipeline(
       languageCode,
       content,
       kalturaId,
+      // Audio length we just transcribed — frozen baseline for re-cut detection.
+      transcript.durationMs ?? null,
     );
     if (speakerMapping) {
       await setSpeakerMapping(transcriptId, speakerMapping);
@@ -472,6 +483,7 @@ export async function submitTranscription(
       lang,
       { statements: [], topics: {} },
       kalturaId,
+      null, // source_duration_ms unknown until transcription completes
       client,
     );
     return {

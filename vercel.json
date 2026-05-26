@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/send-transcript-notifications",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/realign",
+      "schedule": "0 * * * *"
     }
   ]
 }

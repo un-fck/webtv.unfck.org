@@ -2,6 +2,7 @@ import { Pool } from "pg";
 import "@/lib/load-env";
 import { extractKalturaId } from "./kaltura";
 import { slugFromSymbol } from "./meeting-slug";
+import { applyTimeOffset } from "./transcript-offset";
 
 // Transcript production lifecycle. Proposition analysis is a separate axis
 // (`AnalysisStatus`) and intentionally not part of this enum.
@@ -126,6 +127,9 @@ export interface Transcript {
   content: TranscriptContent;
   pipeline_lock: Date | null;
   error_message: string | null;
+  source_duration_ms: number | null;
+  time_offset_ms: number | null;
+  aligned_duration_ms: number | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -212,9 +216,24 @@ function mapTranscriptRow(row: Record<string, unknown>): Transcript {
     content: row.content as TranscriptContent,
     pipeline_lock: row.pipeline_lock as Date | null,
     error_message: row.error_message as string | null,
+    source_duration_ms: (row.source_duration_ms as number | null) ?? null,
+    time_offset_ms: (row.time_offset_ms as number | null) ?? null,
+    aligned_duration_ms: (row.aligned_duration_ms as number | null) ?? null,
     created_at: row.created_at as Date,
     updated_at: row.updated_at as Date,
   };
+}
+
+// Display-facing mapper: applies the realignment offset (WebTV re-cut the audio
+// after transcription) so any caller serving a transcript to users gets aligned
+// timestamps — the single chokepoint, so new read sites can't silently diverge.
+// NEVER use this on reprocessing/realignment paths: those must read the raw
+// stored timestamps (via mapTranscriptRow / getTranscriptById), since the offset
+// is computed from — and re-saved relative to — the original timeline.
+function mapTranscriptRowForDisplay(row: Record<string, unknown>): Transcript {
+  const t = mapTranscriptRow(row);
+  if (!t.time_offset_ms) return t;
+  return { ...t, content: applyTimeOffset(t.content, t.time_offset_ms) };
 }
 
 export async function getTranscript(
@@ -241,7 +260,7 @@ export async function getTranscript(
 
   const result = await pool.query(q(sql, args));
   if (result.rows.length === 0) return null;
-  return mapTranscriptRow(result.rows[0]);
+  return mapTranscriptRowForDisplay(result.rows[0]);
 }
 
 export async function getAllTranscriptsForEntry(
@@ -300,14 +319,17 @@ export async function saveTranscript(
   languageCode: string | null,
   content: TranscriptContent,
   kalturaId: string | null = null,
+  // Actual audio length we transcribed (ms). Frozen baseline for detecting
+  // later WebTV re-cuts (see migration 008). null when unknown.
+  sourceDurationMs: number | null = null,
   // Optional executor so this can run inside an advisory-locked transaction
   // (see withVideoLock) on the same connection as the lock.
   executor: Pick<Pool, "query"> = pool,
 ): Promise<void> {
   await executor.query(
     q(
-      `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content, source_duration_ms)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(transcript_id) DO UPDATE SET
          entry_id = EXCLUDED.entry_id,
          kaltura_id = COALESCE(EXCLUDED.kaltura_id, transcripts.kaltura_id),
@@ -315,6 +337,7 @@ export async function saveTranscript(
          transcription_status = EXCLUDED.transcription_status,
          language_code = EXCLUDED.language_code,
          content = EXCLUDED.content,
+         source_duration_ms = COALESCE(EXCLUDED.source_duration_ms, transcripts.source_duration_ms),
          updated_at = NOW()`,
       [
         entryId,
@@ -326,6 +349,7 @@ export async function saveTranscript(
         status,
         languageCode,
         content,
+        sourceDurationMs,
       ],
     ),
   );
@@ -696,7 +720,7 @@ export async function getTranscriptByKalturaId(
     ),
   );
   if (result.rows.length === 0) return null;
-  return mapTranscriptRow(result.rows[0]);
+  return mapTranscriptRowForDisplay(result.rows[0]);
 }
 
 // Latest non-error transcript for a player ID — completed, in-progress, or
@@ -725,7 +749,7 @@ export async function getActiveTranscriptByKalturaId(
     ),
   );
   if (result.rows.length === 0) return null;
-  return mapTranscriptRow(result.rows[0]);
+  return mapTranscriptRowForDisplay(result.rows[0]);
 }
 
 // Latest non-error full-meeting transcript for a resolved (canonical) entry.
@@ -756,7 +780,7 @@ export async function getActiveTranscriptByEntryId(
     ),
   );
   if (result.rows.length === 0) return null;
-  return mapTranscriptRow(result.rows[0]);
+  return mapTranscriptRowForDisplay(result.rows[0]);
 }
 
 export async function getAllTranscriptedEntries(): Promise<string[]> {
@@ -1493,7 +1517,11 @@ export async function getStatementsForRefs(
   const result = await pool.query(
     `SELECT p.tid AS transcript_id,
             p.idx AS statement_index,
-            (t.content->'statements'->p.idx->>'start')::float8 AS start,
+            -- Apply the realignment offset here too (the speaker feed links into
+            -- the player by timestamp), keeping this path aligned with the
+            -- display getters. COALESCE: most rows have no offset.
+            ((t.content->'statements'->p.idx->>'start')::float8
+               + COALESCE(t.time_offset_ms, 0)) AS start,
             (
               SELECT string_agg(sent->>'text', ' ')
                 FROM jsonb_array_elements(
