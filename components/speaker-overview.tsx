@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { EntityKind, EntitySummary } from "@/lib/speaker-index";
-import { encodeEntityKey } from "@/lib/speaker-keys";
+import { slugify } from "@/lib/speaker-keys";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -14,9 +14,9 @@ const SECTIONS: { kind: EntityKind; title: string }[] = [
   { kind: "org", title: "UN organs & agencies" },
 ];
 
-function profileHref(key: string, name?: string | null) {
-  const base = `/speakers/${encodeEntityKey(key)}`;
-  return name ? `${base}/${encodeURIComponent(name)}` : base;
+function profileHref(slug: string, name?: string | null) {
+  const base = `/speakers/${slug}`;
+  return name ? `${base}/${slugify(name)}` : base;
 }
 
 const MIN_STATEMENTS = 10;
@@ -50,7 +50,7 @@ function EntityRow({
           />
         </button>
         <Link
-          href={profileHref(entity.key)}
+          href={profileHref(entity.slug)}
           className="font-medium text-foreground hover:text-un-blue hover:underline"
         >
           {entity.label}
@@ -63,7 +63,7 @@ function EntityRow({
           {namedPeople.map((p) => (
             <li key={p.name} className="flex items-center gap-2">
               <Link
-                href={profileHref(entity.key, p.name)}
+                href={profileHref(entity.slug, p.name)}
                 className={cn(
                   typography.body,
                   "hover:text-un-blue hover:underline",
@@ -142,7 +142,7 @@ export function SpeakerOverview({ entities }: { entities: EntitySummary[] }) {
               ) : (
                 <ul>
                   {list.map((e) => (
-                    <EntityRow key={e.key} entity={e} searching={searching} />
+                    <EntityRow key={e.slug} entity={e} searching={searching} />
                   ))}
                 </ul>
               )}

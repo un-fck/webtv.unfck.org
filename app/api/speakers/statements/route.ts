@@ -2,22 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/require-user";
 import { apiError } from "@/lib/api-error";
 import {
-  getEntityProfile,
+  getEntityProfileBySlug,
   refsToBubbles,
   SPEAKER_PAGE_SIZE,
 } from "@/lib/speaker-index";
 
 /**
- * Paginated statement feed for a speaker profile. `key` is the (decoded) entity
- * key (e.g. `country:CHN`); `person` optionally narrows to one named speaker.
+ * Paginated statement feed for a speaker profile. `slug` is the entity slug
+ * (e.g. `china`, `ocha`); `person` optionally narrows to one named speaker by
+ * their slug (e.g. `tom-fletcher`).
  */
 export async function GET(request: NextRequest) {
   const auth = await requireUser();
   if (auth.response) return auth.response;
 
   const { searchParams } = request.nextUrl;
-  const key = searchParams.get("key");
-  if (!key) return apiError(400, "missing_parameter", "key is required");
+  const slug = searchParams.get("slug");
+  if (!slug) return apiError(400, "missing_parameter", "slug is required");
   const person = searchParams.get("person");
   const offset = Math.max(0, Number(searchParams.get("offset") ?? "0") || 0);
   const limit = Math.min(
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     ),
   );
 
-  const profile = await getEntityProfile(key, person ?? null);
+  const profile = await getEntityProfileBySlug(slug, person ?? null);
   if (!profile) return apiError(404, "not_found", "Unknown speaker");
 
   const slice = profile.refs.slice(offset, offset + limit);

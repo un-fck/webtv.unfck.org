@@ -6,8 +6,9 @@ import {
 } from "@/lib/db";
 import { getCountryName } from "@/lib/country-lookup";
 import { meetingSlugFromVideo } from "@/lib/meeting-slug";
+import { slugify } from "@/lib/speaker-keys";
 
-export { encodeEntityKey, decodeEntityKey } from "@/lib/speaker-keys";
+export { slugify } from "@/lib/speaker-keys";
 
 export type EntityKind = "country" | "group" | "org";
 
@@ -34,7 +35,8 @@ export interface PersonSummary {
 }
 
 export interface EntitySummary {
-  key: string;
+  /** Clean URL slug, e.g. "ocha", "china", "african-union". */
+  slug: string;
   kind: EntityKind;
   label: string;
   /** ISO3 code when kind === "country". */
@@ -215,11 +217,119 @@ export async function buildSpeakerIndex(): Promise<SpeakerIndex> {
   return buildSpeakerIndexFromRows();
 }
 
-function summarizePeople(node: EntityNode): PersonSummary[] {
+// ── Merge-by-slug layer ───────────────────────────────────────────────────
+// Entity labels and person names are AI-extracted, so the same body/person
+// shows up under casing/accent/punctuation variants ("INTERPOL"/"Interpol",
+// "António"/"Antonio Guterres"). They share a slug, so we merge every entity —
+// and every person within — that slugs the same into one logical profile. The
+// canonical label/name shown is whichever variant has the most statements.
+
+/** One person bucket inside a merged entity, keyed by `slugify(name)`. */
+interface MergedPerson {
+  /** Canonical display name (most-frequent variant), or null if unattributed. */
+  name: string | null;
+  refs: SpeakerRef[];
+}
+
+interface MergedEntity {
+  slug: string;
+  kind: EntityKind;
+  label: string;
+  code: string | null;
+  /** personSlug ("" = unattributed) → bucket */
+  people: Map<string, MergedPerson>;
+  meetings: Set<string>;
+  statementCount: number;
+}
+
+/** Pick the variant with the most refs (ties → first seen). */
+function canonical<T>(counts: Map<T, number>): T {
+  let best: T | undefined;
+  let bestN = -1;
+  for (const [value, n] of counts) {
+    if (n > bestN) {
+      best = value;
+      bestN = n;
+    }
+  }
+  return best as T;
+}
+
+async function buildMergedEntities(): Promise<Map<string, MergedEntity>> {
+  const index = await buildSpeakerIndex();
+
+  // Group raw nodes by entity slug, then collapse each group.
+  const groups = new Map<string, EntityNode[]>();
+  for (const node of index.entities.values()) {
+    const slug = slugify(node.label);
+    if (!slug) continue; // labels that slug to "" have no usable URL
+    const list = groups.get(slug);
+    if (list) list.push(node);
+    else groups.set(slug, [node]);
+  }
+
+  const merged = new Map<string, MergedEntity>();
+  for (const [slug, nodes] of groups) {
+    // Canonical entity identity = highest-statement-count node.
+    const head = nodes
+      .slice()
+      .sort((a, b) => b.statementCount - a.statementCount)[0];
+
+    const people = new Map<
+      string,
+      { refs: SpeakerRef[]; nameCounts: Map<string, number> }
+    >();
+    const meetings = new Set<string>();
+    let statementCount = 0;
+
+    for (const node of nodes) {
+      for (const [personKey, refs] of node.people) {
+        const personSlug =
+          personKey === UNATTRIBUTED ? UNATTRIBUTED : slugify(personKey);
+        let bucket = people.get(personSlug);
+        if (!bucket) {
+          bucket = { refs: [], nameCounts: new Map() };
+          people.set(personSlug, bucket);
+        }
+        bucket.refs.push(...refs);
+        if (personKey !== UNATTRIBUTED) {
+          bucket.nameCounts.set(
+            personKey,
+            (bucket.nameCounts.get(personKey) ?? 0) + refs.length,
+          );
+        }
+        for (const ref of refs) meetings.add(ref.transcriptId);
+        statementCount += refs.length;
+      }
+    }
+
+    const mergedPeople = new Map<string, MergedPerson>();
+    for (const [personSlug, bucket] of people) {
+      mergedPeople.set(personSlug, {
+        name: personSlug === UNATTRIBUTED ? null : canonical(bucket.nameCounts),
+        refs: bucket.refs,
+      });
+    }
+
+    merged.set(slug, {
+      slug,
+      kind: head.kind,
+      label: head.label,
+      code: head.code,
+      people: mergedPeople,
+      meetings,
+      statementCount,
+    });
+  }
+
+  return merged;
+}
+
+function summarizePeople(entity: MergedEntity): PersonSummary[] {
   const people: PersonSummary[] = [];
-  for (const [personKey, refs] of node.people) {
+  for (const { name, refs } of entity.people.values()) {
     people.push({
-      name: personKey === UNATTRIBUTED ? null : personKey,
+      name,
       statementCount: refs.length,
       meetingCount: new Set(refs.map((r) => r.transcriptId)).size,
     });
@@ -229,24 +339,24 @@ function summarizePeople(node: EntityNode): PersonSummary[] {
 
 /** Lightweight, serializable summaries for the overview page. */
 export async function getEntitySummaries(): Promise<EntitySummary[]> {
-  const index = await buildSpeakerIndex();
+  const merged = await buildMergedEntities();
   const out: EntitySummary[] = [];
-  for (const node of index.entities.values()) {
+  for (const entity of merged.values()) {
     out.push({
-      key: node.key,
-      kind: node.kind,
-      label: node.label,
-      code: node.code,
-      statementCount: node.statementCount,
-      meetingCount: node.meetings.size,
-      people: summarizePeople(node),
+      slug: entity.slug,
+      kind: entity.kind,
+      label: entity.label,
+      code: entity.code,
+      statementCount: entity.statementCount,
+      meetingCount: entity.meetings.size,
+      people: summarizePeople(entity),
     });
   }
   return out.sort((a, b) => b.statementCount - a.statementCount);
 }
 
 export interface EntityProfile {
-  key: string;
+  slug: string;
   kind: EntityKind;
   label: string;
   code: string | null;
@@ -257,23 +367,26 @@ export interface EntityProfile {
 }
 
 /**
- * Resolve a profile for an entity, or a single person within it when
- * `personName` is supplied. Returns null if the entity is unknown.
+ * Resolve a profile by entity slug, or a single person within it when
+ * `personSlug` is supplied. Returns null if the entity (or person) is unknown.
  */
-export async function getEntityProfile(
-  key: string,
-  personName?: string | null,
+export async function getEntityProfileBySlug(
+  entitySlug: string,
+  personSlug?: string | null,
 ): Promise<EntityProfile | null> {
-  const index = await buildSpeakerIndex();
-  const node = index.entities.get(key);
-  if (!node) return null;
+  const merged = await buildMergedEntities();
+  const entity = merged.get(entitySlug);
+  if (!entity) return null;
 
   let refs: SpeakerRef[];
-  if (personName != null) {
-    refs = node.people.get(personName) ?? [];
-    if (refs.length === 0) return null;
+  let personName: string | null = null;
+  if (personSlug != null) {
+    const bucket = entity.people.get(personSlug);
+    if (!bucket || bucket.refs.length === 0) return null;
+    refs = bucket.refs;
+    personName = bucket.name;
   } else {
-    refs = [...node.people.values()].flat();
+    refs = [...entity.people.values()].flatMap((p) => p.refs);
   }
   // Newest first. `date` is a JS Date.toString(), not lexically sortable, so
   // compare parsed timestamps; tie-break by statement order within a meeting.
@@ -285,13 +398,13 @@ export async function getEntityProfile(
   });
 
   return {
-    key: node.key,
-    kind: node.kind,
-    label: node.label,
-    code: node.code,
-    personName: personName ?? null,
+    slug: entity.slug,
+    kind: entity.kind,
+    label: entity.label,
+    code: entity.code,
+    personName,
     refs,
-    people: summarizePeople(node),
+    people: summarizePeople(entity),
   };
 }
 

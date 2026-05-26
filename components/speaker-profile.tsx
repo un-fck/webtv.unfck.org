@@ -5,6 +5,7 @@ import type {
   ProfileBubble,
 } from "@/lib/speaker-index";
 import { StatementFeed } from "@/components/statement-feed";
+import { slugify } from "@/lib/speaker-keys";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +38,8 @@ function initials(label: string): string {
 }
 
 export function SpeakerProfile({
-  entityKey,
+  entitySlug,
+  personSlug,
   label,
   kind,
   personName,
@@ -49,7 +51,8 @@ export function SpeakerProfile({
   initialNextOffset,
   initialHasMore,
 }: {
-  entityKey: string;
+  entitySlug: string;
+  personSlug: string | null;
   label: string;
   kind: EntityKind;
   personName: string | null;
@@ -113,7 +116,7 @@ export function SpeakerProfile({
             {namedPeople.map((p) => (
               <li key={p.name}>
                 <Link
-                  href={`${entityHref}/${encodeURIComponent(p.name as string)}`}
+                  href={`${entityHref}/${slugify(p.name as string)}`}
                   className={cn(
                     typography.label,
                     "inline-flex items-center rounded-full bg-muted px-3 py-1 hover:bg-muted/70",
@@ -131,8 +134,8 @@ export function SpeakerProfile({
       )}
 
       <StatementFeed
-        entityKey={entityKey}
-        personName={personName}
+        slug={entitySlug}
+        person={personSlug}
         initialBubbles={initialBubbles}
         initialNextOffset={initialNextOffset}
         initialHasMore={initialHasMore}

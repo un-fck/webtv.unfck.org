@@ -4,8 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SpeakerProfile } from "@/components/speaker-profile";
 import { getCurrentUser } from "@/lib/auth/service";
 import {
-  decodeEntityKey,
-  getEntityProfile,
+  getEntityProfileBySlug,
   refsToBubbles,
   SPEAKER_PAGE_SIZE,
 } from "@/lib/speaker-index";
@@ -23,8 +22,8 @@ export default async function SpeakerProfilePage({
   const user = await getCurrentUser();
 
   const { path } = await params;
-  const key = decodeEntityKey(path[0] ?? "");
-  const personName = path.length > 1 ? decodeURIComponent(path[1]) : undefined;
+  const entitySlug = path[0] ?? "";
+  const personSlug = path.length > 1 ? path[1] : undefined;
 
   if (!user) {
     return (
@@ -43,7 +42,7 @@ export default async function SpeakerProfilePage({
     );
   }
 
-  const profile = await getEntityProfile(key, personName ?? null);
+  const profile = await getEntityProfileBySlug(entitySlug, personSlug ?? null);
   if (!profile) notFound();
 
   const total = profile.refs.length;
@@ -69,11 +68,12 @@ export default async function SpeakerProfilePage({
           </Link>
         </nav>
         <SpeakerProfile
-          entityKey={profile.key}
+          entitySlug={profile.slug}
+          personSlug={personSlug ?? null}
           label={profile.label}
           kind={profile.kind}
           personName={profile.personName}
-          entityHref={`/speakers/${path[0]}`}
+          entityHref={`/speakers/${profile.slug}`}
           people={profile.people}
           totalStatements={total}
           meetingCount={meetingCount}

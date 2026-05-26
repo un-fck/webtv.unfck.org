@@ -112,14 +112,14 @@ function StatementCard({ bubble }: { bubble: ProfileBubble }) {
 }
 
 export function StatementFeed({
-  entityKey,
-  personName,
+  slug,
+  person,
   initialBubbles,
   initialNextOffset,
   initialHasMore,
 }: {
-  entityKey: string;
-  personName: string | null;
+  slug: string;
+  person: string | null;
   initialBubbles: ProfileBubble[];
   initialNextOffset: number;
   initialHasMore: boolean;
@@ -135,10 +135,10 @@ export function StatementFeed({
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        key: entityKey,
+        slug,
         offset: String(offset),
       });
-      if (personName) params.set("person", personName);
+      if (person) params.set("person", person);
       const res = await fetch(`/api/speakers/statements?${params.toString()}`);
       if (!res.ok) {
         setHasMore(false);
@@ -157,7 +157,7 @@ export function StatementFeed({
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, entityKey, personName, offset]);
+  }, [loading, hasMore, slug, person, offset]);
 
   useEffect(() => {
     const el = sentinelRef.current;

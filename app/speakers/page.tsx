@@ -38,8 +38,8 @@ export default async function SpeakersPage() {
           <p className={typography.lead}>
             Everyone who has spoken across transcribed meetings, grouped by
             country, negotiating group, and UN organ. Experimental — speaker
-            names are AI-extracted and not de-duplicated, so a person may appear
-            under several name variants.
+            names are AI-extracted; spelling and accent variants are merged, but
+            distinct names for the same person are not yet reconciled.
           </p>
         </div>
 
