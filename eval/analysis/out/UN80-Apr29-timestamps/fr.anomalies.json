@@ -1,11 +1,39 @@
 {
   "unique_proper_nouns": [
     {
-      "name": "Rider",
-      "provider": "azure-openai",
+      "name": "Voici",
+      "provider": "qwen3.5-omni-plus",
+      "count": 21,
+      "likely": "acoustic",
+      "at": "8:00"
+    },
+    {
+      "name": "Intervention",
+      "provider": "qwen3.5-omni-plus",
+      "count": 14,
+      "likely": "acoustic",
+      "at": "68:00"
+    },
+    {
+      "name": "Vice-Sécrétaire",
+      "provider": "assemblyai-u3-pro",
+      "count": 6,
+      "likely": "acoustic",
+      "at": "4:08"
+    },
+    {
+      "name": "Contexte",
+      "provider": "qwen3.5-omni-plus",
+      "count": 5,
+      "likely": "acoustic",
+      "at": "36:00"
+    },
+    {
+      "name": "Conclusion",
+      "provider": "qwen3.5-omni-plus",
       "count": 4,
       "likely": "acoustic",
-      "at": "3:57"
+      "at": "28:00"
     },
     {
       "name": "Sont",
@@ -22,11 +50,11 @@
       "at": "33:25"
     },
     {
-      "name": "Monsieur Li Junhua",
-      "provider": "gemini",
+      "name": "All",
+      "provider": "azure-openai",
       "count": 3,
       "likely": "acoustic",
-      "at": "41:47"
+      "at": "37:55"
     },
     {
       "name": "How",
@@ -36,39 +64,32 @@
       "at": "35:04"
     },
     {
-      "name": "All",
-      "provider": "azure-openai",
+      "name": "Palao",
+      "provider": "fun-asr",
       "count": 3,
       "likely": "acoustic",
-      "at": "37:55"
+      "at": "58:02"
     },
     {
-      "name": "Madame Mohamed",
-      "provider": "alibaba",
-      "count": 3,
-      "likely": "acoustic",
-      "at": "32:00"
-    },
-    {
-      "name": "Système",
-      "provider": "elevenlabs",
+      "name": "Entités",
+      "provider": "qwen3.5-omni-plus",
       "count": 3,
       "likely": "hallucination",
-      "at": "47:26"
+      "at": "48:00"
     },
     {
-      "name": "Penche",
-      "provider": "mistral",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "35:02"
-    },
-    {
-      "name": "Cadre",
-      "provider": "mistral",
-      "count": 2,
+      "name": "Gouvernance",
+      "provider": "qwen3.5-omni-plus",
+      "count": 3,
       "likely": "hallucination",
-      "at": "46:25"
+      "at": "128:00"
+    },
+    {
+      "name": "Réforme",
+      "provider": "qwen3.5-omni-plus",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "68:00"
     },
     {
       "name": "Rugue",
@@ -78,95 +99,18 @@
       "at": "116:17"
     },
     {
+      "name": "Penche",
+      "provider": "mistral",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "35:02"
+    },
+    {
       "name": "Conseiller",
       "provider": "gemini",
       "count": 2,
       "likely": "acoustic",
       "at": "34:16"
-    },
-    {
-      "name": "Well",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "109:10"
-    },
-    {
-      "name": "There",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "29:00"
-    },
-    {
-      "name": "Latin America",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "35:13"
-    },
-    {
-      "name": "Amérique Latine",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "27:07"
-    },
-    {
-      "name": "Permettre",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "16:43"
-    },
-    {
-      "name": "Soixante",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "54:31"
-    },
-    {
-      "name": "Nécessité",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "65:51"
-    },
-    {
-      "name": "Etant",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "91:53"
-    },
-    {
-      "name": "Hmm",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "38:35"
-    },
-    {
-      "name": "Asia-Pacific",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "35:13"
-    },
-    {
-      "name": "Namibia",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "143:01"
-    },
-    {
-      "name": "Yes",
-      "provider": "azure-openai",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "34:29"
     },
     {
       "name": "Romania",
@@ -176,18 +120,32 @@
       "at": "92:58"
     },
     {
-      "name": "Suivi",
+      "name": "Well",
       "provider": "azure-openai",
       "count": 2,
       "likely": "hallucination",
-      "at": "77:14"
+      "at": "109:10"
     },
     {
-      "name": "However",
+      "name": "Amérique Latine",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "27:07"
+    },
+    {
+      "name": "Namibia",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "143:01"
+    },
+    {
+      "name": "Hmm",
       "provider": "azure-openai",
       "count": 2,
       "likely": "hallucination",
-      "at": "35:46"
+      "at": "38:35"
     },
     {
       "name": "Thanks Madam",
@@ -197,18 +155,60 @@
       "at": "121:54"
     },
     {
+      "name": "However",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "35:46"
+    },
+    {
+      "name": "Asia-Pacific",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "35:13"
+    },
+    {
+      "name": "Permettre",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "16:43"
+    },
+    {
+      "name": "Yes",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "34:29"
+    },
+    {
+      "name": "Latin America",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "35:13"
+    },
+    {
+      "name": "There",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "29:00"
+    },
+    {
+      "name": "Etant",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "91:53"
+    },
+    {
       "name": "Coordinateurs",
       "provider": "alibaba",
       "count": 2,
       "likely": "acoustic",
       "at": "164:00"
-    },
-    {
-      "name": "Unie",
-      "provider": "elevenlabs",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "115:23"
     },
     {
       "name": "Wendel",
@@ -218,14 +218,186 @@
       "at": "25:26"
     },
     {
+      "name": "Unie",
+      "provider": "elevenlabs",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "115:23"
+    },
+    {
       "name": "Nakamitsu",
       "provider": "elevenlabs",
       "count": 2,
       "likely": "acoustic",
       "at": "25:26"
+    },
+    {
+      "name": "Objectifs",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "26:04"
+    },
+    {
+      "name": "Monsieur Van Del",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "40:04"
+    },
+    {
+      "name": "Mme Amina Mohammed",
+      "provider": "fun-asr",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "16:03"
+    },
+    {
+      "name": "Entre",
+      "provider": "fun-asr",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "26:47"
+    },
+    {
+      "name": "Commissions Économiques Régionales",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "156:00"
+    },
+    {
+      "name": "Coordination",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "40:00"
+    },
+    {
+      "name": "Vers",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "28:00"
+    },
+    {
+      "name": "Note",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "68:00"
+    },
+    {
+      "name": "Données",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "40:00"
+    },
+    {
+      "name": "Position",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "128:00"
+    },
+    {
+      "name": "Intégration",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "40:00"
+    },
+    {
+      "name": "Évaluation",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "88:00"
+    },
+    {
+      "name": "Aucune",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "96:00"
+    },
+    {
+      "name": "Transparence",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "148:00"
+    },
+    {
+      "name": "Éviter",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "48:00"
+    },
+    {
+      "name": "Les États",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "36:00"
+    },
+    {
+      "name": "Discours",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "136:00"
+    },
+    {
+      "name": "Soutien",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "48:00"
+    },
+    {
+      "name": "Axé",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "164:00"
     }
   ],
   "name_table": [
+    {
+      "variants": [
+        "Bonjour"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Bonjour": 1
+        },
+        "mistral": {
+          "Bonjour": 1
+        },
+        "gemini": {
+          "Bonjour": 1
+        },
+        "azure-openai": {
+          "Bonjour": 1
+        },
+        "alibaba": {
+          "Bonjour": 1
+        },
+        "elevenlabs": {
+          "Bonjour": 1
+        },
+        "assemblyai-u3-pro": {
+          "Bonjour": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Bonjour": 1
+        }
+      }
+    },
     {
       "variants": [
         "Assemblée",
@@ -252,6 +424,15 @@
           "Assemblée": 8
         },
         "elevenlabs": {
+          "Assemblée": 8
+        },
+        "assemblyai-u3-pro": {
+          "Assemblée": 4
+        },
+        "fun-asr": {
+          "Assemblée": 6
+        },
+        "qwen3.5-omni-plus": {
           "Assemblée": 8
         }
       }
@@ -281,6 +462,17 @@
         },
         "elevenlabs": {
           "Excellence": 5
+        },
+        "assemblyai-u3-pro": {
+          "Excellences": 5
+        },
+        "fun-asr": {
+          "Excellences": 2,
+          "Excellence": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Excellence": 2,
+          "Excellences": 2
         }
       }
     },
@@ -315,13 +507,26 @@
           "Nations": 24,
           "Nothing": 1,
           "Nations Unies": 60
+        },
+        "assemblyai-u3-pro": {
+          "Nations": 69,
+          "Nations Unies": 15,
+          "Nothing": 1
+        },
+        "fun-asr": {
+          "Nations Unies": 35,
+          "Nations": 12
+        },
+        "qwen3.5-omni-plus": {
+          "Nations Unies": 69
         }
       }
     },
     {
       "variants": [
         "Toutes",
-        "États"
+        "États",
+        "États Membres"
       ],
       "by_provider": {
         "assemblyai": {
@@ -347,6 +552,19 @@
         "elevenlabs": {
           "États": 66,
           "Toutes": 2
+        },
+        "assemblyai-u3-pro": {
+          "États": 68,
+          "Toutes": 3
+        },
+        "fun-asr": {
+          "États": 29,
+          "Toutes": 1
+        },
+        "qwen3.5-omni-plus": {
+          "États": 61,
+          "Toutes": 1,
+          "États Membres": 1
         }
       }
     },
@@ -388,6 +606,47 @@
           "Jens Vandahl": 1,
           "Jens Vendel": 1,
           "Jens Wandell": 1
+        },
+        "assemblyai-u3-pro": {
+          "Jamaïque": 1
+        },
+        "fun-asr": {
+          "Jamaïque": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Jamaïque": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Norvège"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Norvège": 1
+        },
+        "mistral": {
+          "Norvège": 1
+        },
+        "gemini": {
+          "Norvège": 1
+        },
+        "azure-openai": {
+          "Norvège": 1
+        },
+        "alibaba": {
+          "Norvège": 1
+        },
+        "elevenlabs": {
+          "Norvège": 1
+        },
+        "assemblyai-u3-pro": {
+          "Norvège": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Norvège": 1
         }
       }
     },
@@ -403,7 +662,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -430,6 +692,47 @@
         },
         "elevenlabs": {
           "Chers": 1
+        },
+        "assemblyai-u3-pro": {
+          "Chers": 1
+        },
+        "fun-asr": {
+          "Chers": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Chers": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Responsabilité"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Responsabilité": 1
+        },
+        "mistral": {
+          "Responsabilité": 1
+        },
+        "gemini": {
+          "Responsabilité": 1
+        },
+        "azure-openai": {
+          "Responsabilité": 1
+        },
+        "alibaba": {
+          "Responsabilité": 1
+        },
+        "elevenlabs": {
+          "Responsabilité": 1
+        },
+        "assemblyai-u3-pro": {
+          "Responsabilité": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Responsabilité": 1
         }
       }
     },
@@ -449,7 +752,42 @@
           "Etats Insulaires": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Faisons"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Faisons": 1
+        },
+        "mistral": {
+          "Faisons": 1
+        },
+        "gemini": {
+          "Faisons": 1
+        },
+        "azure-openai": {
+          "Faisons": 1
+        },
+        "alibaba": {
+          "Faisons": 1
+        },
+        "elevenlabs": {
+          "Faisons": 1
+        },
+        "assemblyai-u3-pro": {
+          "Faisons": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Faisons": 1
+        }
       }
     },
     {
@@ -509,6 +847,19 @@
           "Merci Jens": 1,
           "Merci Mesdames": 1,
           "Merci Madame Wosornu": 1
+        },
+        "assemblyai-u3-pro": {
+          "Merci": 88
+        },
+        "fun-asr": {
+          "Merci": 40
+        },
+        "qwen3.5-omni-plus": {
+          "Merci": 31,
+          "Merci Madame Mohamed": 1,
+          "Merci Monsieur": 7,
+          "Merci Monsieur Wandel": 1,
+          "Merci Mesdames": 1
         }
       }
     },
@@ -524,11 +875,16 @@
         "Monsieur Hua",
         "Monsieur Hwa",
         "Monsieur Jens Vandel",
+        "Monsieur Jens Vandelle",
         "Monsieur Jens Wandel",
+        "Monsieur Jens Wandell",
         "Monsieur Junhua",
         "Monsieur Kwa",
+        "Monsieur Lee Hyun",
+        "Monsieur Lee Jong",
         "Monsieur Lee Jong-Wha",
         "Monsieur Lee Ju",
+        "Monsieur Lee Jung",
         "Monsieur Lee Unruh",
         "Monsieur Lee Yun",
         "Monsieur Li Junhua",
@@ -540,7 +896,10 @@
         "Monsieur Thomas Fletcher",
         "Monsieur Tom Fletcher",
         "Monsieur Van",
-        "Monsieur Vandel"
+        "Monsieur Van Del",
+        "Monsieur Vandel",
+        "Monsieur Vandeleur",
+        "Monsieur Wandell"
       ],
       "by_provider": {
         "assemblyai": {
@@ -601,6 +960,35 @@
           "Monsieur Geir Ødegaard": 1,
           "Monsieur Ryder": 5,
           "Monsieur Fletcher": 2
+        },
+        "assemblyai-u3-pro": {
+          "Monsieur": 55,
+          "Monsieur Ryder": 7,
+          "Monsieur Tom Fletcher": 3,
+          "Monsieur Jens Vandelle": 1,
+          "Monsieur Vandeleur": 1,
+          "Monsieur Jens Wandell": 1,
+          "Monsieur Wandell": 1,
+          "Monsieur Van Del": 2,
+          "Monsieur Lee Jung": 1,
+          "Monsieur Kwa": 1,
+          "Monsieur Pedro Manuel Moreno": 1,
+          "Monsieur Lee Hyun": 1,
+          "Monsieur Guy Ryder": 1,
+          "Monsieur Lee Jong": 1,
+          "Monsieur Fletcher": 2
+        },
+        "fun-asr": {
+          "Monsieur": 25,
+          "Monsieur Tom Fletcher": 1,
+          "Monsieur Guy Ryder": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Monsieur": 39,
+          "Monsieur Tom Fletcher": 1,
+          "Monsieur Jens Wandel": 2,
+          "Monsieur Li Junhua": 2,
+          "Monsieur Ryder": 3
         }
       }
     },
@@ -608,6 +996,7 @@
       "variants": [
         "President",
         "Presidente",
+        "Procédures",
         "Président",
         "Présidente"
       ],
@@ -638,6 +1027,18 @@
         "elevenlabs": {
           "Président": 51,
           "President": 2
+        },
+        "assemblyai-u3-pro": {
+          "President": 4,
+          "Président": 48
+        },
+        "fun-asr": {
+          "Président": 35,
+          "Procédures": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Président": 48,
+          "Présidente": 1
         }
       }
     },
@@ -663,11 +1064,91 @@
         },
         "elevenlabs": {
           "Quatrièmement": 1
+        },
+        "assemblyai-u3-pro": {
+          "Quatrièmement": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Quatrièmement": 2
         }
       }
     },
     {
       "variants": [
+        "Nos",
+        "Nous"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Nous": 151
+        },
+        "mistral": {
+          "Nous": 159
+        },
+        "gemini": {
+          "Nous": 225
+        },
+        "azure-openai": {
+          "Nous": 130
+        },
+        "alibaba": {
+          "Nous": 120
+        },
+        "elevenlabs": {
+          "Nous": 162
+        },
+        "assemblyai-u3-pro": {
+          "Nous": 150
+        },
+        "fun-asr": {
+          "Nous": 43
+        },
+        "qwen3.5-omni-plus": {
+          "Nous": 113,
+          "Nos": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Donc",
+        "Données"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Donc": 17
+        },
+        "mistral": {
+          "Donc": 20
+        },
+        "gemini": {
+          "Donc": 14
+        },
+        "azure-openai": {
+          "Donc": 12
+        },
+        "alibaba": {
+          "Donc": 16
+        },
+        "elevenlabs": {
+          "Donc": 21
+        },
+        "assemblyai-u3-pro": {
+          "Donc": 19
+        },
+        "fun-asr": {
+          "Donc": 8
+        },
+        "qwen3.5-omni-plus": {
+          "Donc": 5,
+          "Données": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Programme",
         "Progrès"
       ],
       "by_provider": {
@@ -682,6 +1163,15 @@
         },
         "elevenlabs": {
           "Progrès": 1
+        },
+        "assemblyai-u3-pro": {
+          "Progrès": 1,
+          "Programme": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Progrès": 1,
+          "Programme": 5
         }
       }
     },
@@ -697,7 +1187,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Guide": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -705,6 +1200,7 @@
         "Vice",
         "Vice Secrétaire",
         "Viesse",
+        "Voici",
         "Vous"
       ],
       "by_provider": {
@@ -731,6 +1227,16 @@
         "elevenlabs": {
           "Vous": 15,
           "Vice": 3
+        },
+        "assemblyai-u3-pro": {
+          "Vous": 18
+        },
+        "fun-asr": {
+          "Vous": 4
+        },
+        "qwen3.5-omni-plus": {
+          "Vous": 8,
+          "Voici": 21
         }
       }
     },
@@ -749,6 +1255,11 @@
         "azure-openai": {},
         "alibaba": {},
         "elevenlabs": {
+          "Delegate": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Delegate": 1
         }
       }
@@ -784,12 +1295,27 @@
         "elevenlabs": {
           "Comme": 4,
           "Chine": 23
+        },
+        "assemblyai-u3-pro": {
+          "Comme": 5,
+          "Chine": 22
+        },
+        "fun-asr": {
+          "Comme": 1,
+          "Chine": 16
+        },
+        "qwen3.5-omni-plus": {
+          "Comme": 5,
+          "Chine": 17
         }
       }
     },
     {
       "variants": [
-        "Internet"
+        "Internet",
+        "Intervenant",
+        "Intervention",
+        "Introduction"
       ],
       "by_provider": {
         "assemblyai": {
@@ -803,6 +1329,14 @@
         "alibaba": {},
         "elevenlabs": {
           "Internet": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Internet": 1,
+          "Introduction": 1,
+          "Intervention": 14,
+          "Intervenant": 1
         }
       }
     },
@@ -811,6 +1345,7 @@
         "Affaires",
         "Africa",
         "Afrique",
+        "Approche",
         "Après"
       ],
       "by_provider": {
@@ -840,6 +1375,52 @@
         "elevenlabs": {
           "Après": 1,
           "Afrique": 4
+        },
+        "assemblyai-u3-pro": {
+          "Après": 1,
+          "Afrique": 4,
+          "Affaires": 5
+        },
+        "fun-asr": {
+          "Après": 1,
+          "Afrique": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Afrique": 4,
+          "Après": 1,
+          "Approche": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Voilà"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Voilà": 6
+        },
+        "mistral": {
+          "Voilà": 6
+        },
+        "gemini": {
+          "Voilà": 7
+        },
+        "azure-openai": {
+          "Voilà": 5
+        },
+        "alibaba": {
+          "Voilà": 7
+        },
+        "elevenlabs": {
+          "Voilà": 8
+        },
+        "assemblyai-u3-pro": {
+          "Voilà": 7
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Voilà": 2
         }
       }
     },
@@ -869,6 +1450,14 @@
         "elevenlabs": {
           "Amina Mohammed": 2,
           "Amman": 1
+        },
+        "assemblyai-u3-pro": {
+          "Amman": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Amina Mohammed": 1,
+          "Amman": 1
         }
       }
     },
@@ -878,7 +1467,9 @@
         "Ratri",
         "Reider",
         "Reiter",
+        "Retour",
         "Rider",
+        "Rieder",
         "Ryder",
         "Érythrée"
       ],
@@ -912,6 +1503,19 @@
         "elevenlabs": {
           "Érythrée": 1,
           "Ryder": 3
+        },
+        "assemblyai-u3-pro": {
+          "Érythrée": 1,
+          "Ryder": 2
+        },
+        "fun-asr": {
+          "Rider": 3,
+          "Ryder": 2,
+          "Rieder": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Retour": 1,
+          "Ryder": 3
         }
       }
     },
@@ -940,6 +1544,15 @@
         },
         "elevenlabs": {
           "Tom Fletcher": 2
+        },
+        "assemblyai-u3-pro": {
+          "Tom Fletcher": 2
+        },
+        "fun-asr": {
+          "Tom Fletcher": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Tom Fletcher": 2
         }
       }
     },
@@ -967,6 +1580,16 @@
         },
         "elevenlabs": {
           "Somalie": 4
+        },
+        "assemblyai-u3-pro": {
+          "Somalie": 4
+        },
+        "fun-asr": {
+          "Somalie": 4
+        },
+        "qwen3.5-omni-plus": {
+          "Somalia": 1,
+          "Somalie": 1
         }
       }
     },
@@ -985,11 +1608,51 @@
           "Okay": 3
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Placer",
+        "Plusieurs"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Plusieurs": 2
+        },
+        "mistral": {
+          "Plusieurs": 2
+        },
+        "gemini": {
+          "Plusieurs": 2
+        },
+        "azure-openai": {
+          "Plusieurs": 2
+        },
+        "alibaba": {
+          "Plusieurs": 2
+        },
+        "elevenlabs": {
+          "Plusieurs": 2
+        },
+        "assemblyai-u3-pro": {
+          "Plusieurs": 2
+        },
+        "fun-asr": {
+          "Plusieurs": 2
+        },
+        "qwen3.5-omni-plus": {
+          "Placer": 1,
+          "Plusieurs": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Cameroon",
         "Cameroun"
       ],
       "by_provider": {
@@ -1008,6 +1671,13 @@
         },
         "elevenlabs": {
           "Cameroun": 1
+        },
+        "assemblyai-u3-pro": {
+          "Cameroun": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Cameroon": 1
         }
       }
     },
@@ -1035,11 +1705,22 @@
         },
         "elevenlabs": {
           "Colombie": 7
+        },
+        "assemblyai-u3-pro": {
+          "Colombie": 7
+        },
+        "fun-asr": {
+          "Colombie": 4
+        },
+        "qwen3.5-omni-plus": {
+          "Colombia": 1,
+          "Colombie": 4
         }
       }
     },
     {
       "variants": [
+        "Niger",
         "Nigeria",
         "Nigeria Monsieur",
         "Nigéria"
@@ -1067,6 +1748,17 @@
         "elevenlabs": {
           "Nigeria": 5,
           "Nigéria": 2
+        },
+        "assemblyai-u3-pro": {
+          "Nigeria": 7
+        },
+        "fun-asr": {
+          "Nigeria": 3,
+          "Niger": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Nigeria": 3,
+          "Nigéria": 5
         }
       }
     },
@@ -1094,6 +1786,15 @@
         },
         "elevenlabs": {
           "Zimbabwe": 9
+        },
+        "assemblyai-u3-pro": {
+          "Zimbabwe": 9
+        },
+        "fun-asr": {
+          "Zimbabwe": 4
+        },
+        "qwen3.5-omni-plus": {
+          "Zimbabwe": 12
         }
       }
     },
@@ -1120,6 +1821,13 @@
         },
         "elevenlabs": {
           "Mogadiscio": 1
+        },
+        "assemblyai-u3-pro": {
+          "Mogadiscio": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Mogadishu": 1
         }
       }
     },
@@ -1146,6 +1854,15 @@
           "Lorsque": 2
         },
         "elevenlabs": {
+          "Lorsque": 2
+        },
+        "assemblyai-u3-pro": {
+          "Lorsque": 2
+        },
+        "fun-asr": {
+          "Lorsque": 2
+        },
+        "qwen3.5-omni-plus": {
           "Lorsque": 2
         }
       }
@@ -1177,11 +1894,19 @@
         },
         "elevenlabs": {
           "Bien": 3
+        },
+        "assemblyai-u3-pro": {
+          "Bien": 4
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Bien": 4
         }
       }
     },
     {
       "variants": [
+        "Guy Reynders",
         "Guy Rider",
         "Guy Ryder",
         "Guy Röder"
@@ -1206,6 +1931,17 @@
         },
         "elevenlabs": {
           "Guy Ryder": 1
+        },
+        "assemblyai-u3-pro": {
+          "Guy Ryder": 2,
+          "Guy Reynders": 1
+        },
+        "fun-asr": {
+          "Guy Ryder": 1,
+          "Guy Rider": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Guy Ryder": 1
         }
       }
     },
@@ -1213,9 +1949,11 @@
       "variants": [
         "Mme",
         "Mme Amina Mohamed",
+        "Mme Amina Mohammed",
         "Mme Béatrice",
         "Mme Edem Hussornon",
         "Mme Edem Oussornon",
+        "Mme Edem Wosornu",
         "Mme Mohamed",
         "Mme Nakamitsu",
         "Mme Ossourneau"
@@ -1239,14 +1977,23 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Mme Amina Mohammed": 2,
+          "Mme Nakamitsu": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Mme Edem Wosornu": 1
+        }
       }
     },
     {
       "variants": [
         "Ceci",
         "Ceux",
-        "Chaque"
+        "Chaque",
+        "Couche"
       ],
       "by_provider": {
         "assemblyai": {
@@ -1278,6 +2025,51 @@
           "Ceci": 5,
           "Chaque": 2,
           "Ceux": 2
+        },
+        "assemblyai-u3-pro": {
+          "Ceci": 6,
+          "Chaque": 1,
+          "Ceux": 4
+        },
+        "fun-asr": {
+          "Ceci": 2
+        },
+        "qwen3.5-omni-plus": {
+          "Ceci": 2,
+          "Couche": 1,
+          "Chaque": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Elles"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Elles": 4
+        },
+        "mistral": {
+          "Elles": 4
+        },
+        "gemini": {
+          "Elles": 2
+        },
+        "azure-openai": {
+          "Elles": 2
+        },
+        "alibaba": {
+          "Elles": 4
+        },
+        "elevenlabs": {
+          "Elles": 4
+        },
+        "assemblyai-u3-pro": {
+          "Elles": 5
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Elles": 4
         }
       }
     },
@@ -1307,6 +2099,15 @@
         },
         "elevenlabs": {
           "Amérique": 7
+        },
+        "assemblyai-u3-pro": {
+          "Amérique": 7
+        },
+        "fun-asr": {
+          "Amérique": 6
+        },
+        "qwen3.5-omni-plus": {
+          "Amérique": 4
         }
       }
     },
@@ -1344,6 +2145,19 @@
           "Tout": 9,
           "Toute": 1,
           "État": 3
+        },
+        "assemblyai-u3-pro": {
+          "Tout": 9,
+          "Toute": 2,
+          "État": 2
+        },
+        "fun-asr": {
+          "Tout": 12,
+          "Toute": 2
+        },
+        "qwen3.5-omni-plus": {
+          "Tout": 5,
+          "Toute": 1
         }
       }
     },
@@ -1353,8 +2167,11 @@
         "Cinquièmement",
         "Commission",
         "Commission Economique Régionale",
+        "Commission Les",
         "Commissions",
-        "Connaissance"
+        "Commissions Économiques Régionales",
+        "Connaissance",
+        "Consente"
       ],
       "by_provider": {
         "assemblyai": {
@@ -1383,6 +2200,53 @@
           "Commissions": 1,
           "Cinquièmement": 1,
           "Commission": 5
+        },
+        "assemblyai-u3-pro": {
+          "Cinquièmement": 1,
+          "Commission": 3,
+          "Changement": 1,
+          "Commission Les": 1
+        },
+        "fun-asr": {
+          "Consente": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Cinquièmement": 1,
+          "Commissions": 1,
+          "Commission": 2,
+          "Commissions Économiques Régionales": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Sixièmement"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Sixièmement": 1
+        },
+        "mistral": {
+          "Sixièmement": 1
+        },
+        "gemini": {
+          "Sixièmement": 2
+        },
+        "azure-openai": {
+          "Sixièmement": 1
+        },
+        "alibaba": {
+          "Sixièmement": 1
+        },
+        "elevenlabs": {
+          "Sixièmement": 1
+        },
+        "assemblyai-u3-pro": {
+          "Sixièmement": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Sixièmement": 1
         }
       }
     },
@@ -1398,7 +2262,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1419,7 +2286,10 @@
           "Llens Van Vandel": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1443,7 +2313,10 @@
         "elevenlabs": {
           "Wandell": 1,
           "Wendel": 2
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1464,7 +2337,10 @@
           "Pensa": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1485,6 +2361,15 @@
         },
         "elevenlabs": {
           "Elle": 2
+        },
+        "assemblyai-u3-pro": {
+          "Elle": 2
+        },
+        "fun-asr": {
+          "Elle": 2
+        },
+        "qwen3.5-omni-plus": {
+          "Elle": 9
         }
       }
     },
@@ -1492,7 +2377,8 @@
       "variants": [
         "Asia Pacific",
         "Asie",
-        "Aussi"
+        "Aussi",
+        "Axé"
       ],
       "by_provider": {
         "assemblyai": {
@@ -1514,6 +2400,13 @@
         },
         "elevenlabs": {
           "Asie": 3
+        },
+        "assemblyai-u3-pro": {
+          "Asie": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Axé": 2
         }
       }
     },
@@ -1548,13 +2441,31 @@
         "elevenlabs": {
           "Turquie": 2,
           "Trois": 2
+        },
+        "assemblyai-u3-pro": {
+          "Turquie": 2
+        },
+        "fun-asr": {
+          "Turquie": 1,
+          "Trois": 3,
+          "Très": 2
+        },
+        "qwen3.5-omni-plus": {
+          "Turquie": 2,
+          "Trois": 1
         }
       }
     },
     {
       "variants": [
+        "Les Coordinateurs Résidents",
+        "Les Kosovois",
         "Les Maldives",
+        "Les Nations",
         "Les Nations Unies",
+        "Les Piliers",
+        "Les Trois Pôles Pilotes Sélectionnés",
+        "Les États",
         "Îles",
         "Îles Salomon"
       ],
@@ -1587,6 +2498,19 @@
           "Îles Salomon": 2,
           "Îles": 3,
           "Les Maldives": 1
+        },
+        "assemblyai-u3-pro": {
+          "Les Nations": 1,
+          "Les Maldives": 1,
+          "Les Kosovois": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Les Piliers": 1,
+          "Les Coordinateurs Résidents": 1,
+          "Les États": 2,
+          "Les Trois Pôles Pilotes Sélectionnés": 1,
+          "Îles Salomon": 1
         }
       }
     },
@@ -1619,12 +2543,23 @@
         },
         "elevenlabs": {
           "Corée": 4
+        },
+        "assemblyai-u3-pro": {
+          "Chair": 2,
+          "Corée": 4
+        },
+        "fun-asr": {
+          "Corée": 4
+        },
+        "qwen3.5-omni-plus": {
+          "Corée": 2
         }
       }
     },
     {
       "variants": [
         "Quelles",
+        "Quelque",
         "Quels"
       ],
       "by_provider": {
@@ -1649,6 +2584,17 @@
         "elevenlabs": {
           "Quels": 3,
           "Quelles": 1
+        },
+        "assemblyai-u3-pro": {
+          "Quels": 3,
+          "Quelles": 1
+        },
+        "fun-asr": {
+          "Quelque": 1,
+          "Quels": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Quels": 4
         }
       }
     },
@@ -1656,7 +2602,8 @@
       "variants": [
         "Pacific",
         "Pacifique",
-        "Pacifiques"
+        "Pacifiques",
+        "Pays-Bas"
       ],
       "by_provider": {
         "assemblyai": {
@@ -1678,12 +2625,53 @@
         },
         "elevenlabs": {
           "Pacifique": 11
+        },
+        "assemblyai-u3-pro": {
+          "Pacifique": 10,
+          "Pays-Bas": 1
+        },
+        "fun-asr": {
+          "Pacifique": 8
+        },
+        "qwen3.5-omni-plus": {
+          "Pacifique": 2
         }
       }
     },
     {
       "variants": [
+        "Revenez"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Revenez": 1
+        },
+        "mistral": {
+          "Revenez": 1
+        },
+        "gemini": {
+          "Revenez": 1
+        },
+        "azure-openai": {
+          "Revenez": 1
+        },
+        "alibaba": {
+          "Revenez": 1
+        },
+        "elevenlabs": {
+          "Revenez": 1
+        },
+        "assemblyai-u3-pro": {
+          "Revenez": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
         "Vandel",
+        "Vandell",
         "Vandelle",
         "Vandelli",
         "Vendel"
@@ -1704,6 +2692,14 @@
         "elevenlabs": {
           "Vendel": 1,
           "Vandelle": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Vandelli": 1,
+          "Vandell": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Vandel": 1
         }
       }
     },
@@ -1723,6 +2719,11 @@
         },
         "elevenlabs": {
           "Junhua": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Junhua": 1
         }
       }
     },
@@ -1734,11 +2735,14 @@
         "Madame Amina Mohamed",
         "Madame Amina Mohammed",
         "Madame Edem Ousmane",
+        "Madame Edem Ousorhon",
         "Madame Edem Ousorno",
+        "Madame Edem Oussornong",
         "Madame Edem Wosornu",
         "Madame Mohamed",
         "Madame Mohammed",
         "Madame Nakamitsu",
+        "Madame Osorno",
         "Madame Ossorno",
         "Madame Vice-Secretaries Ambassadors"
       ],
@@ -1780,6 +2784,26 @@
           "Madame": 12,
           "Madame Mohammed": 2,
           "Madame Edem Wosornu": 1
+        },
+        "assemblyai-u3-pro": {
+          "Madame Amina Mohammed": 3,
+          "Madame Nakamitsu": 2,
+          "Madame Mohamed": 4,
+          "Madame": 12,
+          "Madame Edem Oussornong": 1,
+          "Madame Osorno": 1
+        },
+        "fun-asr": {
+          "Madame Mohamed": 1,
+          "Madame": 5,
+          "Madame Nakamitsu": 1,
+          "Madame Edem Ousorhon": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Madame Nakamitsu": 2,
+          "Madame": 11,
+          "Madame Amina Mohamed": 1,
+          "Madame Mohamed": 1
         }
       }
     },
@@ -1807,6 +2831,15 @@
         },
         "elevenlabs": {
           "Permettez": 2
+        },
+        "assemblyai-u3-pro": {
+          "Permettez": 3
+        },
+        "fun-asr": {
+          "Permettez": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Permettez": 5
         }
       }
     },
@@ -1855,11 +2888,62 @@
           "Secrétariat": 5,
           "Secrétaire": 13,
           "Secrétaires": 1
+        },
+        "assemblyai-u3-pro": {
+          "Secrétaire": 17,
+          "Secrétariat": 3,
+          "Secrétaires": 1
+        },
+        "fun-asr": {
+          "Secrétaire": 4,
+          "Secrétaires": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Secrétariat": 8,
+          "Secrétaire": 20,
+          "Secrétaires": 1
         }
       }
     },
     {
       "variants": [
+        "Avant",
+        "Avantages"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Avant": 1
+        },
+        "mistral": {
+          "Avant": 1
+        },
+        "gemini": {
+          "Avant": 1
+        },
+        "azure-openai": {
+          "Avant": 1
+        },
+        "alibaba": {
+          "Avant": 1
+        },
+        "elevenlabs": {
+          "Avant": 1
+        },
+        "assemblyai-u3-pro": {
+          "Avant": 1
+        },
+        "fun-asr": {
+          "Avant": 1,
+          "Avantages": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Avant": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Processus",
         "Préciser"
       ],
       "by_provider": {
@@ -1870,7 +2954,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Processus": 1
+        }
       }
     },
     {
@@ -1893,6 +2982,15 @@
         },
         "elevenlabs": {
           "Beaucoup": 2
+        },
+        "assemblyai-u3-pro": {
+          "Beaucoup": 3
+        },
+        "fun-asr": {
+          "Beaucoup": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Beaucoup": 5
         }
       }
     },
@@ -1916,11 +3014,19 @@
         },
         "elevenlabs": {
           "Convention": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Convention": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Convention": 1
         }
       }
     },
     {
       "variants": [
+        "Conclusion",
         "Conseil",
         "Conseiller",
         "Consolidation",
@@ -1952,12 +3058,23 @@
         "elevenlabs": {
           "Consolider": 1,
           "Conseil": 2
+        },
+        "assemblyai-u3-pro": {
+          "Conseil": 2,
+          "Consolider": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Conclusion": 4,
+          "Conseil": 3
         }
       }
     },
     {
       "variants": [
-        "Réformes"
+        "Réforme",
+        "Réformes",
+        "Références"
       ],
       "by_provider": {
         "assemblyai": {
@@ -1967,7 +3084,13 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Réforme": 3,
+          "Références": 1
+        }
       }
     },
     {
@@ -1982,12 +3105,50 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Appuyez": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Votre"
+        "Sachez"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Sachez": 1
+        },
+        "mistral": {
+          "Sachez": 1
+        },
+        "gemini": {
+          "Sachez": 1
+        },
+        "azure-openai": {
+          "Sachez": 1
+        },
+        "alibaba": {
+          "Sachez": 1
+        },
+        "elevenlabs": {
+          "Sachez": 1
+        },
+        "assemblyai-u3-pro": {
+          "Sachez": 1
+        },
+        "fun-asr": {
+          "Sachez": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Votre",
+        "Éviter"
       ],
       "by_provider": {
         "assemblyai": {
@@ -1999,14 +3160,22 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Éviter": 2,
+          "Votre": 1
+        }
       }
     },
     {
       "variants": [
+        "Risque",
         "Ruguay",
         "Rugue",
         "Rugui",
+        "Ruguo",
         "Russie"
       ],
       "by_provider": {
@@ -2029,6 +3198,17 @@
         },
         "elevenlabs": {
           "Russie": 1
+        },
+        "assemblyai-u3-pro": {
+          "Ruguo": 1,
+          "Russie": 1
+        },
+        "fun-asr": {
+          "Russie": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Risque": 1,
+          "Russie": 2
         }
       }
     },
@@ -2052,12 +3232,22 @@
         "alibaba": {},
         "elevenlabs": {
           "Compte": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Compte": 1
+        },
+        "fun-asr": {
+          "Compte": 2
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Palau"
+        "Palao",
+        "Palau",
+        "Paul",
+        "Pôle"
       ],
       "by_provider": {
         "assemblyai": {
@@ -2073,6 +3263,16 @@
         "alibaba": {},
         "elevenlabs": {
           "Palau": 5
+        },
+        "assemblyai-u3-pro": {
+          "Palau": 2
+        },
+        "fun-asr": {
+          "Paul": 2,
+          "Palao": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Pôle": 3
         }
       }
     },
@@ -2105,6 +3305,17 @@
         "elevenlabs": {
           "Alliance": 6,
           "Allons": 1
+        },
+        "assemblyai-u3-pro": {
+          "Alliance": 6,
+          "Allons": 1
+        },
+        "fun-asr": {
+          "Alliance": 3,
+          "Allons": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Alliance": 3
         }
       }
     },
@@ -2122,11 +3333,15 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Demande",
         "Demandons",
         "Diminution"
       ],
@@ -2140,7 +3355,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Demande": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2158,11 +3378,19 @@
           "Action Initiative": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Action": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Action": 1
+        }
       }
     },
     {
       "variants": [
+        "Garry Edwards",
         "Gary Conil",
         "Gary Conille",
         "Gary Connell",
@@ -2195,6 +3423,16 @@
         "elevenlabs": {
           "Gary Heider": 1,
           "Gary Connell": 1
+        },
+        "assemblyai-u3-pro": {
+          "Gary Connell": 1
+        },
+        "fun-asr": {
+          "Garry Edwards": 1,
+          "Gary Conille": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Gary Conille": 1
         }
       }
     },
@@ -2222,12 +3460,22 @@
         "elevenlabs": {
           "Antigua": 2,
           "Antigua-Et-Barbuda": 1
+        },
+        "assemblyai-u3-pro": {
+          "Antigua": 2
+        },
+        "fun-asr": {
+          "Antigua": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Antigua": 1
         }
       }
     },
     {
       "variants": [
-        "Salomon"
+        "Salomon",
+        "Seulement"
       ],
       "by_provider": {
         "assemblyai": {
@@ -2243,11 +3491,53 @@
         "alibaba": {
           "Salomon": 2
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Salomon": 2
+        },
+        "fun-asr": {
+          "Salomon": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Seulement": 1
+        }
       }
     },
     {
       "variants": [
+        "Forum"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Forum": 3
+        },
+        "mistral": {
+          "Forum": 3
+        },
+        "gemini": {
+          "Forum": 3
+        },
+        "azure-openai": {
+          "Forum": 2
+        },
+        "alibaba": {
+          "Forum": 3
+        },
+        "elevenlabs": {
+          "Forum": 3
+        },
+        "assemblyai-u3-pro": {
+          "Forum": 3
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Forum": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "New Cut",
         "New Farm",
         "New York"
       ],
@@ -2270,6 +3560,50 @@
         },
         "elevenlabs": {
           "New York": 1
+        },
+        "assemblyai-u3-pro": {
+          "New Cut": 1,
+          "New York": 1
+        },
+        "fun-asr": {
+          "New York": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Comment",
+        "Commentcomptez"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Comment": 10
+        },
+        "mistral": {
+          "Comment": 10
+        },
+        "gemini": {
+          "Comment": 8
+        },
+        "azure-openai": {
+          "Comment": 7
+        },
+        "alibaba": {
+          "Comment": 10
+        },
+        "elevenlabs": {
+          "Comment": 8
+        },
+        "assemblyai-u3-pro": {
+          "Comment": 6
+        },
+        "fun-asr": {
+          "Comment": 6,
+          "Commentcomptez": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Comment": 7
         }
       }
     },
@@ -2297,7 +3631,12 @@
         },
         "elevenlabs": {
           "Droits": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Droits": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2329,6 +3668,16 @@
         "elevenlabs": {
           "Troisièmement": 4,
           "Troisième": 1
+        },
+        "assemblyai-u3-pro": {
+          "Troisièmement": 4,
+          "Troisième": 1
+        },
+        "fun-asr": {
+          "Troisièmement": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Troisièmement": 1
         }
       }
     },
@@ -2358,6 +3707,51 @@
         },
         "elevenlabs": {
           "Union": 10
+        },
+        "assemblyai-u3-pro": {
+          "Union": 10
+        },
+        "fun-asr": {
+          "Union": 6
+        },
+        "qwen3.5-omni-plus": {
+          "Union": 6
+        }
+      }
+    },
+    {
+      "variants": [
+        "Premier",
+        "Premièrement"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Premièrement": 5
+        },
+        "mistral": {
+          "Premièrement": 5
+        },
+        "gemini": {
+          "Premièrement": 5
+        },
+        "azure-openai": {
+          "Premièrement": 5
+        },
+        "alibaba": {
+          "Premièrement": 4
+        },
+        "elevenlabs": {
+          "Premièrement": 5
+        },
+        "assemblyai-u3-pro": {
+          "Premièrement": 5
+        },
+        "fun-asr": {
+          "Premièrement": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Premièrement": 3,
+          "Premier": 1
         }
       }
     },
@@ -2398,6 +3792,57 @@
           "Parce": 2,
           "Pourriez": 3,
           "Pourquoi": 1
+        },
+        "assemblyai-u3-pro": {
+          "Parce": 2,
+          "Pourriez": 3,
+          "Pourquoi": 1
+        },
+        "fun-asr": {
+          "Pourriez": 2,
+          "Pourquoi": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Pourriez": 2,
+          "Pourquoi": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Sud",
+        "Suite",
+        "Suède"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Suède": 4
+        },
+        "mistral": {
+          "Suède": 4
+        },
+        "gemini": {
+          "Suède": 4
+        },
+        "azure-openai": {
+          "Suède": 4
+        },
+        "alibaba": {
+          "Suède": 4
+        },
+        "elevenlabs": {
+          "Suède": 4
+        },
+        "assemblyai-u3-pro": {
+          "Suède": 4
+        },
+        "fun-asr": {
+          "Suède": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Suède": 3,
+          "Sud": 2,
+          "Suite": 1
         }
       }
     },
@@ -2416,11 +3861,47 @@
         "alibaba": {
           "Perre": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Deuxième"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Deuxième": 1
+        },
+        "mistral": {
+          "Deuxième": 1
+        },
+        "gemini": {
+          "Deuxième": 1
+        },
+        "azure-openai": {
+          "Deuxième": 1
+        },
+        "alibaba": {
+          "Deuxième": 1
+        },
+        "elevenlabs": {
+          "Deuxième": 1
+        },
+        "assemblyai-u3-pro": {
+          "Deuxième": 1
+        },
+        "fun-asr": {
+          "Deuxième": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Siège",
         "Sous",
         "Suisse"
       ],
@@ -2444,6 +3925,16 @@
         "elevenlabs": {
           "Sous": 2,
           "Suisse": 9
+        },
+        "assemblyai-u3-pro": {
+          "Suisse": 8
+        },
+        "fun-asr": {
+          "Suisse": 7
+        },
+        "qwen3.5-omni-plus": {
+          "Suisse": 2,
+          "Siège": 1
         }
       }
     },
@@ -2461,7 +3952,10 @@
           "Nigérian": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2492,6 +3986,15 @@
         "elevenlabs": {
           "Quel": 2,
           "Quelle": 1
+        },
+        "assemblyai-u3-pro": {
+          "Quel": 2,
+          "Quelle": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Quel": 3,
+          "Quelle": 2
         }
       }
     },
@@ -2499,7 +4002,8 @@
       "variants": [
         "Romania",
         "Roumanie",
-        "Royaume-Uni"
+        "Royaume-Uni",
+        "Réunion"
       ],
       "by_provider": {
         "assemblyai": {
@@ -2526,6 +4030,19 @@
         "elevenlabs": {
           "Roumanie": 4,
           "Royaume-Uni": 5
+        },
+        "assemblyai-u3-pro": {
+          "Roumanie": 4,
+          "Royaume-Uni": 5
+        },
+        "fun-asr": {
+          "Roumanie": 4,
+          "Royaume-Uni": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Réunion": 1,
+          "Roumanie": 5,
+          "Royaume-Uni": 6
         }
       }
     },
@@ -2541,11 +4058,15 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Reset",
         "Reset Régional"
       ],
       "by_provider": {
@@ -2558,11 +4079,17 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Reset": 1
+        }
       }
     },
     {
       "variants": [
+        "Plateforme",
         "Plateforme Régionale"
       ],
       "by_provider": {
@@ -2575,7 +4102,14 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Plateforme Régionale": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Plateforme": 1
+        }
       }
     },
     {
@@ -2596,7 +4130,14 @@
         "alibaba": {
           "Joint Knowledge Hubs": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Joint Knowledge Hubs": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Joint Knowledge Hubs": 1
+        }
       }
     },
     {
@@ -2615,7 +4156,10 @@
           "Egypte": 3
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2632,7 +4176,10 @@
           "France": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2647,7 +4194,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2670,7 +4220,12 @@
         },
         "elevenlabs": {
           "Étant": 3
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Étant": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2692,7 +4247,16 @@
           "Régionale": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Regional Reset": 1
+        },
+        "fun-asr": {
+          "Régional": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Régional": 1
+        }
       }
     },
     {
@@ -2718,14 +4282,23 @@
         },
         "elevenlabs": {
           "Ignorer": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Ignorer": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Certains",
         "Coordinateur",
-        "Coordinateurs"
+        "Coordinateurs",
+        "Coordination",
+        "Coordonnateurs",
+        "Coordonnateurs Humanitaires",
+        "Coordonnateurs Résidents"
       ],
       "by_provider": {
         "assemblyai": {
@@ -2744,6 +4317,17 @@
           "Coordinateurs": 2
         },
         "elevenlabs": {
+          "Certains": 1
+        },
+        "assemblyai-u3-pro": {
+          "Certains": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Coordination": 2,
+          "Coordonnateurs": 1,
+          "Coordonnateurs Résidents": 1,
+          "Coordonnateurs Humanitaires": 1,
           "Certains": 1
         }
       }
@@ -2774,7 +4358,12 @@
         },
         "elevenlabs": {
           "Thank": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Thank": 7
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2794,7 +4383,12 @@
         "alibaba": {
           "Allow": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Allow": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2813,7 +4407,10 @@
           "Ethiopie": 5
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2828,7 +4425,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2836,7 +4436,8 @@
         "Palaos",
         "Please",
         "Plus",
-        "Policy"
+        "Policy",
+        "Pôles"
       ],
       "by_provider": {
         "assemblyai": {
@@ -2860,12 +4461,27 @@
         "elevenlabs": {
           "Plus": 2,
           "Policy": 1
+        },
+        "assemblyai-u3-pro": {
+          "Plus": 2,
+          "Policy": 1,
+          "Palaos": 1
+        },
+        "fun-asr": {
+          "Plus": 3
+        },
+        "qwen3.5-omni-plus": {
+          "Plus": 4,
+          "Pôles": 1,
+          "Palaos": 2
         }
       }
     },
     {
       "variants": [
-        "Prospectives"
+        "Prospective",
+        "Prospectives",
+        "Préoccupations"
       ],
       "by_provider": {
         "assemblyai": {
@@ -2875,7 +4491,15 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Prospective": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Prospective": 1,
+          "Préoccupations": 1
+        }
       }
     },
     {
@@ -2900,7 +4524,13 @@
         "alibaba": {},
         "elevenlabs": {
           "Davantage": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Davantage": 1,
+          "Doivent": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2923,6 +4553,15 @@
         },
         "elevenlabs": {
           "Fédération": 1
+        },
+        "assemblyai-u3-pro": {
+          "Fédération": 1
+        },
+        "fun-asr": {
+          "Fédération": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Fédération": 2
         }
       }
     },
@@ -2952,6 +4591,15 @@
         },
         "elevenlabs": {
           "République": 10
+        },
+        "assemblyai-u3-pro": {
+          "République": 10
+        },
+        "fun-asr": {
+          "République": 9
+        },
+        "qwen3.5-omni-plus": {
+          "République": 9
         }
       }
     },
@@ -2981,12 +4629,23 @@
         },
         "elevenlabs": {
           "Malaisie": 6
+        },
+        "assemblyai-u3-pro": {
+          "Malaisie": 6
+        },
+        "fun-asr": {
+          "Malaisie": 4
+        },
+        "qwen3.5-omni-plus": {
+          "Malaisie": 6
         }
       }
     },
     {
       "variants": [
         "Georgia",
+        "Georgie",
+        "Grâce",
         "Géorgie"
       ],
       "by_provider": {
@@ -3008,6 +4667,19 @@
         },
         "elevenlabs": {
           "Géorgie": 4
+        },
+        "assemblyai-u3-pro": {
+          "Grâce": 1,
+          "Géorgie": 4
+        },
+        "fun-asr": {
+          "Géorgie": 2,
+          "Georgie": 1,
+          "Grâce": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Grâce": 1,
+          "Géorgie": 3
         }
       }
     },
@@ -3035,6 +4707,15 @@
         },
         "elevenlabs": {
           "Namibie": 3
+        },
+        "assemblyai-u3-pro": {
+          "Namibie": 3
+        },
+        "fun-asr": {
+          "Namibie": 2
+        },
+        "qwen3.5-omni-plus": {
+          "Namibie": 3
         }
       }
     },
@@ -3056,12 +4737,56 @@
         },
         "elevenlabs": {
           "Notre": 1
+        },
+        "assemblyai-u3-pro": {
+          "Notre": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Notre": 6
         }
       }
     },
     {
       "variants": [
-        "Transition"
+        "Celles"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Celles": 1
+        },
+        "mistral": {
+          "Celles": 1
+        },
+        "gemini": {
+          "Celles": 1
+        },
+        "azure-openai": {
+          "Celles": 1
+        },
+        "alibaba": {
+          "Celles": 1
+        },
+        "elevenlabs": {
+          "Celles": 1
+        },
+        "assemblyai-u3-pro": {
+          "Celles": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Celles": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Transcription",
+        "Transformation",
+        "Transformation Proposée",
+        "Transition",
+        "Transparence",
+        "Transversal"
       ],
       "by_provider": {
         "assemblyai": {
@@ -3077,7 +4802,50 @@
         "alibaba": {},
         "elevenlabs": {
           "Transition": 1
+        },
+        "assemblyai-u3-pro": {
+          "Transition": 1
+        },
+        "fun-asr": {
+          "Transversal": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Transition": 5,
+          "Transformation Proposée": 1,
+          "Transcription": 1,
+          "Transformation": 1,
+          "Transparence": 2
         }
+      }
+    },
+    {
+      "variants": [
+        "Moins"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Moins": 1
+        },
+        "mistral": {
+          "Moins": 1
+        },
+        "gemini": {
+          "Moins": 1
+        },
+        "azure-openai": {
+          "Moins": 1
+        },
+        "alibaba": {
+          "Moins": 1
+        },
+        "elevenlabs": {
+          "Moins": 1
+        },
+        "assemblyai-u3-pro": {
+          "Moins": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3104,6 +4872,13 @@
         },
         "elevenlabs": {
           "Organisation": 3
+        },
+        "assemblyai-u3-pro": {
+          "Organisation": 3
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Organisation": 7
         }
       }
     },
@@ -3121,12 +4896,48 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Tchad"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Tchad": 1
+        },
+        "mistral": {
+          "Tchad": 1
+        },
+        "gemini": {
+          "Tchad": 1
+        },
+        "azure-openai": {
+          "Tchad": 1
+        },
+        "alibaba": {
+          "Tchad": 1
+        },
+        "elevenlabs": {
+          "Tchad": 1
+        },
+        "assemblyai-u3-pro": {
+          "Tchad": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Tchad": 1
+        }
       }
     },
     {
       "variants": [
         "Soudan",
+        "Soutien",
         "Sweden"
       ],
       "by_provider": {
@@ -3148,6 +4959,16 @@
         },
         "elevenlabs": {
           "Soudan": 2
+        },
+        "assemblyai-u3-pro": {
+          "Soudan": 2
+        },
+        "fun-asr": {
+          "Soudan": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Soutien": 2,
+          "Soudan": 2
         }
       }
     },
@@ -3165,7 +4986,14 @@
           "Qui": 4
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Qui": 3
+        },
+        "fun-asr": {
+          "Qui": 5
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3180,7 +5008,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3195,7 +5026,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3214,13 +5048,17 @@
         "alibaba": {},
         "elevenlabs": {
           "Ainsi": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Representative",
-        "Représentant"
+        "Représentant",
+        "Représentante"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -3232,7 +5070,13 @@
           "Representative": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Représentante": 1,
+          "Représentant": 5
+        }
       }
     },
     {
@@ -3247,13 +5091,17 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Under Secretary General",
-        "Under-Secretary General"
+        "Under-Secretary General",
+        "Under-Secretary-General"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -3270,6 +5118,13 @@
         "elevenlabs": {
           "Under-Secretary General": 1,
           "Under Secretary General": 1
+        },
+        "assemblyai-u3-pro": {
+          "Under-Secretary-General": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Under-Secretary-General": 1
         }
       }
     },
@@ -3294,11 +5149,19 @@
         },
         "elevenlabs": {
           "Deputy Secretary General": 3
+        },
+        "assemblyai-u3-pro": {
+          "Deputy Secretary-General": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Deputy Secretary-General": 1
         }
       }
     },
     {
       "variants": [
+        "United City",
         "United Kingdom",
         "United Nations"
       ],
@@ -3317,11 +5180,21 @@
         },
         "elevenlabs": {
           "United Nations": 1
+        },
+        "assemblyai-u3-pro": {
+          "United Nations": 1
+        },
+        "fun-asr": {
+          "United City": 1
+        },
+        "qwen3.5-omni-plus": {
+          "United Nations": 1
         }
       }
     },
     {
       "variants": [
+        "Intégration",
         "Intégrés"
       ],
       "by_provider": {
@@ -3332,7 +5205,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Intégration": 2
+        }
       }
     },
     {
@@ -3351,7 +5229,12 @@
           "Notamment": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Notamment": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3375,6 +5258,15 @@
         },
         "elevenlabs": {
           "Asie-Pacifique": 2
+        },
+        "assemblyai-u3-pro": {
+          "Asie-Pacifique": 3
+        },
+        "fun-asr": {
+          "Asie-Pacifique": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Asie-Pacifique": 3
         }
       }
     },
@@ -3390,7 +5282,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3405,7 +5300,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3429,7 +5327,12 @@
           "Lee Jong": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Lee Jong": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3444,11 +5347,17 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Cadre": 1
+        }
       }
     },
     {
       "variants": [
+        "Critères",
         "Croître"
       ],
       "by_provider": {
@@ -3459,7 +5368,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Critères": 1
+        }
       }
     },
     {
@@ -3483,7 +5397,16 @@
         "alibaba": {
           "Vice-Secrétaire": 17
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Vice-Secrétaire": 5
+        },
+        "fun-asr": {
+          "Vice-Secrétaire": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Vice-Secrétaire": 13
+        }
       }
     },
     {
@@ -3500,7 +5423,10 @@
           "Travail": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3522,7 +5448,12 @@
         "alibaba": {
           "Département": 5
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Département": 4
+        }
       }
     },
     {
@@ -3537,7 +5468,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3552,7 +5486,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Unique": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3567,7 +5506,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Vraiment": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3582,7 +5526,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3597,7 +5544,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3612,7 +5562,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3631,7 +5584,10 @@
           "Besoin": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3648,7 +5604,10 @@
           "Lundi": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3663,7 +5622,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3678,7 +5640,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3693,13 +5658,20 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Actifs": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Central East Africa",
-        "Conduire"
+        "Conduire",
+        "Contrairement",
+        "Country Transitions"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -3712,12 +5684,19 @@
           "Conduire": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Country Transitions": 1,
+          "Contrairement": 1
+        }
       }
     },
     {
       "variants": [
-        "Remercier"
+        "Remercier",
+        "Remerciez"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -3729,7 +5708,12 @@
           "Remercier": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Remerciez": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3744,7 +5728,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3759,11 +5746,15 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Shared Platform",
         "Sécurité"
       ],
       "by_provider": {
@@ -3774,7 +5765,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Shared Platform": 1
+        }
       }
     },
     {
@@ -3789,13 +5785,17 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Partageons",
-        "Partagée"
+        "Partagée",
+        "Particulièrement"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -3807,12 +5807,20 @@
           "Partagée": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Partageons": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Particulièrement": 1
+        }
       }
     },
     {
       "variants": [
-        "Redistribution"
+        "Redistribution",
+        "Réduction"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -3822,7 +5830,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Réduction": 1
+        }
       }
     },
     {
@@ -3843,6 +5856,15 @@
         },
         "elevenlabs": {
           "Éthiopie": 5
+        },
+        "assemblyai-u3-pro": {
+          "Éthiopie": 5
+        },
+        "fun-asr": {
+          "Éthiopie": 5
+        },
+        "qwen3.5-omni-plus": {
+          "Éthiopie": 5
         }
       }
     },
@@ -3858,7 +5880,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3873,7 +5898,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3888,7 +5916,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3903,7 +5934,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3918,7 +5952,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3933,12 +5970,16 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Objectif"
+        "Objectif",
+        "Objectifs"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -3948,7 +5989,16 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Objectifs": 2
+        },
+        "fun-asr": {
+          "Objectif": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Objectif": 4
+        }
       }
     },
     {
@@ -3963,13 +6013,17 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Comprendre",
-        "Conformément"
+        "Conformément",
+        "Cumbre"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -3981,7 +6035,14 @@
           "Comprendre": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Conformément": 1
+        },
+        "fun-asr": {
+          "Cumbre": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3996,11 +6057,15 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Phase",
         "Puisqu"
       ],
       "by_provider": {
@@ -4015,6 +6080,11 @@
         "alibaba": {},
         "elevenlabs": {
           "Puisqu": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Phase": 1
         }
       }
     },
@@ -4034,6 +6104,11 @@
         },
         "elevenlabs": {
           "Femmes": 2
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Femmes": 1
         }
       }
     },
@@ -4053,12 +6128,18 @@
         "alibaba": {
           "Ambassadeur": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Ambassadeur": 1
+        }
       }
     },
     {
       "variants": [
-        "Velde"
+        "Velde",
+        "Volet"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -4068,7 +6149,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Volet": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4091,6 +6177,11 @@
         },
         "elevenlabs": {
           "Groupe": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Groupe": 9
         }
       }
     },
@@ -4109,7 +6200,10 @@
           "Présence": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4124,7 +6218,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4141,7 +6238,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Euh": 45
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4156,7 +6256,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Sous-Secrétaires": 2
+        }
       }
     },
     {
@@ -4171,7 +6276,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Pensons": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4190,6 +6300,13 @@
         },
         "elevenlabs": {
           "Pacte": 2
+        },
+        "assemblyai-u3-pro": {
+          "Pacte": 3
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Pacte": 2
         }
       }
     },
@@ -4205,7 +6322,10 @@
           "Auquel": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4220,7 +6340,10 @@
           "Onyuk": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4239,11 +6362,17 @@
           "Soixante": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Soixante": 3
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Eritrea",
         "Erythrée"
       ],
       "by_provider": {
@@ -4254,7 +6383,12 @@
           "Erythrée": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Eritrea": 1
+        }
       }
     },
     {
@@ -4269,7 +6403,10 @@
           "Philosophie": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4284,7 +6421,14 @@
           "Fonds": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Fonds": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Fonds": 1
+        }
       }
     },
     {
@@ -4299,7 +6443,10 @@
           "Aller": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4316,6 +6463,11 @@
         "alibaba": {},
         "elevenlabs": {
           "Ecosoc": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Ecosoc": 1
         }
       }
     },
@@ -4331,12 +6483,16 @@
           "There": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Saurons"
+        "Saurons",
+        "Serons"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -4346,12 +6502,21 @@
           "Saurons": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Serons": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Serons": 1
+        }
       }
     },
     {
       "variants": [
-        "Research Specialist"
+        "Research Regional",
+        "Research Specialist",
+        "Ressources"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -4361,7 +6526,14 @@
           "Research Specialist": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Research Regional": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Ressources": 1
+        }
       }
     },
     {
@@ -4376,7 +6548,10 @@
           "Yes": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4391,7 +6566,10 @@
           "How": 3
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4406,7 +6584,10 @@
           "Latin America": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4421,7 +6602,10 @@
           "Occidental Europe": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4436,7 +6620,10 @@
           "Oriental Europe": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4451,7 +6638,10 @@
           "However": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4466,7 +6656,10 @@
           "Hmm": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4481,7 +6674,10 @@
           "Temps": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4496,7 +6692,10 @@
           "Cologne": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4511,7 +6710,10 @@
           "Herman": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4526,7 +6728,10 @@
           "Egon Mon": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4546,6 +6751,13 @@
         "alibaba": {},
         "elevenlabs": {
           "Initiatives": 1
+        },
+        "assemblyai-u3-pro": {
+          "Initiative": 5
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Initiative": 4
         }
       }
     },
@@ -4561,7 +6773,10 @@
           "Revenir": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4576,7 +6791,10 @@
           "Because": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4591,7 +6809,10 @@
           "Gérer": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4606,7 +6827,10 @@
           "Surdenti Guai-Barbuda": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4621,7 +6845,12 @@
           "Nécessité": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Nécessité": 1
+        }
       }
     },
     {
@@ -4636,11 +6865,17 @@
           "Suivi": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Suivi": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Gagnant",
         "Gagnons"
       ],
       "by_provider": {
@@ -4651,7 +6886,12 @@
           "Gagnons": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Gagnant": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4666,7 +6906,10 @@
           "Before": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4681,7 +6924,10 @@
           "Syria": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4696,7 +6942,10 @@
           "Déclaration": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4711,7 +6960,10 @@
           "Service": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4728,7 +6980,12 @@
         "alibaba": {
           "Muchas": 2
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Muchas": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4743,7 +7000,12 @@
           "Question": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Question": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4758,7 +7020,10 @@
           "Mandat": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4773,7 +7038,10 @@
           "Etant": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4788,12 +7056,18 @@
           "Switzerland": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Switzerland": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "September"
+        "September",
+        "Septembre"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -4803,7 +7077,12 @@
           "September": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Septembre": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4818,7 +7097,10 @@
           "After": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4833,7 +7115,10 @@
           "Well": 2
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4848,7 +7133,10 @@
           "Russian Federation": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4863,7 +7151,10 @@
           "Uganda": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4878,7 +7169,10 @@
           "Dominican Republic": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4893,7 +7187,10 @@
           "Speak": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4908,7 +7205,10 @@
           "Ethiopian": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4923,7 +7223,10 @@
           "Chairman": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4938,7 +7241,10 @@
           "Quatre-Vingt": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4955,12 +7261,18 @@
         "alibaba": {
           "Rwanda": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Rwanda": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Palaros"
+        "Palaros",
+        "Piliers"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -4970,7 +7282,12 @@
           "Palaros": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Piliers": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4985,7 +7302,10 @@
           "Directeur": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5000,7 +7320,10 @@
           "General Assembly": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5015,7 +7338,12 @@
           "Mettre": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Mettre": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5030,7 +7358,10 @@
           "Assurer": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5045,12 +7376,16 @@
           "Malagasy": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Maintenant"
+        "Maintenant",
+        "Mention"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -5060,7 +7395,12 @@
           "Maintenant": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Mention": 1
+        }
       }
     },
     {
@@ -5075,7 +7415,10 @@
           "Écosoc": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5094,7 +7437,12 @@
         "elevenlabs": {
           "Mohammed": 1,
           "Mohamed": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Mohamed": 2
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5115,7 +7463,10 @@
           "Mister Guy Ryder": 1,
           "Mister President": 1,
           "Mister Thompson": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5130,7 +7481,10 @@
           "Situation": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5145,7 +7499,10 @@
           "Rendre": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5160,7 +7517,10 @@
           "Difficult": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5175,7 +7535,10 @@
           "Caribbean": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5190,12 +7553,16 @@
           "Assistant Secretary-General Adjunct": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Economic"
+        "Economic",
+        "Examen"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -5205,7 +7572,12 @@
           "Economic": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Examen": 1
+        }
       }
     },
     {
@@ -5220,12 +7592,16 @@
           "Social Affairs": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Humanitaire"
+        "Humanitaire",
+        "Humanitarian Affairs"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -5235,7 +7611,12 @@
           "Humanitaire": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Humanitarian Affairs": 1
+        }
       }
     },
     {
@@ -5250,7 +7631,10 @@
         "alibaba": {
           "Penchez": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5265,7 +7649,10 @@
         "alibaba": {
           "Van Dael": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5280,7 +7667,10 @@
         "alibaba": {
           "Ruihui": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5295,7 +7685,10 @@
         "alibaba": {
           "Tenant": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5310,7 +7703,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Nakamitsu": 2
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5325,12 +7721,18 @@
         "alibaba": {},
         "elevenlabs": {
           "Système": 3
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Système": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Devraient"
+        "Devraient",
+        "Différenciation"
       ],
       "by_provider": {
         "assemblyai": {},
@@ -5340,6 +7742,11 @@
         "alibaba": {},
         "elevenlabs": {
           "Devraient": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Différenciation": 1
         }
       }
     },
@@ -5355,7 +7762,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Vingt": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5370,7 +7780,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Deux": 2
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5385,7 +7798,12 @@
         "alibaba": {},
         "elevenlabs": {
           "Tenons": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Tenons": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5400,7 +7818,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Unie": 2
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5415,7 +7836,12 @@
         "alibaba": {},
         "elevenlabs": {
           "Durable": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Durable": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -5430,15 +7856,2305 @@
         "alibaba": {},
         "elevenlabs": {
           "Edouard": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Vice-Sécrétaire"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Vice-Sécrétaire": 6
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Deputy-Secretary-General"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Deputy-Secretary-General": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Rajouter"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Rajouter": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Secours"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Secours": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Guaï-Barbuda"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Guaï-Barbuda": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Resident Coordinators"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Resident Coordinators": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Pays-Hôtes"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Pays-Hôtes": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Relevant"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Relevant": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Éliminant"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Éliminant": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Horizon"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Horizon": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Aurélie"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Aurélie": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Bureaux"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Bureaux": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Oratrice"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Oratrice": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Poser"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Poser": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Commune"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Commune": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Quand",
+        "Quant"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Quand": 1,
+          "Quant": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Etcepourchacundesaxesdetravail"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Etcepourchacundesaxesdetravail": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Porter",
+        "Portera"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Portera": 1,
+          "Porter": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Undocumentuniquedestrois"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Undocumentuniquedestrois": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Entre"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Entre": 2
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Hans Wandel"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Hans Wandel": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Yuyou"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Yuyou": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Possible"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Possible": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Environnement"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Environnement": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Également"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Également": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Auniveaudespays"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Auniveaudespays": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Etjedonnelaparole"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Etjedonnelaparole": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Essentiel"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Essentiel": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Applaudissements"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Applaudissements": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Équateur"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Équateur": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Priorités"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Priorités": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Priorités": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Effectivement"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Effectivement": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Incluant"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Incluant": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Aider"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Aider": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Agadat"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Agadat": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Impact",
+        "Impossibilité"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Impact": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Impossibilité": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Solution"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Solution": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Remis"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Remis": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Cequeceladevraitchanger"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Cequeceladevraitchanger": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Jevousrenvoieausitewebdecelui"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Jevousrenvoieausitewebdecelui": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "États-Unis"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "États-Unis": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Flavien Flavien"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Flavien Flavien": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Based"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Based": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Context",
+        "Contexte"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Context": 1,
+          "Contexte": 5
+        }
+      }
+    },
+    {
+      "variants": [
+        "Main Speaker"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Main Speaker": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Structural Changes"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Structural Changes": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Timeline"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Timeline": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "October"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "October": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Performance Management Reform"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Performance Management Reform": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Currently"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Currently": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Specific"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Specific": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Special"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Special": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Emergency Relief Coordinator"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Emergency Relief Coordinator": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Titre"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Titre": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Vers"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Vers": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Diagnostic"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Diagnostic": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Vision"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Vision": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Fonctionner"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Fonctionner": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Ancrer"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Ancrer": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Appel"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Appel": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Architecture Régionale"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Architecture Régionale": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Expertise"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Expertise": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Domaine"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Domaine": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Lot"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Lot": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Améliorer"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Améliorer": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Discussion"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Discussion": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Ajout"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Ajout": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Méthodologie"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Méthodologie": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Sélection"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Sélection": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Point"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Point": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Résultat"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Résultat": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Principes",
+        "Principes Directeurs"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Principes Directeurs": 1,
+          "Principes": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Créer"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Créer": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Entités"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Entités": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Constat"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Constat": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Feuille"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Feuille": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Route"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Route": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Finalisation"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Finalisation": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Achèvement"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Achèvement": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Lancement"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Lancement": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Expansion"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Expansion": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Réflexion"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Réflexion": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Bénéfices Concrets"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Bénéfices Concrets": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Meilleur"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Meilleur": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Disponibilité"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Disponibilité": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Canada"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Canada": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Nouvelle-Zélande"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Nouvelle-Zélande": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Objet"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Objet": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Non-Inscrits",
+        "Néanmoins"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Néanmoins": 1,
+          "Non-Inscrits": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Note"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Note": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Hareide"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Hareide": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Équipes"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Équipes": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Tribune"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Tribune": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Coopération"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Coopération": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Développement Durable"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Développement Durable": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Nouveau Pacte Humanitaire"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Nouveau Pacte Humanitaire": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Reconfiguration"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Reconfiguration": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Avons"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Avons": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Évaluation"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Évaluation": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Complexité"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Complexité": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Agenda"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Agenda": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Aucune"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Aucune": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Redevabilité"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Redevabilité": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Valeur"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Valeur": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Position"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Position": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Volets"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Volets": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Accélérer"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Accélérer": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Utilisation",
+        "Utiliser"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Utilisation": 1,
+          "Utiliser": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Financement"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Financement": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Gouvernance"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Gouvernance": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Discours"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Discours": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Regroupement"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Regroupement": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Gestion"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Gestion": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Modèle"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Modèle": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Allocation"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Allocation": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Visibilité"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Visibilité": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Avenir"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Avenir": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Appuyer"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Appuyer": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Points"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Points": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Focus"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Focus": 1
         }
       }
     }
   ],
   "unique_numbers": [
     {
+      "number": "00",
+      "provider": "qwen3.5-omni-plus",
+      "count": 44
+    },
+    {
+      "number": "01",
+      "provider": "qwen3.5-omni-plus",
+      "count": 32
+    },
+    {
+      "number": "03",
+      "provider": "qwen3.5-omni-plus",
+      "count": 32
+    },
+    {
+      "number": "02",
+      "provider": "qwen3.5-omni-plus",
+      "count": 26
+    },
+    {
       "number": "2.0",
       "provider": "gemini",
       "count": 22
+    },
+    {
+      "number": "45.008",
+      "provider": "qwen3.5-omni-plus",
+      "count": 3
+    },
+    {
+      "number": "09.568",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "56.208",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "13.488",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "33.564",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "39.280",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "24.448",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "47.248",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "44.608",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "30.048",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "17.608",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "50.528",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "50.480",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "54.688",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "56.800",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "02.088",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "13.648",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
+    },
+    {
+      "number": "37.648",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2
     }
   ]
 }

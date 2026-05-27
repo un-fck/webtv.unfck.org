@@ -1,0 +1,3709 @@
+{
+  "unique_proper_nouns": [
+    {
+      "name": "Secretary-General",
+      "provider": "assemblyai-u3-pro",
+      "count": 21,
+      "likely": "acoustic",
+      "at": "0:01"
+    },
+    {
+      "name": "Secretary General",
+      "provider": "assemblyai",
+      "count": 18,
+      "likely": "acoustic",
+      "at": "0:01"
+    },
+    {
+      "name": "United",
+      "provider": "assemblyai",
+      "count": 17,
+      "likely": "acoustic",
+      "at": "0:01"
+    },
+    {
+      "name": "Under-Secretary-General",
+      "provider": "assemblyai-u3-pro",
+      "count": 10,
+      "likely": "acoustic",
+      "at": "0:01"
+    },
+    {
+      "name": "Member State",
+      "provider": "assemblyai",
+      "count": 9,
+      "likely": "acoustic",
+      "at": "19:14"
+    },
+    {
+      "name": "Mujeres",
+      "provider": "assemblyai-u3-pro",
+      "count": 8,
+      "likely": "hallucination",
+      "at": "41:00"
+    },
+    {
+      "name": "Deputy Secretary-General",
+      "provider": "assemblyai-u3-pro",
+      "count": 8,
+      "likely": "acoustic",
+      "at": "3:51"
+    },
+    {
+      "name": "General",
+      "provider": "assemblyai",
+      "count": 7,
+      "likely": "acoustic",
+      "at": "0:01"
+    },
+    {
+      "name": "Under Secretary General",
+      "provider": "assemblyai",
+      "count": 6,
+      "likely": "acoustic",
+      "at": "0:01"
+    },
+    {
+      "name": "Haiti Initiative",
+      "provider": "assemblyai-u3-pro",
+      "count": 6,
+      "likely": "acoustic",
+      "at": "3:51"
+    },
+    {
+      "name": "Naciones Unidas",
+      "provider": "assemblyai-u3-pro",
+      "count": 5,
+      "likely": "hallucination",
+      "at": "118:34"
+    },
+    {
+      "name": "Doreen Bogdan Martin",
+      "provider": "assemblyai",
+      "count": 4,
+      "likely": "acoustic",
+      "at": "44:02"
+    },
+    {
+      "name": "Doreen Bogdan-Martin",
+      "provider": "assemblyai-u3-pro",
+      "count": 4,
+      "likely": "acoustic",
+      "at": "10:38"
+    },
+    {
+      "name": "Sénégal",
+      "provider": "assemblyai-u3-pro",
+      "count": 4,
+      "likely": "acoustic",
+      "at": "103:12"
+    },
+    {
+      "name": "Mucha",
+      "provider": "assemblyai",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "66:19"
+    },
+    {
+      "name": "Katherine Russell",
+      "provider": "assemblyai",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "36:21"
+    },
+    {
+      "name": "Boards",
+      "provider": "assemblyai",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "52:01"
+    },
+    {
+      "name": "Work",
+      "provider": "assemblyai",
+      "count": 3,
+      "likely": "hallucination",
+      "at": "0:01"
+    },
+    {
+      "name": "Président",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "103:12"
+    },
+    {
+      "name": "Monsieur",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "103:12"
+    },
+    {
+      "name": "Secretaría",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "65:22"
+    },
+    {
+      "name": "Programme",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "10:38"
+    },
+    {
+      "name": "Eje",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "hallucination",
+      "at": "142:03"
+    },
+    {
+      "name": "Regarding",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "41:00"
+    },
+    {
+      "name": "Haiti",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "hallucination",
+      "at": "3:51"
+    },
+    {
+      "name": "États",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "hallucination",
+      "at": "103:12"
+    },
+    {
+      "name": "Presidente",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "acoustic",
+      "at": "91:29"
+    },
+    {
+      "name": "Asimismo",
+      "provider": "assemblyai-u3-pro",
+      "count": 3,
+      "likely": "hallucination",
+      "at": "140:06"
+    },
+    {
+      "name": "Women Merger",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "3:51"
+    },
+    {
+      "name": "Sima Barhus",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "10:56"
+    },
+    {
+      "name": "Preliminary",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "44:02"
+    },
+    {
+      "name": "Director",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "19:01"
+    },
+    {
+      "name": "Distinguished Representative",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "126:28"
+    },
+    {
+      "name": "Composite",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "63:09"
+    },
+    {
+      "name": "Madam President Excellencies",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "72:11"
+    },
+    {
+      "name": "Give",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "13:41"
+    },
+    {
+      "name": "Sustainable",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "100:53"
+    },
+    {
+      "name": "Plenary",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "0:01"
+    },
+    {
+      "name": "Assessment",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "3:51"
+    },
+    {
+      "name": "Chairs",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "0:01"
+    },
+    {
+      "name": "Briefers",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "77:09"
+    },
+    {
+      "name": "Women Merger Assessment",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "3:51"
+    },
+    {
+      "name": "Distinguished Delegates",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "72:11"
+    },
+    {
+      "name": "Unity",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "49:17"
+    },
+    {
+      "name": "Several",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "10:38"
+    },
+    {
+      "name": "Sin",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "118:34"
+    },
+    {
+      "name": "Concernant",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "103:12"
+    },
+    {
+      "name": "Gracias",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "64:58"
+    },
+    {
+      "name": "Estados",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "118:34"
+    },
+    {
+      "name": "Comisión",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "91:29"
+    },
+    {
+      "name": "Elle",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "103:12"
+    },
+    {
+      "name": "Mesdames",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "103:12"
+    },
+    {
+      "name": "Messieurs",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "103:12"
+    },
+    {
+      "name": "Sima Bahus",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "10:38"
+    },
+    {
+      "name": "Desarrollo",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "91:29"
+    },
+    {
+      "name": "Nos",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "91:29"
+    },
+    {
+      "name": "Phase",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "10:38"
+    },
+    {
+      "name": "Technology Acceleration Platform",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "24:39"
+    },
+    {
+      "name": "Nations",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "0:01"
+    },
+    {
+      "name": "Enfin",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "103:12"
+    },
+    {
+      "name": "Implementation",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "0:01"
+    },
+    {
+      "name": "Review",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "0:01"
+    },
+    {
+      "name": "Señor",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "140:06"
+    },
+    {
+      "name": "Trabajo",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "142:03"
+    },
+    {
+      "name": "Chinese Mandarin",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "62:44"
+    },
+    {
+      "name": "Población",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "91:29"
+    },
+    {
+      "name": "República Dominicana",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "142:03"
+    },
+    {
+      "name": "Nous",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "132:11"
+    },
+    {
+      "name": "Panamá",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "118:34"
+    },
+    {
+      "name": "Mandate Creation",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "3:51"
+    },
+    {
+      "name": "Resolution",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "3:51"
+    }
+  ],
+  "name_table": [
+    {
+      "variants": [
+        "Plenary"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Plenary": 2
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "President",
+        "President Excellence",
+        "President Excellencies",
+        "President Speaking",
+        "Presidente",
+        "Presidentes",
+        "Président"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "President": 34,
+          "President Excellencies": 4,
+          "President Excellence": 1,
+          "President Speaking": 1,
+          "Presidentes": 1
+        },
+        "assemblyai-u3-pro": {
+          "President": 40,
+          "President Excellencies": 1,
+          "Presidente": 3,
+          "Président": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "General",
+        "General Assembly",
+        "General Assembly Resolution",
+        "General Assembly Under Secretary General Excellencies"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "General Assembly Under Secretary General Excellencies": 1,
+          "General": 7,
+          "General Assembly": 4,
+          "General Assembly Resolution": 1
+        },
+        "assemblyai-u3-pro": {
+          "General Assembly": 11,
+          "General Assembly Resolution": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Indeed",
+        "Initiative",
+        "Initiative Madam President"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Initiative": 3,
+          "Initiative Madam President": 1,
+          "Indeed": 1
+        },
+        "assemblyai-u3-pro": {
+          "Initiative": 13,
+          "Indeed": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Secretariat",
+        "Secretary General",
+        "Secretary-General",
+        "Secretaría",
+        "Secrétaire",
+        "Security",
+        "Security Council Resolution"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Secretary General": 18,
+          "Secretariat": 6,
+          "Security Council Resolution": 1
+        },
+        "assemblyai-u3-pro": {
+          "Secretary-General": 21,
+          "Secretariat": 7,
+          "Secretaría": 3,
+          "Security Council Resolution": 1,
+          "Security": 1,
+          "Secrétaire": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "United",
+        "United Arab Emirates",
+        "United Kingdom",
+        "United Kingdom Pakistan",
+        "United Nations",
+        "United Nations Children",
+        "United Nations Population Fund"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "United": 17,
+          "United Nations": 3,
+          "United Nations Population Fund": 2,
+          "United Nations Children": 2,
+          "United Arab Emirates": 1,
+          "United Kingdom Pakistan": 1,
+          "United Kingdom": 4
+        },
+        "assemblyai-u3-pro": {
+          "United Nations": 19,
+          "United Nations Population Fund": 2,
+          "United Nations Children": 2,
+          "United Arab Emirates": 1,
+          "United Kingdom": 4
+        }
+      }
+    },
+    {
+      "variants": [
+        "Chairs"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Chairs": 2
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Mandate Creation",
+        "Mandate Implementation Review",
+        "Mandates"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Mandate Implementation Review": 1,
+          "Mandates": 2
+        },
+        "assemblyai-u3-pro": {
+          "Mandate Implementation Review": 1,
+          "Mandate Creation": 2,
+          "Mandates": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Excellencies",
+        "Excellency",
+        "Exzellenz"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Excellencies": 14,
+          "Excellency": 1
+        },
+        "assemblyai-u3-pro": {
+          "Excellencies": 18,
+          "Exzellenz": 1,
+          "Excellency": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Under Secretaries General",
+        "Under Secretary General",
+        "Under Secretary Generals",
+        "Under Work Stream",
+        "Under-Secretaries-General",
+        "Under-Secretary Generals",
+        "Under-Secretary-General",
+        "Underlying",
+        "Undersecretary General"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Under Work Stream": 1,
+          "Under Secretary General": 6,
+          "Undersecretary General": 1,
+          "Underlying": 1,
+          "Under Secretary Generals": 1,
+          "Under Secretaries General": 1
+        },
+        "assemblyai-u3-pro": {
+          "Under-Secretary-General": 10,
+          "Underlying": 1,
+          "Under-Secretary Generals": 1,
+          "Under-Secretaries-General": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Member",
+        "Member State",
+        "Member States",
+        "Members",
+        "Membership"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Member States": 60,
+          "Member": 1,
+          "Member State": 9,
+          "Members": 1
+        },
+        "assemblyai-u3-pro": {
+          "Membership": 1,
+          "Member States": 28,
+          "Members": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Serving"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Serving": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Gaia Reido",
+        "Guy Rider",
+        "Guy Ryder"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Guy Ryder": 3,
+          "Guy Rider": 1,
+          "Gaia Reido": 1
+        },
+        "assemblyai-u3-pro": {
+          "Guy Ryder": 5
+        }
+      }
+    },
+    {
+      "variants": [
+        "Please",
+        "Policy"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Policy": 5
+        },
+        "assemblyai-u3-pro": {
+          "Policy": 5,
+          "Please": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Dear Colleagues",
+        "Dear Excellencies",
+        "Dear Guy"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Dear Guy": 1,
+          "Dear Colleagues": 1
+        },
+        "assemblyai-u3-pro": {
+          "Dear Guy": 1,
+          "Dear Excellencies": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Thank",
+        "Thanks",
+        "Tunisia",
+        "Tunisia Norway"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Thank": 57,
+          "Tunisia Norway": 1,
+          "Tunisia": 8
+        },
+        "assemblyai-u3-pro": {
+          "Thank": 70,
+          "Thanks": 1,
+          "Tunisia": 9
+        }
+      }
+    },
+    {
+      "variants": [
+        "Madam",
+        "Madam Chair",
+        "Madam Chair President",
+        "Madam Deputy Mr",
+        "Madam Deputy Secretary General",
+        "Madam Deputy Secretary-General",
+        "Madam President",
+        "Madam President Excellencies",
+        "Madam Thank",
+        "Madame",
+        "Madame Bahous",
+        "Madame Deputy Secretary",
+        "Madame Deputy Secretary General",
+        "Madame Deputy Secretary-General",
+        "Madame Keïta",
+        "Madame President"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Madam President": 22,
+          "Madam": 3,
+          "Madame Deputy Secretary General": 1,
+          "Madam Chair": 4,
+          "Madam President Excellencies": 2,
+          "Madam Deputy Secretary General": 1,
+          "Madame Deputy Secretary": 1,
+          "Madam Chair President": 1,
+          "Madame": 2
+        },
+        "assemblyai-u3-pro": {
+          "Madam President": 24,
+          "Madam": 2,
+          "Madame President": 1,
+          "Madame Deputy Secretary-General": 1,
+          "Madam Thank": 1,
+          "Madam Chair": 5,
+          "Madam Deputy Secretary-General": 1,
+          "Madam Deputy Mr": 1,
+          "Madame": 2,
+          "Madame Bahous": 1,
+          "Madame Keïta": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Since",
+        "Since January"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Since": 2,
+          "Since January": 1
+        },
+        "assemblyai-u3-pro": {
+          "Since": 2,
+          "Since January": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "March",
+        "Merci",
+        "Mrs"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "March": 2,
+          "Merci": 2,
+          "Mrs": 2
+        },
+        "assemblyai-u3-pro": {
+          "March": 2,
+          "Merci": 3,
+          "Mrs": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Importantly",
+        "Informal Ad Hoc Working Group",
+        "Informative"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Informal Ad Hoc Working Group": 1,
+          "Importantly": 2,
+          "Informative": 1
+        },
+        "assemblyai-u3-pro": {
+          "Importantly": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Work",
+        "Work Package",
+        "Work Packages",
+        "Work Stream"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Work": 3,
+          "Work Packages": 1,
+          "Work Package": 8,
+          "Work Stream": 1
+        },
+        "assemblyai-u3-pro": {
+          "Work Package": 26,
+          "Work Packages": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Consolidated Report",
+        "Consultados"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Consolidated Report": 1
+        },
+        "assemblyai-u3-pro": {
+          "Consultados": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Chief",
+        "Chief Executive Board",
+        "Chief Statisticians",
+        "Cuba"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Chief Executive Board": 1,
+          "Chief": 1,
+          "Cuba": 4
+        },
+        "assemblyai-u3-pro": {
+          "Chief Executive Board": 1,
+          "Chief Statisticians": 1,
+          "Cuba": 7
+        }
+      }
+    },
+    {
+      "variants": [
+        "Women",
+        "Women As",
+        "Women Executive Board",
+        "Women Executive Director",
+        "Women Merger",
+        "Women Merger Assessment",
+        "Women Murder Assessment"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Women Murder Assessment": 1,
+          "Women Merger Assessment": 2,
+          "Women": 36,
+          "Women Executive Director": 1,
+          "Women Executive Board": 3,
+          "Women As": 1,
+          "Women Merger": 2
+        },
+        "assemblyai-u3-pro": {
+          "Women": 64,
+          "Women Executive Director": 1,
+          "Women Executive Board": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Deputy Secretary General",
+        "Deputy Secretary-General"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Deputy Secretary General": 9
+        },
+        "assemblyai-u3-pro": {
+          "Deputy Secretary-General": 8,
+          "Deputy Secretary General": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Very",
+        "Very Briefly"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Very Briefly": 1
+        },
+        "assemblyai-u3-pro": {
+          "Very": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Sistema",
+        "Sustainable",
+        "Sustainable Development Goals",
+        "System",
+        "System Data Common",
+        "System Data Commons",
+        "Systems Data Commons"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "System Data Commons": 4,
+          "System": 1,
+          "System Data Common": 1,
+          "Systems Data Commons": 1,
+          "Sistema": 1,
+          "Sustainable Development Goals": 1,
+          "Sustainable": 2
+        },
+        "assemblyai-u3-pro": {
+          "System Data Commons": 3,
+          "System Data Common": 1,
+          "System": 1,
+          "Systems Data Commons": 1,
+          "Sustainable Development Goals": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Report"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Report": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Dialogue"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Dialogue": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Amina Mohamed",
+        "Amina Mohammed"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Amina Mohammed": 2,
+          "Amina Mohamed": 1
+        },
+        "assemblyai-u3-pro": {
+          "Amina Mohammed": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Executive",
+        "Executive Board",
+        "Executive Boards",
+        "Executive Director",
+        "Executive Directors",
+        "Executive Directors Sima Barhus"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Executive Directors Sima Barhus": 1,
+          "Executive Director": 10,
+          "Executive Board": 7,
+          "Executive Boards": 12,
+          "Executive Directors": 3
+        },
+        "assemblyai-u3-pro": {
+          "Executive Directors": 4,
+          "Executive Director": 18,
+          "Executive Board": 8,
+          "Executive Boards": 3,
+          "Executive": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Dean Gita",
+        "Dean Keeter",
+        "Diane",
+        "Diane Eadie",
+        "Diane Ed",
+        "Diane Keita",
+        "Diane Keiter",
+        "Diane Kita"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Diane Keiter": 1,
+          "Diane": 3,
+          "Diane Ed": 1,
+          "Dean Keeter": 1,
+          "Diane Keita": 2,
+          "Diane Kita": 1
+        },
+        "assemblyai-u3-pro": {
+          "Diane Keita": 4,
+          "Diane": 4,
+          "Diane Eadie": 1,
+          "Dean Gita": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "The Action Plan",
+        "The Agency",
+        "The Benelux",
+        "The Data Common",
+        "The Executive Boards",
+        "The General",
+        "The Group",
+        "The Kingdom",
+        "The Maldives",
+        "The Qualcare",
+        "The Regional Recept",
+        "The Secretary General",
+        "The Secretary-General",
+        "The State",
+        "The United Kingdom"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "The Secretary General": 1,
+          "The General": 1,
+          "The Data Common": 1,
+          "The Group": 4,
+          "The Kingdom": 1,
+          "The Executive Boards": 1,
+          "The Agency": 1,
+          "The Benelux": 1,
+          "The Maldives": 2,
+          "The Regional Recept": 1,
+          "The Action Plan": 1,
+          "The Qualcare": 1
+        },
+        "assemblyai-u3-pro": {
+          "The Secretary-General": 1,
+          "The Group": 4,
+          "The State": 1,
+          "The Executive Boards": 1,
+          "The Benelux": 1,
+          "The Maldives": 2,
+          "The United Kingdom": 1,
+          "The Action Plan": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Baltimore Leeves",
+        "Building"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Building": 1,
+          "Baltimore Leeves": 1
+        },
+        "assemblyai-u3-pro": {
+          "Building": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Give"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Give": 2
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Seema",
+        "Seema Bahous",
+        "Seema Sami Bahu",
+        "Sima",
+        "Sima Bahaus",
+        "Sima Bahus",
+        "Sima Baja",
+        "Sima Barhus",
+        "Sima Mahoos",
+        "Sima Sami Bahous",
+        "Sin"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Sima Barhus": 2,
+          "Sima Baja": 1,
+          "Seema Bahous": 1,
+          "Seema Sami Bahu": 1,
+          "Seema": 1
+        },
+        "assemblyai-u3-pro": {
+          "Sima Mahoos": 1,
+          "Sima Bahus": 2,
+          "Sima": 3,
+          "Sima Bahaus": 1,
+          "Sin": 2,
+          "Sima Sami Bahous": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Delegates",
+        "Delegations"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Delegates": 1,
+          "Delegations": 1
+        },
+        "assemblyai-u3-pro": {
+          "Delegations": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Her Excellency Anna Lena Baerbock",
+        "Her Excellency Anna-Lena Baerbock"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Her Excellency Anna Lena Baerbock": 1
+        },
+        "assemblyai-u3-pro": {
+          "Her Excellency Anna-Lena Baerbock": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Humanitarian",
+        "Humanitarian Compact",
+        "Humanitarian Data Collaborative",
+        "Humanitarian Data Collaborative Initiative"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Humanitarian": 1,
+          "Humanitarian Compact": 1,
+          "Humanitarian Data Collaborative Initiative": 1
+        },
+        "assemblyai-u3-pro": {
+          "Humanitarian": 1,
+          "Humanitarian Data Collaborative": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Director"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Director": 2
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Sister Seema",
+        "Sister Sima"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Sister Seema": 1
+        },
+        "assemblyai-u3-pro": {
+          "Sister Sima": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Dignitary"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Dignitary": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Beijing",
+        "Beijing Platform"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Beijing Platform": 4,
+          "Beijing": 2
+        },
+        "assemblyai-u3-pro": {
+          "Beijing Platform": 5,
+          "Beijing": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Action",
+        "Action Plan"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Action": 7,
+          "Action Plan": 1
+        },
+        "assemblyai-u3-pro": {
+          "Action": 10,
+          "Action Plan": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "International",
+        "International Computing Center",
+        "International Conference",
+        "International Telecommunication Union",
+        "International Telecommunications Union"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "International Conference": 1,
+          "International Telecommunication Union": 1,
+          "International Computing Center": 1,
+          "International Telecommunications Union": 1,
+          "International": 1
+        },
+        "assemblyai-u3-pro": {
+          "International Conference": 1,
+          "International Telecommunication Union": 2,
+          "International Computing Center": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Population Development Program",
+        "Population Development Programme"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Population Development Program": 1
+        },
+        "assemblyai-u3-pro": {
+          "Population Development Programme": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Convención",
+        "Convention"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Convention": 1
+        },
+        "assemblyai-u3-pro": {
+          "Convention": 1,
+          "Convención": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "All",
+        "All Forms",
+        "Allow"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "All Forms": 1,
+          "Allow": 4,
+          "All": 2
+        },
+        "assemblyai-u3-pro": {
+          "All Forms": 1,
+          "Allow": 4
+        }
+      }
+    },
+    {
+      "variants": [
+        "Discriminación",
+        "Discrimination",
+        "Discrimination Against Women"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Discrimination": 1
+        },
+        "assemblyai-u3-pro": {
+          "Discrimination Against Women": 1,
+          "Discriminación": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Transition",
+        "Transparent"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Transparent": 1,
+          "Transition": 1
+        },
+        "assemblyai-u3-pro": {
+          "Transparent": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Thanking Kita"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Thanking Kita": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Acción",
+        "Again"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Again": 1
+        },
+        "assemblyai-u3-pro": {
+          "Again": 2,
+          "Acción": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Based",
+        "Bogda Martin"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Bogda Martin": 1,
+          "Based": 1
+        },
+        "assemblyai-u3-pro": {
+          "Based": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Next",
+        "Nkeeta"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Next": 5
+        },
+        "assemblyai-u3-pro": {
+          "Nkeeta": 1,
+          "Next": 5
+        }
+      }
+    },
+    {
+      "variants": [
+        "Also",
+        "Also Work",
+        "Also Work Package"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Also Work": 1,
+          "Also": 5
+        },
+        "assemblyai-u3-pro": {
+          "Also Work Package": 1,
+          "Also": 5
+        }
+      }
+    },
+    {
+      "variants": [
+        "Technology",
+        "Technology Acceleration",
+        "Technology Acceleration Platform",
+        "Technology Acceleration Platform Phase",
+        "Technology Accelerator",
+        "Technology Accelerator Platform"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Technology Acceleration": 1,
+          "Technology Acceleration Platform Phase": 1,
+          "Technology Accelerator": 1,
+          "Technology Accelerator Platform": 1
+        },
+        "assemblyai-u3-pro": {
+          "Technology": 1,
+          "Technology Acceleration Platform": 2,
+          "Technology Accelerator Platform": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Lee",
+        "Lee Jin",
+        "Lee Jinhua",
+        "Lee Joongo",
+        "Lee Jung",
+        "Lee Yuan",
+        "Lee Yuanho"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Lee Joongo": 1,
+          "Lee": 3,
+          "Lee Yuanho": 1,
+          "Lee Jinhua": 1
+        },
+        "assemblyai-u3-pro": {
+          "Lee Jung": 1,
+          "Lee Yuan": 1,
+          "Lee Jin": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Social",
+        "Social Affairs"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Social Affairs": 3
+        },
+        "assemblyai-u3-pro": {
+          "Social Affairs": 3,
+          "Social": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Katherine Russell"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Katherine Russell": 3
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Data Common",
+        "Data Commons",
+        "Data Governance"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Data Common": 1,
+          "Data Commons": 6
+        },
+        "assemblyai-u3-pro": {
+          "Data Common": 2,
+          "Data Commons": 5,
+          "Data Governance": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Significantly"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Significantly": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Principal"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Principal": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Increased",
+        "Increasingly"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Increasingly": 1,
+          "Increased": 1
+        },
+        "assemblyai-u3-pro": {
+          "Increasingly": 1,
+          "Increased": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Uruguay",
+        "Uruguay La"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Uruguay": 11,
+          "Uruguay La": 1
+        },
+        "assemblyai-u3-pro": {
+          "Uruguay": 16
+        }
+      }
+    },
+    {
+      "variants": [
+        "China",
+        "Chine"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "China": 20
+        },
+        "assemblyai-u3-pro": {
+          "China": 22,
+          "Chine": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Unit Initiative",
+        "Unit Work Stream",
+        "Unity",
+        "Unity Initiative"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Unit Work Stream": 1,
+          "Unit Initiative": 1,
+          "Unity Initiative": 1,
+          "Unity": 2
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Doreen Bogdan Martin",
+        "Doreen Bogdan-Martin"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Doreen Bogdan Martin": 4
+        },
+        "assemblyai-u3-pro": {
+          "Doreen Bogdan-Martin": 4
+        }
+      }
+    },
+    {
+      "variants": [
+        "Lin Jinghua",
+        "Lin Junhua"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Lin Jinghua": 1
+        },
+        "assemblyai-u3-pro": {
+          "Lin Junhua": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Regarding",
+        "Regarding Work Package"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Regarding Work Package": 1
+        },
+        "assemblyai-u3-pro": {
+          "Regarding Work Package": 1,
+          "Regarding": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Preliminary",
+        "Preliminary Finding",
+        "Preliminary Findings"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Preliminary Findings": 1,
+          "Preliminary Finding": 1,
+          "Preliminary": 2
+        },
+        "assemblyai-u3-pro": {
+          "Preliminary Findings": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Aurora Qui Sira Agregar Algunos Commentarios"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Aurora Qui Sira Agregar Algunos Commentarios": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Capacia Nacional"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Capacia Nacional": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Armados"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Armados": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Keita",
+        "Kuwait"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Kuwait": 1
+        },
+        "assemblyai-u3-pro": {
+          "Kuwait": 1,
+          "Keita": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Saudi Arabia",
+        "South Africa"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Saudi Arabia": 1,
+          "South Africa": 6
+        },
+        "assemblyai-u3-pro": {
+          "Saudi Arabia": 1,
+          "South Africa": 6
+        }
+      }
+    },
+    {
+      "variants": [
+        "Further",
+        "Furthermore"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Furthermore": 3,
+          "Further": 1
+        },
+        "assemblyai-u3-pro": {
+          "Furthermore": 3,
+          "Further": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Canada",
+        "Committee",
+        "Committee In"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Canada": 1
+        },
+        "assemblyai-u3-pro": {
+          "Canada": 1,
+          "Committee": 1,
+          "Committee In": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "New Zealand",
+        "Now"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "New Zealand": 1,
+          "Now": 4
+        },
+        "assemblyai-u3-pro": {
+          "New Zealand": 1,
+          "Now": 4
+        }
+      }
+    },
+    {
+      "variants": [
+        "Outcomes While"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Outcomes While": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Assessment"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Assessment": 2
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Workstream",
+        "Workstreams"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Workstream": 3
+        },
+        "assemblyai-u3-pro": {
+          "Workstream": 11,
+          "Workstreams": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Merger",
+        "Merger Assessment"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Merger": 1,
+          "Merger Assessment": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Resident Coordinator",
+        "Resident Coordinator System",
+        "Resident Coordinators"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Resident Coordinator": 1,
+          "Resident Coordinators": 1
+        },
+        "assemblyai-u3-pro": {
+          "Resident Coordinator": 1,
+          "Resident Coordinator System": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Hard"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Hard": 2
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Reform",
+        "Reformation",
+        "Reforms"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Reforms": 1,
+          "Reformation": 1,
+          "Reform": 1
+        },
+        "assemblyai-u3-pro": {
+          "Reforms": 1,
+          "Reform": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Xingyuan"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Xingyuan": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Huangfunder"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Huangfunder": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Composite",
+        "Compositive Anti"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Composite": 2
+        },
+        "assemblyai-u3-pro": {
+          "Compositive Anti": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Gracias",
+        "Gracias Senior President",
+        "Gracias Senora Presienta"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Gracias Senora Presienta": 1,
+          "Gracias Senior President": 1
+        },
+        "assemblyai-u3-pro": {
+          "Gracias": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Miss Catherine Russell",
+        "Miss Doreen Bogdan-Martin",
+        "Mucha"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Mucha": 3
+        },
+        "assemblyai-u3-pro": {
+          "Miss Doreen Bogdan-Martin": 1,
+          "Miss Catherine Russell": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Maldives",
+        "Maledives",
+        "Moldova Alliance"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Maledives": 1,
+          "Maldives": 3
+        },
+        "assemblyai-u3-pro": {
+          "Maldives": 4,
+          "Moldova Alliance": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Distinguished",
+        "Distinguished Briefers",
+        "Distinguished Delegates",
+        "Distinguished Representative"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Distinguished Delegates": 2,
+          "Distinguished Briefers": 1,
+          "Distinguished Representative": 2
+        },
+        "assemblyai-u3-pro": {
+          "Distinguished": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Common Service"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Common Service": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Working Group",
+        "Working Stream"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Working Stream": 1
+        },
+        "assemblyai-u3-pro": {
+          "Working Stream": 1,
+          "Working Group": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Number"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Number": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "There",
+        "Three Under Secretary Generals",
+        "Three Under-Secretary-Generals"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "There": 2,
+          "Three Under Secretary Generals": 1
+        },
+        "assemblyai-u3-pro": {
+          "There": 1,
+          "Three Under-Secretary-Generals": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Program",
+        "Programa",
+        "Programme",
+        "Progress"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Program": 3,
+          "Progress": 2
+        },
+        "assemblyai-u3-pro": {
+          "Programme": 3,
+          "Program": 1,
+          "Programa": 1,
+          "Progress": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Institutions"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Institutions": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Briefers"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Briefers": 2
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Consistent"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Consistent": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Process",
+        "Process Review"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Process": 1,
+          "Process Review": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Vice President",
+        "Vice Presidents"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Vice President": 1
+        },
+        "assemblyai-u3-pro": {
+          "Vice Presidents": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Salvador",
+        "Salvadorando"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Salvador": 2,
+          "Salvadorando": 1
+        },
+        "assemblyai-u3-pro": {
+          "Salvador": 5
+        }
+      }
+    },
+    {
+      "variants": [
+        "Recalibration"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Recalibration": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Cordinaores",
+        "Creation"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Cordinaores": 1,
+          "Creation": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Especially"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Especially": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Boards"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Boards": 3
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Armenia",
+        "Armenia Mr"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Armenia": 5,
+          "Armenia Mr": 1
+        },
+        "assemblyai-u3-pro": {
+          "Armenia": 6
+        }
+      }
+    },
+    {
+      "variants": [
+        "Comprehensive Board",
+        "Conferencia Internacional"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Comprehensive Board": 1
+        },
+        "assemblyai-u3-pro": {
+          "Conferencia Internacional": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Senegal",
+        "Sénégal"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Senegal": 5
+        },
+        "assemblyai-u3-pro": {
+          "Senegal": 5,
+          "Sénégal": 4
+        }
+      }
+    },
+    {
+      "variants": [
+        "Delivery",
+        "Delivery Aligned"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Delivery Aligned": 1
+        },
+        "assemblyai-u3-pro": {
+          "Delivery": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Indonesia",
+        "Indonesian"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Indonesia": 4,
+          "Indonesian": 1
+        },
+        "assemblyai-u3-pro": {
+          "Indonesia": 5,
+          "Indonesian": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Administration"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Administration": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Calcul Nacienie"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Calcul Nacienie": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Accretion Dune Platform",
+        "Acuerdo",
+        "Agradecemos"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Accretion Dune Platform": 1
+        },
+        "assemblyai-u3-pro": {
+          "Acuerdo": 1,
+          "Agradecemos": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Acceleration Technologique Set Initiative"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Acceleration Technologique Set Initiative": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Senor President Informadiva",
+        "Summer Continued"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Summer Continued": 1,
+          "Senor President Informadiva": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Panama",
+        "Panamá"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Panama": 4
+        },
+        "assemblyai-u3-pro": {
+          "Panama": 6,
+          "Panamá": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Steering Committee",
+        "Strengthening"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Strengthening": 2
+        },
+        "assemblyai-u3-pro": {
+          "Steering Committee": 1,
+          "Strengthening": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Pakistan",
+        "Pakistan Associates"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Pakistan": 6,
+          "Pakistan Associates": 1
+        },
+        "assemblyai-u3-pro": {
+          "Pakistan": 8
+        }
+      }
+    },
+    {
+      "variants": [
+        "Considering"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Considering": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Mahules Mucha Haracias"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Mahules Mucha Haracias": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Peace",
+        "Phase"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Peace": 1
+        },
+        "assemblyai-u3-pro": {
+          "Phase": 2,
+          "Peace": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Foremost",
+        "Formas",
+        "France",
+        "France Merci Monsieur President"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "France": 4,
+          "France Merci Monsieur President": 1,
+          "Foremost": 1
+        },
+        "assemblyai-u3-pro": {
+          "Formas": 1,
+          "France": 6
+        }
+      }
+    },
+    {
+      "variants": [
+        "Jameena Mohammed Mr",
+        "Jamina Mohammed"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Jamina Mohammed": 1
+        },
+        "assemblyai-u3-pro": {
+          "Jameena Mohammed Mr": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Rather",
+        "Rider",
+        "Ryder"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Rider": 1
+        },
+        "assemblyai-u3-pro": {
+          "Rather": 1,
+          "Ryder": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Monsieur",
+        "Monsieur President"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Monsieur President": 1
+        },
+        "assemblyai-u3-pro": {
+          "Monsieur": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Organizaciones",
+        "Organization"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Organization": 1
+        },
+        "assemblyai-u3-pro": {
+          "Organizaciones": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Concernant",
+        "Concerned"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Concerned": 1
+        },
+        "assemblyai-u3-pro": {
+          "Concernant": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Model"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Model": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Service Informatics"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Service Informatics": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Israel",
+        "Israeli"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Israel": 6,
+          "Israeli": 1
+        },
+        "assemblyai-u3-pro": {
+          "Israel": 7,
+          "Israeli": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Providing",
+        "Providing Member"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Providing Member": 1
+        },
+        "assemblyai-u3-pro": {
+          "Providing": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Dominican Republic",
+        "Dominican Republic Cuba"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Dominican Republic Cuba": 1,
+          "Dominican Republic": 2
+        },
+        "assemblyai-u3-pro": {
+          "Dominican Republic": 4
+        }
+      }
+    },
+    {
+      "variants": [
+        "Jalafucion"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Jalafucion": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Yuna Mujeres"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Yuna Mujeres": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Igualmente",
+        "Islamic Republic"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Islamic Republic": 5
+        },
+        "assemblyai-u3-pro": {
+          "Igualmente": 1,
+          "Islamic Republic": 5
+        }
+      }
+    },
+    {
+      "variants": [
+        "Iran",
+        "Iran Israel Mr"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Iran Israel Mr": 1,
+          "Iran": 4
+        },
+        "assemblyai-u3-pro": {
+          "Iran": 6
+        }
+      }
+    },
+    {
+      "variants": [
+        "European Union",
+        "European Union Dominican Republic"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "European Union Dominican Republic": 1,
+          "European Union": 5
+        },
+        "assemblyai-u3-pro": {
+          "European Union": 6
+        }
+      }
+    },
+    {
+      "variants": [
+        "Presentationes"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Presentationes": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Entre"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Entre": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Implement",
+        "Implementation",
+        "Implementations"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Implement": 1
+        },
+        "assemblyai-u3-pro": {
+          "Implementation": 2,
+          "Implementations": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Salvaguardo"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Salvaguardo": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Most Compassionate",
+        "Most Merciful"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Most Compassionate": 1,
+          "Most Merciful": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Centre",
+        "Country Team Configuration"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Country Team Configuration": 1
+        },
+        "assemblyai-u3-pro": {
+          "Centre": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Global Health"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Global Health": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Emerger"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Emerger": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "One"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "One": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Towards"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Towards": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Jointly"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Jointly": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Task Force"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Task Force": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Asamblea General",
+        "Assembly"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Assembly": 1,
+          "Asamblea General": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Resolution"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Resolution": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Review"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Review": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Efficient"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Efficient": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Effective United Nations"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Effective United Nations": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Haiti",
+        "Haiti Initiative"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Haiti Initiative": 6,
+          "Haiti": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Several"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Several": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Zima Bahus"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Zima Bahus": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Greetings"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Greetings": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Unified Services Roadmap"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Unified Services Roadmap": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Beyond"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Beyond": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Ahora"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Ahora": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Messieurs",
+        "Mujeres"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Mujeres": 8,
+          "Messieurs": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Evidence"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Evidence": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Detailed"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Detailed": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "What"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "What": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Explored"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Explored": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Chinese Mandarin"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Chinese Mandarin": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Deseamos"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Deseamos": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Bajus"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Bajus": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Podrían"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Podrían": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Session"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Session": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Yedinoye"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Yedinoye": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Kromitavut"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Kromitavut": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Premier"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Premier": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Western"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Western": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Guarilha"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Guarilha": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Hatil Bufkhan"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Hatil Bufkhan": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Kayapa"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Kayapa": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Insufficient"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Insufficient": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Notwithstanding"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Notwithstanding": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Nos",
+        "Nous"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Nos": 2,
+          "Nous": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Regional Reset"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Regional Reset": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Comisión"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Comisión": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Población"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Población": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Desarrollo"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Desarrollo": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Condición Jurídica"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Condición Jurídica": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Mujer"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Mujer": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Tocante"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Tocante": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Nairobi"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Nairobi": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "High-Level Week"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "High-Level Week": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Mesdames"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Mesdames": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Devant"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Devant": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Todas",
+        "États"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "États": 3,
+          "Todas": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Aussi"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Aussi": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Nations"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Nations": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Elle"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Elle": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Enfin"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Enfin": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Estados"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Estados": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Reconocemos"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Reconocemos": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Sobre"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Sobre": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Erradicación"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Erradicación": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Tomamos"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Tomamos": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Naciones Unidas"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Naciones Unidas": 5
+        }
+      }
+    },
+    {
+      "variants": [
+        "Costs"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Costs": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Across"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Across": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Vice-Scrétaire"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Vice-Scrétaire": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Après"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Après": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Femmes"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Femmes": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Señor",
+        "Señor Presidente"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Señor": 2,
+          "Señor Presidente": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Suscribimos"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Suscribimos": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Teniendo"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Teniendo": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Asimismo"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Asimismo": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Adicionalmente"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Adicionalmente": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Reiteramos"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Reiteramos": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Followed"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Followed": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Eje"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Eje": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Trabajo"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Trabajo": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "República Dominicana"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "República Dominicana": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Cualquier"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Cualquier": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Civil"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Civil": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Eustice Lee"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Eustice Lee": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Rightly"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Rightly": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Discrepancies"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Discrepancies": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Daily"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Daily": 1
+        }
+      }
+    }
+  ],
+  "unique_numbers": [
+    {
+      "number": "8",
+      "provider": "assemblyai-u3-pro",
+      "count": 3
+    },
+    {
+      "number": "2025",
+      "provider": "assemblyai-u3-pro",
+      "count": 2
+    }
+  ]
+}

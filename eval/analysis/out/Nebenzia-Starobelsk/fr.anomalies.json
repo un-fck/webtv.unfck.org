@@ -1,102 +1,11 @@
 {
   "unique_proper_nouns": [
     {
-      "name": "Russie",
-      "provider": "gemini",
-      "count": 25,
-      "likely": "acoustic",
-      "at": "0:03"
-    },
-    {
-      "name": "Mais",
-      "provider": "gemini",
-      "count": 22,
-      "likely": "acoustic",
-      "at": "5:51"
-    },
-    {
-      "name": "Nous",
-      "provider": "gemini",
-      "count": 17,
-      "likely": "acoustic",
-      "at": "8:04"
-    },
-    {
-      "name": "Merci",
-      "provider": "gemini",
-      "count": 14,
-      "likely": "hallucination",
-      "at": "0:24"
-    },
-    {
-      "name": "Conseil",
-      "provider": "gemini",
-      "count": 13,
-      "likely": "hallucination",
-      "at": "0:42"
-    },
-    {
-      "name": "Vous",
-      "provider": "gemini",
-      "count": 9,
-      "likely": "hallucination",
-      "at": "11:08"
-    },
-    {
-      "name": "Ils",
-      "provider": "gemini",
-      "count": 9,
-      "likely": "hallucination",
-      "at": "1:14"
-    },
-    {
-      "name": "États-Unis",
-      "provider": "gemini",
-      "count": 8,
-      "likely": "hallucination",
-      "at": "4:25"
-    },
-    {
       "name": "Affaires",
       "provider": "gemini",
       "count": 6,
-      "likely": "hallucination",
+      "likely": "acoustic",
       "at": "34:23"
-    },
-    {
-      "name": "Occident",
-      "provider": "gemini",
-      "count": 6,
-      "likely": "hallucination",
-      "at": "2:45"
-    },
-    {
-      "name": "Golfe",
-      "provider": "gemini",
-      "count": 6,
-      "likely": "acoustic",
-      "at": "23:57"
-    },
-    {
-      "name": "Tout",
-      "provider": "gemini",
-      "count": 5,
-      "likely": "acoustic",
-      "at": "4:01"
-    },
-    {
-      "name": "Fédération",
-      "provider": "gemini",
-      "count": 5,
-      "likely": "hallucination",
-      "at": "0:03"
-    },
-    {
-      "name": "Cela",
-      "provider": "gemini",
-      "count": 5,
-      "likely": "hallucination",
-      "at": "9:09"
     },
     {
       "name": "Monsieur",
@@ -113,25 +22,46 @@
       "at": "17:04"
     },
     {
+      "name": "Fédération",
+      "provider": "gemini",
+      "count": 5,
+      "likely": "hallucination",
+      "at": "0:03"
+    },
+    {
+      "name": "Cela",
+      "provider": "gemini",
+      "count": 5,
+      "likely": "hallucination",
+      "at": "9:09"
+    },
+    {
+      "name": "Tout",
+      "provider": "gemini",
+      "count": 5,
+      "likely": "acoustic",
+      "at": "4:01"
+    },
+    {
+      "name": "Effect",
+      "provider": "qwen3.5-omni-plus",
+      "count": 5,
+      "likely": "hallucination",
+      "at": "4:00"
+    },
+    {
+      "name": "Technique",
+      "provider": "qwen3.5-omni-plus",
+      "count": 5,
+      "likely": "hallucination",
+      "at": "4:00"
+    },
+    {
       "name": "Starobylsk",
       "provider": "mistral",
       "count": 4,
       "likely": "acoustic",
       "at": "0:03"
-    },
-    {
-      "name": "Comment",
-      "provider": "gemini",
-      "count": 4,
-      "likely": "hallucination",
-      "at": "7:20"
-    },
-    {
-      "name": "République",
-      "provider": "gemini",
-      "count": 4,
-      "likely": "acoustic",
-      "at": "0:38"
     },
     {
       "name": "Boutcha",
@@ -141,6 +71,13 @@
       "at": "14:00"
     },
     {
+      "name": "République",
+      "provider": "gemini",
+      "count": 4,
+      "likely": "acoustic",
+      "at": "0:38"
+    },
+    {
       "name": "Elle",
       "provider": "gemini",
       "count": 4,
@@ -148,32 +85,11 @@
       "at": "10:00"
     },
     {
-      "name": "Oui",
-      "provider": "gemini",
-      "count": 4,
-      "likely": "hallucination",
-      "at": "23:00"
-    },
-    {
-      "name": "Quand",
-      "provider": "gemini",
-      "count": 3,
-      "likely": "hallucination",
-      "at": "3:29"
-    },
-    {
-      "name": "Chine",
+      "name": "Lougansk",
       "provider": "gemini",
       "count": 3,
       "likely": "acoustic",
-      "at": "4:21"
-    },
-    {
-      "name": "Nations Unies",
-      "provider": "gemini",
-      "count": 3,
-      "likely": "acoustic",
-      "at": "15:02"
+      "at": "0:38"
     },
     {
       "name": "Pourtant",
@@ -190,46 +106,18 @@
       "at": "10:24"
     },
     {
-      "name": "Alors",
-      "provider": "gemini",
+      "name": "Throughout",
+      "provider": "qwen3.5-omni-plus",
       "count": 3,
       "likely": "hallucination",
-      "at": "11:01"
+      "at": "16:00"
     },
     {
-      "name": "Qui",
-      "provider": "gemini",
+      "name": "Moderator",
+      "provider": "qwen3.5-omni-plus",
       "count": 3,
       "likely": "hallucination",
-      "at": "10:52"
-    },
-    {
-      "name": "Parce",
-      "provider": "gemini",
-      "count": 3,
-      "likely": "hallucination",
-      "at": "32:06"
-    },
-    {
-      "name": "Lougansk",
-      "provider": "gemini",
-      "count": 3,
-      "likely": "acoustic",
-      "at": "0:38"
-    },
-    {
-      "name": "Bucci",
-      "provider": "mistral",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "15:18"
-    },
-    {
-      "name": "Secretary",
-      "provider": "mistral",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "14:00"
+      "at": "36:00"
     },
     {
       "name": "Buche",
@@ -239,81 +127,11 @@
       "at": "15:02"
     },
     {
-      "name": "Bonjour",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "0:00"
-    },
-    {
-      "name": "Leurs",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "5:13"
-    },
-    {
-      "name": "Toute",
-      "provider": "gemini",
+      "name": "Bucci",
+      "provider": "mistral",
       "count": 2,
       "likely": "acoustic",
-      "at": "7:03"
-    },
-    {
-      "name": "Bien",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "12:44"
-    },
-    {
-      "name": "Comme",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "0:28"
-    },
-    {
-      "name": "Rien",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "22:09"
-    },
-    {
-      "name": "Certains",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "4:41"
-    },
-    {
-      "name": "Ceux",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "6:13"
-    },
-    {
-      "name": "Lors",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "2:37"
-    },
-    {
-      "name": "Ormuz",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "acoustic",
-      "at": "24:45"
-    },
-    {
-      "name": "Lorsqu",
-      "provider": "gemini",
-      "count": 2,
-      "likely": "hallucination",
-      "at": "14:32"
+      "at": "15:18"
     },
     {
       "name": "Ont",
@@ -323,11 +141,60 @@
       "at": "12:13"
     },
     {
-      "name": "Iranian Foreign Minister",
-      "provider": "azure-openai",
+      "name": "Rien",
+      "provider": "gemini",
       "count": 2,
       "likely": "acoustic",
-      "at": "36:39"
+      "at": "22:09"
+    },
+    {
+      "name": "Lors",
+      "provider": "gemini",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "2:37"
+    },
+    {
+      "name": "Certains",
+      "provider": "gemini",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "4:41"
+    },
+    {
+      "name": "Lorsqu",
+      "provider": "gemini",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "14:32"
+    },
+    {
+      "name": "Ceux",
+      "provider": "gemini",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "6:13"
+    },
+    {
+      "name": "Comme",
+      "provider": "gemini",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "0:28"
+    },
+    {
+      "name": "Ormuz",
+      "provider": "gemini",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "24:45"
+    },
+    {
+      "name": "Toute",
+      "provider": "gemini",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "7:03"
     },
     {
       "name": "Armed Forces",
@@ -335,6 +202,55 @@
       "count": 2,
       "likely": "hallucination",
       "at": "16:00"
+    },
+    {
+      "name": "Secretary-General",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "10:39"
+    },
+    {
+      "name": "The Permanent Representative",
+      "provider": "assemblyai-u3-pro",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "1:07"
+    },
+    {
+      "name": "Pourquoi",
+      "provider": "fun-asr",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "16:14"
+    },
+    {
+      "name": "Ici",
+      "provider": "fun-asr",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "6:38"
+    },
+    {
+      "name": "Kieff",
+      "provider": "fun-asr",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "11:54"
+    },
+    {
+      "name": "Plusieurs",
+      "provider": "fun-asr",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "6:14"
+    },
+    {
+      "name": "Organization",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "12:00"
     }
   ],
   "name_table": [
@@ -355,12 +271,20 @@
         },
         "elevenlabs": {
           "Hello": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Hello": 2
+        },
+        "fun-asr": {
+          "Hello": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Thank"
+        "Thank",
+        "Thankyou"
       ],
       "by_provider": {
         "mistral": {
@@ -375,11 +299,22 @@
         },
         "elevenlabs": {
           "Thank": 18
+        },
+        "assemblyai-u3-pro": {
+          "Thank": 19
+        },
+        "fun-asr": {
+          "Thank": 2,
+          "Thankyou": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Thank": 12
         }
       }
     },
     {
       "variants": [
+        "Permanent Representative Vasily Nebensia",
         "Permanent Representative Vasily Nibenzia",
         "Permanent Representative Vassily Nebenzia"
       ],
@@ -392,12 +327,18 @@
         "alibaba": {
           "Permanent Representative Vassily Nebenzia": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Permanent Representative Vasily Nebensia": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Ukraine",
+        "Ukraine Ukraine",
         "Ukrainian",
         "Ukrainian Armed Forces",
         "Ukrainians",
@@ -428,6 +369,21 @@
           "Ukrainian": 19,
           "Ukraine": 17,
           "Ukrainians": 1
+        },
+        "assemblyai-u3-pro": {
+          "Ukrainian": 18,
+          "Ukrainian Armed Forces": 1,
+          "Ukraine": 14,
+          "Ukraine Ukraine": 1,
+          "Ukrainians": 1
+        },
+        "fun-asr": {
+          "Ukraine": 6
+        },
+        "qwen3.5-omni-plus": {
+          "Ukrainian": 19,
+          "Ukraine": 17,
+          "Ukrainians": 1
         }
       }
     },
@@ -440,6 +396,7 @@
         "Starobersky",
         "Starobeshev Starobeshev",
         "Starobilsk",
+        "Starobilsky",
         "Starobyl",
         "Starobylsk"
       ],
@@ -468,6 +425,18 @@
           "Starobilsk": 8,
           "Starobelsk": 4,
           "Starobe-Starobelsk": 1
+        },
+        "assemblyai-u3-pro": {
+          "Starobilsk": 10,
+          "Starobelsk": 2,
+          "Starobilsky": 1
+        },
+        "fun-asr": {
+          "Starobelsk": 2
+        },
+        "qwen3.5-omni-plus": {
+          "Starobilsk": 3,
+          "Starobelsk": 6
         }
       }
     },
@@ -476,10 +445,12 @@
         "Ambassadeur",
         "Ambassador",
         "Ambassador Alex Smith",
+        "Ambassador Alexei Danilov",
         "Ambassador Alexey Medved",
         "Ambassador Alexey Reanov",
         "Ambassador Farhan Shamiiri",
         "Ambassador Farnesha Mary",
+        "Ambassador Farnoush Amiri",
         "Ambassador Farnushamiri"
       ],
       "by_provider": {
@@ -503,6 +474,17 @@
         },
         "elevenlabs": {
           "Ambassador": 6
+        },
+        "assemblyai-u3-pro": {
+          "Ambassador": 6
+        },
+        "fun-asr": {
+          "Ambassador": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Ambassador": 2,
+          "Ambassador Farnoush Amiri": 1,
+          "Ambassador Alexei Danilov": 1
         }
       }
     },
@@ -523,13 +505,19 @@
         },
         "elevenlabs": {
           "After": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "After": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Vasily Alekseyevich",
         "Vasily Alexeevich",
+        "Vasily Alexei",
         "Vasily Alexeyevich",
         "Vasily Nebenzia",
         "Vasily Nibenzia",
@@ -558,6 +546,13 @@
           "Vasily Nebenzia": 1,
           "Vasily Alekseyevich": 1,
           "Vasily Alexeevich": 1
+        },
+        "assemblyai-u3-pro": {
+          "Vasily Alexei": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Vassily Nebenzia": 4
         }
       }
     },
@@ -576,7 +571,12 @@
         },
         "elevenlabs": {
           "May": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "May": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -602,6 +602,13 @@
         },
         "elevenlabs": {
           "Lugansk People": 2
+        },
+        "assemblyai-u3-pro": {
+          "Lugansk People": 3
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Lugansk People": 1
         }
       }
     },
@@ -625,6 +632,13 @@
         },
         "elevenlabs": {
           "Republic": 4
+        },
+        "assemblyai-u3-pro": {
+          "Republic": 4
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Republic": 2
         }
       }
     },
@@ -633,7 +647,8 @@
         "Rescue",
         "Russia",
         "Russia Russia",
-        "Russie"
+        "Russie",
+        "Russie Vassili Nibensia"
       ],
       "by_provider": {
         "mistral": {
@@ -652,6 +667,17 @@
         },
         "elevenlabs": {
           "Russia": 22
+        },
+        "assemblyai-u3-pro": {
+          "Russia": 21
+        },
+        "fun-asr": {
+          "Russie Vassili Nibensia": 1,
+          "Russie": 7,
+          "Russia": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Russia": 25
         }
       }
     },
@@ -661,7 +687,11 @@
         "Secretary",
         "Secretary General",
         "Secretary General Guterres",
+        "Secretary-General",
         "Secretary-General Guterres",
+        "Secretary-General Terrorist",
+        "Secrétaire",
+        "Secrétariat",
         "Security Council"
       ],
       "by_provider": {
@@ -686,6 +716,22 @@
           "Security Council": 12,
           "Secretariat": 9,
           "Secretary-General Guterres": 1
+        },
+        "assemblyai-u3-pro": {
+          "Security Council": 11,
+          "Secretariat": 5,
+          "Secretary-General Terrorist": 1,
+          "Secretary-General": 2,
+          "Secretary": 2
+        },
+        "fun-asr": {
+          "Secrétaire": 1,
+          "Secrétariat": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Secretariat": 9,
+          "Secretary-General Guterres": 1,
+          "Security Council": 10
         }
       }
     },
@@ -706,7 +752,12 @@
         },
         "elevenlabs": {
           "Friday": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Friday": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -724,12 +775,17 @@
         "alibaba": {},
         "elevenlabs": {
           "Eighty": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "According"
+        "According",
+        "Assertion",
+        "Aujourd"
       ],
       "by_provider": {
         "mistral": {
@@ -744,6 +800,15 @@
         },
         "elevenlabs": {
           "According": 1
+        },
+        "assemblyai-u3-pro": {
+          "According": 1
+        },
+        "fun-asr": {
+          "Aujourd": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Assertion": 1
         }
       }
     },
@@ -764,7 +829,12 @@
         },
         "elevenlabs": {
           "Many": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Many": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -782,7 +852,12 @@
         },
         "elevenlabs": {
           "All": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "All": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -802,6 +877,15 @@
         },
         "elevenlabs": {
           "There": 8
+        },
+        "assemblyai-u3-pro": {
+          "There": 9
+        },
+        "fun-asr": {
+          "There": 1
+        },
+        "qwen3.5-omni-plus": {
+          "There": 6
         }
       }
     },
@@ -827,11 +911,19 @@
         },
         "elevenlabs": {
           "Nazi": 5
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Nazi": 3
+        },
+        "fun-asr": {
+          "Nous": 5
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Kieff",
         "Kiev",
         "Kyiv"
       ],
@@ -853,6 +945,16 @@
         "elevenlabs": {
           "Kiev": 17,
           "Kyiv": 7
+        },
+        "assemblyai-u3-pro": {
+          "Kyiv": 21
+        },
+        "fun-asr": {
+          "Kiev": 5,
+          "Kieff": 2
+        },
+        "qwen3.5-omni-plus": {
+          "Kyiv": 14
         }
       }
     },
@@ -886,6 +988,19 @@
           "Russian": 10,
           "Russian Federation": 4,
           "Russian Foreign Minister Sergey Lavrov": 1
+        },
+        "assemblyai-u3-pro": {
+          "Russian": 9,
+          "Russian Federation": 4,
+          "Russian Foreign Minister Sergei Lavrov": 1,
+          "Russian Deputy Foreign Minister": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Russian": 18,
+          "Russian Federation": 1,
+          "Russian Foreign Minister Sergey Lavrov": 1,
+          "Russian Deputy Foreign Minister": 1
         }
       }
     },
@@ -906,6 +1021,13 @@
         },
         "elevenlabs": {
           "West": 5
+        },
+        "assemblyai-u3-pro": {
+          "West": 5
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "West": 2
         }
       }
     },
@@ -926,6 +1048,15 @@
         },
         "elevenlabs": {
           "Western": 9
+        },
+        "assemblyai-u3-pro": {
+          "Western": 8
+        },
+        "fun-asr": {
+          "Western": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Western": 7
         }
       }
     },
@@ -946,7 +1077,12 @@
         },
         "elevenlabs": {
           "Denmark": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Denmark": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -960,11 +1096,17 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Before": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Weon",
         "When"
       ],
       "by_provider": {
@@ -980,6 +1122,13 @@
         },
         "elevenlabs": {
           "When": 4
+        },
+        "assemblyai-u3-pro": {
+          "When": 5
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Weon": 2
         }
       }
     },
@@ -1000,6 +1149,13 @@
         },
         "elevenlabs": {
           "European": 2
+        },
+        "assemblyai-u3-pro": {
+          "European": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "European": 1
         }
       }
     },
@@ -1020,7 +1176,39 @@
         },
         "elevenlabs": {
           "Latvia": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Latvia": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Kremlin"
+      ],
+      "by_provider": {
+        "mistral": {
+          "Kremlin": 1
+        },
+        "gemini": {
+          "Kremlin": 1
+        },
+        "azure-openai": {
+          "Kremlin": 1
+        },
+        "alibaba": {
+          "Kremlin": 1
+        },
+        "elevenlabs": {
+          "Kremlin": 1
+        },
+        "assemblyai-u3-pro": {
+          "Kremlin": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1040,7 +1228,12 @@
         },
         "elevenlabs": {
           "Equally": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Equally": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1060,7 +1253,12 @@
         },
         "elevenlabs": {
           "Austria": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Austria": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1083,7 +1281,12 @@
         },
         "elevenlabs": {
           "Brazil": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Brazil": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1106,7 +1309,41 @@
         },
         "elevenlabs": {
           "Hungary": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Hungary": 1
+        },
+        "fun-asr": {
+          "Hungary": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Venezuela"
+      ],
+      "by_provider": {
+        "mistral": {
+          "Venezuela": 1
+        },
+        "gemini": {
+          "Venezuela": 1
+        },
+        "azure-openai": {
+          "Venezuela": 1
+        },
+        "alibaba": {
+          "Venezuela": 1
+        },
+        "elevenlabs": {
+          "Venezuela": 1
+        },
+        "assemblyai-u3-pro": {
+          "Venezuela": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1132,7 +1369,15 @@
         "elevenlabs": {
           "Germany": 1,
           "German": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Germany": 1,
+          "German": 1
+        },
+        "fun-asr": {
+          "Germany": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1155,7 +1400,12 @@
         },
         "elevenlabs": {
           "Greece": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Greece": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1175,7 +1425,12 @@
         },
         "elevenlabs": {
           "Spain": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Spain": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1198,7 +1453,41 @@
         },
         "elevenlabs": {
           "Italy": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Italy": 1
+        },
+        "fun-asr": {
+          "Italy": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Qatar"
+      ],
+      "by_provider": {
+        "mistral": {
+          "Qatar": 1
+        },
+        "gemini": {
+          "Qatar": 1
+        },
+        "azure-openai": {
+          "Qatar": 1
+        },
+        "alibaba": {
+          "Qatar": 1
+        },
+        "elevenlabs": {
+          "Qatar": 1
+        },
+        "assemblyai-u3-pro": {
+          "Qatar": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1223,6 +1512,15 @@
         },
         "elevenlabs": {
           "China": 4
+        },
+        "assemblyai-u3-pro": {
+          "China": 4
+        },
+        "fun-asr": {
+          "Chine": 2
+        },
+        "qwen3.5-omni-plus": {
+          "China": 3
         }
       }
     },
@@ -1243,7 +1541,12 @@
         },
         "elevenlabs": {
           "Lebanon": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Lebanon": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1263,7 +1566,39 @@
         },
         "elevenlabs": {
           "Emirates": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Emirates": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Pakistan"
+      ],
+      "by_provider": {
+        "mistral": {
+          "Pakistan": 1
+        },
+        "gemini": {
+          "Pakistan": 1
+        },
+        "azure-openai": {
+          "Pakistan": 1
+        },
+        "alibaba": {
+          "Pakistan": 1
+        },
+        "elevenlabs": {
+          "Pakistan": 1
+        },
+        "assemblyai-u3-pro": {
+          "Pakistan": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1294,7 +1629,13 @@
           "United States": 1,
           "United Nations": 1,
           "United Nations Correspondents Association": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "United States": 1,
+          "United Nations": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1317,7 +1658,12 @@
         },
         "elevenlabs": {
           "Turkey": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Turkey": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1340,13 +1686,21 @@
         },
         "elevenlabs": {
           "Finland": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Finland": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Farnoosh",
+        "Farnoosh Ahmadi",
         "Farnoush",
         "Farnoush Amiri",
+        "Farnoush Shemiri",
         "Farnush",
         "Farnush Amiri",
         "France"
@@ -1370,6 +1724,18 @@
           "France": 1,
           "Farnoush": 1,
           "Farnoush Amiri": 1
+        },
+        "assemblyai-u3-pro": {
+          "France": 1,
+          "Farnoosh": 1,
+          "Farnoosh Ahmadi": 1
+        },
+        "fun-asr": {
+          "Farnoush": 1,
+          "Farnoush Shemiri": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Farnoush Amiri": 2
         }
       }
     },
@@ -1392,13 +1758,19 @@
         "elevenlabs": {
           "Some Western": 1,
           "Some": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Some Western": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Tokyo",
         "Tokyo Bart",
+        "Tokyo Bartender",
         "Tokyo Shimbun"
       ],
       "by_provider": {
@@ -1412,12 +1784,20 @@
         "alibaba": {},
         "elevenlabs": {
           "Tokyo": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Tokyo Bartender": 1
+        },
+        "fun-asr": {
+          "Tokyo": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "First"
+        "First",
+        "Firsthand"
       ],
       "by_provider": {
         "mistral": {
@@ -1428,7 +1808,12 @@
           "First": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Firsthand": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1448,12 +1833,20 @@
         },
         "elevenlabs": {
           "Please": 3
+        },
+        "assemblyai-u3-pro": {
+          "Please": 3
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Please": 1
         }
       }
     },
     {
       "variants": [
         "Olia Kovaleva",
+        "Olia Kovalieva",
         "Olya Kovaliva",
         "Olya Kovalyova"
       ],
@@ -1468,7 +1861,12 @@
         },
         "elevenlabs": {
           "Olia Kovaleva": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Olia Kovalieva": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1476,11 +1874,14 @@
         "The Director General",
         "The Kiev",
         "The Kyiv",
+        "The Nazi",
+        "The Permanent Representative",
         "The President",
         "The Russian",
         "The Staro Belskoe College",
         "The Starobels College",
         "The Starobelsk",
+        "The Starobelsk College",
         "The Starobilsk",
         "The Ukrainian",
         "The Western",
@@ -1514,6 +1915,18 @@
           "The Starobilsk": 1,
           "The Zelensky": 1,
           "The Ukrainian": 1
+        },
+        "assemblyai-u3-pro": {
+          "The Permanent Representative": 2,
+          "The Starobelsk College": 1,
+          "The Zelensky": 1,
+          "The Kyiv": 1,
+          "The Ukrainian": 1,
+          "The Nazi": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "The Zelensky": 1
         }
       }
     },
@@ -1534,7 +1947,12 @@
         },
         "elevenlabs": {
           "One": 3
-        }
+        },
+        "assemblyai-u3-pro": {
+          "One": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1553,6 +1971,13 @@
           "Here": 4
         },
         "elevenlabs": {
+          "Here": 4
+        },
+        "assemblyai-u3-pro": {
+          "Here": 3
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Here": 4
         }
       }
@@ -1580,7 +2005,15 @@
         "elevenlabs": {
           "Elena": 1,
           "Elena Kopilova": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Elena": 1,
+          "Elena Kopilova": 1
+        },
+        "fun-asr": {
+          "Elena": 2
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1600,7 +2033,12 @@
         },
         "elevenlabs": {
           "Adults": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Adults": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1620,7 +2058,12 @@
         },
         "elevenlabs": {
           "Konstantin Dubovoy": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Konstantin Dubovoy": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1647,11 +2090,17 @@
         },
         "elevenlabs": {
           "Today": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Today": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Louhansk",
         "Luhansk",
         "Luhansk Republic"
       ],
@@ -1669,6 +2118,15 @@
         "elevenlabs": {
           "Luhansk Republic": 1,
           "Luhansk": 1
+        },
+        "assemblyai-u3-pro": {
+          "Luhansk Republic": 1
+        },
+        "fun-asr": {
+          "Louhansk": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Luhansk Republic": 1
         }
       }
     },
@@ -1689,7 +2147,12 @@
         },
         "elevenlabs": {
           "Several": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Several": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1719,6 +2182,16 @@
         "elevenlabs": {
           "Moscow": 2,
           "Miss Audience Choice": 1
+        },
+        "assemblyai-u3-pro": {
+          "Moscow": 2,
+          "Miss Audience Choice": 1
+        },
+        "fun-asr": {
+          "Mais": 7
+        },
+        "qwen3.5-omni-plus": {
+          "Moscow": 1
         }
       }
     },
@@ -1740,7 +2213,12 @@
         },
         "elevenlabs": {
           "Maxim": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Maxim": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1760,7 +2238,12 @@
         },
         "elevenlabs": {
           "Among": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Among": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1783,7 +2266,14 @@
         },
         "elevenlabs": {
           "Just": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Just": 2
+        },
+        "fun-asr": {
+          "Just": 2
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1791,6 +2281,7 @@
         "Iran",
         "Irina Zhevotikova",
         "Irina Zhivotikova",
+        "Irina Zhivotykova",
         "Irina Zivotikova"
       ],
       "by_provider": {
@@ -1812,6 +2303,16 @@
         "elevenlabs": {
           "Irina Zhevotikova": 1,
           "Iran": 22
+        },
+        "assemblyai-u3-pro": {
+          "Irina Zhivotykova": 1,
+          "Iran": 18
+        },
+        "fun-asr": {
+          "Iran": 2
+        },
+        "qwen3.5-omni-plus": {
+          "Iran": 23
         }
       }
     },
@@ -1826,7 +2327,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1844,7 +2348,12 @@
         },
         "elevenlabs": {
           "Beauty": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Beauty": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1862,12 +2371,18 @@
         },
         "elevenlabs": {
           "Faculty": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Faculty": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Dasha Serdyuk",
+        "Dasha Seryuk",
         "Does Russia"
       ],
       "by_provider": {
@@ -1886,6 +2401,14 @@
         },
         "elevenlabs": {
           "Dasha Serdyuk": 1
+        },
+        "assemblyai-u3-pro": {
+          "Dasha Seryuk": 1,
+          "Does Russia": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Does Russia": 1
         }
       }
     },
@@ -1910,16 +2433,23 @@
         },
         "elevenlabs": {
           "Anya Pogrebnichenko": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Anya Pogrebnychenko": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Belazerka",
+        "Belokurakhino",
         "Belokurakino",
         "Belozirka",
         "Belozorka",
         "Belozyorka",
+        "Belozërka",
         "Bilozirka"
       ],
       "by_provider": {
@@ -1941,6 +2471,15 @@
         "elevenlabs": {
           "Belokurakino": 1,
           "Belozorka": 1
+        },
+        "assemblyai-u3-pro": {
+          "Belokurakhino": 1
+        },
+        "fun-asr": {
+          "Bilozirka": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Belozërka": 1
         }
       }
     },
@@ -1959,7 +2498,14 @@
         "alibaba": {
           "Now": 3
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Now": 3
+        },
+        "fun-asr": {
+          "Now": 2
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -1977,7 +2523,10 @@
         "alibaba": {},
         "elevenlabs": {
           "People": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2000,6 +2549,15 @@
         },
         "elevenlabs": {
           "Zelenskyy": 1,
+          "Zelensky": 2
+        },
+        "assemblyai-u3-pro": {
+          "Zelensky": 3
+        },
+        "fun-asr": {
+          "Zelensky": 3
+        },
+        "qwen3.5-omni-plus": {
           "Zelensky": 2
         }
       }
@@ -2025,6 +2583,13 @@
         },
         "elevenlabs": {
           "Geneva Conventions": 1
+        },
+        "assemblyai-u3-pro": {
+          "Geneva Conventions": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Geneva Conventions": 1
         }
       }
     },
@@ -2042,6 +2607,13 @@
           "Convention": 1
         },
         "elevenlabs": {
+          "Convention": 1
+        },
+        "assemblyai-u3-pro": {
+          "Convention": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Convention": 1
         }
       }
@@ -2061,6 +2633,13 @@
         },
         "elevenlabs": {
           "Rights": 1
+        },
+        "assemblyai-u3-pro": {
+          "Rights": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Rights": 1
         }
       }
     },
@@ -2078,6 +2657,13 @@
           "Child": 1
         },
         "elevenlabs": {
+          "Child": 1
+        },
+        "assemblyai-u3-pro": {
+          "Child": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Child": 1
         }
       }
@@ -2098,6 +2684,13 @@
           "Anyone": 1
         },
         "elevenlabs": {
+          "Anyone": 1
+        },
+        "assemblyai-u3-pro": {
+          "Anyone": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Anyone": 1
         }
       }
@@ -2121,6 +2714,13 @@
           "Donetsk People": 1
         },
         "elevenlabs": {
+          "Donetsk People": 1
+        },
+        "assemblyai-u3-pro": {
+          "Donetsk People": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Donetsk People": 1
         }
       }
@@ -2146,6 +2746,42 @@
         },
         "elevenlabs": {
           "Zaporizhzhia": 1
+        },
+        "assemblyai-u3-pro": {
+          "Zaporozhye": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Zaporozhye": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Kherson"
+      ],
+      "by_provider": {
+        "mistral": {
+          "Kherson": 1
+        },
+        "gemini": {
+          "Kherson": 1
+        },
+        "azure-openai": {
+          "Kherson": 1
+        },
+        "alibaba": {
+          "Kherson": 1
+        },
+        "elevenlabs": {
+          "Kherson": 1
+        },
+        "assemblyai-u3-pro": {
+          "Kherson": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Kherson": 1
         }
       }
     },
@@ -2167,6 +2803,13 @@
         },
         "elevenlabs": {
           "Tellingly": 1
+        },
+        "assemblyai-u3-pro": {
+          "Tellingly": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Tellingly": 1
         }
       }
     },
@@ -2184,7 +2827,10 @@
         "alibaba": {
           "Yet Secretary General Guterres": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2198,7 +2844,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2221,6 +2870,13 @@
         },
         "elevenlabs": {
           "Bucha": 4
+        },
+        "assemblyai-u3-pro": {
+          "Bucha": 4
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Bucha": 4
         }
       }
     },
@@ -2240,6 +2896,13 @@
           "Earlier": 1
         },
         "elevenlabs": {
+          "Earlier": 1
+        },
+        "assemblyai-u3-pro": {
+          "Earlier": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Earlier": 1
         }
       }
@@ -2264,6 +2927,13 @@
         },
         "elevenlabs": {
           "António Guterres": 1
+        },
+        "assemblyai-u3-pro": {
+          "António Guterres": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Antonio Guterres": 1
         }
       }
     },
@@ -2287,6 +2957,11 @@
         "alibaba": {},
         "elevenlabs": {
           "Proliski": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Proliska": 1
         }
       }
     },
@@ -2307,6 +2982,13 @@
           "Donbas": 1
         },
         "elevenlabs": {
+          "Donbas": 1
+        },
+        "assemblyai-u3-pro": {
+          "Donbas": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Donbas": 1
         }
       }
@@ -2334,6 +3016,15 @@
         "elevenlabs": {
           "Edith": 2,
           "Edith Lederer": 1
+        },
+        "assemblyai-u3-pro": {
+          "Edith": 2,
+          "Edith Lederer": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Edith": 1,
+          "Edith Lederer": 1
         }
       }
     },
@@ -2358,12 +3049,20 @@
         },
         "elevenlabs": {
           "Associated Press": 2
+        },
+        "assemblyai-u3-pro": {
+          "Associated Press": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Associated Press": 2
         }
       }
     },
     {
       "variants": [
-        "What"
+        "What",
+        "White Fallacy"
       ],
       "by_provider": {
         "mistral": {
@@ -2378,11 +3077,19 @@
         },
         "elevenlabs": {
           "What": 5
+        },
+        "assemblyai-u3-pro": {
+          "What": 3
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "White Fallacy": 1
         }
       }
     },
     {
       "variants": [
+        "Spasibo",
         "Specifically"
       ],
       "by_provider": {
@@ -2394,7 +3101,14 @@
           "Specifically": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Spasibo": 1
+        },
+        "fun-asr": {
+          "Specifically": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2413,6 +3127,13 @@
           "Then": 3
         },
         "elevenlabs": {
+          "Then": 2
+        },
+        "assemblyai-u3-pro": {
+          "Then": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Then": 2
         }
       }
@@ -2433,7 +3154,16 @@
         "alibaba": {
           "Nothing": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Nothing": 1
+        },
+        "fun-asr": {
+          "Nations Unies": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Nothing": 1
+        }
       }
     },
     {
@@ -2447,7 +3177,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Encouraging": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2467,12 +3202,21 @@
         },
         "elevenlabs": {
           "Yes": 2
+        },
+        "assemblyai-u3-pro": {
+          "Yes": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Yes": 3
         }
       }
     },
     {
       "variants": [
-        "President Trump"
+        "President",
+        "President Trump",
+        "President Zelensky"
       ],
       "by_provider": {
         "mistral": {
@@ -2486,6 +3230,15 @@
           "President Trump": 1
         },
         "elevenlabs": {
+          "President Trump": 1
+        },
+        "assemblyai-u3-pro": {
+          "President Trump": 1,
+          "President": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "President Zelensky": 1,
           "President Trump": 1
         }
       }
@@ -2501,7 +3254,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Perhaps": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2522,6 +3280,42 @@
         },
         "elevenlabs": {
           "Russian-Ukrainian": 1
+        },
+        "assemblyai-u3-pro": {
+          "Russian-Ukrainian": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Russian-Ukrainian": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Kushner"
+      ],
+      "by_provider": {
+        "mistral": {
+          "Kushner": 1
+        },
+        "gemini": {
+          "Kushner": 1
+        },
+        "azure-openai": {
+          "Kushner": 1
+        },
+        "alibaba": {
+          "Kushner": 1
+        },
+        "elevenlabs": {
+          "Kushner": 1
+        },
+        "assemblyai-u3-pro": {
+          "Kushner": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Kushner": 1
         }
       }
     },
@@ -2536,7 +3330,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2556,12 +3353,19 @@
         },
         "elevenlabs": {
           "Yeah": 4
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Yeah": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Abdel Hamid Sayyam",
+        "Abdel Hamid Siam",
+        "Abdelhamid Sayam",
         "Abdelhamid Siam",
         "Abdul Hamid Sayam",
         "Abdul Hamid Sia",
@@ -2582,12 +3386,22 @@
         },
         "elevenlabs": {
           "Abdul Hamid Sayam": 1
+        },
+        "assemblyai-u3-pro": {
+          "Abdelhamid Sayam": 1
+        },
+        "fun-asr": {
+          "Abdelhamid Sayam": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Abdel Hamid Siam": 1
         }
       }
     },
     {
       "variants": [
         "Arabic",
+        "Arabic Daily Al Quds Arabe",
         "Arabic Daily Al-Quds Al-Arabi"
       ],
       "by_provider": {
@@ -2602,6 +3416,15 @@
           "Arabic": 1
         },
         "elevenlabs": {
+          "Arabic": 1
+        },
+        "assemblyai-u3-pro": {
+          "Arabic": 1
+        },
+        "fun-asr": {
+          "Arabic Daily Al Quds Arabe": 1
+        },
+        "qwen3.5-omni-plus": {
           "Arabic": 1
         }
       }
@@ -2627,6 +3450,13 @@
           "Palestinians": 2
         },
         "elevenlabs": {
+          "Palestinians": 2
+        },
+        "assemblyai-u3-pro": {
+          "Palestinians": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Palestinians": 2
         }
       }
@@ -2657,6 +3487,15 @@
         "elevenlabs": {
           "Israeli": 1,
           "Israel": 1
+        },
+        "assemblyai-u3-pro": {
+          "Israeli": 1,
+          "Israel": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Israeli": 1,
+          "Israel": 1
         }
       }
     },
@@ -2679,6 +3518,16 @@
           "Gulf": 6
         },
         "elevenlabs": {
+          "Gulf": 6
+        },
+        "assemblyai-u3-pro": {
+          "Gulf": 6
+        },
+        "fun-asr": {
+          "Gulf": 2,
+          "Golfe": 2
+        },
+        "qwen3.5-omni-plus": {
           "Gulf": 6
         }
       }
@@ -2710,6 +3559,17 @@
         "elevenlabs": {
           "Iranian": 6,
           "Iranians": 1
+        },
+        "assemblyai-u3-pro": {
+          "Iranian": 4,
+          "Iranians": 1,
+          "Iranian Foreign Minister": 2
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Iranian": 5,
+          "Iranians": 1,
+          "Iranian Foreign Minister": 2
         }
       }
     },
@@ -2734,6 +3594,13 @@
         },
         "elevenlabs": {
           "And Iraq": 1
+        },
+        "assemblyai-u3-pro": {
+          "And Iraq": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "And Iraq": 1
         }
       }
     },
@@ -2753,6 +3620,13 @@
           "Strait": 1
         },
         "elevenlabs": {
+          "Strait": 1
+        },
+        "assemblyai-u3-pro": {
+          "Strait": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "Strait": 1
         }
       }
@@ -2774,6 +3648,13 @@
         },
         "elevenlabs": {
           "Hormuz": 2
+        },
+        "assemblyai-u3-pro": {
+          "Hormuz": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Hormuz": 2
         }
       }
     },
@@ -2788,7 +3669,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2802,12 +3686,16 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "American"
+        "American",
+        "American English"
       ],
       "by_provider": {
         "mistral": {
@@ -2822,6 +3710,14 @@
         },
         "elevenlabs": {
           "American": 1
+        },
+        "assemblyai-u3-pro": {
+          "American": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "American": 2,
+          "American English": 1
         }
       }
     },
@@ -2842,7 +3738,12 @@
         },
         "elevenlabs": {
           "Middle East": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Middle East": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2856,12 +3757,18 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Director General": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Denis",
+        "Denis Slava",
         "Denis Slavykh",
         "Denise"
       ],
@@ -2879,11 +3786,21 @@
         },
         "elevenlabs": {
           "Denis": 2
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Denis": 1,
+          "Denis Slava": 1
+        },
+        "fun-asr": {
+          "Denise": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Alexei",
+        "Alexei Danilov",
         "Alexey"
       ],
       "by_provider": {
@@ -2897,6 +3814,14 @@
         "alibaba": {},
         "elevenlabs": {
           "Alexey": 1
+        },
+        "assemblyai-u3-pro": {
+          "Alexei": 1,
+          "Alexey": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Alexei Danilov": 1
         }
       }
     },
@@ -2917,7 +3842,12 @@
         },
         "elevenlabs": {
           "Olenivka": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Olenivka": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2933,7 +3863,12 @@
         "alibaba": {
           "Besides": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Besides": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -2954,12 +3889,17 @@
         "alibaba": {
           "Schaffach": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "During"
+        "During",
+        "Duringourlastmeeting",
+        "Duringtherecentdroneandmissileattacksonkiev"
       ],
       "by_provider": {
         "mistral": {
@@ -2970,12 +3910,21 @@
         "alibaba": {
           "During": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "During": 1
+        },
+        "fun-asr": {
+          "Duringtherecentdroneandmissileattacksonkiev": 1,
+          "Duringourlastmeeting": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
         "Susan Taherani",
+        "Susan Teani",
         "Susan Tehrani"
       ],
       "by_provider": {
@@ -2992,6 +3941,15 @@
           "Susan Taherani": 1
         },
         "elevenlabs": {
+          "Susan Taherani": 1
+        },
+        "assemblyai-u3-pro": {
+          "Susan Tehrani": 1
+        },
+        "fun-asr": {
+          "Susan Teani": 1
+        },
+        "qwen3.5-omni-plus": {
           "Susan Taherani": 1
         }
       }
@@ -3015,6 +3973,14 @@
         },
         "elevenlabs": {
           "Has": 2
+        },
+        "assemblyai-u3-pro": {
+          "Has": 2,
+          "Has Iran": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Has": 3
         }
       }
     },
@@ -3038,6 +4004,15 @@
         },
         "elevenlabs": {
           "Bahrain": 1
+        },
+        "assemblyai-u3-pro": {
+          "Bahrain": 1
+        },
+        "fun-asr": {
+          "Bahreïn": 1
+        },
+        "qwen3.5-omni-plus": {
+          "Bahrain": 1
         }
       }
     },
@@ -3054,7 +4029,14 @@
           "Because": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Because": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Because": 1
+        }
       }
     },
     {
@@ -3076,6 +4058,13 @@
         },
         "elevenlabs": {
           "Studies": 1,
+          "States": 1
+        },
+        "assemblyai-u3-pro": {
+          "States": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
           "States": 1
         }
       }
@@ -3100,6 +4089,13 @@
         },
         "elevenlabs": {
           "Chinese": 3
+        },
+        "assemblyai-u3-pro": {
+          "Chinese": 3
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Chinese": 3
         }
       }
     },
@@ -3114,7 +4110,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Without": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3134,6 +4135,13 @@
         },
         "elevenlabs": {
           "Muslim": 1
+        },
+        "assemblyai-u3-pro": {
+          "Muslim": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Muslim": 1
         }
       }
     },
@@ -3148,7 +4156,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3166,14 +4177,22 @@
         "alibaba": {},
         "elevenlabs": {
           "Evgeny": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Evgeny": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Foreign Minister Lavrov",
         "Foreign Minister Van",
         "Foreign Minister Van Eyck",
-        "Foreign Minister Vane"
+        "Foreign Minister Vane",
+        "Foreign Minister Vanee Soweraung",
+        "Foreign Ministry"
       ],
       "by_provider": {
         "mistral": {
@@ -3186,6 +4205,15 @@
         },
         "elevenlabs": {
           "Foreign Minister Van": 1
+        },
+        "assemblyai-u3-pro": {
+          "Foreign Ministry": 1,
+          "Foreign Minister Vanee Soweraung": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Foreign Ministry": 1,
+          "Foreign Minister Lavrov": 1
         }
       }
     },
@@ -3200,7 +4228,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Bonjour": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3214,7 +4247,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3228,12 +4264,18 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Merci": 5
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Conseil"
+        "Conseil",
+        "Council"
       ],
       "by_provider": {
         "mistral": {},
@@ -3242,7 +4284,14 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Council": 1
+        },
+        "fun-asr": {
+          "Conseil": 4
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3256,7 +4305,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Ils": 5
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3270,7 +4324,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Selon": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3284,7 +4343,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Beaucoup": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3302,7 +4366,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Leurs": 2
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3316,7 +4385,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Occident": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3330,7 +4404,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3344,7 +4421,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Quand": 3
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3358,11 +4440,15 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Addressing",
         "Autriche"
       ],
       "by_provider": {
@@ -3372,7 +4458,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Addressing": 1
+        }
       }
     },
     {
@@ -3386,7 +4477,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3400,7 +4494,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3414,7 +4511,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3428,7 +4528,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3442,11 +4545,15 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
+        "Thethisconflictbetweenrussiaandukraine",
         "États-Unis"
       ],
       "by_provider": {
@@ -3456,7 +4563,13 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Thethisconflictbetweenrussiaandukraine": 1,
+          "États-Unis": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3472,7 +4585,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3486,12 +4602,16 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Ceux"
+        "Ceux",
+        "Chose"
       ],
       "by_provider": {
         "mistral": {},
@@ -3500,7 +4620,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Chose": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3514,7 +4639,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3528,7 +4656,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Comment": 2
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3542,7 +4675,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3556,7 +4692,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3570,7 +4709,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3584,7 +4726,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3598,7 +4743,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3612,7 +4760,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3626,7 +4777,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3640,7 +4794,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Alors": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3654,7 +4813,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Vous": 4
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3668,7 +4832,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3682,7 +4849,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3696,7 +4866,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3710,7 +4883,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3724,7 +4900,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3738,7 +4917,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Guterres": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3752,7 +4936,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3766,7 +4953,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Depuis": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3780,7 +4972,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3794,7 +4989,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3808,7 +5006,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3822,7 +5023,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3836,12 +5040,16 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Quelles"
+        "Quelles",
+        "Quelque"
       ],
       "by_provider": {
         "mistral": {},
@@ -3850,7 +5058,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Quelque": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3864,7 +5077,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3878,7 +5094,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3892,7 +5111,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3906,7 +5128,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Oui": 2
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3925,6 +5152,13 @@
         },
         "elevenlabs": {
           "Witkoff": 1
+        },
+        "assemblyai-u3-pro": {
+          "Witkoff": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Whitcoff": 1
         }
       }
     },
@@ -3946,6 +5180,13 @@
         },
         "elevenlabs": {
           "Quds Al-Arabi": 1
+        },
+        "assemblyai-u3-pro": {
+          "Quds Al-Arabi": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Quds Al-Arabi": 1
         }
       }
     },
@@ -3960,7 +5201,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3974,7 +5218,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -3988,7 +5235,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Moyen-Orient": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4002,7 +5254,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Quelle": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4016,12 +5273,16 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Parce"
+        "Parce",
+        "Pourquoi"
       ],
       "by_provider": {
         "mistral": {},
@@ -4030,12 +5291,19 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Pourquoi": 2,
+          "Parce": 2
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Affaires"
+        "Affaires",
+        "Après"
       ],
       "by_provider": {
         "mistral": {},
@@ -4044,7 +5312,12 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Après": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4063,6 +5336,13 @@
         },
         "elevenlabs": {
           "Novosti": 1
+        },
+        "assemblyai-u3-pro": {
+          "Novosti": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Novosti": 1
         }
       }
     },
@@ -4077,7 +5357,10 @@
         },
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4093,7 +5376,10 @@
           "Stary Bits": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4107,7 +5393,10 @@
           "Senate": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4121,7 +5410,10 @@
           "Olimkova": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4137,7 +5429,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Seventeen": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4158,7 +5453,12 @@
         "elevenlabs": {
           "Investigators": 1,
           "Investigative Committee": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Investigators": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4174,7 +5474,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Nineteen": 3
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4188,7 +5491,10 @@
           "Belo Kurakino": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4206,7 +5512,10 @@
         },
         "elevenlabs": {
           "How": 2
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4224,7 +5533,12 @@
         },
         "elevenlabs": {
           "Despite": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Despite": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4238,7 +5552,10 @@
           "While": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4254,7 +5571,12 @@
         "alibaba": {
           "Basically": 2
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Basically": 2
+        }
       }
     },
     {
@@ -4268,7 +5590,12 @@
           "Unlike": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Unlike": 1
+        }
       }
     },
     {
@@ -4282,7 +5609,10 @@
           "Makes": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4296,7 +5626,10 @@
         "alibaba": {
           "Bartas": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4310,7 +5643,10 @@
         "alibaba": {
           "Written": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4324,7 +5660,10 @@
         "alibaba": {
           "Classrooms": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4338,7 +5677,10 @@
         "alibaba": {
           "Whoever": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4354,7 +5696,10 @@
         },
         "elevenlabs": {
           "Someone": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4370,7 +5715,10 @@
         },
         "elevenlabs": {
           "Let": 4
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4386,7 +5734,12 @@
         },
         "elevenlabs": {
           "Where": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Where": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4400,7 +5753,10 @@
         "alibaba": {
           "Armed Forces": 2
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4414,7 +5770,10 @@
         "alibaba": {
           "Prorizka Humanitarian Mission": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4428,7 +5787,14 @@
         "alibaba": {
           "Nazis": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Nazis": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Nazis": 1
+        }
       }
     },
     {
@@ -4442,7 +5808,10 @@
         "alibaba": {
           "Did": 2
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4456,12 +5825,16 @@
         "alibaba": {
           "Close": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
       "variants": [
-        "Literally"
+        "Literally",
+        "Littéralement"
       ],
       "by_provider": {
         "mistral": {},
@@ -4470,7 +5843,14 @@
         "alibaba": {},
         "elevenlabs": {
           "Literally": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Literally": 1
+        },
+        "fun-asr": {
+          "Littéralement": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4484,7 +5864,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Apparently": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4498,7 +5881,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Everyone": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4512,7 +5898,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Everything": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4526,7 +5915,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Lisichansk": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4540,7 +5932,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Plans": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4554,7 +5949,12 @@
         "alibaba": {},
         "elevenlabs": {
           "Resolution": 1
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Resolution": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4568,7 +5968,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Right": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4582,7 +5985,10 @@
         "alibaba": {},
         "elevenlabs": {
           "Shafah": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -4596,14 +6002,1195 @@
         "alibaba": {},
         "elevenlabs": {
           "Although": 1
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Finding"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Finding": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Details"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Details": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Territories"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Territories": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Bilohorivka"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Bilohorivka": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Pralinsk"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Pralinsk": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Industry"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Industry": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Correspondents Association"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Correspondents Association": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Correspondents Association": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Asked"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Asked": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Babilist"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Babilist": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Attacks"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Attacks": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Hagen Stroetters"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Hagen Stroetters": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Schaffer"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Schaffer": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Veuillezlefaire"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Veuillezlefaire": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Jevousremercie"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Jevousremercie": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Avant"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Avant": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Emblématique"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Emblématique": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Qatarar"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Qatarar": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Premiers"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Premiers": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Plusieurs"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Plusieurs": 2
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Ici"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Ici": 2
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Bienvenue"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Bienvenue": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Témoigne"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Témoigne": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Iither"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Iither": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Srebrenica"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Srebrenica": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Oniran"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Oniran": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Planned"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Planned": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Décidé"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Décidé": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Astoppedarbitrarilyarbitrarilyintheopenseasbyourformereuropeanpartners"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Astoppedarbitrarilyarbitrarilyintheopenseasbyourformereuropeanpartners": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Wehavearesolutiondraftthatwepreparetogetherwithchina"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Wehavearesolutiondraftthatwepreparetogetherwithchina": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Focus"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Focus": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Andtheysaid"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Andtheysaid": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Ithinkiknowtheanswerinadvance"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Ithinkiknowtheanswerinadvance": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Therewillbenouninvestigationofthisofthistragedybecauseofthesethingstowhichireferredinmypresentationthattheywillsay"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Therewillbenouninvestigationofthisofthistragedybecauseofthesethingstowhichireferredinmypresentationthattheywillsay": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Civilians"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Civilians": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Regulière"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Regulière": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Whoaredeliberatelytargetingcivilianobjectsbecausetheyarethis"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Whoaredeliberatelytargetingcivilianobjectsbecausetheyarethis": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Thisbecameakindofagamebecauseforthe"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Thisbecameakindofagamebecauseforthe": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Andthat"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Andthat": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Complètement"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Complètement": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Russiaussia"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Russiaussia": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Butthethealternativetothestrikes"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Butthethealternativetothestrikes": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Ihaveafollowuponstarstrike"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Ihaveafollowuponstarstrike": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Areyoureadytoinviteyoursecuritycouncilcolleaguestovisitstar"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Areyoureadytoinviteyoursecuritycouncilcolleaguestovisitstar": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Collaps"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Collaps": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Butyouknow"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Butyouknow": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Appeal"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Appeal": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "False Authority"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "False Authority": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Staged Event"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Staged Event": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Technique"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Technique": 5
+        }
+      }
+    },
+    {
+      "variants": [
+        "Effect"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Effect": 5
+        }
+      }
+    },
+    {
+      "variants": [
+        "Loaded Language"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Loaded Language": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Demonization"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Demonization": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Emotional Appeal"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Emotional Appeal": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Pathos"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Pathos": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Oversimplification"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Oversimplification": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Black"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Black": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Evidence"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Evidence": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Additional Protocols"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Additional Protocols": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Organization"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Organization": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Should"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Should": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "However"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "However": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Consider"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Consider": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "English"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "English": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Immediately"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Immediately": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Throughout"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Throughout": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Transitioning"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Transitioning": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Another"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Another": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Moderator"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Moderator": 3
         }
       }
     }
   ],
   "unique_numbers": [
     {
-      "number": "24",
-      "provider": "gemini",
+      "number": "03",
+      "provider": "qwen3.5-omni-plus",
+      "count": 7
+    },
+    {
+      "number": "02",
+      "provider": "qwen3.5-omni-plus",
+      "count": 6
+    },
+    {
+      "number": "01",
+      "provider": "qwen3.5-omni-plus",
+      "count": 4
+    },
+    {
+      "number": "00",
+      "provider": "qwen3.5-omni-plus",
+      "count": 3
+    },
+    {
+      "number": "47.786",
+      "provider": "qwen3.5-omni-plus",
       "count": 2
     }
   ]

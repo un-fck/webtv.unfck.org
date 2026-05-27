@@ -4,6 +4,7 @@ import os from "os";
 import path from "path";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
 import { downloadAudioToTemp, apiLanguage } from "./utils";
+import { transcribeViaFiletrans } from "./dashscope-asr";
 
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY!;
 // Use international endpoint; switch to dashscope.aliyuncs.com for China region
@@ -237,5 +238,28 @@ function makeAlibaba(model: string, name: string): TranscriptionProvider {
   };
 }
 
-export const alibaba = makeAlibaba("qwen3-asr-flash", "alibaba");
+// `alibaba` uses the async file-transcription interface (qwen3-asr-flash-filetrans)
+// so we get real sentence/word timestamps. The Qwen-ASR series does not support
+// diarization on any interface, so speaker_id is not returned (use fun-asr for that).
+export const alibaba: TranscriptionProvider = {
+  name: "alibaba",
+  capabilities: {
+    speakerIdentification: false,
+    paragraphSegmentation: false,
+    wordTimestamps: true,
+  },
+  async transcribe(audioUrl, opts) {
+    const lang = apiLanguage(opts?.language);
+    return transcribeViaFiletrans(
+      "alibaba",
+      "qwen3-asr-flash-filetrans",
+      { file_url: audioUrl },
+      { enable_words: true, ...(lang ? { language: lang } : {}) },
+      opts?.language || "en",
+    );
+  },
+};
+
+// qwen3.5-omni-plus stays on the synchronous multimodal/chat endpoint (it is a
+// chat model, not a file-transcription model).
 export const alibabaOmni = makeAlibaba("qwen3.5-omni-plus", "qwen3.5-omni-plus");

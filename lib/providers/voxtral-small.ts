@@ -9,7 +9,7 @@ const MODEL = "voxtral-small-latest";
 // not requests. A 10-min audio chunk alone can approach/exceed that, so we use
 // small chunks and serial requests to stay under budget; the 429 backoff paces
 // the rest. Raise both if your Mistral rate-limit tier is higher.
-const CHUNK_SECS = 240; // 4 min
+const CHUNK_SECS = 180; // 3 min (~150k audio tokens, fits a 200k tok/min tier)
 const PARALLEL = 1;
 
 // voxtral-small is an audio-*understanding* (chat) model, not a transcription

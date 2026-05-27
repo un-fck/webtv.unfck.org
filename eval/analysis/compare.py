@@ -21,7 +21,8 @@ from collections import Counter, defaultdict
 
 RAW = os.path.join(os.path.dirname(__file__), "..", "results", "raw")
 OUT = os.path.join(os.path.dirname(__file__), "out")
-PROVIDERS = ["assemblyai", "mistral", "gemini", "azure-openai", "alibaba", "elevenlabs"]
+PROVIDERS = ["assemblyai", "mistral", "gemini", "azure-openai", "alibaba", "elevenlabs",
+             "gemini-3.5-flash", "assemblyai-u3-pro", "fun-asr", "qwen3.5-omni-plus"]
 WINDOW_MS = 30_000
 # Only our four hand-picked videos (ignore older corpus results in raw/)
 ONLY_SYMBOLS = {"UN80-Apr06-keita", "S_PV.10156", "UN80-Apr29-timestamps", "Nebenzia-Starobelsk"}

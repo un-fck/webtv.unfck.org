@@ -1,0 +1,162 @@
+{
+  "unique_proper_nouns": [
+    {
+      "name": "General",
+      "provider": "assemblyai",
+      "count": 4,
+      "likely": "acoustic",
+      "at": "1:18"
+    },
+    {
+      "name": "General Assembly",
+      "provider": "assemblyai-u3-pro",
+      "count": 4,
+      "likely": "acoustic",
+      "at": "0:29"
+    },
+    {
+      "name": "Annual Report",
+      "provider": "assemblyai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "1:18"
+    }
+  ],
+  "name_table": [
+    {
+      "variants": [
+        "Arsenian"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Arsenian": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "President",
+        "President Pakistan",
+        "President Whereas",
+        "Presidential Note"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "President": 3,
+          "President Pakistan": 1,
+          "Presidential Note": 1,
+          "President Whereas": 1
+        },
+        "assemblyai-u3-pro": {
+          "President": 4,
+          "President Pakistan": 1,
+          "Presidential Note": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Annual Report"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Annual Report": 2
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Secretariat",
+        "Security Council",
+        "Security Council Affairs Division"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Security Council": 7,
+          "Secretariat": 1,
+          "Security Council Affairs Division": 1
+        },
+        "assemblyai-u3-pro": {
+          "Security Council": 7,
+          "Secretariat": 1,
+          "Security Council Affairs Division": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "General",
+        "General Assembly",
+        "General Assembly Resolution"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "General": 4,
+          "General Assembly Resolution": 1
+        },
+        "assemblyai-u3-pro": {
+          "General Assembly": 4,
+          "General Assembly Resolution": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Report"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Report": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "During"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "During": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Member States"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Member States": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Three"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Three": 1
+        },
+        "assemblyai-u3-pro": {}
+      }
+    },
+    {
+      "variants": [
+        "Paragraph"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "assemblyai-u3-pro": {
+          "Paragraph": 1
+        }
+      }
+    }
+  ],
+  "unique_numbers": []
+}

@@ -6,6 +6,20 @@
       "count": 2,
       "likely": "acoustic",
       "at": "0:00"
+    },
+    {
+      "name": "Ton",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "acoustic",
+      "at": "4:00"
+    },
+    {
+      "name": "Objectif",
+      "provider": "qwen3.5-omni-plus",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "4:00"
     }
   ],
   "name_table": [
@@ -23,7 +37,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -49,6 +66,15 @@
         },
         "elevenlabs": {
           "Merci Monsieur": 1,
+          "Merci": 1
+        },
+        "assemblyai-u3-pro": {
+          "Merci": 2
+        },
+        "fun-asr": {
+          "Merci": 1
+        },
+        "qwen3.5-omni-plus": {
           "Merci": 1
         }
       }
@@ -77,7 +103,44 @@
         },
         "elevenlabs": {
           "Président": 3
-        }
+        },
+        "assemblyai-u3-pro": {
+          "Président": 3
+        },
+        "fun-asr": {
+          "Président": 2
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Nous"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Nous": 8
+        },
+        "mistral": {
+          "Nous": 8
+        },
+        "gemini": {
+          "Nous": 8
+        },
+        "azure-openai": {
+          "Nous": 8
+        },
+        "alibaba": {
+          "Nous": 8
+        },
+        "elevenlabs": {
+          "Nous": 8
+        },
+        "assemblyai-u3-pro": {
+          "Nous": 7
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -100,7 +163,44 @@
         },
         "elevenlabs": {
           "Conformément": 1
-        }
+        },
+        "assemblyai-u3-pro": {},
+        "fun-asr": {
+          "Conformément": 1
+        },
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Notre"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Notre": 1
+        },
+        "mistral": {
+          "Notre": 1
+        },
+        "gemini": {
+          "Notre": 1
+        },
+        "azure-openai": {
+          "Notre": 1
+        },
+        "alibaba": {
+          "Notre": 1
+        },
+        "elevenlabs": {
+          "Notre": 1
+        },
+        "assemblyai-u3-pro": {
+          "Notre": 1
+        },
+        "fun-asr": {
+          "Notre": 1
+        },
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -126,6 +226,13 @@
         },
         "elevenlabs": {
           "Nations Unies": 1
+        },
+        "assemblyai-u3-pro": {
+          "Nations": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Nations Unies": 2
         }
       }
     },
@@ -141,7 +248,12 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Sécurité": 1
+        }
       }
     },
     {
@@ -156,7 +268,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -171,7 +286,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -186,7 +304,10 @@
         "gemini": {},
         "azure-openai": {},
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -205,7 +326,14 @@
         "alibaba": {
           "Ambassadeur": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Ambassadeur": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Ambassadeur": 1
+        }
       }
     },
     {
@@ -224,6 +352,13 @@
         },
         "elevenlabs": {
           "Secrétariat": 3
+        },
+        "assemblyai-u3-pro": {
+          "Secrétariat": 3
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Secrétariat": 1
         }
       }
     },
@@ -245,6 +380,13 @@
         },
         "elevenlabs": {
           "Division": 1
+        },
+        "assemblyai-u3-pro": {
+          "Division": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Division": 2
         }
       }
     },
@@ -260,7 +402,10 @@
           "Tournée": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -275,7 +420,10 @@
           "Cazachien": 1
         },
         "alibaba": {},
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
       }
     },
     {
@@ -290,7 +438,413 @@
         "alibaba": {
           "Organisation": 1
         },
-        "elevenlabs": {}
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Organisation": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Welcome"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Welcome": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Thank",
+        "Thèmes Principaux Abordés"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Thank": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Thèmes Principaux Abordés": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Permettant"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {
+          "Permettant": 1
+        },
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {}
+      }
+    },
+    {
+      "variants": [
+        "Voici"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Voici": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Contexte"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Contexte": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Objet"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Objet": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Sujet"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Sujet": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Présentation",
+        "Présenter"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Présentation": 1,
+          "Présenter": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Orateur"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Orateur": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Représentant"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Représentant": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Malgré"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Malgré": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Méthodologie"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Méthodologie": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Approche"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Approche": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Résultats"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Résultats": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Réussites"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Réussites": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Consensus"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Consensus": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Grâce"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Grâce": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Remerciements"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Remerciements": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Preuve"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Preuve": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Ton"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Ton": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Objectif"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Objectif": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Diplomatique"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {},
+        "assemblyai-u3-pro": {},
+        "fun-asr": {},
+        "qwen3.5-omni-plus": {
+          "Diplomatique": 1
+        }
       }
     }
   ],

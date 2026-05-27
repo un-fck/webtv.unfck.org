@@ -4,7 +4,10 @@
     "gemini",
     "azure-openai",
     "alibaba",
-    "elevenlabs"
+    "elevenlabs",
+    "assemblyai-u3-pro",
+    "fun-asr",
+    "qwen3.5-omni-plus"
   ],
   "signals": {
     "mistral": {
@@ -81,6 +84,52 @@
         "cyrillic": 3.6
       },
       "off_script_pct": 96.4
+    },
+    "assemblyai-u3-pro": {
+      "utt_count": 50,
+      "char_count": 29052,
+      "duration_min": 40.0,
+      "last_end_min": 39.9,
+      "chars_per_min": 726.0,
+      "coverage_pct": 95.2,
+      "fffd": 1,
+      "repetition": 0.0,
+      "script_mix": {
+        "cyrillic": 99.9,
+        "latin": 0.1
+      },
+      "off_script_pct": 0.1
+    },
+    "fun-asr": {
+      "utt_count": 331,
+      "char_count": 27614,
+      "duration_min": 40.0,
+      "last_end_min": 40.0,
+      "chars_per_min": 691.0,
+      "coverage_pct": 87.8,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cyrillic": 60.1,
+        "latin": 39.4,
+        "cjk": 0.4
+      },
+      "off_script_pct": 39.9
+    },
+    "qwen3.5-omni-plus": {
+      "utt_count": 10,
+      "char_count": 27601,
+      "duration_min": 40.0,
+      "last_end_min": 40.0,
+      "chars_per_min": 690.0,
+      "coverage_pct": 100.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 92.4,
+        "cyrillic": 7.6
+      },
+      "off_script_pct": 92.4
     }
   }
 }

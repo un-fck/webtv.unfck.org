@@ -1,0 +1,36 @@
+{
+  "providers": [
+    "assemblyai",
+    "assemblyai-u3-pro"
+  ],
+  "signals": {
+    "assemblyai": {
+      "utt_count": 113,
+      "char_count": 31389,
+      "duration_min": 40.0,
+      "last_end_min": 39.9,
+      "chars_per_min": 785.0,
+      "coverage_pct": 95.9,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": null
+    },
+    "assemblyai-u3-pro": {
+      "utt_count": 62,
+      "char_count": 31800,
+      "duration_min": 40.0,
+      "last_end_min": 39.9,
+      "chars_per_min": 795.0,
+      "coverage_pct": 97.3,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": null
+    }
+  }
+}
