@@ -1,0 +1,96 @@
+{
+  "providers": [
+    "assemblyai",
+    "mistral",
+    "gemini",
+    "azure-openai",
+    "alibaba",
+    "elevenlabs"
+  ],
+  "signals": {
+    "assemblyai": {
+      "utt_count": 24,
+      "char_count": 145424,
+      "duration_min": 171.1,
+      "last_end_min": 171.0,
+      "chars_per_min": 850.0,
+      "coverage_pct": 99.1,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "mistral": {
+      "utt_count": 1609,
+      "char_count": 146263,
+      "duration_min": 170.0,
+      "last_end_min": 171.0,
+      "chars_per_min": 860.0,
+      "coverage_pct": 83.3,
+      "fffd": 2,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "gemini": {
+      "utt_count": 1766,
+      "char_count": 156937,
+      "duration_min": 171.1,
+      "last_end_min": 170.7,
+      "chars_per_min": 917.0,
+      "coverage_pct": 69.3,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "azure-openai": {
+      "utt_count": 1277,
+      "char_count": 150543,
+      "duration_min": 171.0,
+      "last_end_min": 171.0,
+      "chars_per_min": 881.0,
+      "coverage_pct": 86.9,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "alibaba": {
+      "utt_count": 43,
+      "char_count": 146738,
+      "duration_min": 172.0,
+      "last_end_min": 172.0,
+      "chars_per_min": 853.0,
+      "coverage_pct": 100.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "elevenlabs": {
+      "utt_count": 23,
+      "char_count": 152064,
+      "duration_min": 171.0,
+      "last_end_min": 171.0,
+      "chars_per_min": 889.0,
+      "coverage_pct": 99.6,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "providers": [
+    "mistral",
+    "gemini",
+    "azure-openai",
+    "alibaba",
+    "elevenlabs"
+  ],
+  "signals": {
+    "mistral": {
+      "utt_count": 2975,
+      "char_count": 133945,
+      "duration_min": 170.0,
+      "last_end_min": 170.9,
+      "chars_per_min": 788.0,
+      "coverage_pct": 86.7,
+      "fffd": 0,
+      "repetition": 0.039,
+      "script_mix": {
+        "cyrillic": 100.0,
+        "latin": 0.0
+      },
+      "off_script_pct": 0.0
+    },
+    "gemini": {
+      "utt_count": 1681,
+      "char_count": 130972,
+      "duration_min": 171.1,
+      "last_end_min": 170.8,
+      "chars_per_min": 766.0,
+      "coverage_pct": 72.7,
+      "fffd": 0,
+      "repetition": 0.03,
+      "script_mix": {
+        "cyrillic": 100.0,
+        "latin": 0.0
+      },
+      "off_script_pct": 0.0
+    },
+    "azure-openai": {
+      "utt_count": 1180,
+      "char_count": 132696,
+      "duration_min": 171.0,
+      "last_end_min": 171.0,
+      "chars_per_min": 776.0,
+      "coverage_pct": 87.7,
+      "fffd": 0,
+      "repetition": 0.002,
+      "script_mix": {
+        "latin": 8.1,
+        "cyrillic": 91.9
+      },
+      "off_script_pct": 8.1
+    },
+    "alibaba": {
+      "utt_count": 43,
+      "char_count": 128791,
+      "duration_min": 172.0,
+      "last_end_min": 172.0,
+      "chars_per_min": 749.0,
+      "coverage_pct": 100.0,
+      "fffd": 0,
+      "repetition": 0.044,
+      "script_mix": {
+        "cyrillic": 99.9,
+        "latin": 0.1
+      },
+      "off_script_pct": 0.1
+    },
+    "elevenlabs": {
+      "utt_count": 15,
+      "char_count": 131831,
+      "duration_min": 171.0,
+      "last_end_min": 171.0,
+      "chars_per_min": 771.0,
+      "coverage_pct": 99.7,
+      "fffd": 0,
+      "repetition": 0.262,
+      "script_mix": {
+        "latin": 0.1,
+        "cyrillic": 99.9
+      },
+      "off_script_pct": 0.1
+    }
+  }
+}

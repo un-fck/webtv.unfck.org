@@ -1,0 +1,21 @@
+{
+  "unique_proper_nouns": [],
+  "name_table": [],
+  "unique_numbers": [
+    {
+      "number": "2.0",
+      "provider": "gemini",
+      "count": 6
+    },
+    {
+      "number": "٨٠",
+      "provider": "assemblyai",
+      "count": 2
+    },
+    {
+      "number": "2028",
+      "provider": "azure-openai",
+      "count": 2
+    }
+  ]
+}

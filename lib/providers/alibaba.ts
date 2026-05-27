@@ -8,7 +8,6 @@ import { downloadAudioToTemp, apiLanguage } from "./utils";
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY!;
 // Use international endpoint; switch to dashscope.aliyuncs.com for China region
 const BASE = "https://dashscope-intl.aliyuncs.com";
-const MODEL = "qwen3-asr-flash";
 const MAX_CHUNK_SECS = 240; // 4 min chunks (API limit is ~5 min)
 const PARALLEL_CHUNKS = 3;
 
@@ -35,8 +34,9 @@ interface AsrSentence {
   speaker_id?: string;
 }
 
-/** Call Qwen3-ASR-Flash with base64 audio via the multimodal generation endpoint */
+/** Call a DashScope multimodal model with base64 audio via the generation endpoint */
 async function transcribeChunk(
+  model: string,
   audioPath: string,
   language?: string,
 ): Promise<AsrSentence[]> {
@@ -45,7 +45,7 @@ async function transcribeChunk(
   const dataUri = `data:audio/mp3;base64,${base64}`;
 
   const body = {
-    model: MODEL,
+    model,
     input: {
       messages: [
         { role: "system", content: [{ text: "" }] },
@@ -139,95 +139,103 @@ async function parallelMap<T, R>(
   return results;
 }
 
-export const alibaba: TranscriptionProvider = {
-  name: "alibaba",
-  capabilities: {
-    speakerIdentification: false,
-    paragraphSegmentation: false,
-    wordTimestamps: false,
-  },
+/**
+ * DashScope multimodal-generation provider, parameterized by model. Used for
+ * qwen3-asr-flash (purpose-built ASR, returns sentences with timestamps) and
+ * qwen3.5-omni-plus (omni chat model — may return only plain text, which the
+ * transcribeChunk parser falls back to as a single chunk-spanning utterance).
+ */
+function makeAlibaba(model: string, name: string): TranscriptionProvider {
+  return {
+    name,
+    capabilities: {
+      speakerIdentification: false,
+      paragraphSegmentation: false,
+      wordTimestamps: false,
+    },
 
-  async transcribe(audioUrl, opts) {
-    const lang = opts?.language;
-    const apiLang = apiLanguage(opts?.language);
-    const ownedPath = !opts?.audioFilePath;
-    const filePath =
-      opts?.audioFilePath || (await downloadAudioToTemp(audioUrl, "Alibaba"));
+    async transcribe(audioUrl, opts) {
+      const lang = opts?.language;
+      const apiLang = apiLanguage(opts?.language);
+      const ownedPath = !opts?.audioFilePath;
+      const filePath =
+        opts?.audioFilePath || (await downloadAudioToTemp(audioUrl, name));
 
-    try {
-      console.log(`  [Alibaba] Transcribing with ${MODEL}...`);
-      const t0 = Date.now();
-
-      // Split into chunks for the 5-min API limit
-      const chunks = splitAudio(filePath, MAX_CHUNK_SECS);
-      console.log(
-        `  [Alibaba] Split into ${chunks.length} chunk(s), transcribing ${PARALLEL_CHUNKS} at a time...`,
-      );
-
-      const chunkResults = await parallelMap(
-        chunks,
-        PARALLEL_CHUNKS,
-        async (chunk, i) => {
-          const tChunk = Date.now();
-          const sentences = await transcribeChunk(chunk.path, apiLang);
-          console.log(
-            `  [Alibaba] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (${sentences.length} sentences)`,
-          );
-          try {
-            fs.unlinkSync(chunk.path);
-          } catch {}
-          return { sentences, offsetMs: chunk.offsetMs };
-        },
-      );
-
-      // Clean up chunk directory
       try {
-        const chunkDir = path.dirname(chunks[0].path);
-        fs.rmdirSync(chunkDir);
-      } catch {}
+        console.log(`  [${name}] Transcribing with ${model}...`);
+        const t0 = Date.now();
 
-      // Reassemble
-      const utterances: NormalizedTranscript["utterances"] = [];
-      const fullTextParts: string[] = [];
+        const chunks = splitAudio(filePath, MAX_CHUNK_SECS);
+        console.log(
+          `  [${name}] Split into ${chunks.length} chunk(s), transcribing ${PARALLEL_CHUNKS} at a time...`,
+        );
 
-      for (const { sentences, offsetMs } of chunkResults) {
-        for (const s of sentences) {
-          const text = s.text.trim();
-          if (!text) continue;
-          const start = s.begin_time + offsetMs;
-          // Plain-text fallback (alibaba.ts transcribeChunk) emits a single
-          // sentence with begin_time/end_time = 0; clamp its span to the whole
-          // chunk so it doesn't render as a zero-width unit that seeks to 0.
-          const end =
-            s.end_time > s.begin_time
-              ? s.end_time + offsetMs
-              : offsetMs + MAX_CHUNK_SECS * 1000;
-          utterances.push({ speaker: s.speaker_id ?? "0", start, end, text });
-          fullTextParts.push(text);
+        const chunkResults = await parallelMap(
+          chunks,
+          PARALLEL_CHUNKS,
+          async (chunk, i) => {
+            const tChunk = Date.now();
+            const sentences = await transcribeChunk(model, chunk.path, apiLang);
+            console.log(
+              `  [${name}] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (${sentences.length} sentences)`,
+            );
+            try {
+              fs.unlinkSync(chunk.path);
+            } catch {}
+            return { sentences, offsetMs: chunk.offsetMs };
+          },
+        );
+
+        try {
+          const chunkDir = path.dirname(chunks[0].path);
+          fs.rmdirSync(chunkDir);
+        } catch {}
+
+        const utterances: NormalizedTranscript["utterances"] = [];
+        const fullTextParts: string[] = [];
+
+        for (const { sentences, offsetMs } of chunkResults) {
+          for (const s of sentences) {
+            const text = s.text.trim();
+            if (!text) continue;
+            const start = s.begin_time + offsetMs;
+            // Plain-text fallback emits a single sentence with
+            // begin_time/end_time = 0; clamp its span to the whole chunk so it
+            // doesn't render as a zero-width unit that seeks to 0.
+            const end =
+              s.end_time > s.begin_time
+                ? s.end_time + offsetMs
+                : offsetMs + MAX_CHUNK_SECS * 1000;
+            utterances.push({ speaker: s.speaker_id ?? "0", start, end, text });
+            fullTextParts.push(text);
+          }
+        }
+
+        const durationMs =
+          utterances.length > 0 ? utterances[utterances.length - 1].end : 0;
+
+        console.log(
+          `  [${name}] Done in ${((Date.now() - t0) / 1000).toFixed(1)}s — ${utterances.length} utterances, ${(durationMs / 1000 / 60).toFixed(0)}min audio`,
+        );
+
+        return {
+          provider: name,
+          language: lang || "en",
+          fullText: fullTextParts.join(" "),
+          utterances,
+          durationMs,
+          raw: { chunkResults },
+        } satisfies NormalizedTranscript;
+      } finally {
+        if (ownedPath) {
+          try {
+            fs.unlinkSync(filePath);
+          } catch {}
         }
       }
+    },
+  };
+}
 
-      const durationMs =
-        utterances.length > 0 ? utterances[utterances.length - 1].end : 0;
-
-      console.log(
-        `  [Alibaba] Done in ${((Date.now() - t0) / 1000).toFixed(1)}s — ${utterances.length} utterances, ${(durationMs / 1000 / 60).toFixed(0)}min audio`,
-      );
-
-      return {
-        provider: "alibaba",
-        language: lang || "en",
-        fullText: fullTextParts.join(" "),
-        utterances,
-        durationMs,
-        raw: { chunkResults },
-      } satisfies NormalizedTranscript;
-    } finally {
-      if (ownedPath) {
-        try {
-          fs.unlinkSync(filePath);
-        } catch {}
-      }
-    }
-  },
-};
+export const alibaba = makeAlibaba("qwen3-asr-flash", "alibaba");
+export const alibabaOmni = makeAlibaba("qwen3.5-omni-plus", "qwen3.5-omni-plus");

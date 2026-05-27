@@ -1,0 +1,214 @@
+{
+  "unique_proper_nouns": [],
+  "name_table": [
+    {
+      "variants": [
+        "Secretaría",
+        "Seguridad"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Seguridad": 4,
+          "Secretaría": 3
+        },
+        "mistral": {
+          "Seguridad": 4,
+          "Secretaría": 3
+        },
+        "gemini": {
+          "Seguridad": 4,
+          "Secretaría": 4
+        },
+        "azure-openai": {
+          "Seguridad": 4,
+          "Secretaría": 3
+        },
+        "alibaba": {
+          "Seguridad": 4,
+          "Secretaría": 3
+        },
+        "elevenlabs": {
+          "Seguridad": 4,
+          "Secretaría": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Asamblea",
+        "Asamblea General"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Asamblea General": 3,
+          "Asamblea": 3
+        },
+        "mistral": {
+          "Asamblea General": 3,
+          "Asamblea": 3
+        },
+        "gemini": {
+          "Asamblea General": 3,
+          "Asamblea": 3
+        },
+        "azure-openai": {
+          "Asamblea General": 3,
+          "Asamblea": 3
+        },
+        "alibaba": {
+          "Asamblea General": 3,
+          "Asamblea": 3
+        },
+        "elevenlabs": {
+          "Asamblea General": 3,
+          "Asamblea": 3
+        }
+      }
+    },
+    {
+      "variants": [
+        "Presidencia",
+        "Presidente"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Presidente": 3,
+          "Presidencia": 2
+        },
+        "mistral": {
+          "Presidente": 1
+        },
+        "gemini": {
+          "Presidente": 1
+        },
+        "azure-openai": {
+          "Presidente": 3,
+          "Presidencia": 2
+        },
+        "alibaba": {
+          "Presidente": 4,
+          "Presidencia": 2
+        },
+        "elevenlabs": {
+          "Presidente": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Estados",
+        "Estados Miembros"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Estados": 1
+        },
+        "mistral": {
+          "Estados": 1
+        },
+        "gemini": {},
+        "azure-openai": {
+          "Estados": 1
+        },
+        "alibaba": {
+          "Estados Miembros": 1
+        },
+        "elevenlabs": {
+          "Estados": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "División"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "División": 2
+        },
+        "mistral": {
+          "División": 2
+        },
+        "gemini": {},
+        "azure-openai": {
+          "División": 1
+        },
+        "alibaba": {
+          "División": 2
+        },
+        "elevenlabs": {
+          "División": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Asuntos"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Asuntos": 2
+        },
+        "mistral": {
+          "Asuntos": 2
+        },
+        "gemini": {},
+        "azure-openai": {
+          "Asuntos": 1
+        },
+        "alibaba": {
+          "Asuntos": 2
+        },
+        "elevenlabs": {
+          "Asuntos": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Pronto"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {
+          "Pronto": 1
+        },
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Complicaron"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Complicaron": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Procuramos"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Procuramos": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    }
+  ],
+  "unique_numbers": []
+}

@@ -1,0 +1,103 @@
+{
+  "providers": [
+    "assemblyai",
+    "mistral",
+    "gemini",
+    "azure-openai",
+    "alibaba",
+    "elevenlabs"
+  ],
+  "signals": {
+    "assemblyai": {
+      "utt_count": 67,
+      "char_count": 37241,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 217.0,
+      "coverage_pct": 99.3,
+      "fffd": 0,
+      "repetition": 0.004,
+      "script_mix": {
+        "cjk": 98.4,
+        "latin": 1.6
+      },
+      "off_script_pct": 1.6
+    },
+    "mistral": {
+      "utt_count": 1041,
+      "char_count": 40608,
+      "duration_min": 170.0,
+      "last_end_min": 171.2,
+      "chars_per_min": 239.0,
+      "coverage_pct": 85.4,
+      "fffd": 3606,
+      "repetition": 0.006,
+      "script_mix": {
+        "cjk": 98.2,
+        "latin": 1.8
+      },
+      "off_script_pct": 1.8
+    },
+    "gemini": {
+      "utt_count": 1556,
+      "char_count": 42162,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 246.0,
+      "coverage_pct": 57.9,
+      "fffd": 0,
+      "repetition": 0.005,
+      "script_mix": {
+        "cjk": 98.1,
+        "latin": 1.9
+      },
+      "off_script_pct": 1.9
+    },
+    "azure-openai": {
+      "utt_count": 766,
+      "char_count": 44943,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 262.0,
+      "coverage_pct": 91.3,
+      "fffd": 0,
+      "repetition": 0.004,
+      "script_mix": {
+        "latin": 4.8,
+        "cjk": 95.1,
+        "cyrillic": 0.0
+      },
+      "off_script_pct": 4.9
+    },
+    "alibaba": {
+      "utt_count": 43,
+      "char_count": 41605,
+      "duration_min": 172.0,
+      "last_end_min": 172.0,
+      "chars_per_min": 242.0,
+      "coverage_pct": 100.0,
+      "fffd": 0,
+      "repetition": 0.035,
+      "script_mix": {
+        "latin": 2.0,
+        "cjk": 98.0
+      },
+      "off_script_pct": 2.0
+    },
+    "elevenlabs": {
+      "utt_count": 23,
+      "char_count": 42048,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 246.0,
+      "coverage_pct": 99.6,
+      "fffd": 0,
+      "repetition": 0.031,
+      "script_mix": {
+        "cjk": 97.9,
+        "latin": 2.1
+      },
+      "off_script_pct": 2.1
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "providers": [
+    "assemblyai",
+    "mistral",
+    "gemini",
+    "azure-openai",
+    "alibaba",
+    "elevenlabs"
+  ],
+  "signals": {
+    "assemblyai": {
+      "utt_count": 25,
+      "char_count": 31344,
+      "duration_min": 40.0,
+      "last_end_min": 39.9,
+      "chars_per_min": 784.0,
+      "coverage_pct": 98.3,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "mistral": {
+      "utt_count": 435,
+      "char_count": 32438,
+      "duration_min": 30.0,
+      "last_end_min": 39.9,
+      "chars_per_min": 1081.0,
+      "coverage_pct": 115.3,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 96.8,
+        "cyrillic": 3.2
+      },
+      "off_script_pct": 3.2
+    },
+    "gemini": {
+      "utt_count": 642,
+      "char_count": 30329,
+      "duration_min": 40.0,
+      "last_end_min": 37.5,
+      "chars_per_min": 758.0,
+      "coverage_pct": 69.8,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "azure-openai": {
+      "utt_count": 318,
+      "char_count": 34869,
+      "duration_min": 39.9,
+      "last_end_min": 39.9,
+      "chars_per_min": 873.0,
+      "coverage_pct": 91.9,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 96.0,
+        "cyrillic": 4.0
+      },
+      "off_script_pct": 4.0
+    },
+    "alibaba": {
+      "utt_count": 10,
+      "char_count": 32198,
+      "duration_min": 40.0,
+      "last_end_min": 40.0,
+      "chars_per_min": 805.0,
+      "coverage_pct": 100.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 99.8,
+        "cyrillic": 0.2
+      },
+      "off_script_pct": 0.2
+    },
+    "elevenlabs": {
+      "utt_count": 45,
+      "char_count": 34882,
+      "duration_min": 40.0,
+      "last_end_min": 40.0,
+      "chars_per_min": 873.0,
+      "coverage_pct": 97.9,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    }
+  }
+}

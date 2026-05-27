@@ -1,0 +1,314 @@
+{
+  "unique_proper_nouns": [
+    {
+      "name": "Women",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "57:25"
+    }
+  ],
+  "name_table": [
+    {
+      "variants": [
+        "Uruguay"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Uruguay": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Power Point",
+        "Pro Unemployment Ops"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Pro Unemployment Ops": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {
+          "Power Point": 1
+        },
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Accelerator"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Accelerator": 1
+        },
+        "mistral": {
+          "Accelerator": 1
+        },
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {
+          "Accelerator": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Benelux"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {
+          "Benelux": 1
+        },
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Thank"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Thank": 7
+        },
+        "alibaba": {
+          "Thank": 6
+        },
+        "elevenlabs": {
+          "Thank": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "Deputy Secretary General"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Deputy Secretary General": 1
+        },
+        "alibaba": {
+          "Deputy Secretary General": 1
+        },
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "United",
+        "United Nations"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "United Nations": 1
+        },
+        "alibaba": {
+          "United": 1
+        },
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Women"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Women": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Gracias"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Gracias": 1
+        },
+        "alibaba": {
+          "Gracias": 1
+        },
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Madam President",
+        "Madame President"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Madam President": 2,
+          "Madame President": 1
+        },
+        "alibaba": {
+          "Madam President": 1
+        },
+        "elevenlabs": {
+          "Madam President": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Executive Committees"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Executive Committees": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Excellencies"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Excellencies": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {
+          "Excellencies": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Distinguished",
+        "Distinguished Delegates",
+        "Distinguished Representative"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Distinguished Delegates": 1,
+          "Distinguished": 1,
+          "Distinguished Representative": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Newgal"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Newgal": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "India"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "India": 1
+        },
+        "alibaba": {
+          "India": 1
+        },
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "President"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "President": 2
+        },
+        "alibaba": {
+          "President": 2
+        },
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "All Women"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "All Women": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    }
+  ],
+  "unique_numbers": [
+    {
+      "number": "2.0",
+      "provider": "gemini",
+      "count": 13
+    },
+    {
+      "number": "8.0",
+      "provider": "gemini",
+      "count": 4
+    }
+  ]
+}

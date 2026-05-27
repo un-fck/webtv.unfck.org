@@ -1,0 +1,836 @@
+{
+  "unique_proper_nouns": [
+    {
+      "name": "After",
+      "provider": "azure-openai",
+      "count": 3,
+      "likely": "hallucination",
+      "at": "8:20"
+    },
+    {
+      "name": "Blagodarju",
+      "provider": "azure-openai",
+      "count": 3,
+      "likely": "hallucination",
+      "at": "121:55"
+    },
+    {
+      "name": "Your Excellency",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "0:33"
+    },
+    {
+      "name": "Indonesia",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "118:43"
+    },
+    {
+      "name": "Regional",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "84:07"
+    },
+    {
+      "name": "Unfa",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "11:18"
+    },
+    {
+      "name": "What",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "71:28"
+    },
+    {
+      "name": "India",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "121:45"
+    },
+    {
+      "name": "Unops",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "11:18"
+    },
+    {
+      "name": "Today",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "0:33"
+    },
+    {
+      "name": "Then",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "8:37"
+    },
+    {
+      "name": "General Assembly",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "0:26"
+    },
+    {
+      "name": "Slovo",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "118:43"
+    },
+    {
+      "name": "Zambia",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "127:41"
+    },
+    {
+      "name": "State Parties",
+      "provider": "azure-openai",
+      "count": 2,
+      "likely": "hallucination",
+      "at": "82:16"
+    }
+  ],
+  "name_table": [
+    {
+      "variants": [
+        "The Gas Rider"
+      ],
+      "by_provider": {
+        "mistral": {
+          "The Gas Rider": 1
+        },
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Delegate"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {
+          "Delegate": 1
+        },
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Chairman"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Chairman": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "General Assembly",
+        "General Secretary"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "General Assembly": 2,
+          "General Secretary": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Your Excellency"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Your Excellency": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Today"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Today": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Gaya Ryders"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Gaya Ryders": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Blagodarju",
+        "Blagodaryu"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Blagodaryu": 1,
+          "Blagodarju": 3
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "After"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "After": 3
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Formulations"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Formulations": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "There"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "There": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Then"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Then": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Unops"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Unops": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Unfa"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Unfa": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Thank"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Thank": 10
+        },
+        "alibaba": {
+          "Thank": 3
+        },
+        "elevenlabs": {
+          "Thank": 2
+        }
+      }
+    },
+    {
+      "variants": [
+        "President"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "President": 5
+        },
+        "alibaba": {
+          "President": 2
+        },
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Situation"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Situation": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Strategic"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Strategic": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Deputy",
+        "Deputy Secretary-General"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Deputy": 1,
+          "Deputy Secretary-General": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Moreover"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Moreover": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Minimi Mohammed"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Minimi Mohammed": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Secretariat",
+        "Secretary-General Guterres"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Secretary-General Guterres": 1,
+          "Secretariat": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Ali Rezaei"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Ali Rezaei": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Consultations"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Consultations": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "What"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "What": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "State Parties"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "State Parties": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Centres"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Centres": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Expertise"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Expertise": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Regional"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Regional": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "First Deputy General Director-General"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "First Deputy General Director-General": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Packets"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Packets": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Uruguay"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Uruguay": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Group"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Group": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "China"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "China": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Slovo"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Slovo": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Dominicanskaya Respublika",
+        "Dominicanskoy Respubliki"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Dominicanskoy Respubliki": 1,
+          "Dominicanskaya Respublika": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Columbia"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Columbia": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Indonesia",
+        "Indonézia"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Indonesia": 2,
+          "Indonézia": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Bolshoje"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Bolshoje": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Kolumbii"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Kolumbii": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Posle"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Posle": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "India"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "India": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Additional"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Additional": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Pakistan"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Pakistan": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Zambia"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Zambia": 2
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Analogous"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Analogous": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Republika Koreja"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Republika Koreja": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Malaysia"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Malaysia": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Priznatjelna"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Priznatjelna": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Marketplace"
+      ],
+      "by_provider": {
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Marketplace": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    }
+  ],
+  "unique_numbers": [
+    {
+      "number": "8.0",
+      "provider": "gemini",
+      "count": 3
+    }
+  ]
+}

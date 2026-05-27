@@ -1,0 +1,409 @@
+{
+  "unique_proper_nouns": [
+    {
+      "name": "General",
+      "provider": "assemblyai",
+      "count": 5,
+      "likely": "acoustic",
+      "at": "0:04"
+    }
+  ],
+  "name_table": [
+    {
+      "variants": [
+        "Secretariat",
+        "Security Council",
+        "Security Council Affairs Division"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Security Council": 10,
+          "Secretariat": 3,
+          "Security Council Affairs Division": 1
+        },
+        "mistral": {
+          "Security Council": 9,
+          "Secretariat": 3,
+          "Security Council Affairs Division": 1
+        },
+        "gemini": {
+          "Security Council": 10,
+          "Secretariat": 3,
+          "Security Council Affairs Division": 1
+        },
+        "azure-openai": {
+          "Security Council": 9,
+          "Secretariat": 3,
+          "Security Council Affairs Division": 1
+        },
+        "alibaba": {
+          "Security Council": 10,
+          "Secretariat": 3,
+          "Security Council Affairs Division": 1
+        },
+        "elevenlabs": {
+          "Security Council": 10,
+          "Secretariat": 2,
+          "Security Council Affairs Division": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Order"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Order": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "General",
+        "General Assembly",
+        "General Assembly Resolution"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "General Assembly": 1,
+          "General": 5,
+          "General Assembly Resolution": 1
+        },
+        "mistral": {
+          "General Assembly": 6,
+          "General Assembly Resolution": 1
+        },
+        "gemini": {
+          "General Assembly": 7
+        },
+        "azure-openai": {
+          "General Assembly": 6,
+          "General Assembly Resolution": 1
+        },
+        "alibaba": {
+          "General Assembly": 7
+        },
+        "elevenlabs": {
+          "General Assembly": 6,
+          "General Assembly Resolution": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "The Council",
+        "The Security Council"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "The Security Council": 2,
+          "The Council": 1
+        },
+        "mistral": {
+          "The Security Council": 3,
+          "The Council": 1
+        },
+        "gemini": {
+          "The Security Council": 2,
+          "The Council": 1
+        },
+        "azure-openai": {
+          "The Security Council": 3,
+          "The Council": 1
+        },
+        "alibaba": {
+          "The Security Council": 2,
+          "The Council": 1
+        },
+        "elevenlabs": {
+          "The Security Council": 2,
+          "The Council": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "President",
+        "President Pakistan",
+        "President Vire",
+        "Presidential Note"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "President": 5,
+          "President Pakistan": 1,
+          "Presidential Note": 1,
+          "President Vire": 1
+        },
+        "mistral": {
+          "President": 6,
+          "President Pakistan": 1,
+          "Presidential Note": 1
+        },
+        "gemini": {
+          "President": 7
+        },
+        "azure-openai": {
+          "President": 6,
+          "President Pakistan": 1,
+          "Presidential Note": 1
+        },
+        "alibaba": {
+          "President": 6,
+          "President Pakistan": 1,
+          "Presidential Note": 1
+        },
+        "elevenlabs": {
+          "President": 6,
+          "Presidential Note": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Representative"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Representative": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "State"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "State": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "During"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "During": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Member States"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Member States": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {
+          "Member States": 1
+        },
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Report"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Report": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Excellency"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Excellency": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Annual Report"
+      ],
+      "by_provider": {
+        "assemblyai": {
+          "Annual Report": 1
+        },
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Paragraph"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {
+          "Paragraph": 1
+        },
+        "gemini": {},
+        "azure-openai": {
+          "Paragraph": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {
+          "Paragraph": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Accountability"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {
+          "Accountability": 1
+        },
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Your Excellency"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {
+          "Your Excellency": 1
+        },
+        "gemini": {
+          "Your Excellency": 1
+        },
+        "azure-openai": {
+          "Your Excellency": 1
+        },
+        "alibaba": {
+          "Your Excellency": 1
+        },
+        "elevenlabs": {
+          "Your Excellency": 1
+        }
+      }
+    },
+    {
+      "variants": [
+        "Consideration"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {
+          "Consideration": 1
+        },
+        "azure-openai": {},
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Supporting"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Supporting": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Further"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {
+          "Further": 1
+        },
+        "alibaba": {},
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Regions"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {
+          "Regions": 1
+        },
+        "elevenlabs": {}
+      }
+    },
+    {
+      "variants": [
+        "Transparency"
+      ],
+      "by_provider": {
+        "assemblyai": {},
+        "mistral": {},
+        "gemini": {},
+        "azure-openai": {},
+        "alibaba": {
+          "Transparency": 1
+        },
+        "elevenlabs": {}
+      }
+    }
+  ],
+  "unique_numbers": []
+}

@@ -1,0 +1,99 @@
+{
+  "providers": [
+    "assemblyai",
+    "mistral",
+    "gemini",
+    "azure-openai",
+    "alibaba",
+    "elevenlabs"
+  ],
+  "signals": {
+    "assemblyai": {
+      "utt_count": 1,
+      "char_count": 6328,
+      "duration_min": 9.2,
+      "last_end_min": 9.1,
+      "chars_per_min": 688.0,
+      "coverage_pct": 97.5,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "mistral": {
+      "utt_count": 66,
+      "char_count": 6360,
+      "duration_min": 9.1,
+      "last_end_min": 9.1,
+      "chars_per_min": 700.0,
+      "coverage_pct": 81.0,
+      "fffd": 2,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 0.3,
+        "latin": 99.7
+      },
+      "off_script_pct": 0.3
+    },
+    "gemini": {
+      "utt_count": 48,
+      "char_count": 6336,
+      "duration_min": 9.2,
+      "last_end_min": 6.9,
+      "chars_per_min": 689.0,
+      "coverage_pct": 67.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "azure-openai": {
+      "utt_count": 66,
+      "char_count": 6424,
+      "duration_min": 9.1,
+      "last_end_min": 9.1,
+      "chars_per_min": 707.0,
+      "coverage_pct": 84.8,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 0.4,
+        "latin": 99.6
+      },
+      "off_script_pct": 0.4
+    },
+    "alibaba": {
+      "utt_count": 3,
+      "char_count": 6336,
+      "duration_min": 12.0,
+      "last_end_min": 12.0,
+      "chars_per_min": 528.0,
+      "coverage_pct": 100.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 99.8,
+        "cjk": 0.2
+      },
+      "off_script_pct": 0.2
+    },
+    "elevenlabs": {
+      "utt_count": 1,
+      "char_count": 6450,
+      "duration_min": 9.1,
+      "last_end_min": 9.1,
+      "chars_per_min": 710.0,
+      "coverage_pct": 98.7,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    }
+  }
+}

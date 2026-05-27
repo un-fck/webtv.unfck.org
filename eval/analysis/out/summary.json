@@ -1,0 +1,1780 @@
+[
+  {
+    "symbol": "Nebenzia-Starobelsk",
+    "lang": "en",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 151,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 0,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 25,
+        "coverage_pct": 98.3,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 784.0
+      },
+      "mistral": {
+        "utt_count": 435,
+        "coverage_pct": 115.3,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 3.2,
+        "chars_per_min": 1081.0
+      },
+      "gemini": {
+        "utt_count": 642,
+        "coverage_pct": 69.8,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 758.0
+      },
+      "azure-openai": {
+        "utt_count": 318,
+        "coverage_pct": 91.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 4.0,
+        "chars_per_min": 873.0
+      },
+      "alibaba": {
+        "utt_count": 10,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.2,
+        "chars_per_min": 805.0
+      },
+      "elevenlabs": {
+        "utt_count": 45,
+        "coverage_pct": 97.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 873.0
+      }
+    }
+  },
+  {
+    "symbol": "Nebenzia-Starobelsk",
+    "lang": "fr",
+    "providers": [
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 228,
+    "unique_pn_hallucination": [
+      {
+        "name": "Merci",
+        "provider": "gemini",
+        "count": 14,
+        "likely": "hallucination",
+        "at": "0:24"
+      },
+      {
+        "name": "Conseil",
+        "provider": "gemini",
+        "count": 13,
+        "likely": "hallucination",
+        "at": "0:42"
+      },
+      {
+        "name": "Vous",
+        "provider": "gemini",
+        "count": 9,
+        "likely": "hallucination",
+        "at": "11:08"
+      },
+      {
+        "name": "Ils",
+        "provider": "gemini",
+        "count": 9,
+        "likely": "hallucination",
+        "at": "1:14"
+      },
+      {
+        "name": "États-Unis",
+        "provider": "gemini",
+        "count": 8,
+        "likely": "hallucination",
+        "at": "4:25"
+      },
+      {
+        "name": "Affaires",
+        "provider": "gemini",
+        "count": 6,
+        "likely": "hallucination",
+        "at": "34:23"
+      },
+      {
+        "name": "Occident",
+        "provider": "gemini",
+        "count": 6,
+        "likely": "hallucination",
+        "at": "2:45"
+      },
+      {
+        "name": "Fédération",
+        "provider": "gemini",
+        "count": 5,
+        "likely": "hallucination",
+        "at": "0:03"
+      },
+      {
+        "name": "Cela",
+        "provider": "gemini",
+        "count": 5,
+        "likely": "hallucination",
+        "at": "9:09"
+      },
+      {
+        "name": "Monsieur",
+        "provider": "gemini",
+        "count": 5,
+        "likely": "hallucination",
+        "at": "17:04"
+      }
+    ],
+    "unique_numbers": 1,
+    "signals": {
+      "mistral": {
+        "utt_count": 427,
+        "coverage_pct": 115.4,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 3.2,
+        "chars_per_min": 1077.0
+      },
+      "gemini": {
+        "utt_count": 512,
+        "coverage_pct": 75.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 867.0
+      },
+      "azure-openai": {
+        "utt_count": 308,
+        "coverage_pct": 92.2,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 3.8,
+        "chars_per_min": 878.0
+      },
+      "alibaba": {
+        "utt_count": 10,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.2,
+        "chars_per_min": 824.0
+      },
+      "elevenlabs": {
+        "utt_count": 57,
+        "coverage_pct": 97.6,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 903.0
+      }
+    }
+  },
+  {
+    "symbol": "Nebenzia-Starobelsk",
+    "lang": "ru",
+    "providers": [
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 175,
+    "unique_pn_hallucination": [
+      {
+        "name": "The Permanent Representative",
+        "provider": "alibaba",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "0:00"
+      }
+    ],
+    "unique_numbers": 0,
+    "signals": {
+      "mistral": {
+        "utt_count": 427,
+        "coverage_pct": 114.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 96.7,
+        "chars_per_min": 1078.0
+      },
+      "gemini": {
+        "utt_count": 543,
+        "coverage_pct": 67.4,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.2,
+        "chars_per_min": 724.0
+      },
+      "azure-openai": {
+        "utt_count": 325,
+        "coverage_pct": 91.8,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 96.1,
+        "chars_per_min": 870.0
+      },
+      "alibaba": {
+        "utt_count": 10,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 99.8,
+        "chars_per_min": 804.0
+      },
+      "elevenlabs": {
+        "utt_count": 50,
+        "coverage_pct": 97.7,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 96.4,
+        "chars_per_min": 876.0
+      }
+    }
+  },
+  {
+    "symbol": "S_PV.10156",
+    "lang": "ar",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 0,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 2,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 1,
+        "coverage_pct": 98.3,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 449.0
+      },
+      "mistral": {
+        "utt_count": 61,
+        "coverage_pct": 74.3,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 1.4,
+        "chars_per_min": 468.0
+      },
+      "gemini": {
+        "utt_count": 91,
+        "coverage_pct": 33.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 496.0
+      },
+      "azure-openai": {
+        "utt_count": 42,
+        "coverage_pct": 82.6,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.3,
+        "chars_per_min": 478.0
+      },
+      "alibaba": {
+        "utt_count": 3,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 370.0
+      },
+      "elevenlabs": {
+        "utt_count": 1,
+        "coverage_pct": 99.2,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.1,
+        "chars_per_min": 476.0
+      }
+    }
+  },
+  {
+    "symbol": "S_PV.10156",
+    "lang": "en",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 20,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 0,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 3,
+        "coverage_pct": 97.7,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 684.0
+      },
+      "mistral": {
+        "utt_count": 67,
+        "coverage_pct": 79.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 693.0
+      },
+      "gemini": {
+        "utt_count": 74,
+        "coverage_pct": 62.7,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 686.0
+      },
+      "azure-openai": {
+        "utt_count": 78,
+        "coverage_pct": 80.3,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.1,
+        "chars_per_min": 704.0
+      },
+      "alibaba": {
+        "utt_count": 3,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 526.0
+      },
+      "elevenlabs": {
+        "utt_count": 3,
+        "coverage_pct": 97.7,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 732.0
+      }
+    }
+  },
+  {
+    "symbol": "S_PV.10156",
+    "lang": "es",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 9,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 0,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 1,
+        "coverage_pct": 97.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 688.0
+      },
+      "mistral": {
+        "utt_count": 66,
+        "coverage_pct": 81.0,
+        "fffd": 2,
+        "repetition": 0.0,
+        "off_script_pct": 0.3,
+        "chars_per_min": 700.0
+      },
+      "gemini": {
+        "utt_count": 48,
+        "coverage_pct": 67.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 689.0
+      },
+      "azure-openai": {
+        "utt_count": 66,
+        "coverage_pct": 84.8,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.4,
+        "chars_per_min": 707.0
+      },
+      "alibaba": {
+        "utt_count": 3,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.2,
+        "chars_per_min": 528.0
+      },
+      "elevenlabs": {
+        "utt_count": 1,
+        "coverage_pct": 98.7,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 710.0
+      }
+    }
+  },
+  {
+    "symbol": "S_PV.10156",
+    "lang": "fr",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 15,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 0,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 1,
+        "coverage_pct": 98.2,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 755.0
+      },
+      "mistral": {
+        "utt_count": 68,
+        "coverage_pct": 77.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 758.0
+      },
+      "gemini": {
+        "utt_count": 82,
+        "coverage_pct": 54.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 757.0
+      },
+      "azure-openai": {
+        "utt_count": 86,
+        "coverage_pct": 80.4,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.1,
+        "chars_per_min": 771.0
+      },
+      "alibaba": {
+        "utt_count": 3,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 580.0
+      },
+      "elevenlabs": {
+        "utt_count": 1,
+        "coverage_pct": 99.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 798.0
+      }
+    }
+  },
+  {
+    "symbol": "S_PV.10156",
+    "lang": "ru",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 0,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 0,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 18,
+        "coverage_pct": 94.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 642.0
+      },
+      "mistral": {
+        "utt_count": 68,
+        "coverage_pct": 80.3,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.1,
+        "chars_per_min": 650.0
+      },
+      "gemini": {
+        "utt_count": 82,
+        "coverage_pct": 57.1,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 642.0
+      },
+      "azure-openai": {
+        "utt_count": 60,
+        "coverage_pct": 83.8,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.2,
+        "chars_per_min": 651.0
+      },
+      "alibaba": {
+        "utt_count": 3,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 490.0
+      },
+      "elevenlabs": {
+        "utt_count": 1,
+        "coverage_pct": 98.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 695.0
+      }
+    }
+  },
+  {
+    "symbol": "S_PV.10156",
+    "lang": "zh",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 0,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 0,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 3,
+        "coverage_pct": 97.6,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.1,
+        "chars_per_min": 197.0
+      },
+      "mistral": {
+        "utt_count": 65,
+        "coverage_pct": 73.7,
+        "fffd": 176,
+        "repetition": 0.0,
+        "off_script_pct": 0.8,
+        "chars_per_min": 222.0
+      },
+      "gemini": {
+        "utt_count": 136,
+        "coverage_pct": 72.8,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.1,
+        "chars_per_min": 213.0
+      },
+      "azure-openai": {
+        "utt_count": 53,
+        "coverage_pct": 81.7,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 1.1,
+        "chars_per_min": 234.0
+      },
+      "alibaba": {
+        "utt_count": 3,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 1.1,
+        "chars_per_min": 167.0
+      },
+      "elevenlabs": {
+        "utt_count": 3,
+        "coverage_pct": 98.1,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 1.2,
+        "chars_per_min": 226.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr06-keita",
+    "lang": "ar",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 0,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 3,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 109,
+        "coverage_pct": 99.6,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.2,
+        "chars_per_min": 549.0
+      },
+      "mistral": {
+        "utt_count": 1002,
+        "coverage_pct": 88.5,
+        "fffd": 0,
+        "repetition": 0.008,
+        "off_script_pct": 0.2,
+        "chars_per_min": 545.0
+      },
+      "gemini": {
+        "utt_count": 1426,
+        "coverage_pct": 64.7,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.3,
+        "chars_per_min": 554.0
+      },
+      "azure-openai": {
+        "utt_count": 567,
+        "coverage_pct": 94.8,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 1.5,
+        "chars_per_min": 555.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.2,
+        "chars_per_min": 554.0
+      },
+      "elevenlabs": {
+        "utt_count": 12,
+        "coverage_pct": 99.8,
+        "fffd": 0,
+        "repetition": 0.012,
+        "off_script_pct": 0.7,
+        "chars_per_min": 579.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr06-keita",
+    "lang": "en",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 252,
+    "unique_pn_hallucination": [
+      {
+        "name": "Unit",
+        "provider": "assemblyai",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "41:00"
+      },
+      {
+        "name": "Consolidated Report",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "3:51"
+      },
+      {
+        "name": "Swedish",
+        "provider": "mistral",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "77:01"
+      },
+      {
+        "name": "Kanem",
+        "provider": "gemini",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "23:44"
+      },
+      {
+        "name": "Estados",
+        "provider": "gemini",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "117:47"
+      },
+      {
+        "name": "Natalia Kanem",
+        "provider": "gemini",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "23:44"
+      },
+      {
+        "name": "Mujeres",
+        "provider": "gemini",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "46:35"
+      },
+      {
+        "name": "Gracias",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "64:58"
+      }
+    ],
+    "unique_numbers": 1,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 73,
+        "coverage_pct": 98.8,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 862.0
+      },
+      "mistral": {
+        "utt_count": 1515,
+        "coverage_pct": 90.2,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 869.0
+      },
+      "gemini": {
+        "utt_count": 2083,
+        "coverage_pct": 79.6,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 890.0
+      },
+      "azure-openai": {
+        "utt_count": 1408,
+        "coverage_pct": 91.4,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 880.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 859.0
+      },
+      "elevenlabs": {
+        "utt_count": 98,
+        "coverage_pct": 98.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 884.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr06-keita",
+    "lang": "es",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 264,
+    "unique_pn_hallucination": [
+      {
+        "name": "Ochenta",
+        "provider": "elevenlabs",
+        "count": 15,
+        "likely": "hallucination",
+        "at": "0:01"
+      },
+      {
+        "name": "Tanto",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "26:50"
+      },
+      {
+        "name": "Viene Lux",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "61:44"
+      }
+    ],
+    "unique_numbers": 0,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 19,
+        "coverage_pct": 99.4,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 754.0
+      },
+      "mistral": {
+        "utt_count": 1445,
+        "coverage_pct": 86.8,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 763.0
+      },
+      "gemini": {
+        "utt_count": 1635,
+        "coverage_pct": 69.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 759.0
+      },
+      "azure-openai": {
+        "utt_count": 1402,
+        "coverage_pct": 88.7,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.1,
+        "chars_per_min": 764.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 757.0
+      },
+      "elevenlabs": {
+        "utt_count": 21,
+        "coverage_pct": 99.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 772.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr06-keita",
+    "lang": "fr",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 278,
+    "unique_pn_hallucination": [
+      {
+        "name": "Women",
+        "provider": "elevenlabs",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "86:02"
+      },
+      {
+        "name": "Diapositive",
+        "provider": "gemini",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "25:15"
+      },
+      {
+        "name": "Quatre Vingt",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "89:20"
+      },
+      {
+        "name": "Ils",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "130:47"
+      }
+    ],
+    "unique_numbers": 2,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 35,
+        "coverage_pct": 99.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 881.0
+      },
+      "mistral": {
+        "utt_count": 1580,
+        "coverage_pct": 83.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 891.0
+      },
+      "gemini": {
+        "utt_count": 1961,
+        "coverage_pct": 76.6,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 976.0
+      },
+      "azure-openai": {
+        "utt_count": 1521,
+        "coverage_pct": 85.6,
+        "fffd": 0,
+        "repetition": 0.006,
+        "off_script_pct": 0.0,
+        "chars_per_min": 933.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 884.0
+      },
+      "elevenlabs": {
+        "utt_count": 32,
+        "coverage_pct": 99.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 882.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr06-keita",
+    "lang": "ru",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 17,
+    "unique_pn_hallucination": [
+      {
+        "name": "Women",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "57:25"
+      }
+    ],
+    "unique_numbers": 2,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 8,
+        "coverage_pct": 99.8,
+        "fffd": 0,
+        "repetition": 0.015,
+        "off_script_pct": 0.1,
+        "chars_per_min": 757.0
+      },
+      "mistral": {
+        "utt_count": 1491,
+        "coverage_pct": 86.0,
+        "fffd": 2,
+        "repetition": 0.01,
+        "off_script_pct": 0.0,
+        "chars_per_min": 767.0
+      },
+      "gemini": {
+        "utt_count": 1705,
+        "coverage_pct": 72.3,
+        "fffd": 0,
+        "repetition": 0.024,
+        "off_script_pct": 0.0,
+        "chars_per_min": 794.0
+      },
+      "azure-openai": {
+        "utt_count": 1132,
+        "coverage_pct": 88.7,
+        "fffd": 0,
+        "repetition": 0.085,
+        "off_script_pct": 1.3,
+        "chars_per_min": 771.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.009,
+        "off_script_pct": 0.2,
+        "chars_per_min": 780.0
+      },
+      "elevenlabs": {
+        "utt_count": 17,
+        "coverage_pct": 99.7,
+        "fffd": 0,
+        "repetition": 0.02,
+        "off_script_pct": 0.2,
+        "chars_per_min": 781.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr06-keita",
+    "lang": "zh",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 0,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 5,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 67,
+        "coverage_pct": 99.3,
+        "fffd": 0,
+        "repetition": 0.004,
+        "off_script_pct": 1.6,
+        "chars_per_min": 217.0
+      },
+      "mistral": {
+        "utt_count": 1041,
+        "coverage_pct": 85.4,
+        "fffd": 3606,
+        "repetition": 0.006,
+        "off_script_pct": 1.8,
+        "chars_per_min": 239.0
+      },
+      "gemini": {
+        "utt_count": 1556,
+        "coverage_pct": 57.9,
+        "fffd": 0,
+        "repetition": 0.005,
+        "off_script_pct": 1.9,
+        "chars_per_min": 246.0
+      },
+      "azure-openai": {
+        "utt_count": 766,
+        "coverage_pct": 91.3,
+        "fffd": 0,
+        "repetition": 0.004,
+        "off_script_pct": 4.9,
+        "chars_per_min": 262.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.035,
+        "off_script_pct": 2.0,
+        "chars_per_min": 242.0
+      },
+      "elevenlabs": {
+        "utt_count": 23,
+        "coverage_pct": 99.6,
+        "fffd": 0,
+        "repetition": 0.031,
+        "off_script_pct": 2.1,
+        "chars_per_min": 246.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr29-timestamps",
+    "lang": "ar",
+    "providers": [
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 0,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 0,
+    "signals": {
+      "mistral": {
+        "utt_count": 1002,
+        "coverage_pct": 86.0,
+        "fffd": 0,
+        "repetition": 0.008,
+        "off_script_pct": 0.2,
+        "chars_per_min": 556.0
+      },
+      "gemini": {
+        "utt_count": 1521,
+        "coverage_pct": 62.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 567.0
+      },
+      "azure-openai": {
+        "utt_count": 663,
+        "coverage_pct": 91.9,
+        "fffd": 0,
+        "repetition": 0.002,
+        "off_script_pct": 2.8,
+        "chars_per_min": 577.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.3,
+        "chars_per_min": 570.0
+      },
+      "elevenlabs": {
+        "utt_count": 8,
+        "coverage_pct": 99.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.3,
+        "chars_per_min": 586.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr29-timestamps",
+    "lang": "en",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 261,
+    "unique_pn_hallucination": [
+      {
+        "name": "Briefers",
+        "provider": "assemblyai",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "72:43"
+      },
+      {
+        "name": "Unity",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "95:23"
+      },
+      {
+        "name": "Social",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "33:58"
+      },
+      {
+        "name": "Commissions",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "53:29"
+      },
+      {
+        "name": "Headquarters",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "19:15"
+      },
+      {
+        "name": "Including",
+        "provider": "mistral",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "12:12"
+      },
+      {
+        "name": "Administrator",
+        "provider": "gemini",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "17:38"
+      },
+      {
+        "name": "Mister President",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "4:04"
+      }
+    ],
+    "unique_numbers": 0,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 84,
+        "coverage_pct": 99.2,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 841.0
+      },
+      "mistral": {
+        "utt_count": 1475,
+        "coverage_pct": 88.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 848.0
+      },
+      "gemini": {
+        "utt_count": 2228,
+        "coverage_pct": 77.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 900.0
+      },
+      "azure-openai": {
+        "utt_count": 1190,
+        "coverage_pct": 91.2,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 871.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 840.0
+      },
+      "elevenlabs": {
+        "utt_count": 100,
+        "coverage_pct": 97.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 883.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr29-timestamps",
+    "lang": "es",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 305,
+    "unique_pn_hallucination": [
+      {
+        "name": "Brasil",
+        "provider": "gemini",
+        "count": 6,
+        "likely": "hallucination",
+        "at": "137:35"
+      },
+      {
+        "name": "Ochenta",
+        "provider": "azure-openai",
+        "count": 5,
+        "likely": "hallucination",
+        "at": "0:04"
+      },
+      {
+        "name": "Gestión",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "98:28"
+      },
+      {
+        "name": "Desempeño",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "98:28"
+      },
+      {
+        "name": "Cooperación",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "57:58"
+      },
+      {
+        "name": "Mandato",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "0:01"
+      },
+      {
+        "name": "Bloque Trabajo",
+        "provider": "assemblyai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "124:59"
+      },
+      {
+        "name": "Funciones",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "75:02"
+      },
+      {
+        "name": "Ecosoc",
+        "provider": "alibaba",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "32:00"
+      }
+    ],
+    "unique_numbers": 0,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 16,
+        "coverage_pct": 99.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 805.0
+      },
+      "mistral": {
+        "utt_count": 1423,
+        "coverage_pct": 86.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 816.0
+      },
+      "gemini": {
+        "utt_count": 1899,
+        "coverage_pct": 73.5,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 848.0
+      },
+      "azure-openai": {
+        "utt_count": 1179,
+        "coverage_pct": 88.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 828.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 808.0
+      },
+      "elevenlabs": {
+        "utt_count": 16,
+        "coverage_pct": 99.6,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 835.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr29-timestamps",
+    "lang": "fr",
+    "providers": [
+      "assemblyai",
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 250,
+    "unique_pn_hallucination": [
+      {
+        "name": "How",
+        "provider": "azure-openai",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "35:04"
+      },
+      {
+        "name": "Système",
+        "provider": "elevenlabs",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "47:26"
+      },
+      {
+        "name": "Cadre",
+        "provider": "mistral",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "46:25"
+      },
+      {
+        "name": "Well",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "109:10"
+      },
+      {
+        "name": "There",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "29:00"
+      },
+      {
+        "name": "Latin America",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "35:13"
+      },
+      {
+        "name": "Soixante",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "54:31"
+      },
+      {
+        "name": "Nécessité",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "65:51"
+      },
+      {
+        "name": "Hmm",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "38:35"
+      },
+      {
+        "name": "Yes",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "34:29"
+      }
+    ],
+    "unique_numbers": 1,
+    "signals": {
+      "assemblyai": {
+        "utt_count": 24,
+        "coverage_pct": 99.1,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 850.0
+      },
+      "mistral": {
+        "utt_count": 1609,
+        "coverage_pct": 83.3,
+        "fffd": 2,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 860.0
+      },
+      "gemini": {
+        "utt_count": 1766,
+        "coverage_pct": 69.3,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 917.0
+      },
+      "azure-openai": {
+        "utt_count": 1277,
+        "coverage_pct": 86.9,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 881.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 853.0
+      },
+      "elevenlabs": {
+        "utt_count": 23,
+        "coverage_pct": 99.6,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 0.0,
+        "chars_per_min": 889.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr29-timestamps",
+    "lang": "ru",
+    "providers": [
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 50,
+    "unique_pn_hallucination": [
+      {
+        "name": "After",
+        "provider": "azure-openai",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "8:20"
+      },
+      {
+        "name": "Blagodarju",
+        "provider": "azure-openai",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "121:55"
+      },
+      {
+        "name": "Your Excellency",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "0:33"
+      },
+      {
+        "name": "Indonesia",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "118:43"
+      },
+      {
+        "name": "Regional",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "84:07"
+      },
+      {
+        "name": "Unfa",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "11:18"
+      },
+      {
+        "name": "What",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "71:28"
+      },
+      {
+        "name": "India",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "121:45"
+      },
+      {
+        "name": "Unops",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "11:18"
+      },
+      {
+        "name": "Today",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "0:33"
+      }
+    ],
+    "unique_numbers": 1,
+    "signals": {
+      "mistral": {
+        "utt_count": 2975,
+        "coverage_pct": 86.7,
+        "fffd": 0,
+        "repetition": 0.039,
+        "off_script_pct": 0.0,
+        "chars_per_min": 788.0
+      },
+      "gemini": {
+        "utt_count": 1681,
+        "coverage_pct": 72.7,
+        "fffd": 0,
+        "repetition": 0.03,
+        "off_script_pct": 0.0,
+        "chars_per_min": 766.0
+      },
+      "azure-openai": {
+        "utt_count": 1180,
+        "coverage_pct": 87.7,
+        "fffd": 0,
+        "repetition": 0.002,
+        "off_script_pct": 8.1,
+        "chars_per_min": 776.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.044,
+        "off_script_pct": 0.1,
+        "chars_per_min": 749.0
+      },
+      "elevenlabs": {
+        "utt_count": 15,
+        "coverage_pct": 99.7,
+        "fffd": 0,
+        "repetition": 0.262,
+        "off_script_pct": 0.1,
+        "chars_per_min": 771.0
+      }
+    }
+  },
+  {
+    "symbol": "UN80-Apr29-timestamps",
+    "lang": "zh",
+    "providers": [
+      "mistral",
+      "gemini",
+      "azure-openai",
+      "alibaba",
+      "elevenlabs"
+    ],
+    "name_disagreements": 0,
+    "unique_pn_hallucination": [],
+    "unique_numbers": 3,
+    "signals": {
+      "mistral": {
+        "utt_count": 1030,
+        "coverage_pct": 82.7,
+        "fffd": 3669,
+        "repetition": 0.005,
+        "off_script_pct": 1.2,
+        "chars_per_min": 212.0
+      },
+      "gemini": {
+        "utt_count": 1687,
+        "coverage_pct": 67.9,
+        "fffd": 0,
+        "repetition": 0.019,
+        "off_script_pct": 1.0,
+        "chars_per_min": 252.0
+      },
+      "azure-openai": {
+        "utt_count": 785,
+        "coverage_pct": 89.7,
+        "fffd": 0,
+        "repetition": 0.001,
+        "off_script_pct": 16.4,
+        "chars_per_min": 265.0
+      },
+      "alibaba": {
+        "utt_count": 43,
+        "coverage_pct": 100.0,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 1.6,
+        "chars_per_min": 214.0
+      },
+      "elevenlabs": {
+        "utt_count": 27,
+        "coverage_pct": 99.6,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": 1.5,
+        "chars_per_min": 219.0
+      }
+    }
+  }
+]

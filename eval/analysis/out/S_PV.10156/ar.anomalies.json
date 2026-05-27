@@ -1,0 +1,16 @@
+{
+  "unique_proper_nouns": [],
+  "name_table": [],
+  "unique_numbers": [
+    {
+      "number": "٢٠٢٤",
+      "provider": "assemblyai",
+      "count": 2
+    },
+    {
+      "number": "2015",
+      "provider": "azure-openai",
+      "count": 2
+    }
+  ]
+}

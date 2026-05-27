@@ -1,0 +1,31 @@
+{
+  "unique_proper_nouns": [],
+  "name_table": [],
+  "unique_numbers": [
+    {
+      "number": "2",
+      "provider": "gemini",
+      "count": 5
+    },
+    {
+      "number": "15",
+      "provider": "gemini",
+      "count": 3
+    },
+    {
+      "number": "5",
+      "provider": "gemini",
+      "count": 2
+    },
+    {
+      "number": "2022",
+      "provider": "gemini",
+      "count": 2
+    },
+    {
+      "number": "25",
+      "provider": "gemini",
+      "count": 2
+    }
+  ]
+}
