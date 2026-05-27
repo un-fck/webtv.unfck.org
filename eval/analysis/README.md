@@ -6,7 +6,7 @@ language track** in the production pipeline. Distinct from the main `eval/` harn
 (which scores WER against PV documents across a standing corpus) — this is a targeted
 qualitative/structural study of provider _failure modes_.
 
-**Read [`out/SYNTHESIS.md`](out/SYNTHESIS.md) first** — it has the final routing decision and
+**Read [`SYNTHESIS.md`](SYNTHESIS.md) first** — it has the final routing decision and
 all findings. Per-video deep dives are in `out/<symbol>/REPORT.md`.
 
 ## Final decision (see SYNTHESIS §7)
@@ -39,7 +39,7 @@ Providers (11): `assemblyai` (U2), `assemblyai-u3-pro`, `mistral` (voxtral-mini)
 
 | Path                               | What                                                                                                                                          |
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `out/SYNTHESIS.md`                 | **The report** — cross-provider findings + final decision                                                                                     |
+| `SYNTHESIS.md`                     | **The report** — cross-provider findings + final decision                                                                                     |
 | `out/<symbol>/REPORT.md`           | Per-video deep analysis (produced by per-video review agents)                                                                                 |
 | `out/<symbol>/<lang>.signals.json` | Deterministic per-provider stats (coverage, fffd, repetition, off-script, utt/speaker counts)                                                 |
 | `out/summary.json`                 | Harness roll-up across all video-languages                                                                                                    |
@@ -73,9 +73,9 @@ Provider code: `lib/providers/` (registry in `registry.ts`); DashScope async hel
 
 ## Status / caveats
 
-- **`fun-asr` WER row is pending one clean re-run** — its cache was cleared for the spacing-fix
-  re-run, which died on a transient DNS blip (not quota/code). The conditional word-rejoin fix is
-  in place; non-English values are unchanged, en reflects the verified fix (27.2).
+- `fun-asr` WER is **final** after the conditional word-rejoin fix: en 46.6→**21.7**, zh **94.6**
+  (best of all). Long-video fun-asr raw is being repopulated in the background for the harness;
+  the conclusions don't change.
 - Reference-free: "consensus" flags have false positives (verified against raw transcripts before
   any headline claim). WER exists only for `S/PV.10156`.
 - Diarization here = speaker-count calibration + granularity, **not** attribution accuracy (no

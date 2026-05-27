@@ -17,11 +17,6 @@ Providers: `assemblyai` (Universal-2), `assemblyai-u3-pro` (Universal-3 Pro), `m
 `qwen3.5-omni-plus`, `elevenlabs` (Scribe v2). `voxtral-small` dropped (Mistral token-rate
 tier makes audio-chat transcription impractical — a 60s clip exceeds the per-minute budget).
 
-> **Data status:** `fun-asr` numbers are **pending one clean re-run** — its cache was cleared
-> for the spacing-fix re-run, which crashed on a transient DNS/network blip (not quota/code).
-> en reflects the verified spacing fix (27.2); non-English values are the pre-fix `sentence.text`
-> figures, which the _conditional_ fix leaves unchanged. Everything else is final.
-
 ---
 
 ## 1. The two error families (core structural insight)
@@ -48,12 +43,12 @@ tier makes audio-chat transcription impractical — a 60s clip exceeds the per-m
 | azure-openai          |     17.7 |     54.1 | 60.7 |     84.3 | **159.9** |     62.8 |
 | alibaba _(filetrans)_ |     20.3 |     53.6 | 59.5 |     82.7 |      96.4 |     62.8 |
 | elevenlabs            |     21.1 |     56.6 | 61.1 |     83.3 |      99.4 |     66.3 |
-| fun-asr _(pending)_   |     ~28† |     56.9 | 60.8 |     85.7 |      95.2 |     66.3 |
+| fun-asr               |     21.7 |     56.2 | 62.1 |     85.8 |  **94.6** |     66.0 |
 | qwen3.5-omni-plus     |     97.2 |     79.7 | 79.0 |     85.1 |     107.2 |     75.8 |
 
-† fun-asr en: was 46.6 (spacing defect), verified **27.2** after the word-rejoin fix; awaiting
-the clean re-run for the final figure. Caveats: vs a heavily-edited PV (15–40% is "good"), on a
-9-min meeting, so directional. High ar/zh/ru = edited-PV + CJK scoring, not raw failure.
+Caveats: vs a heavily-edited PV (15–40% is "good"), on a 9-min meeting, so directional. High
+ar/zh/ru = edited-PV + CJK scoring, not raw failure. (fun-asr en was 46.6 before the word-rejoin
+spacing fix → **21.7**; **zh 94.6 is now the best of all providers**.)
 
 - **gemini and gemini-3.5 lead**; gemini-3.5 best on ar/zh/ru. **u3-pro ≈ assemblyai** on bulk
   WER (its win is accented _words_, not aggregate).
@@ -132,7 +127,7 @@ multilingual floor audio it's disqualified.**
 | **mistral** (voxtral-mini)              | Clean Latin text, good granularity; multilingual floor OK                                                   | **CJK corruption** (176→3606 U+FFFD); "polling"; over-generates; no diarization                                                                                                             | Never on CJK                                                                                      |
 | **azure-openai** (gpt-4o)               | Good granularity; **best-calibrated diarization**; multilingual floor OK                                    | **Cross-language leakage** (Chinese gavel; zh WER 159.9%); "p p p" loops; hallucinates over noise                                                                                           | Capable but unstable on multilingual/noisy audio                                                  |
 | **alibaba** (qwen3-asr-flash-filetrans) | Top-tier WER; clean CJK; **now real sentence+word timestamps** (1327 sentences/171m); multilingual floor OK | **No diarization** (Qwen-ASR limit); spells numbers in entities ("UN80"→"Eighty Initiative")                                                                                                | Strong text + timestamps; no speaker labels                                                       |
-| **fun-asr**                             | **Real diarization + fine timestamps**; **best Chinese** (zh 95.2); multilingual floor OK                   | English **spacing** (fixed via conditional word-rejoin) + **word truncation** ("Madam"→"Mad"); over-splits diarization                                                                      | Excellent for Chinese / timestamped diarization; weak English text                                |
+| **fun-asr**                             | **Real diarization + fine timestamps**; **best Chinese of all** (zh 94.6); multilingual floor OK                   | English **word truncation** ("Madam"→"Mad") — spacing was fixed via conditional word-rejoin (en 46.6→21.7); over-splits diarization                                                                      | Excellent for Chinese / timestamped diarization; English now usable but mid                                |
 | **qwen3.5-omni-plus**                   | (chat model)                                                                                                | **Summarizes, doesn't transcribe** — emits section headers ("Overview/Key Themes/Next Steps/Conclusion") + timestamp-number junk; transcribed English as Chinese; no timestamps/diarization | **Drop for transcription**                                                                        |
 | **elevenlabs** (Scribe v2)              | **Best accented-English**; ~98% coverage; marks self-repairs; clean CJK; multilingual floor OK              | Worst en WER of serious set (21.1); turn-lumping (coarse timestamps); **over-splits diarization** (34–41 spk); spells numbers ("Gulf Corporation Council")                                  | **Specialist** for accented-English press conferences; not a general workhorse — not in the stack |
 
@@ -177,7 +172,7 @@ A 4-provider stack, each role justified by the evidence above:
 | ------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **en**                   | **assemblyai-u3-pro**      | best non-Gemini en WER (16.3), fixes accent errors ("appalling"/"cold blood"), 6.5× faster than U2, accurate word-level timestamps                                                                                                                                                                                                       |
 | **fr / es / ar / ru**    | **azure-openai**           | one provider for all four; best-calibrated diarization; solid WER; handles every script. Its instability (gavel-leak, cross-lang hallucination) only shows on the _mixed floor_ — single-language interpretation tracks are clean                                                                                                        |
-| **zh**                   | **fun-asr**                | best Chinese WER (95.2) + real diarization + word/sentence timestamps; Mandarin-first. _(Alternative if dropping fun-asr: **alibaba** / qwen3-asr-flash-filetrans — ~equal WER 96.4, clean CJK, timestamps, but no diarization; or **paraformer-v2** for diarization. Off-DashScope alternative: gemini, with name-hallucination risk.)_ |
+| **zh**                   | **fun-asr**                | best Chinese WER of all providers (94.6) + real diarization + word/sentence timestamps; Mandarin-first. _(Alternative if dropping fun-asr: **alibaba** / qwen3-asr-flash-filetrans — ~equal WER 96.4, clean CJK, timestamps, but no diarization; or **paraformer-v2** for diarization. Off-DashScope alternative: gemini, with name-hallucination risk.)_ |
 | **floor (multilingual)** | **gemini-3-flash-preview** | the only clean all-script option with reasonable diarization (AssemblyAI Latin-collapses; azure leaks; fun-asr's English suffers). See Gemini caveats below                                                                                                                                                                              |
 
 **Gemini version — use `gemini-3-flash-preview`, not 3.5-flash.** Accuracy is a wash and mixed
@@ -225,4 +220,6 @@ cross-check for named officials.
 - Diarization here = calibration + granularity, not attribution accuracy (no speaker-labeled GT;
   DER/cpWER would need aligning the PV's speaker turns).
 - Full per-video evidence: `eval/analysis/out/<symbol>/REPORT.md`.
-- **Outstanding:** one clean fun-asr re-run to finalize its WER row (failure was network, not quota).
+- fun-asr WER row is **final** (clean re-run done): en 46.6→21.7 after the conditional word-rejoin
+  fix; zh 94.6 best of all. (Long-video fun-asr raw is being repopulated in the background for the
+  harness; conclusions unaffected.)
