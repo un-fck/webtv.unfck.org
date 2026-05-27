@@ -70,12 +70,12 @@
       "off_script_pct": 0.0
     },
     "alibaba": {
-      "utt_count": 43,
-      "char_count": 152118,
-      "duration_min": 172.0,
-      "last_end_min": 172.0,
-      "chars_per_min": 884.0,
-      "coverage_pct": 100.0,
+      "utt_count": 1336,
+      "char_count": 149556,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 873.0,
+      "coverage_pct": 86.9,
       "fffd": 0,
       "repetition": 0.0,
       "script_mix": {
@@ -126,12 +126,12 @@
       "off_script_pct": 0.0
     },
     "fun-asr": {
-      "utt_count": 1565,
-      "char_count": 152789,
+      "utt_count": 1573,
+      "char_count": 164037,
       "duration_min": 171.2,
       "last_end_min": 171.2,
-      "chars_per_min": 893.0,
-      "coverage_pct": 85.9,
+      "chars_per_min": 958.0,
+      "coverage_pct": 85.7,
       "fffd": 0,
       "repetition": 0.0,
       "script_mix": {

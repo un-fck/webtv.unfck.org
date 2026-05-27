@@ -42,7 +42,8 @@ export function joinWords(words: FiletransWord[]): string {
       const next = t[0];
       const closingPunct = /^[,.!?;:)\]}%»、。，！？；：…”’]/.test(t);
       const openBefore = /[(\[{«“‘]$/.test(out);
-      if (!isCJK(prev) && !isCJK(next) && !closingPunct && !openBefore) out += " ";
+      if (!isCJK(prev) && !isCJK(next) && !closingPunct && !openBefore)
+        out += " ";
     }
     out += t;
   }
@@ -89,7 +90,9 @@ export async function transcribeViaFiletrans(
     const status = task.output?.task_status;
     if (status === "SUCCEEDED") break;
     if (status === "FAILED")
-      throw new Error(`${providerName} failed: ${JSON.stringify(task.output).slice(0, 400)}`);
+      throw new Error(
+        `${providerName} failed: ${JSON.stringify(task.output).slice(0, 400)}`,
+      );
     if (i % 6 === 5)
       console.log(`  [${providerName}] Still processing... (${(i + 1) * 5}s)`);
   }
@@ -107,8 +110,15 @@ export async function transcribeViaFiletrans(
     const doc = (await (await fetch(r.transcription_url)).json()) as any;
     for (const tr of doc.transcripts || []) {
       for (const s of (tr.sentences || []) as FiletransSentence[]) {
-        const text =
-          s.words && s.words.length ? joinWords(s.words) : (s.text || "").trim();
+        // Prefer the model's sentence.text (correct for most languages). Only
+        // rebuild from word tokens when sentence.text shows the run-together
+        // defect (a long Latin token with no spaces) — rebuilding everything
+        // inserts spurious spaces between non-Latin sub-tokens (e.g. fun-asr
+        // ar/ru), which wrecks those languages.
+        let text = (s.text || "").trim();
+        if (s.words && s.words.length && /[A-Za-zÀ-ÿ]{18,}/.test(text)) {
+          text = joinWords(s.words);
+        }
         if (!text) continue;
         const words: TranscriptWord[] | undefined = s.words?.map((w) => ({
           text: w.text,
@@ -127,7 +137,9 @@ export async function transcribeViaFiletrans(
     }
   }
 
-  const durationMs = utterances.length ? utterances[utterances.length - 1].end : 0;
+  const durationMs = utterances.length
+    ? utterances[utterances.length - 1].end
+    : 0;
   console.log(`  [${providerName}] Done — ${utterances.length} sentences`);
 
   return {

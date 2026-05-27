@@ -15,28 +15,28 @@ The meeting is ~9.1 min of speech: President opens, Secretariat thanked, the dra
 
 ## CJK integrity table (zh track)
 
-| Provider | fffd | coverage_pct | utt_count | Verdict |
-|---|---|---|---|---|
-| assemblyai | 0 | 97.6 | 3 | Clean |
-| mistral | **176** | 73.7 | 65 | **CORRUPT** |
-| gemini | 0 | 72.8\* | 136 | Clean text; \*low coverage = timestamp compression |
-| azure-openai | 0 | 81.7 | 53 | Clean |
-| alibaba | 0 | 100.0\*\* | 3 | Clean; \*\*artifact of fixed-window chunking |
-| elevenlabs | 0 | 98.1 | 3 | Clean |
+| Provider     | fffd    | coverage_pct | utt_count | Verdict                                            |
+| ------------ | ------- | ------------ | --------- | -------------------------------------------------- |
+| assemblyai   | 0       | 97.6         | 3         | Clean                                              |
+| mistral      | **176** | 73.7         | 65        | **CORRUPT**                                        |
+| gemini       | 0       | 72.8\*       | 136       | Clean text; \*low coverage = timestamp compression |
+| azure-openai | 0       | 81.7         | 53        | Clean                                              |
+| alibaba      | 0       | 100.0\*\*    | 3         | Clean; \*\*artifact of fixed-window chunking       |
+| elevenlabs   | 0       | 98.1         | 3         | Clean                                              |
 
 Only mistral corrupts CJK (176 fffd on zh, confirmed by direct count). Not confined to zh — also es (2 fffd) where Chinese floor audio appears. All five others: 0 fffd on zh.
 
 ## Ranked anomaly list
 
-| Severity | Type | Lang | Timestamp | Providers | Evidence |
-|---|---|---|---|---|---|
-| HIGH | CJK corruption | zh | throughout | mistral | 176 U+FFFD; e.g. `��议安全理事会…` (line 8) |
-| MEDIUM | CJK corruption (bleed) | es | ~line 173 | mistral | `��谢白色党代表的发言` (2 fffd) |
-| MEDIUM | Timestamp compression | all 6 | back half | gemini | last_end_min 3.0–7.7 vs ~9.1; text complete, timing collapsed |
-| MEDIUM | Cross-lang hallucination | en,es,fr,ru,ar | 00:00:02 (line 1) | azure-openai | Opening rendered as Chinese `我宣布安全理事会…` |
-| LOW | Fixed-window lumping | all 6 | n/a | alibaba | 3 utts, padded 12.0 min; "100% coverage" artifact |
-| LOW | Coarse segmentation | all 6 | n/a | assemblyai, elevenlabs | utt_count 1–3 |
-| LOW | Isolated mishear | fr | ~line 230 | azure-openai | "le Cazachien" garbled token |
+| Severity | Type                     | Lang           | Timestamp         | Providers              | Evidence                                                      |
+| -------- | ------------------------ | -------------- | ----------------- | ---------------------- | ------------------------------------------------------------- |
+| HIGH     | CJK corruption           | zh             | throughout        | mistral                | 176 U+FFFD; e.g. `��议安全理事会…` (line 8)                   |
+| MEDIUM   | CJK corruption (bleed)   | es             | ~line 173         | mistral                | `��谢白色党代表的发言` (2 fffd)                               |
+| MEDIUM   | Timestamp compression    | all 6          | back half         | gemini                 | last_end_min 3.0–7.7 vs ~9.1; text complete, timing collapsed |
+| MEDIUM   | Cross-lang hallucination | en,es,fr,ru,ar | 00:00:02 (line 1) | azure-openai           | Opening rendered as Chinese `我宣布安全理事会…`               |
+| LOW      | Fixed-window lumping     | all 6          | n/a               | alibaba                | 3 utts, padded 12.0 min; "100% coverage" artifact             |
+| LOW      | Coarse segmentation      | all 6          | n/a               | assemblyai, elevenlabs | utt_count 1–3                                                 |
+| LOW      | Isolated mishear         | fr             | ~line 230         | azure-openai           | "le Cazachien" garbled token                                  |
 
 **False positives (verified, NOT errors):** name_table/proper-noun flags on en/es/fr are mostly capitalized common words (fr "Examen", "Merci", "Conformément", "Ambassadeur"; es "Pronto", "Procuramos", "Complicaron"; en "During", "Further", "Your Excellency"). Institution names agree across all providers. ar number flags (2024/2015) are minor year mishears. No repetition loops (repetition 0.0 everywhere); no genuine dropped passages found.
 

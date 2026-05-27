@@ -25,7 +25,7 @@ PROVIDERS = ["assemblyai", "mistral", "gemini", "azure-openai", "alibaba", "elev
              "gemini-3.5-flash", "assemblyai-u3-pro", "fun-asr", "qwen3.5-omni-plus"]
 WINDOW_MS = 30_000
 # Only our four hand-picked videos (ignore older corpus results in raw/)
-ONLY_SYMBOLS = {"UN80-Apr06-keita", "S_PV.10156", "UN80-Apr29-timestamps", "Nebenzia-Starobelsk"}
+ONLY_SYMBOLS = {"UN80-Apr06-keita", "S_PV.10156", "UN80-Apr29-timestamps", "Nebenzia-Starobelsk", "S_PV.10153"}
 
 STOP = set("""the a an and or but of to in on at for with by from as is are was were be been being
 this that these those it its he she they them his her their we you i me my our your

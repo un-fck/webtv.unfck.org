@@ -1,0 +1,3 @@
+# Regenerable intermediates from compare.py (reproduce with: python3 compare.py)
+out/**/*.aligned.md
+out/**/*.anomalies.json

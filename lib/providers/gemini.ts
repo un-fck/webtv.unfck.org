@@ -95,9 +95,14 @@ async function transcribeOneFile(
   await waitForGeminiFile(file.name, true);
   try {
     const apiUrl = `${BASE}/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-    const result = await httpsPostJson(apiUrl, buildRequestBody(file.uri, langName));
+    const result = await httpsPostJson(
+      apiUrl,
+      buildRequestBody(file.uri, langName),
+    );
     if (result.status !== 200)
-      throw new Error(`Gemini API error ${result.status}: ${result.body.slice(0, 500)}`);
+      throw new Error(
+        `Gemini API error ${result.status}: ${result.body.slice(0, 500)}`,
+      );
     const raw = JSON.parse(result.body) as any;
     const responseText = (raw.candidates?.[0]?.content?.parts || [])
       .map((p: any) => p.text || "")
@@ -147,28 +152,47 @@ function makeGemini(model: string, name: string): TranscriptionProvider {
 
         if (duration > CHUNK_DURATION_SECONDS) {
           const starts: number[] = [];
-          for (let s = 0; s < duration; s += CHUNK_DURATION_SECONDS) starts.push(s);
+          for (let s = 0; s < duration; s += CHUNK_DURATION_SECONDS)
+            starts.push(s);
           console.log(
             `  [${name}] ${(duration / 60).toFixed(0)}min audio → ${starts.length} chunks, ${CHUNK_CONCURRENCY} at a time (${model})...`,
           );
-          offsetSegments = await parallelMap(starts, CHUNK_CONCURRENCY, async (start, i) => {
-            const chunkPath = await extractAudioChunk(
-              filePath,
-              start,
-              CHUNK_DURATION_SECONDS,
-              `gemini-eval-${i}`,
-            );
-            try {
-              const segments = await transcribeOneFile(model, name, chunkPath, langName);
-              console.log(`  [${name}] Chunk ${i + 1}/${starts.length} (offset ${(start / 60).toFixed(0)}min): ${segments.length} segments`);
-              return { offsetMs: start * 1000, segments };
-            } finally {
-              try { fs.unlinkSync(chunkPath); } catch {}
-            }
-          });
+          offsetSegments = await parallelMap(
+            starts,
+            CHUNK_CONCURRENCY,
+            async (start, i) => {
+              const chunkPath = await extractAudioChunk(
+                filePath,
+                start,
+                CHUNK_DURATION_SECONDS,
+                `gemini-eval-${i}`,
+              );
+              try {
+                const segments = await transcribeOneFile(
+                  model,
+                  name,
+                  chunkPath,
+                  langName,
+                );
+                console.log(
+                  `  [${name}] Chunk ${i + 1}/${starts.length} (offset ${(start / 60).toFixed(0)}min): ${segments.length} segments`,
+                );
+                return { offsetMs: start * 1000, segments };
+              } finally {
+                try {
+                  fs.unlinkSync(chunkPath);
+                } catch {}
+              }
+            },
+          );
         } else {
           console.log(`  [${name}] Transcribing with ${model}...`);
-          const segments = await transcribeOneFile(model, name, filePath, langName);
+          const segments = await transcribeOneFile(
+            model,
+            name,
+            filePath,
+            langName,
+          );
           offsetSegments = [{ offsetMs: 0, segments }];
         }
 
@@ -185,7 +209,12 @@ function makeGemini(model: string, name: string): TranscriptionProvider {
               last.end = startMs;
               last.text += " " + seg.content;
             } else {
-              utterances.push({ speaker, start: startMs, end: startMs, text: seg.content });
+              utterances.push({
+                speaker,
+                start: startMs,
+                end: startMs,
+                text: seg.content,
+              });
             }
           }
         }

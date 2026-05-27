@@ -6,8 +6,8 @@
 
 ## Per-provider error profile
 
-- **gemini (gemini-3-flash)** — High for named-entity fidelity, otherwise the best text. Only provider that truly *hallucinates* entities: substitutes **"Natalia Kanem"** (former UNFPA ED, not present) for actual speaker Diene Keita. LLM-prior override, in Latin scripts only (en ×4, es ×1, fr ×2); absent in ar/ru/zh. Intermittent — correctly says "Diene/Diane Keita" elsewhere in the same transcript. No fffd, no loops.
-- **assemblyai (Universal-2)** — Low–Med. Clean, near-100% coverage, no fffd/repetition. Weakness is *lumping*: utt_count 8 (ru), 19 (es), 35 (fr) — poor diarization. Name errors purely acoustic ("Dean Kita", "Diane Keiter", "Sima Barhus"). Auto-flagged "Consolidated Report"/"Unit" are false positives, not hallucinations.
+- **gemini (gemini-3-flash)** — High for named-entity fidelity, otherwise the best text. Only provider that truly _hallucinates_ entities: substitutes **"Natalia Kanem"** (former UNFPA ED, not present) for actual speaker Diene Keita. LLM-prior override, in Latin scripts only (en ×4, es ×1, fr ×2); absent in ar/ru/zh. Intermittent — correctly says "Diene/Diane Keita" elsewhere in the same transcript. No fffd, no loops.
+- **assemblyai (Universal-2)** — Low–Med. Clean, near-100% coverage, no fffd/repetition. Weakness is _lumping_: utt_count 8 (ru), 19 (es), 35 (fr) — poor diarization. Name errors purely acoustic ("Dean Kita", "Diane Keiter", "Sima Barhus"). Auto-flagged "Consolidated Report"/"Unit" are false positives, not hallucinations.
 - **elevenlabs (Scribe v2)** — Low. High coverage, minor repetition. Acoustic name errors only ("Dean Khija", "Team Khija", "Simma Bahous"). Lumps like assemblyai.
 - **azure-openai (gpt-4o-transcribe)** — Med. Well-segmented but noisiest on interpretation channels: highest ru repetition (0.085, incl. a degenerate `"p p p p..."` loop) and English/Spanish bleed into the Russian track ("Thank you" ×13, "Women", "Gracias", "India"). Off-script elevated in zh (4.9%), ar (1.5%). Acoustic name errors ("Miss Geeta", "Guikita").
 - **alibaba (qwen3-asr-flash)** — Low–Med. 100% coverage, fixed 43-utterance block (no real diarization). One near-hallucination: renders the UNFPA ED as **"Inger Kjaer"** (plausible invented Nordic name) at 23:44.
@@ -15,7 +15,7 @@
 
 ## Ranked anomaly list
 
-1. **High | HALLUCINATION (named entity) | en | 23:44, 43:55, 48:10, 64:26 | gemini vs all 5** — "thanking ___, Executive Director of the UN Population Fund": gemini = **"Natalia Kanem"**; others = "Dean Kita"/"Guikita"/"Inger Kjaer"/"Dean Khija". Actual speaker = Diene Keita.
+1. **High | HALLUCINATION (named entity) | en | 23:44, 43:55, 48:10, 64:26 | gemini vs all 5** — "thanking \_\_\_, Executive Director of the UN Population Fund": gemini = **"Natalia Kanem"**; others = "Dean Kita"/"Guikita"/"Inger Kjaer"/"Dean Khija". Actual speaker = Diene Keita.
 2. **High | CORRUPTION (encoding) | zh | whole file | mistral** — 3606 × U+FFFD, e.g. `里程��意义的决议它��及的`. Others have 0 fffd in zh.
 3. **Med | HALLUCINATION | es | line 1877 | gemini vs all** — "señora Kanem y señora Bahous"; same transcript correctly says "Diene Keita" at line 4688 (intermittent).
 4. **Med | HALLUCINATION | fr | lines 1199, 4769 | gemini vs all** — "Directrice exécutive de l'UNFPA Natalia Kanem" / "Madame Kanem"; correct "Diene Keita" at lines 1349/5615.
@@ -27,7 +27,7 @@
 
 ## Headline findings
 
-- The **Keita→Kanem hallucination is confirmed, gemini-unique, and language-dependent**: present in en (×4), es (×1), fr (×2), absent in ar/ru/zh (gemini there correctly writes "ديان كيتا" etc.). The other 5 providers only make *acoustic* errors on the name ("Dean Kita", "Dean Khija", "Guikita", "Inger Kjaer") — none ever produce "Kanem". Classic LLM-prior override active only where the prior for that famous name is strong (Latin scripts).
+- The **Keita→Kanem hallucination is confirmed, gemini-unique, and language-dependent**: present in en (×4), es (×1), fr (×2), absent in ar/ru/zh (gemini there correctly writes "ديان كيتا" etc.). The other 5 providers only make _acoustic_ errors on the name ("Dean Kita", "Dean Khija", "Guikita", "Inger Kjaer") — none ever produce "Kanem". Classic LLM-prior override active only where the prior for that famous name is strong (Latin scripts).
 - It is **intermittent within gemini**: the same transcript spells "Diene/Diane Keita" correctly in most mentions and slips to "Kanem" in a few — so one speaker appears under two names.
 - **mistral is broken for Chinese** (3606 U+FFFD, ~9% corrupted) — the single worst structural failure.
 - **azure-openai is noisiest on interpretation channels**: a degenerate "p p p…" loop in ru plus the most cross-language English/Spanish bleed.

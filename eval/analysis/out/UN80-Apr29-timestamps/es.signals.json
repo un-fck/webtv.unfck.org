@@ -6,6 +6,7 @@
     "azure-openai",
     "alibaba",
     "elevenlabs",
+    "gemini-3.5-flash",
     "assemblyai-u3-pro",
     "fun-asr",
     "qwen3.5-omni-plus"
@@ -68,12 +69,12 @@
       "off_script_pct": 0.0
     },
     "alibaba": {
-      "utt_count": 43,
-      "char_count": 138928,
-      "duration_min": 172.0,
-      "last_end_min": 172.0,
-      "chars_per_min": 808.0,
-      "coverage_pct": 100.0,
+      "utt_count": 1223,
+      "char_count": 136692,
+      "duration_min": 170.9,
+      "last_end_min": 170.9,
+      "chars_per_min": 800.0,
+      "coverage_pct": 88.7,
       "fffd": 0,
       "repetition": 0.0,
       "script_mix": {
@@ -88,6 +89,20 @@
       "last_end_min": 170.9,
       "chars_per_min": 835.0,
       "coverage_pct": 99.6,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": 0.0
+    },
+    "gemini-3.5-flash": {
+      "utt_count": 101,
+      "char_count": 140040,
+      "duration_min": 170.9,
+      "last_end_min": 170.9,
+      "chars_per_min": 819.0,
+      "coverage_pct": 97.4,
       "fffd": 0,
       "repetition": 0.0,
       "script_mix": {
@@ -110,12 +125,12 @@
       "off_script_pct": 0.0
     },
     "fun-asr": {
-      "utt_count": 1225,
-      "char_count": 121636,
+      "utt_count": 1421,
+      "char_count": 147565,
       "duration_min": 170.9,
       "last_end_min": 170.9,
-      "chars_per_min": 712.0,
-      "coverage_pct": 75.4,
+      "chars_per_min": 863.0,
+      "coverage_pct": 86.6,
       "fffd": 0,
       "repetition": 0.0,
       "script_mix": {

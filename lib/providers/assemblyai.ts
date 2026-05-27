@@ -30,14 +30,17 @@ function makeAssemblyai(
       };
       if (speechModels) body.speech_models = speechModels;
 
-      const submitRes = await fetch("https://api.assemblyai.com/v2/transcript", {
-        method: "POST",
-        headers: {
-          authorization: ASSEMBLYAI_API_KEY,
-          "content-type": "application/json",
+      const submitRes = await fetch(
+        "https://api.assemblyai.com/v2/transcript",
+        {
+          method: "POST",
+          headers: {
+            authorization: ASSEMBLYAI_API_KEY,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(body),
         },
-        body: JSON.stringify(body),
-      });
+      );
       if (!submitRes.ok)
         throw new Error(`AssemblyAI submit failed: ${await submitRes.text()}`);
       const { id: transcriptId } = (await submitRes.json()) as { id: string };

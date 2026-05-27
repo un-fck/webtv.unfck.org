@@ -262,4 +262,7 @@ export const alibaba: TranscriptionProvider = {
 
 // qwen3.5-omni-plus stays on the synchronous multimodal/chat endpoint (it is a
 // chat model, not a file-transcription model).
-export const alibabaOmni = makeAlibaba("qwen3.5-omni-plus", "qwen3.5-omni-plus");
+export const alibabaOmni = makeAlibaba(
+  "qwen3.5-omni-plus",
+  "qwen3.5-omni-plus",
+);

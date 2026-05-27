@@ -11,11 +11,20 @@ const GT_DIR = path.join(__dirname, "..", "results", "ground-truth", SYM);
 const RAW_DIR = path.join(__dirname, "..", "results", "raw", SYM);
 const LANGS = ["en", "fr", "es", "ar", "zh", "ru"];
 const PROVIDERS = [
-  "assemblyai", "assemblyai-u3-pro", "mistral", "gemini", "gemini-3.5-flash",
-  "azure-openai", "alibaba", "fun-asr", "qwen3.5-omni-plus", "elevenlabs",
+  "assemblyai",
+  "assemblyai-u3-pro",
+  "mistral",
+  "gemini",
+  "gemini-3.5-flash",
+  "azure-openai",
+  "alibaba",
+  "fun-asr",
+  "qwen3.5-omni-plus",
+  "elevenlabs",
 ];
 
-const rows: { provider: string; lang: string; nwer: number; cer: number }[] = [];
+const rows: { provider: string; lang: string; nwer: number; cer: number }[] =
+  [];
 for (const lang of LANGS) {
   const gtPath = path.join(GT_DIR, `${lang}.txt`);
   if (!fs.existsSync(gtPath)) continue;
@@ -25,7 +34,12 @@ for (const lang of LANGS) {
     if (!fs.existsSync(f)) continue;
     const hyp = JSON.parse(fs.readFileSync(f, "utf-8")).fullText || "";
     const m = computeMetrics(gt, hyp, lang);
-    rows.push({ provider: p, lang, nwer: m.normalizedWer.wer, cer: m.normalizedWer.cer });
+    rows.push({
+      provider: p,
+      lang,
+      nwer: m.normalizedWer.wer,
+      cer: m.normalizedWer.cer,
+    });
   }
 }
 

@@ -15,54 +15,54 @@ Recording note: the EN track is the live English interpretation/floor where Nebe
 
 ## Accented-English error table
 
-| Timestamp | Consensus | assemblyai | mistral | gemini | azure-openai | alibaba | elevenlabs | Error type |
-|---|---|---|---|---|---|---|---|---|
-| ~5:30 | appalling | polling | polling | appalling | appalling | appalling | appalling | ACOUSTIC (stress test) |
-| ~2:00 | minors in cold blood | miners in crime | (ok) | (ok) | (ok) | (ok) | (ok) | ACOUSTIC double sub |
-| ~1:30 | three successive waves | ways | waves | waves | waves | waves | ways | ACOUSTIC |
-| ~3:30 | approaching the scene | this in itself | scene | scene | the Senate | scene | scene | ACOUSTIC (aa drop; az homophone) |
-| ~3:30 | Tokyo barred | barters | Bart | Broadcasting…participated | (dropped) | Bartels | barred | ACOUSTIC + HALLUCINATION |
-| ~0:30 | (at) Russia's request | "the eu, who was there" insert | "the U.S. Who was that?" | clean | "BBC? were you… crashes the request" | clean | (ok) | HALLUCINATION |
-| ~0:00 | Alexeyevich (patronymic) | "Vasily" | "Vasily Likseyev" | Alekseyevich | Alekseevich | "Vassily Lyubimov" | Alekseyevich | name invention |
-| ~5:00 | Russia | Russia | Russia | Russia | Russia | "Rescue" (1×) | Russia | ACOUSTIC |
-| ~5:30 | Olya Kovaleva | Kovaleva | Kovaliva | (drop) | "Olga Kovaliewa" | Kovalyova | Kovaleva | spelling drift |
-| ~12:30 | (disfluent noise) | — | — | "What's up? What's up?" | "We should remain serious"/"the mind visualize" | — | — | HALLUCINATION |
-| ~13:00 | Strait of Hormuz | (ok) | (ok) | (ok) | "of Hormuz" (Strait dropped) | (ok) | (ok) | deletion |
-| name | Shafaq | Shafakh | Schaffach | Shafak | Shafagh | Schaffach | Shafaq | ACOUSTIC |
+| Timestamp | Consensus                | assemblyai                     | mistral                  | gemini                    | azure-openai                                    | alibaba            | elevenlabs   | Error type                       |
+| --------- | ------------------------ | ------------------------------ | ------------------------ | ------------------------- | ----------------------------------------------- | ------------------ | ------------ | -------------------------------- |
+| ~5:30     | appalling                | polling                        | polling                  | appalling                 | appalling                                       | appalling          | appalling    | ACOUSTIC (stress test)           |
+| ~2:00     | minors in cold blood     | miners in crime                | (ok)                     | (ok)                      | (ok)                                            | (ok)               | (ok)         | ACOUSTIC double sub              |
+| ~1:30     | three successive waves   | ways                           | waves                    | waves                     | waves                                           | waves              | ways         | ACOUSTIC                         |
+| ~3:30     | approaching the scene    | this in itself                 | scene                    | scene                     | the Senate                                      | scene              | scene        | ACOUSTIC (aa drop; az homophone) |
+| ~3:30     | Tokyo barred             | barters                        | Bart                     | Broadcasting…participated | (dropped)                                       | Bartels            | barred       | ACOUSTIC + HALLUCINATION         |
+| ~0:30     | (at) Russia's request    | "the eu, who was there" insert | "the U.S. Who was that?" | clean                     | "BBC? were you… crashes the request"            | clean              | (ok)         | HALLUCINATION                    |
+| ~0:00     | Alexeyevich (patronymic) | "Vasily"                       | "Vasily Likseyev"        | Alekseyevich              | Alekseevich                                     | "Vassily Lyubimov" | Alekseyevich | name invention                   |
+| ~5:00     | Russia                   | Russia                         | Russia                   | Russia                    | Russia                                          | "Rescue" (1×)      | Russia       | ACOUSTIC                         |
+| ~5:30     | Olya Kovaleva            | Kovaleva                       | Kovaliva                 | (drop)                    | "Olga Kovaliewa"                                | Kovalyova          | Kovaleva     | spelling drift                   |
+| ~12:30    | (disfluent noise)        | —                              | —                        | "What's up? What's up?"   | "We should remain serious"/"the mind visualize" | —                  | —            | HALLUCINATION                    |
+| ~13:00    | Strait of Hormuz         | (ok)                           | (ok)                     | (ok)                      | "of Hormuz" (Strait dropped)                    | (ok)               | (ok)         | deletion                         |
+| name      | Shafaq                   | Shafakh                        | Schaffach                | Shafak                    | Shafagh                                         | Schaffach          | Shafaq       | ACOUSTIC                         |
 
 Confirm: "polling" vs "appalling" isolates exactly assemblyai + mistral as wrong; the other four correct.
 
 ## Proper-noun spelling table
 
-| Name | assemblyai | mistral | gemini | azure-openai | alibaba | elevenlabs |
-|---|---|---|---|---|---|---|
-| Nebenzia | Nybenzia/Nibenzia | Nibenzia | Nebenzya | "Vasilina Ibenzia" | Nebenzia | Nebenzya |
-| Starobelsk | Starybersk/Starobersk/Starobilsk/Starebsk | Starobylsk/Starobelsk | Starobilsk/Starobelsk | Starobelsk (9×, most stable)/"Stary Beslan" 1× | Starobilsk/Starobelsk | Starobilsk/Starobelsk/Starobe |
-| patronymic | "Vasily" | "Vasily Likseyev" | Alekseyevich | Alekseevich | "Vassily Lyubimov" | Alekseyevich |
-| Kyiv/Kiev | Kyiv19/Kiev3 | Kiev16/Kyiv6 | Kyiv 23 | Kiev20/Kyiv2 | Kyiv 23 | 12/12 split |
-| Olya Kovaleva | Kovaleva | Kovaliva | (drop) | "Olga Kovaliewa" | Kovalyova | Kovaleva |
-| Irina Zhivotikova | Jvotikova | Zivotikova | (drop) | Zivotikova | Zhivotikova | Zhevotikova |
-| Bucha | Bucha/Buchi | Buche/Bucci | Bucha | Bucha/Buchi | Bucha | Bucha |
-| Konstantin Dubovoy | "Constantine" | Konstantin | (drop) | Konstantin | Konstantin | Konstantin |
+| Name               | assemblyai                                | mistral               | gemini                | azure-openai                                   | alibaba               | elevenlabs                    |
+| ------------------ | ----------------------------------------- | --------------------- | --------------------- | ---------------------------------------------- | --------------------- | ----------------------------- |
+| Nebenzia           | Nybenzia/Nibenzia                         | Nibenzia              | Nebenzya              | "Vasilina Ibenzia"                             | Nebenzia              | Nebenzya                      |
+| Starobelsk         | Starybersk/Starobersk/Starobilsk/Starebsk | Starobylsk/Starobelsk | Starobilsk/Starobelsk | Starobelsk (9×, most stable)/"Stary Beslan" 1× | Starobilsk/Starobelsk | Starobilsk/Starobelsk/Starobe |
+| patronymic         | "Vasily"                                  | "Vasily Likseyev"     | Alekseyevich          | Alekseevich                                    | "Vassily Lyubimov"    | Alekseyevich                  |
+| Kyiv/Kiev          | Kyiv19/Kiev3                              | Kiev16/Kyiv6          | Kyiv 23               | Kiev20/Kyiv2                                   | Kyiv 23               | 12/12 split                   |
+| Olya Kovaleva      | Kovaleva                                  | Kovaliva              | (drop)                | "Olga Kovaliewa"                               | Kovalyova             | Kovaleva                      |
+| Irina Zhivotikova  | Jvotikova                                 | Zivotikova            | (drop)                | Zivotikova                                     | Zhivotikova           | Zhevotikova                   |
+| Bucha              | Bucha/Buchi                               | Buche/Bucci           | Bucha                 | Bucha/Buchi                                    | Bucha                 | Bucha                         |
+| Konstantin Dubovoy | "Constantine"                             | Konstantin            | (drop)                | Konstantin                                     | Konstantin            | Konstantin                    |
 
 azure-openai most consistent on Starobelsk but also worst name inventions; gemini/alibaba consistent on Kyiv; no provider rendered the patronymic correctly.
 
 ## Ranked anomaly list
 
-| Severity | Type | Timestamp | Providers | Evidence |
-|---|---|---|---|---|
-| HIGH | Acoustic semantic | ~5:30 | assemblyai, mistral | "Equally polling" for "appalling" |
-| HIGH | Acoustic semantic | ~2:00 | assemblyai | "kill miners in crime" for "minors in cold blood" |
-| HIGH | Hallucination noise-fill | ~12:30 | azure-openai, gemini | invented sentences in disfluent audio |
-| HIGH | Name corruption | ~0:00 | azure-openai, alibaba | "Vasilina Ibenzia", "Vassily Lyubimov" |
-| MED | Over-generation/overlap | whole | mistral | 435 utts, 1081 cpm, 115% coverage |
-| MED | Coverage gaps | 37.5+ min | gemini | 69.8% coverage, drops clip names |
-| MED | Lumping | whole | alibaba | 10 utts / 40 min |
-| MED | Hallucinated reading | ~3:30 | gemini | "Tokyo Broadcasting…participated" |
-| LOW | Garbled crosstalk | ~0:30 | assemblyai, azure-openai | "the eu, who was there"; "crashes the request" |
-| LOW | Place-name invention | ~3:30 | azure-openai | "Stary Beslan" |
-| LOW | Deletion | ~13:00 | azure-openai | "Strait" dropped |
-| INFO | Cyrillic = CORRECT | 5:30–7:00 | mistral 3.2%, azure 4%, alibaba 0.2% | untranslated Russian survivor clips; the 100%-Latin providers actually translated/dropped them |
+| Severity | Type                     | Timestamp | Providers                            | Evidence                                                                                       |
+| -------- | ------------------------ | --------- | ------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| HIGH     | Acoustic semantic        | ~5:30     | assemblyai, mistral                  | "Equally polling" for "appalling"                                                              |
+| HIGH     | Acoustic semantic        | ~2:00     | assemblyai                           | "kill miners in crime" for "minors in cold blood"                                              |
+| HIGH     | Hallucination noise-fill | ~12:30    | azure-openai, gemini                 | invented sentences in disfluent audio                                                          |
+| HIGH     | Name corruption          | ~0:00     | azure-openai, alibaba                | "Vasilina Ibenzia", "Vassily Lyubimov"                                                         |
+| MED      | Over-generation/overlap  | whole     | mistral                              | 435 utts, 1081 cpm, 115% coverage                                                              |
+| MED      | Coverage gaps            | 37.5+ min | gemini                               | 69.8% coverage, drops clip names                                                               |
+| MED      | Lumping                  | whole     | alibaba                              | 10 utts / 40 min                                                                               |
+| MED      | Hallucinated reading     | ~3:30     | gemini                               | "Tokyo Broadcasting…participated"                                                              |
+| LOW      | Garbled crosstalk        | ~0:30     | assemblyai, azure-openai             | "the eu, who was there"; "crashes the request"                                                 |
+| LOW      | Place-name invention     | ~3:30     | azure-openai                         | "Stary Beslan"                                                                                 |
+| LOW      | Deletion                 | ~13:00    | azure-openai                         | "Strait" dropped                                                                               |
+| INFO     | Cyrillic = CORRECT       | 5:30–7:00 | mistral 3.2%, azure 4%, alibaba 0.2% | untranslated Russian survivor clips; the 100%-Latin providers actually translated/dropped them |
 
 ## Headline findings
 
