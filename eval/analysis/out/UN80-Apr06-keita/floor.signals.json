@@ -1,0 +1,171 @@
+{
+  "providers": [
+    "assemblyai",
+    "mistral",
+    "gemini",
+    "azure-openai",
+    "alibaba",
+    "elevenlabs",
+    "gemini-3.5-flash",
+    "assemblyai-u3-pro",
+    "fun-asr",
+    "qwen3.5-omni-plus"
+  ],
+  "signals": {
+    "assemblyai": {
+      "utt_count": 130,
+      "char_count": 128369,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 750.0,
+      "coverage_pct": 90.9,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": null
+    },
+    "mistral": {
+      "utt_count": 1463,
+      "char_count": 147542,
+      "duration_min": 170.0,
+      "last_end_min": 171.1,
+      "chars_per_min": 868.0,
+      "coverage_pct": 90.0,
+      "fffd": 59,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 98.1,
+        "cjk": 0.4,
+        "cyrillic": 1.5
+      },
+      "off_script_pct": null
+    },
+    "gemini": {
+      "utt_count": 2146,
+      "char_count": 157127,
+      "duration_min": 171.2,
+      "last_end_min": 171.0,
+      "chars_per_min": 918.0,
+      "coverage_pct": 82.4,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 98.2,
+        "cjk": 0.4,
+        "cyrillic": 1.4
+      },
+      "off_script_pct": null
+    },
+    "azure-openai": {
+      "utt_count": 1406,
+      "char_count": 149928,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 876.0,
+      "coverage_pct": 91.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 98.1,
+        "cjk": 0.4,
+        "cyrillic": 1.5
+      },
+      "off_script_pct": null
+    },
+    "alibaba": {
+      "utt_count": 1255,
+      "char_count": 144989,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 847.0,
+      "coverage_pct": 91.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 98.1,
+        "cjk": 0.5,
+        "cyrillic": 1.4
+      },
+      "off_script_pct": null
+    },
+    "elevenlabs": {
+      "utt_count": 102,
+      "char_count": 150308,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 878.0,
+      "coverage_pct": 97.8,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 98.5,
+        "cyrillic": 1.5
+      },
+      "off_script_pct": null
+    },
+    "gemini-3.5-flash": {
+      "utt_count": 116,
+      "char_count": 148362,
+      "duration_min": 170.9,
+      "last_end_min": 170.9,
+      "chars_per_min": 868.0,
+      "coverage_pct": 97.1,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 98.1,
+        "cjk": 0.5,
+        "cyrillic": 1.5
+      },
+      "off_script_pct": null
+    },
+    "assemblyai-u3-pro": {
+      "utt_count": 62,
+      "char_count": 145781,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 851.0,
+      "coverage_pct": 97.6,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": null
+    },
+    "fun-asr": {
+      "utt_count": 1433,
+      "char_count": 148490,
+      "duration_min": 171.2,
+      "last_end_min": 171.2,
+      "chars_per_min": 867.0,
+      "coverage_pct": 90.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 98.1,
+        "cjk": 0.5,
+        "cyrillic": 1.5
+      },
+      "off_script_pct": null
+    },
+    "qwen3.5-omni-plus": {
+      "utt_count": 43,
+      "char_count": 93959,
+      "duration_min": 172.0,
+      "last_end_min": 172.0,
+      "chars_per_min": 546.0,
+      "coverage_pct": 100.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 96.9,
+        "cjk": 0.6,
+        "cyrillic": 2.4
+      },
+      "off_script_pct": null
+    }
+  }
+}

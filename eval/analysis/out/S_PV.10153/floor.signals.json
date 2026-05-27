@@ -1,0 +1,182 @@
+{
+  "providers": [
+    "assemblyai",
+    "mistral",
+    "gemini",
+    "azure-openai",
+    "alibaba",
+    "elevenlabs",
+    "gemini-3.5-flash",
+    "assemblyai-u3-pro",
+    "fun-asr",
+    "qwen3.5-omni-plus"
+  ],
+  "signals": {
+    "assemblyai": {
+      "utt_count": 29,
+      "char_count": 31212,
+      "duration_min": 80.3,
+      "last_end_min": 79.9,
+      "chars_per_min": 389.0,
+      "coverage_pct": 70.8,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 100.0
+      },
+      "off_script_pct": null
+    },
+    "mistral": {
+      "utt_count": 581,
+      "char_count": 54590,
+      "duration_min": 80.0,
+      "last_end_min": 80.0,
+      "chars_per_min": 682.0,
+      "coverage_pct": 84.6,
+      "fffd": 228,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 2.9,
+        "latin": 74.1,
+        "arabic": 9.9,
+        "cyrillic": 13.1
+      },
+      "off_script_pct": null
+    },
+    "gemini": {
+      "utt_count": 974,
+      "char_count": 59392,
+      "duration_min": 80.3,
+      "last_end_min": 80.2,
+      "chars_per_min": 740.0,
+      "coverage_pct": 75.7,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 3.1,
+        "latin": 75.3,
+        "arabic": 9.5,
+        "cyrillic": 12.1
+      },
+      "off_script_pct": null
+    },
+    "azure-openai": {
+      "utt_count": 679,
+      "char_count": 55213,
+      "duration_min": 80.0,
+      "last_end_min": 80.0,
+      "chars_per_min": 690.0,
+      "coverage_pct": 86.1,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 3.4,
+        "latin": 73.6,
+        "arabic": 10.0,
+        "cyrillic": 13.0
+      },
+      "off_script_pct": null
+    },
+    "alibaba": {
+      "utt_count": 775,
+      "char_count": 67614,
+      "duration_min": 82.5,
+      "last_end_min": 82.5,
+      "chars_per_min": 819.0,
+      "coverage_pct": 91.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 2.3,
+        "latin": 79.2,
+        "arabic": 8.1,
+        "cyrillic": 10.4
+      },
+      "off_script_pct": null
+    },
+    "elevenlabs": {
+      "utt_count": 28,
+      "char_count": 55946,
+      "duration_min": 80.0,
+      "last_end_min": 80.0,
+      "chars_per_min": 699.0,
+      "coverage_pct": 98.3,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 3.1,
+        "latin": 75.5,
+        "arabic": 8.3,
+        "cyrillic": 13.1
+      },
+      "off_script_pct": null
+    },
+    "gemini-3.5-flash": {
+      "utt_count": 36,
+      "char_count": 54844,
+      "duration_min": 79.8,
+      "last_end_min": 79.8,
+      "chars_per_min": 687.0,
+      "coverage_pct": 86.9,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 3.0,
+        "latin": 73.8,
+        "arabic": 10.1,
+        "cyrillic": 13.1
+      },
+      "off_script_pct": null
+    },
+    "assemblyai-u3-pro": {
+      "utt_count": 28,
+      "char_count": 46864,
+      "duration_min": 80.3,
+      "last_end_min": 79.9,
+      "chars_per_min": 584.0,
+      "coverage_pct": 96.4,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "latin": 99.5,
+        "cjk": 0.0,
+        "arabic": 0.5
+      },
+      "off_script_pct": null
+    },
+    "fun-asr": {
+      "utt_count": 659,
+      "char_count": 58094,
+      "duration_min": 80.0,
+      "last_end_min": 80.0,
+      "chars_per_min": 726.0,
+      "coverage_pct": 85.4,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 3.3,
+        "latin": 73.9,
+        "arabic": 9.8,
+        "cyrillic": 13.0
+      },
+      "off_script_pct": null
+    },
+    "qwen3.5-omni-plus": {
+      "utt_count": 21,
+      "char_count": 35893,
+      "duration_min": 84.0,
+      "last_end_min": 84.0,
+      "chars_per_min": 427.0,
+      "coverage_pct": 100.0,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 10.0,
+        "latin": 61.4,
+        "arabic": 16.7,
+        "cyrillic": 12.0
+      },
+      "off_script_pct": null
+    }
+  }
+}

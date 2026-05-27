@@ -1,0 +1,27 @@
+[
+  {
+    "symbol": "UN80-Apr06-keita",
+    "assetId": "k19/k19ajx0e2m",
+    "notes": "UN80 Initiative informal briefing (GA 80, 2026-04-06). Gemini misspelled Diene Keita as 'Diane Keita'. No PV record. Check proper-name handling (Keita, Bahous, Baerbock, Bogdan-Martin)."
+  },
+  {
+    "symbol": "S/PV.10156",
+    "assetId": "k10/k10fnw1w4w",
+    "notes": "Draft SC report to GA, 10156th meeting (2026-05-22). Mistral voxtral-mini emitted 70x U+FFFD on the Chinese track. Has PV ground truth (WER available). Focus zh CJK integrity."
+  },
+  {
+    "symbol": "UN80-Apr29-timestamps",
+    "assetId": "k1o/k1o2nlwyhl",
+    "notes": "UN80 Initiative informal briefing (GA 80, 2026-04-29). AssemblyAI timestamps partially off. No PV record. Check timestamp alignment vs audio."
+  },
+  {
+    "symbol": "Nebenzia-Starobelsk",
+    "assetId": "k1n/k1n273g87b",
+    "notes": "Nebenzia (Russian Federation) press conference on Starobelsk strike (2026-05-26). Russian-accented but clear English; AssemblyAI gave wrong words e.g. 'polling' for 'appalling'. No PV record."
+  },
+  {
+    "symbol": "S/PV.10153",
+    "assetId": "k1v/k1v2e5uujj",
+    "notes": "Middle East - Security Council 10153rd meeting (~80min). FLOOR-ONLY multilingual test: member statements in all 6 UN languages (ar/zh/ru/en/fr/es) on the original floor track. Has PV."
+  }
+]

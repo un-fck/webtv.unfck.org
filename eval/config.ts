@@ -6,6 +6,9 @@ export const UN_LANGUAGES: Record<string, string> = {
   ar: "arabic",
   zh: "chinese",
   ru: "russian",
+  // Floor/original-language track (Kaltura labels it "interlingua").
+  // Code "floor" → providers auto-detect language (see apiLanguage in lib/providers/utils.ts).
+  floor: "interlingua",
 };
 
 /** ISO code → documents.un.org language param */
