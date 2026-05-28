@@ -4,14 +4,22 @@ Overview of how AI models are used in the transcription and analysis pipeline.
 
 ## Models
 
-| Provider | Model | Used for |
+Transcription is routed **per language** (`STT_ROUTING` in `lib/providers/config.ts`, chosen from the eval in `eval/analysis/out/SYNTHESIS.md`):
+
+| Track | Provider | Model |
 | --- | --- | --- |
-| STT provider (any) | configurable via `STT_PROVIDER` | Audio transcription |
+| English | AssemblyAI | `universal-3-pro` |
+| French / Spanish / Arabic / Russian | Azure OpenAI | `gpt-4o-transcribe` |
+| Chinese | Alibaba | `fun-asr` |
+| Floor (multilingual original) | Google Gemini | `gemini-3-flash-preview` |
+
+| Other AI | Model | Used for |
+| --- | --- | --- |
 | Azure OpenAI | `gpt-5.4` (configurable via `STT_ANALYSIS_MODEL`) | Speaker identification, resegmentation, topic definition, proposition analysis |
 | Azure OpenAI | `gpt-5.4-mini` (configurable via `STT_ANALYSIS_MODEL_MINI`) | Sentence-level topic tagging (reasoning disabled) |
 | Google Gemini | `gemini-3-flash-preview` | PV document alignment |
 
-Transcription is **provider-agnostic**: any STT provider registered in `lib/providers/registry.ts` can be selected via `STT_PROVIDER`. The choice of provider does not change the rest of the pipeline — the same Azure OpenAI analysis stages run on the resulting transcript regardless. Analysis model names are configurable via `STT_ANALYSIS_MODEL` and `STT_ANALYSIS_MODEL_MINI`.
+The choice of provider does not change the rest of the pipeline — the same Azure OpenAI analysis stages run regardless, and **no provider names speakers** (they emit opaque/numeric labels; the OpenAI stage in step 2 assigns names from context). Analysis model names are configurable via `STT_ANALYSIS_MODEL` and `STT_ANALYSIS_MODEL_MINI`.
 
 All AI calls are tracked in the `processing_usage_events` table via `lib/usage-tracking.ts`, recording token counts, duration, and estimated cost.
 
@@ -21,7 +29,7 @@ All AI calls are tracked in the `processing_usage_events` table via `lib/usage-t
 Kaltura audio URL
        │
        ▼
- 1. Transcription — STT provider (any, via STT_PROVIDER)
+ 1. Transcription — STT provider chosen per language (STT_ROUTING)
        │   Long audio may be split into chunks inside the provider.
        │
        ▼
@@ -53,10 +61,10 @@ Proposition analysis is **never** part of this pipeline — it is always on-dema
 
 ## 1. Transcription
 
-**Entry point:** `lib/transcription.ts` → `provider.transcribe()` (provider selected by `STT_PROVIDER`)
+**Entry point:** `lib/transcription.ts` → `getSTTProvider(language).transcribe()` (provider chosen per language via `STT_ROUTING` in `lib/providers/config.ts`)
 **Triggered by:** `POST /api/transcripts`
 
-Audio is downloaded from Kaltura and transcribed by the configured STT provider. Provider implementations live in `lib/providers/` and are registered in `lib/providers/registry.ts`. Each provider normalizes its output into the same `RawParagraph` shape, so the downstream pipeline is identical regardless of which provider ran. All 6 UN official languages plus the "floor" (original) channel are supported.
+Audio is downloaded from Kaltura and transcribed by the provider routed for that language. Provider implementations live in `lib/providers/` and are registered in `lib/providers/registry.ts`. Each provider normalizes its output into the same `RawParagraph` shape, so the downstream pipeline is identical regardless of which provider ran. All 6 UN official languages plus the "floor" (original) channel are supported.
 
 **Chunking:** Providers that need it split long audio into chunks internally and stitch the results back together. (The Gemini provider, for example, chunks at 10 minutes with ffmpeg to avoid timestamp hallucination on long clips.)
 

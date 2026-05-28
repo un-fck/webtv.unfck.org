@@ -146,9 +146,15 @@ async function parallelMap<T, R>(
  * qwen3.5-omni-plus (omni chat model — may return only plain text, which the
  * transcribeChunk parser falls back to as a single chunk-spanning utterance).
  */
-function makeAlibaba(model: string, name: string): TranscriptionProvider {
+function makeAlibaba(
+  model: string,
+  name: string,
+  label: string,
+): TranscriptionProvider {
   return {
     name,
+    label,
+    model,
     capabilities: {
       speakerIdentification: false,
       paragraphSegmentation: false,
@@ -241,8 +247,10 @@ function makeAlibaba(model: string, name: string): TranscriptionProvider {
 // `alibaba` uses the async file-transcription interface (qwen3-asr-flash-filetrans)
 // so we get real sentence/word timestamps. The Qwen-ASR series does not support
 // diarization on any interface, so speaker_id is not returned (use fun-asr for that).
-export const alibaba: TranscriptionProvider = {
-  name: "alibaba",
+export const alibabaQwen3Asr: TranscriptionProvider = {
+  name: "alibaba-qwen3-asr",
+  label: "Alibaba Qwen3-ASR-Flash",
+  model: "qwen3-asr-flash-filetrans",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -251,7 +259,7 @@ export const alibaba: TranscriptionProvider = {
   async transcribe(audioUrl, opts) {
     const lang = apiLanguage(opts?.language);
     return transcribeViaFiletrans(
-      "alibaba",
+      "alibaba-qwen3-asr",
       "qwen3-asr-flash-filetrans",
       { file_url: audioUrl },
       { enable_words: true, ...(lang ? { language: lang } : {}) },
@@ -262,7 +270,8 @@ export const alibaba: TranscriptionProvider = {
 
 // qwen3.5-omni-plus stays on the synchronous multimodal/chat endpoint (it is a
 // chat model, not a file-transcription model).
-export const alibabaOmni = makeAlibaba(
+export const alibabaQwen35Omni = makeAlibaba(
   "qwen3.5-omni-plus",
-  "qwen3.5-omni-plus",
+  "alibaba-qwen3.5-omni",
+  "Alibaba Qwen3.5-Omni",
 );

@@ -115,19 +115,19 @@
       "off_script_pct": 0.0
     },
     "fun-asr": {
-      "utt_count": 383,
-      "char_count": 33688,
+      "utt_count": 398,
+      "char_count": 32106,
       "duration_min": 39.9,
       "last_end_min": 39.9,
-      "chars_per_min": 844.0,
-      "coverage_pct": 86.9,
+      "chars_per_min": 804.0,
+      "coverage_pct": 87.0,
       "fffd": 0,
       "repetition": 0.0,
       "script_mix": {
-        "latin": 98.2,
-        "cyrillic": 1.8
+        "latin": 98.1,
+        "cyrillic": 1.9
       },
-      "off_script_pct": 1.8
+      "off_script_pct": 1.9
     },
     "qwen3.5-omni-plus": {
       "utt_count": 10,

@@ -25,6 +25,8 @@ const CO_API_KEY = process.env.CO_API_KEY!;
 
 export const cohere: TranscriptionProvider = {
   name: "cohere",
+  label: "Cohere",
+  model: "cohere-transcribe-03-2026",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,

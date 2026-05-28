@@ -6,7 +6,9 @@ import { downloadAudioToTemp, apiLanguage } from "./utils";
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY!;
 
 export const elevenlabs: TranscriptionProvider = {
-  name: "elevenlabs",
+  name: "elevenlabs-scribe-v2",
+  label: "ElevenLabs Scribe v2",
+  model: "scribe_v2",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -79,7 +81,7 @@ export const elevenlabs: TranscriptionProvider = {
         utterances.length > 0 ? utterances[utterances.length - 1].end : 0;
 
       return {
-        provider: "elevenlabs",
+        provider: "elevenlabs-scribe-v2",
         language: raw.language_code || opts?.language || "en",
         fullText: raw.text,
         utterances,

@@ -137,10 +137,10 @@
     },
     "fun-asr": {
       "utt_count": 1433,
-      "char_count": 148490,
+      "char_count": 147550,
       "duration_min": 171.2,
       "last_end_min": 171.2,
-      "chars_per_min": 867.0,
+      "chars_per_min": 862.0,
       "coverage_pct": 90.0,
       "fffd": 0,
       "repetition": 0.0,

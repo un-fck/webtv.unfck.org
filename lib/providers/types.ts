@@ -39,7 +39,12 @@ export interface ProviderCapabilities {
 
 /** Interface every provider adapter must implement */
 export interface TranscriptionProvider {
+  /** Registry key / stable identifier, e.g. "assemblyai-universal-3-pro". */
   name: string;
+  /** Human-readable name for display, e.g. "AssemblyAI Universal-3 Pro". */
+  label: string;
+  /** Underlying model id, e.g. "universal-3-pro". */
+  model: string;
   capabilities: ProviderCapabilities;
   supportedLanguages?: string[];
   transcribe(

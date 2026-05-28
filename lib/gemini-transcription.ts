@@ -64,6 +64,8 @@ export interface GeminiTranscriptionOptions {
   withThinking?: boolean;
   /** BCP-47 language code, e.g. 'en', 'fr'. Default: 'en'. */
   language?: string;
+  /** Gemini model id. Default: GEMINI_MODEL (gemini-3-flash-preview). */
+  model?: string;
   /** Transcript ID for logging. */
   transcriptId?: string;
 }
@@ -175,6 +177,7 @@ async function callGeminiOnFile(
 ): Promise<GeminiCallResult> {
   const langCode = options.language ?? "en";
   const langName = getLanguageFullName(langCode);
+  const model = options.model ?? GEMINI_MODEL;
 
   console.log("  [Gemini] Uploading audio...");
   const file = await uploadFileToGemini(filePath, "un-transcript");
@@ -183,7 +186,7 @@ async function callGeminiOnFile(
 
   const thinking = options.withThinking ?? false;
   console.log(
-    `  [Gemini] Calling ${GEMINI_MODEL}${thinking ? " (thinking ON)" : " (thinking OFF)"}...`,
+    `  [Gemini] Calling ${model}${thinking ? " (thinking ON)" : " (thinking OFF)"}...`,
   );
 
   // Note: we intentionally do NOT use responseMimeType:'application/json' + responseSchema here.
@@ -209,7 +212,7 @@ async function callGeminiOnFile(
     generationConfig,
   };
 
-  const apiUrl = `${GEMINI_BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const apiUrl = `${GEMINI_BASE}/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
   const result = await httpsPostJson(apiUrl, requestBody);
   await deleteGeminiFile(file.name);
 

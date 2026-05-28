@@ -127,16 +127,17 @@
       "off_script_pct": 0.0
     },
     "fun-asr": {
-      "utt_count": 75,
-      "char_count": 6375,
+      "utt_count": 76,
+      "char_count": 6386,
       "duration_min": 9.1,
       "last_end_min": 9.1,
-      "chars_per_min": 702.0,
+      "chars_per_min": 703.0,
       "coverage_pct": 80.3,
       "fffd": 0,
       "repetition": 0.0,
       "script_mix": {
-        "latin": 100.0
+        "latin": 100.0,
+        "cjk": 0.0
       },
       "off_script_pct": 0.0
     },

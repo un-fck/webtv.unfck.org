@@ -86,7 +86,9 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 export const voxtralSmall: TranscriptionProvider = {
-  name: "voxtral-small",
+  name: "mistral-voxtral-small",
+  label: "Mistral Voxtral Small",
+  model: "voxtral-small-latest",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -147,7 +149,7 @@ export const voxtralSmall: TranscriptionProvider = {
       );
 
       return {
-        provider: "voxtral-small",
+        provider: "mistral-voxtral-small",
         language: lang,
         fullText,
         utterances,

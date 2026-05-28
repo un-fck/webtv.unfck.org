@@ -13,13 +13,13 @@ This app scrapes [UN Web TV](https://webtv.un.org/en/schedule) (which has no pub
 - **Video schedule table** with column filters, sorting, pagination, and global search (TanStack Table)
 - **Full-archive search** via PostgreSQL (beyond the rolling schedule window)
 - **Embedded video pages** with Kaltura player
-- **AI transcription** via Gemini with speaker diarization and paragraph breaks
+- **AI transcription** with per-language speech-to-text routing (AssemblyAI / Azure / Alibaba / Gemini), diarization, and paragraph breaks
 - **Speaker identification** via Azure OpenAI (maps speaker labels to named delegates)
 - **Scheduled transcription** for upcoming events (cron job picks them up when audio becomes available)
 - **JSON API** for programmatic access to video data
 - **Status badges** (Live / Scheduled / Finished) with smart sorting
 - **Metadata extraction** from titles (UN body, event code, session number, etc.)
-- **API cost tracking** per transcript (Gemini hours, OpenAI tokens)
+- **API cost tracking** per transcript (STT provider usage, OpenAI tokens)
 
 ## Documentation
 
@@ -68,9 +68,11 @@ See `.env.example` for all variables. Core ones:
 | Variable                | Required   | Purpose                        |
 | ----------------------- | ---------- | ------------------------------ |
 | `DATABASE_URL`          | Yes        | PostgreSQL connection string   |
-| `GEMINI_API_KEY`        | Yes        | Transcription (Gemini)         |
-| `AZURE_OPENAI_API_KEY`  | Yes        | Speaker identification         |
-| `AZURE_OPENAI_ENDPOINT` | Yes        | Speaker identification         |
+| `GEMINI_API_KEY`        | Yes        | Floor transcription + PV alignment |
+| `ASSEMBLYAI_API_KEY`    | Yes        | English transcription          |
+| `DASHSCOPE_API_KEY`     | Yes        | Chinese transcription (Fun-ASR)|
+| `AZURE_OPENAI_API_KEY`  | Yes        | fr/es/ar/ru transcription + speaker ID |
+| `AZURE_OPENAI_ENDPOINT` | Yes        | as above                       |
 | `CRON_SECRET`           | Production | Vercel cron job auth           |
 
 ## Tech Stack
@@ -81,7 +83,7 @@ See `.env.example` for all variables. Core ones:
 - **UI**: shadcn/ui, Lucide icons, Radix UI primitives
 - **Table**: TanStack Table v8
 - **Database**: PostgreSQL via `pg` connection pool
-- **Transcription**: Gemini (batch)
+- **Transcription**: per-language STT routing (AssemblyAI Universal-3 Pro, Azure gpt-4o-transcribe, Alibaba Fun-ASR, Gemini 3 Flash) — see `lib/providers/config.ts`
 - **Speaker ID**: Azure OpenAI (structured output via Zod)
 - **Video hosting**: Kaltura (partner ID: 2503451)
 - **Deployment**: Vercel — three cron jobs: `process-scheduled` every 5 min, `sync-videos` every 15 min, `check-pv` every 6 hours

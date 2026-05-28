@@ -12,10 +12,14 @@ const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;
  */
 function makeAssemblyai(
   name: string,
+  label: string,
+  model: string,
   speechModels?: string[],
 ): TranscriptionProvider {
   return {
     name,
+    label,
+    model,
     capabilities: {
       speakerIdentification: false,
       paragraphSegmentation: false,
@@ -79,8 +83,14 @@ function makeAssemblyai(
   };
 }
 
-export const assemblyai = makeAssemblyai("assemblyai");
-export const assemblyaiU3Pro = makeAssemblyai("assemblyai-u3-pro", [
-  "universal-3-pro",
+export const assemblyaiUniversal2 = makeAssemblyai(
+  "assemblyai-universal-2",
+  "AssemblyAI Universal-2",
   "universal-2",
-]);
+);
+export const assemblyaiUniversal3Pro = makeAssemblyai(
+  "assemblyai-universal-3-pro",
+  "AssemblyAI Universal-3 Pro",
+  "universal-3-pro",
+  ["universal-3-pro", "universal-2"],
+);

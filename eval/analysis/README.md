@@ -9,6 +9,12 @@ qualitative/structural study of provider _failure modes_.
 **Read [`SYNTHESIS.md`](SYNTHESIS.md) first** — it has the final routing decision and
 all findings. Per-video deep dives are in `out/<symbol>/REPORT.md`.
 
+> **Note:** this study ran before the provider registry keys were renamed to the
+> `{vendor}-{model}` scheme. Cached outputs, scripts, and reports here use the **old**
+> keys (`assemblyai-u3-pro`→`assemblyai-universal-3-pro`, `fun-asr`→`alibaba-fun-asr`,
+> `alibaba`→`alibaba-qwen3-asr`, `gemini`→`gemini-3-flash`, `azure-openai`→`azure-gpt-4o-transcribe`).
+> Kept as a historical record.
+
 ## Final decision (see SYNTHESIS §7)
 
 | Track                               | Provider                                                               |

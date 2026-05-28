@@ -14,7 +14,9 @@ const LANG_MAP: Record<string, string> = {
 };
 
 export const azureSpeech: TranscriptionProvider = {
-  name: "azure-speech",
+  name: "azure-speech-batch",
+  label: "Azure Speech (Batch)",
+  model: "azure-speech-batch",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -115,7 +117,7 @@ export const azureSpeech: TranscriptionProvider = {
     await fetch(jobUrl, { method: "DELETE", headers: subKey });
 
     return {
-      provider: "azure-speech",
+      provider: "azure-speech-batch",
       language: opts?.language || "en",
       fullText,
       utterances,

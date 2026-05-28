@@ -16,22 +16,26 @@ Audio is sourced from Kaltura, the UN's video hosting platform. For each session
 
 ## Providers
 
-The eval system benchmarks the providers registered in `lib/providers/registry.ts`. Two Gemini variants are registered: `gemini` (the production provider, with a richer named-speaker schema) and `gemini-eval` (a simpler diarization-only variant used when benchmarking apples-to-apples against other providers).
+The eval system benchmarks the providers registered in `lib/providers/registry.ts`. Registry keys follow a `{vendor}-{model}` scheme. All Gemini variants emit numeric speaker IDs only (no names — names are assigned downstream by the OpenAI pipeline in the main app).
 
 | Provider | Registry name | Model | Mechanism |
 |---|---|---|---|
-| AssemblyAI | `assemblyai` | Universal-2 | URL submission, polling |
-| Azure OpenAI | `azure-openai` | gpt-4o-transcribe-diarize | File upload |
-| Azure Speech | `azure-speech` | Cognitive Services Batch | Batch job submission, polling |
-| Deepgram | `deepgram` | Nova-3 | File upload |
-| ElevenLabs | `elevenlabs` | Scribe v2 | File upload |
-| Gemini (eval) | `gemini-eval` | gemini-3-flash-preview | File upload to Gemini Files API, structured prompt |
-| Gemini (prod) | `gemini` | gemini-3-flash-preview | Same, but production schema (named speakers, etc.) |
-| Google Chirp | `google-chirp` | chirp_3 (Speech V2) | FLAC conversion, GCS upload, batch recognition |
-| Groq | `groq-whisper` | whisper-large-v3 | File upload, chunked for files >24 MB |
-| Alibaba | `alibaba` | Qwen3-ASR-Flash | 4-minute chunks, base64 encoded |
-| Mistral | `mistral` | voxtral-mini-latest | File upload |
-| Cohere | `cohere` | (see provider) | File upload |
+| AssemblyAI Universal-2 | `assemblyai-universal-2` | universal-2 | URL submission, polling |
+| AssemblyAI Universal-3 Pro | `assemblyai-universal-3-pro` | universal-3-pro | URL submission, polling |
+| Azure OpenAI | `azure-gpt-4o-transcribe` | gpt-4o-transcribe-diarize | File upload |
+| Azure Speech | `azure-speech-batch` | Cognitive Services Batch | Batch job submission, polling |
+| Deepgram | `deepgram-nova-3` | Nova-3 | File upload |
+| ElevenLabs | `elevenlabs-scribe-v2` | Scribe v2 | File upload |
+| Gemini 3 Flash | `gemini-3-flash` | gemini-3-flash-preview | File upload to Gemini Files API, structured prompt |
+| Gemini 3.5 Flash | `gemini-3.5-flash` | gemini-3.5-flash | Same |
+| Google Chirp | `google-chirp-3` | chirp_3 (Speech V2) | FLAC conversion, GCS upload, batch recognition |
+| Groq | `groq-whisper-large-v3` | whisper-large-v3 | File upload, chunked for files >24 MB |
+| Alibaba Qwen3-ASR | `alibaba-qwen3-asr` | qwen3-asr-flash-filetrans | Async file transcription |
+| Alibaba Qwen3.5-Omni | `alibaba-qwen3.5-omni` | qwen3.5-omni-plus | 4-minute chunks, base64 encoded |
+| Alibaba Fun-ASR | `alibaba-fun-asr` | fun-asr | Async file transcription (diarization) |
+| Mistral Voxtral Mini | `mistral-voxtral-mini` | voxtral-mini-latest | File upload |
+| Mistral Voxtral Small | `mistral-voxtral-small` | voxtral-small-latest | Chat completions (audio) |
+| Cohere | `cohere` | cohere-transcribe-03-2026 | File upload |
 
 All providers produce a normalized transcript format: `{provider, language, fullText, utterances[], durationMs}`, where each utterance has a speaker label and start/end timestamps in milliseconds. Providers that support word-level timestamps (AssemblyAI, Deepgram, ElevenLabs, Azure Speech, Google Chirp, Cohere) also return `words[]` per utterance with per-word timing.
 

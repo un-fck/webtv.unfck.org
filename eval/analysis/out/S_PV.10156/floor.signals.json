@@ -3,6 +3,7 @@
     "assemblyai",
     "mistral",
     "gemini",
+    "azure-openai",
     "alibaba",
     "elevenlabs",
     "gemini-3.5-flash",
@@ -52,6 +53,21 @@
       "script_mix": {
         "cjk": 8.6,
         "latin": 91.4
+      },
+      "off_script_pct": null
+    },
+    "azure-openai": {
+      "utt_count": 69,
+      "char_count": 5044,
+      "duration_min": 9.1,
+      "last_end_min": 9.1,
+      "chars_per_min": 557.0,
+      "coverage_pct": 81.4,
+      "fffd": 0,
+      "repetition": 0.0,
+      "script_mix": {
+        "cjk": 9.1,
+        "latin": 90.9
       },
       "off_script_pct": null
     },
@@ -115,12 +131,12 @@
       "off_script_pct": null
     },
     "fun-asr": {
-      "utt_count": 75,
-      "char_count": 5040,
+      "utt_count": 76,
+      "char_count": 5002,
       "duration_min": 9.1,
       "last_end_min": 9.1,
-      "chars_per_min": 556.0,
-      "coverage_pct": 78.3,
+      "chars_per_min": 552.0,
+      "coverage_pct": 78.2,
       "fffd": 0,
       "repetition": 0.0,
       "script_mix": {

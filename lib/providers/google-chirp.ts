@@ -139,7 +139,9 @@ async function ensureBucket(bucket: string, projectId: string): Promise<void> {
 }
 
 export const googleChirp: TranscriptionProvider = {
-  name: "google-chirp",
+  name: "google-chirp-3",
+  label: "Google Chirp 3",
+  model: "chirp_3",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -301,7 +303,7 @@ export const googleChirp: TranscriptionProvider = {
       );
 
       return {
-        provider: "google-chirp",
+        provider: "google-chirp-3",
         language: lang,
         fullText,
         utterances,

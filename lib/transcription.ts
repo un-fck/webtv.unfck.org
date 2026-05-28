@@ -244,7 +244,7 @@ async function runTranscriptionPipeline(
   kalturaId: string,
 ): Promise<void> {
   try {
-    const provider = getSTTProvider();
+    const provider = getSTTProvider(languageCode);
     await updateTranscriptionStatus(transcriptId, "transcribing");
     plog(
       `[Pipeline] Starting transcription with ${provider.name} for ${transcriptId}`,
@@ -450,7 +450,7 @@ export async function submitTranscription(
     await deleteTranscriptsForEntry(entryId, lang);
   }
 
-  const provider = getSTTProvider();
+  const provider = getSTTProvider(lang);
 
   // Serialize the start decision per video+language so two simultaneous
   // requests can't each create a fresh transcript row. Reuse an existing

@@ -14,14 +14,14 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 258,
+    "name_disagreements": 270,
     "unique_pn_hallucination": [
       {
-        "name": "Moderator",
-        "provider": "qwen3.5-omni-plus",
+        "name": "Thankyouverymuch",
+        "provider": "fun-asr",
         "count": 3,
         "likely": "hallucination",
-        "at": "36:00"
+        "at": "19:40"
       },
       {
         "name": "Nebenzia",
@@ -31,11 +31,11 @@
         "at": "0:00"
       },
       {
-        "name": "Olya",
-        "provider": "gemini-3.5-flash",
-        "count": 2,
+        "name": "Moderator",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
         "likely": "hallucination",
-        "at": "5:33"
+        "at": "36:00"
       },
       {
         "name": "News Agency",
@@ -45,18 +45,11 @@
         "at": "28:59"
       },
       {
-        "name": "Star",
-        "provider": "fun-asr",
+        "name": "Olya",
+        "provider": "gemini-3.5-flash",
         "count": 2,
         "likely": "hallucination",
-        "at": "0:02"
-      },
-      {
-        "name": "Does",
-        "provider": "fun-asr",
-        "count": 2,
-        "likely": "hallucination",
-        "at": "33:55"
+        "at": "5:33"
       }
     ],
     "unique_numbers": 30,
@@ -126,12 +119,12 @@
         "chars_per_min": 796.0
       },
       "fun-asr": {
-        "utt_count": 415,
-        "coverage_pct": 86.1,
+        "utt_count": 417,
+        "coverage_pct": 86.3,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 1.9,
-        "chars_per_min": 803.0
+        "chars_per_min": 809.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 10,
@@ -158,7 +151,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 249,
+    "name_disagreements": 255,
     "unique_pn_hallucination": [
       {
         "name": "Lavrov",
@@ -168,21 +161,28 @@
         "at": "12:00"
       },
       {
-        "name": "Star",
-        "provider": "fun-asr",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "0:02"
-      },
-      {
         "name": "Moderator",
         "provider": "qwen3.5-omni-plus",
         "count": 3,
         "likely": "hallucination",
         "at": "36:00"
+      },
+      {
+        "name": "Planned",
+        "provider": "fun-asr",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "20:34"
+      },
+      {
+        "name": "Thankyouverymuch",
+        "provider": "fun-asr",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "19:40"
       }
     ],
-    "unique_numbers": 30,
+    "unique_numbers": 26,
     "signals": {
       "assemblyai": {
         "utt_count": 113,
@@ -249,12 +249,12 @@
         "chars_per_min": 795.0
       },
       "fun-asr": {
-        "utt_count": 404,
-        "coverage_pct": 86.1,
+        "utt_count": 410,
+        "coverage_pct": 86.2,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": null,
-        "chars_per_min": 804.0
+        "chars_per_min": 805.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 10,
@@ -280,7 +280,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 282,
+    "name_disagreements": 296,
     "unique_pn_hallucination": [
       {
         "name": "Technique",
@@ -304,20 +304,6 @@
         "at": "13:28"
       },
       {
-        "name": "Parce",
-        "provider": "gemini",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "32:06"
-      },
-      {
-        "name": "Moderator",
-        "provider": "qwen3.5-omni-plus",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "36:00"
-      },
-      {
         "name": "Throughout",
         "provider": "qwen3.5-omni-plus",
         "count": 3,
@@ -325,11 +311,11 @@
         "at": "16:00"
       },
       {
-        "name": "Ceux",
-        "provider": "gemini",
-        "count": 2,
+        "name": "Moderator",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
         "likely": "hallucination",
-        "at": "6:13"
+        "at": "36:00"
       },
       {
         "name": "Armed Forces",
@@ -346,14 +332,21 @@
         "at": "1:07"
       },
       {
-        "name": "Gol",
+        "name": "Avant",
         "provider": "fun-asr",
         "count": 2,
         "likely": "hallucination",
-        "at": "25:58"
+        "at": "3:14"
+      },
+      {
+        "name": "Organization",
+        "provider": "qwen3.5-omni-plus",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "12:00"
       }
     ],
-    "unique_numbers": 7,
+    "unique_numbers": 5,
     "signals": {
       "mistral": {
         "utt_count": 427,
@@ -412,12 +405,12 @@
         "chars_per_min": 794.0
       },
       "fun-asr": {
-        "utt_count": 383,
-        "coverage_pct": 86.9,
+        "utt_count": 398,
+        "coverage_pct": 87.0,
         "fffd": 0,
         "repetition": 0.0,
-        "off_script_pct": 1.8,
-        "chars_per_min": 844.0
+        "off_script_pct": 1.9,
+        "chars_per_min": 804.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 10,
@@ -443,7 +436,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 202,
+    "name_disagreements": 210,
     "unique_pn_hallucination": [
       {
         "name": "Moderator",
@@ -453,18 +446,18 @@
         "at": "36:00"
       },
       {
-        "name": "Key Topic",
-        "provider": "qwen3.5-omni-plus",
-        "count": 2,
-        "likely": "hallucination",
-        "at": "24:00"
-      },
-      {
         "name": "Nebenzia",
         "provider": "qwen3.5-omni-plus",
         "count": 2,
         "likely": "hallucination",
         "at": "0:00"
+      },
+      {
+        "name": "Key Topic",
+        "provider": "qwen3.5-omni-plus",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "24:00"
       }
     ],
     "unique_numbers": 30,
@@ -526,12 +519,12 @@
         "chars_per_min": 726.0
       },
       "fun-asr": {
-        "utt_count": 347,
-        "coverage_pct": 87.8,
+        "utt_count": 340,
+        "coverage_pct": 87.9,
         "fffd": 0,
         "repetition": 0.0,
-        "off_script_pct": 41.7,
-        "chars_per_min": 763.0
+        "off_script_pct": 40.9,
+        "chars_per_min": 691.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 10,
@@ -558,28 +551,14 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 303,
+    "name_disagreements": 313,
     "unique_pn_hallucination": [
-      {
-        "name": "Bar",
-        "provider": "fun-asr",
-        "count": 10,
-        "likely": "hallucination",
-        "at": "1:38"
-      },
       {
         "name": "Middle",
         "provider": "assemblyai",
         "count": 3,
         "likely": "hallucination",
         "at": "1:28"
-      },
-      {
-        "name": "Sayyid",
-        "provider": "assemblyai-u3-pro",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "10:04"
       },
       {
         "name": "Imarat",
@@ -596,6 +575,13 @@
         "at": "10:04"
       },
       {
+        "name": "Bar",
+        "provider": "fun-asr",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "1:38"
+      },
+      {
         "name": "Brazil",
         "provider": "gemini",
         "count": 2,
@@ -610,11 +596,18 @@
         "at": "1:07"
       },
       {
-        "name": "Qanun",
+        "name": "May God",
         "provider": "assemblyai-u3-pro",
         "count": 2,
         "likely": "hallucination",
         "at": "10:04"
+      },
+      {
+        "name": "Kowloon",
+        "provider": "assemblyai-u3-pro",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "69:16"
       },
       {
         "name": "Taiwan",
@@ -624,14 +617,14 @@
         "at": "69:16"
       },
       {
-        "name": "May God",
+        "name": "Qanun",
         "provider": "assemblyai-u3-pro",
         "count": 2,
         "likely": "hallucination",
         "at": "10:04"
       }
     ],
-    "unique_numbers": 2,
+    "unique_numbers": 0,
     "signals": {
       "assemblyai": {
         "utt_count": 29,
@@ -698,12 +691,12 @@
         "chars_per_min": 584.0
       },
       "fun-asr": {
-        "utt_count": 659,
+        "utt_count": 661,
         "coverage_pct": 85.4,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": null,
-        "chars_per_min": 726.0
+        "chars_per_min": 689.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 21,
@@ -732,7 +725,7 @@
     ],
     "name_disagreements": 0,
     "unique_pn_hallucination": [],
-    "unique_numbers": 4,
+    "unique_numbers": 2,
     "signals": {
       "assemblyai": {
         "utt_count": 1,
@@ -799,12 +792,12 @@
         "chars_per_min": 448.0
       },
       "fun-asr": {
-        "utt_count": 66,
-        "coverage_pct": 76.9,
+        "utt_count": 69,
+        "coverage_pct": 77.0,
         "fffd": 0,
         "repetition": 0.0,
-        "off_script_pct": 0.8,
-        "chars_per_min": 581.0
+        "off_script_pct": 1.0,
+        "chars_per_min": 502.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 3,
@@ -833,7 +826,7 @@
     ],
     "name_disagreements": 41,
     "unique_pn_hallucination": [],
-    "unique_numbers": 5,
+    "unique_numbers": 0,
     "signals": {
       "assemblyai": {
         "utt_count": 3,
@@ -900,12 +893,12 @@
         "chars_per_min": 688.0
       },
       "fun-asr": {
-        "utt_count": 75,
+        "utt_count": 76,
         "coverage_pct": 80.3,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.0,
-        "chars_per_min": 702.0
+        "chars_per_min": 703.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 3,
@@ -934,7 +927,7 @@
     ],
     "name_disagreements": 29,
     "unique_pn_hallucination": [],
-    "unique_numbers": 5,
+    "unique_numbers": 0,
     "signals": {
       "assemblyai": {
         "utt_count": 1,
@@ -1006,7 +999,7 @@
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.0,
-        "chars_per_min": 746.0
+        "chars_per_min": 702.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 3,
@@ -1025,6 +1018,7 @@
       "assemblyai",
       "mistral",
       "gemini",
+      "azure-openai",
       "alibaba",
       "elevenlabs",
       "gemini-3.5-flash",
@@ -1032,7 +1026,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 61,
+    "name_disagreements": 62,
     "unique_pn_hallucination": [
       {
         "name": "Gratitude",
@@ -1042,7 +1036,7 @@
         "at": "4:00"
       }
     ],
-    "unique_numbers": 1,
+    "unique_numbers": 0,
     "signals": {
       "assemblyai": {
         "utt_count": 1,
@@ -1067,6 +1061,14 @@
         "repetition": 0.0,
         "off_script_pct": null,
         "chars_per_min": 538.0
+      },
+      "azure-openai": {
+        "utt_count": 69,
+        "coverage_pct": 81.4,
+        "fffd": 0,
+        "repetition": 0.0,
+        "off_script_pct": null,
+        "chars_per_min": 557.0
       },
       "alibaba": {
         "utt_count": 53,
@@ -1101,12 +1103,12 @@
         "chars_per_min": 490.0
       },
       "fun-asr": {
-        "utt_count": 75,
-        "coverage_pct": 78.3,
+        "utt_count": 76,
+        "coverage_pct": 78.2,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": null,
-        "chars_per_min": 556.0
+        "chars_per_min": 552.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 3,
@@ -1133,7 +1135,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 50,
+    "name_disagreements": 42,
     "unique_pn_hallucination": [
       {
         "name": "Objectif",
@@ -1143,7 +1145,7 @@
         "at": "4:00"
       }
     ],
-    "unique_numbers": 2,
+    "unique_numbers": 0,
     "signals": {
       "assemblyai": {
         "utt_count": 1,
@@ -1215,7 +1217,7 @@
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.0,
-        "chars_per_min": 849.0
+        "chars_per_min": 793.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 3,
@@ -1244,7 +1246,7 @@
     ],
     "name_disagreements": 0,
     "unique_pn_hallucination": [],
-    "unique_numbers": 3,
+    "unique_numbers": 0,
     "signals": {
       "assemblyai": {
         "utt_count": 18,
@@ -1312,11 +1314,11 @@
       },
       "fun-asr": {
         "utt_count": 68,
-        "coverage_pct": 82.8,
+        "coverage_pct": 82.6,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.1,
-        "chars_per_min": 778.0
+        "chars_per_min": 680.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 3,
@@ -1345,7 +1347,7 @@
     ],
     "name_disagreements": 0,
     "unique_pn_hallucination": [],
-    "unique_numbers": 4,
+    "unique_numbers": 0,
     "signals": {
       "assemblyai": {
         "utt_count": 3,
@@ -1417,7 +1419,7 @@
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 1.2,
-        "chars_per_min": 220.0
+        "chars_per_min": 231.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 3,
@@ -1446,7 +1448,7 @@
     ],
     "name_disagreements": 0,
     "unique_pn_hallucination": [],
-    "unique_numbers": 5,
+    "unique_numbers": 6,
     "signals": {
       "assemblyai": {
         "utt_count": 109,
@@ -1513,12 +1515,12 @@
         "chars_per_min": 550.0
       },
       "fun-asr": {
-        "utt_count": 946,
-        "coverage_pct": 92.0,
+        "utt_count": 947,
+        "coverage_pct": 91.9,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.8,
-        "chars_per_min": 663.0
+        "chars_per_min": 564.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -1544,7 +1546,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 507,
+    "name_disagreements": 523,
     "unique_pn_hallucination": [
       {
         "name": "English",
@@ -1554,18 +1556,11 @@
         "at": "64:00"
       },
       {
-        "name": "Part",
+        "name": "Ithankyou",
         "provider": "fun-asr",
-        "count": 7,
-        "likely": "hallucination",
-        "at": "22:18"
-      },
-      {
-        "name": "Sra",
-        "provider": "qwen3.5-omni-plus",
         "count": 5,
         "likely": "hallucination",
-        "at": "44:00"
+        "at": "91:16"
       },
       {
         "name": "Statement",
@@ -1575,18 +1570,11 @@
         "at": "20:00"
       },
       {
-        "name": "Mont",
-        "provider": "fun-asr",
-        "count": 4,
-        "likely": "hallucination",
-        "at": "134:31"
-      },
-      {
-        "name": "Ben",
-        "provider": "fun-asr",
+        "name": "Unit",
+        "provider": "assemblyai",
         "count": 3,
         "likely": "hallucination",
-        "at": "56:46"
+        "at": "41:00"
       },
       {
         "name": "Acknowledgments",
@@ -1596,11 +1584,18 @@
         "at": "24:00"
       },
       {
-        "name": "Next Steps",
+        "name": "Topic",
         "provider": "qwen3.5-omni-plus",
         "count": 3,
         "likely": "hallucination",
-        "at": "0:00"
+        "at": "24:00"
+      },
+      {
+        "name": "Emphasizing",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "84:00"
       },
       {
         "name": "Specifically",
@@ -1610,14 +1605,21 @@
         "at": "52:00"
       },
       {
-        "name": "Topic",
-        "provider": "qwen3.5-omni-plus",
-        "count": 3,
+        "name": "Swedish",
+        "provider": "mistral",
+        "count": 2,
         "likely": "hallucination",
-        "at": "24:00"
+        "at": "77:01"
+      },
+      {
+        "name": "Kanem",
+        "provider": "gemini",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "23:44"
       }
     ],
-    "unique_numbers": 26,
+    "unique_numbers": 25,
     "signals": {
       "assemblyai": {
         "utt_count": 73,
@@ -1676,12 +1678,12 @@
         "chars_per_min": 867.0
       },
       "fun-asr": {
-        "utt_count": 1498,
-        "coverage_pct": 90.3,
+        "utt_count": 1496,
+        "coverage_pct": 90.2,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.0,
-        "chars_per_min": 860.0
+        "chars_per_min": 864.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -1707,7 +1709,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 466,
+    "name_disagreements": 461,
     "unique_pn_hallucination": [
       {
         "name": "Ochenta",
@@ -1724,20 +1726,6 @@
         "at": null
       },
       {
-        "name": "Member States",
-        "provider": "qwen3.5-omni-plus",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "44:00"
-      },
-      {
-        "name": "Women",
-        "provider": "qwen3.5-omni-plus",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "44:00"
-      },
-      {
         "name": "Propuesta",
         "provider": "qwen3.5-omni-plus",
         "count": 3,
@@ -1745,11 +1733,25 @@
         "at": "12:00"
       },
       {
+        "name": "Member States",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "44:00"
+      },
+      {
         "name": "Mandatos",
         "provider": "qwen3.5-omni-plus",
         "count": 3,
         "likely": "hallucination",
         "at": "16:00"
+      },
+      {
+        "name": "Women",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "44:00"
       },
       {
         "name": "Viene Lux",
@@ -1773,14 +1775,14 @@
         "at": "164:00"
       },
       {
-        "name": "Acceso",
+        "name": "Transparencia",
         "provider": "qwen3.5-omni-plus",
         "count": 2,
         "likely": "hallucination",
-        "at": "12:00"
+        "at": "76:00"
       }
     ],
-    "unique_numbers": 10,
+    "unique_numbers": 11,
     "signals": {
       "assemblyai": {
         "utt_count": 19,
@@ -1839,12 +1841,12 @@
         "chars_per_min": 761.0
       },
       "fun-asr": {
-        "utt_count": 1461,
-        "coverage_pct": 86.2,
+        "utt_count": 1459,
+        "coverage_pct": 86.3,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.0,
-        "chars_per_min": 800.0
+        "chars_per_min": 764.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -1871,7 +1873,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 558,
+    "name_disagreements": 562,
     "unique_pn_hallucination": [
       {
         "name": "Statement",
@@ -1881,32 +1883,11 @@
         "at": "48:00"
       },
       {
-        "name": "Part",
-        "provider": "fun-asr",
-        "count": 5,
-        "likely": "hallucination",
-        "at": "22:18"
-      },
-      {
-        "name": "Mont",
-        "provider": "fun-asr",
-        "count": 4,
-        "likely": "hallucination",
-        "at": "134:31"
-      },
-      {
         "name": "Emphasized",
         "provider": "qwen3.5-omni-plus",
         "count": 4,
         "likely": "hallucination",
         "at": "48:00"
-      },
-      {
-        "name": "Next Steps",
-        "provider": "qwen3.5-omni-plus",
-        "count": 4,
-        "likely": "hallucination",
-        "at": "0:00"
       },
       {
         "name": "Goal",
@@ -1923,11 +1904,25 @@
         "at": "3:51"
       },
       {
-        "name": "Ben",
+        "name": "Ithankyou",
         "provider": "fun-asr",
         "count": 3,
         "likely": "hallucination",
-        "at": "56:44"
+        "at": "91:16"
+      },
+      {
+        "name": "Acknowledged",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "96:00"
+      },
+      {
+        "name": "Full",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "16:00"
       },
       {
         "name": "Highlighted",
@@ -1937,14 +1932,21 @@
         "at": "48:00"
       },
       {
-        "name": "Acknowledged",
-        "provider": "qwen3.5-omni-plus",
-        "count": 3,
+        "name": "Plenary",
+        "provider": "assemblyai",
+        "count": 2,
         "likely": "hallucination",
-        "at": "96:00"
+        "at": "0:01"
+      },
+      {
+        "name": "Women Thank",
+        "provider": "alibaba",
+        "count": 2,
+        "likely": "hallucination",
+        "at": null
       }
     ],
-    "unique_numbers": 5,
+    "unique_numbers": 4,
     "signals": {
       "assemblyai": {
         "utt_count": 130,
@@ -2016,7 +2018,7 @@
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": null,
-        "chars_per_min": 867.0
+        "chars_per_min": 862.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -2043,35 +2045,14 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 411,
+    "name_disagreements": 406,
     "unique_pn_hallucination": [
-      {
-        "name": "Bah",
-        "provider": "fun-asr",
-        "count": 11,
-        "likely": "hallucination",
-        "at": "11:14"
-      },
-      {
-        "name": "Tro",
-        "provider": "fun-asr",
-        "count": 6,
-        "likely": "hallucination",
-        "at": "67:40"
-      },
       {
         "name": "Speaker",
         "provider": "qwen3.5-omni-plus",
         "count": 5,
         "likely": "hallucination",
         "at": "36:00"
-      },
-      {
-        "name": "Applaudissements",
-        "provider": "qwen3.5-omni-plus",
-        "count": 4,
-        "likely": "hallucination",
-        "at": "40:00"
       },
       {
         "name": "Women",
@@ -2081,6 +2062,13 @@
         "at": "86:02"
       },
       {
+        "name": "Jevousremercie",
+        "provider": "fun-asr",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "111:23"
+      },
+      {
         "name": "Chine Le",
         "provider": "alibaba",
         "count": 2,
@@ -2088,25 +2076,32 @@
         "at": null
       },
       {
-        "name": "Gol",
+        "name": "Kanz",
         "provider": "fun-asr",
         "count": 2,
         "likely": "hallucination",
-        "at": "49:13"
+        "at": "51:55"
       },
       {
-        "name": "Dor",
-        "provider": "fun-asr",
+        "name": "Détails",
+        "provider": "qwen3.5-omni-plus",
         "count": 2,
         "likely": "hallucination",
-        "at": "24:32"
+        "at": "136:00"
       },
       {
-        "name": "Per",
-        "provider": "fun-asr",
+        "name": "Cybersécurité",
+        "provider": "qwen3.5-omni-plus",
         "count": 2,
         "likely": "hallucination",
-        "at": "9:59"
+        "at": "48:00"
+      },
+      {
+        "name": "Réforme",
+        "provider": "qwen3.5-omni-plus",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "84:00"
       },
       {
         "name": "Innovation",
@@ -2114,9 +2109,16 @@
         "count": 2,
         "likely": "hallucination",
         "at": "128:00"
+      },
+      {
+        "name": "Fusion",
+        "provider": "qwen3.5-omni-plus",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "136:00"
       }
     ],
-    "unique_numbers": 7,
+    "unique_numbers": 6,
     "signals": {
       "assemblyai": {
         "utt_count": 35,
@@ -2183,12 +2185,12 @@
         "chars_per_min": 887.0
       },
       "fun-asr": {
-        "utt_count": 1573,
+        "utt_count": 1571,
         "coverage_pct": 85.7,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.0,
-        "chars_per_min": 958.0
+        "chars_per_min": 893.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -2215,15 +2217,8 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 74,
+    "name_disagreements": 75,
     "unique_pn_hallucination": [
-      {
-        "name": "Work Package",
-        "provider": "qwen3.5-omni-plus",
-        "count": 4,
-        "likely": "hallucination",
-        "at": "36:00"
-      },
       {
         "name": "Junhua",
         "provider": "qwen3.5-omni-plus",
@@ -2232,7 +2227,14 @@
         "at": "36:00"
       },
       {
-        "name": "Economic",
+        "name": "Work Package",
+        "provider": "qwen3.5-omni-plus",
+        "count": 4,
+        "likely": "hallucination",
+        "at": "36:00"
+      },
+      {
+        "name": "Social Affairs",
         "provider": "qwen3.5-omni-plus",
         "count": 3,
         "likely": "hallucination",
@@ -2246,21 +2248,28 @@
         "at": "36:00"
       },
       {
-        "name": "Social Affairs",
+        "name": "Economic",
         "provider": "qwen3.5-omni-plus",
         "count": 3,
         "likely": "hallucination",
         "at": "36:00"
       },
       {
-        "name": "Future",
+        "name": "Russell",
         "provider": "qwen3.5-omni-plus",
         "count": 2,
         "likely": "hallucination",
         "at": "36:00"
       },
       {
-        "name": "Next",
+        "name": "Statistical Commission",
+        "provider": "qwen3.5-omni-plus",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "36:00"
+      },
+      {
+        "name": "Let",
         "provider": "qwen3.5-omni-plus",
         "count": 2,
         "likely": "hallucination",
@@ -2274,21 +2283,14 @@
         "at": "56:00"
       },
       {
-        "name": "Let",
-        "provider": "qwen3.5-omni-plus",
-        "count": 2,
-        "likely": "hallucination",
-        "at": "36:00"
-      },
-      {
-        "name": "States",
+        "name": "Chief Statisticians Network",
         "provider": "qwen3.5-omni-plus",
         "count": 2,
         "likely": "hallucination",
         "at": "36:00"
       }
     ],
-    "unique_numbers": 13,
+    "unique_numbers": 10,
     "signals": {
       "assemblyai": {
         "utt_count": 8,
@@ -2355,12 +2357,12 @@
         "chars_per_min": 757.0
       },
       "fun-asr": {
-        "utt_count": 1284,
+        "utt_count": 1285,
         "coverage_pct": 88.0,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.1,
-        "chars_per_min": 861.0
+        "chars_per_min": 763.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -2456,12 +2458,12 @@
         "chars_per_min": 218.0
       },
       "fun-asr": {
-        "utt_count": 1458,
-        "coverage_pct": 87.8,
+        "utt_count": 1453,
+        "coverage_pct": 87.9,
         "fffd": 0,
-        "repetition": 0.004,
-        "off_script_pct": 1.7,
-        "chars_per_min": 235.0
+        "repetition": 0.007,
+        "off_script_pct": 1.6,
+        "chars_per_min": 255.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -2489,7 +2491,7 @@
     ],
     "name_disagreements": 0,
     "unique_pn_hallucination": [],
-    "unique_numbers": 5,
+    "unique_numbers": 7,
     "signals": {
       "mistral": {
         "utt_count": 1002,
@@ -2548,12 +2550,12 @@
         "chars_per_min": 577.0
       },
       "fun-asr": {
-        "utt_count": 1058,
+        "utt_count": 1054,
         "coverage_pct": 89.2,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.9,
-        "chars_per_min": 678.0
+        "chars_per_min": 578.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -2579,14 +2581,14 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 470,
+    "name_disagreements": 487,
     "unique_pn_hallucination": [
       {
-        "name": "Coord",
+        "name": "Ithankyou",
         "provider": "fun-asr",
         "count": 4,
         "likely": "hallucination",
-        "at": "28:35"
+        "at": "3:50"
       },
       {
         "name": "Japanese",
@@ -2610,20 +2612,6 @@
         "at": null
       },
       {
-        "name": "Nam",
-        "provider": "fun-asr",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "145:53"
-      },
-      {
-        "name": "Eff",
-        "provider": "fun-asr",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "74:41"
-      },
-      {
         "name": "Focuses",
         "provider": "qwen3.5-omni-plus",
         "count": 3,
@@ -2638,18 +2626,32 @@
         "at": "28:00"
       },
       {
-        "name": "Male Speaker",
-        "provider": "qwen3.5-omni-plus",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "16:00"
-      },
-      {
         "name": "Noted",
         "provider": "qwen3.5-omni-plus",
         "count": 3,
         "likely": "hallucination",
         "at": "128:00"
+      },
+      {
+        "name": "British",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "4:00"
+      },
+      {
+        "name": "Focus",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "28:00"
+      },
+      {
+        "name": "Male Speaker",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "16:00"
       }
     ],
     "unique_numbers": 30,
@@ -2711,12 +2713,12 @@
         "chars_per_min": 847.0
       },
       "fun-asr": {
-        "utt_count": 1537,
+        "utt_count": 1532,
         "coverage_pct": 88.8,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.0,
-        "chars_per_min": 848.0
+        "chars_per_min": 851.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -2743,7 +2745,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 492,
+    "name_disagreements": 490,
     "unique_pn_hallucination": [
       {
         "name": "Brasil",
@@ -2795,6 +2797,13 @@
         "at": "32:29"
       },
       {
+        "name": "Estrategia",
+        "provider": "qwen3.5-omni-plus",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "20:00"
+      },
+      {
         "name": "Apologies",
         "provider": "qwen3.5-omni-plus",
         "count": 2,
@@ -2802,21 +2811,14 @@
         "at": "112:00"
       },
       {
-        "name": "Postura Clave",
+        "name": "Observación",
         "provider": "qwen3.5-omni-plus",
         "count": 2,
         "likely": "hallucination",
         "at": "132:00"
-      },
-      {
-        "name": "Respecto",
-        "provider": "qwen3.5-omni-plus",
-        "count": 2,
-        "likely": "hallucination",
-        "at": "100:00"
       }
     ],
-    "unique_numbers": 25,
+    "unique_numbers": 23,
     "signals": {
       "assemblyai": {
         "utt_count": 16,
@@ -2883,12 +2885,12 @@
         "chars_per_min": 814.0
       },
       "fun-asr": {
-        "utt_count": 1421,
+        "utt_count": 1415,
         "coverage_pct": 86.6,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.0,
-        "chars_per_min": 863.0
+        "chars_per_min": 822.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -2914,7 +2916,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 498,
+    "name_disagreements": 510,
     "unique_pn_hallucination": [
       {
         "name": "Which",
@@ -2924,13 +2926,6 @@
         "at": "13:50"
       },
       {
-        "name": "Coord",
-        "provider": "fun-asr",
-        "count": 4,
-        "likely": "hallucination",
-        "at": "28:35"
-      },
-      {
         "name": "Namibia Thank",
         "provider": "alibaba",
         "count": 3,
@@ -2938,11 +2933,11 @@
         "at": null
       },
       {
-        "name": "Nam",
+        "name": "Thankyouverymuch",
         "provider": "fun-asr",
         "count": 3,
         "likely": "hallucination",
-        "at": "145:53"
+        "at": "34:27"
       },
       {
         "name": "West African",
@@ -2966,25 +2961,32 @@
         "at": "104:01"
       },
       {
-        "name": "Headquarters",
-        "provider": "assemblyai",
+        "name": "Haiti",
+        "provider": "azure-openai",
         "count": 2,
         "likely": "hallucination",
-        "at": "19:42"
+        "at": "0:02"
       },
       {
-        "name": "Eff",
+        "name": "Closer",
         "provider": "fun-asr",
         "count": 2,
         "likely": "hallucination",
-        "at": "74:41"
+        "at": "32:32"
       },
       {
-        "name": "Furthermore",
-        "provider": "qwen3.5-omni-plus",
+        "name": "Thankyousomuch",
+        "provider": "fun-asr",
         "count": 2,
         "likely": "hallucination",
-        "at": "128:00"
+        "at": "72:27"
+      },
+      {
+        "name": "Ithankyou",
+        "provider": "fun-asr",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "3:50"
       }
     ],
     "unique_numbers": 30,
@@ -3046,12 +3048,12 @@
         "chars_per_min": 834.0
       },
       "fun-asr": {
-        "utt_count": 1501,
+        "utt_count": 1502,
         "coverage_pct": 88.9,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": null,
-        "chars_per_min": 850.0
+        "chars_per_min": 846.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -3078,42 +3080,14 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 417,
+    "name_disagreements": 404,
     "unique_pn_hallucination": [
-      {
-        "name": "Contexte",
-        "provider": "qwen3.5-omni-plus",
-        "count": 5,
-        "likely": "hallucination",
-        "at": "36:00"
-      },
       {
         "name": "How",
         "provider": "azure-openai",
         "count": 3,
         "likely": "hallucination",
         "at": "35:04"
-      },
-      {
-        "name": "Barb",
-        "provider": "fun-asr",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "61:32"
-      },
-      {
-        "name": "Per",
-        "provider": "fun-asr",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "45:25"
-      },
-      {
-        "name": "Gouvernance",
-        "provider": "qwen3.5-omni-plus",
-        "count": 3,
-        "likely": "hallucination",
-        "at": "128:00"
       },
       {
         "name": "Entités",
@@ -3123,11 +3097,18 @@
         "at": "48:00"
       },
       {
-        "name": "However",
+        "name": "Gouvernance",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "128:00"
+      },
+      {
+        "name": "Hmm",
         "provider": "azure-openai",
         "count": 2,
         "likely": "hallucination",
-        "at": "35:46"
+        "at": "38:35"
       },
       {
         "name": "Thanks Madam",
@@ -3137,11 +3118,11 @@
         "at": "121:54"
       },
       {
-        "name": "Soixante",
+        "name": "However",
         "provider": "azure-openai",
         "count": 2,
         "likely": "hallucination",
-        "at": "54:31"
+        "at": "35:46"
       },
       {
         "name": "Well",
@@ -3149,9 +3130,30 @@
         "count": 2,
         "likely": "hallucination",
         "at": "109:10"
+      },
+      {
+        "name": "Yes",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "34:29"
+      },
+      {
+        "name": "There",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "29:00"
+      },
+      {
+        "name": "Latin America",
+        "provider": "azure-openai",
+        "count": 2,
+        "likely": "hallucination",
+        "at": "35:13"
       }
     ],
-    "unique_numbers": 23,
+    "unique_numbers": 22,
     "signals": {
       "assemblyai": {
         "utt_count": 24,
@@ -3218,12 +3220,12 @@
         "chars_per_min": 858.0
       },
       "fun-asr": {
-        "utt_count": 1537,
-        "coverage_pct": 85.3,
+        "utt_count": 1540,
+        "coverage_pct": 85.2,
         "fffd": 0,
         "repetition": 0.0,
         "off_script_pct": 0.0,
-        "chars_per_min": 924.0
+        "chars_per_min": 869.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -3249,7 +3251,7 @@
       "fun-asr",
       "qwen3.5-omni-plus"
     ],
-    "name_disagreements": 109,
+    "name_disagreements": 108,
     "unique_pn_hallucination": [
       {
         "name": "Chair",
@@ -3257,13 +3259,6 @@
         "count": 8,
         "likely": "hallucination",
         "at": "12:00"
-      },
-      {
-        "name": "Georgia",
-        "provider": "qwen3.5-omni-plus",
-        "count": 6,
-        "likely": "hallucination",
-        "at": "140:00"
       },
       {
         "name": "Resident Coordinators",
@@ -3280,11 +3275,11 @@
         "at": "24:00"
       },
       {
-        "name": "Humanitarian Coordinators",
+        "name": "Georgia",
         "provider": "qwen3.5-omni-plus",
-        "count": 4,
+        "count": 6,
         "likely": "hallucination",
-        "at": "68:00"
+        "at": "140:00"
       },
       {
         "name": "Malawi",
@@ -3294,11 +3289,11 @@
         "at": "140:00"
       },
       {
-        "name": "Blagodarju",
-        "provider": "azure-openai",
-        "count": 3,
+        "name": "Humanitarian Coordinators",
+        "provider": "qwen3.5-omni-plus",
+        "count": 4,
         "likely": "hallucination",
-        "at": "121:55"
+        "at": "68:00"
       },
       {
         "name": "After",
@@ -3308,11 +3303,11 @@
         "at": "8:20"
       },
       {
-        "name": "Regarding",
-        "provider": "qwen3.5-omni-plus",
+        "name": "Blagodarju",
+        "provider": "azure-openai",
         "count": 3,
         "likely": "hallucination",
-        "at": "128:00"
+        "at": "121:55"
       },
       {
         "name": "United Kingdom",
@@ -3320,6 +3315,13 @@
         "count": 3,
         "likely": "hallucination",
         "at": "140:00"
+      },
+      {
+        "name": "Furthermore",
+        "provider": "qwen3.5-omni-plus",
+        "count": 3,
+        "likely": "hallucination",
+        "at": "12:00"
       }
     ],
     "unique_numbers": 30,
@@ -3381,12 +3383,12 @@
         "chars_per_min": 750.0
       },
       "fun-asr": {
-        "utt_count": 1287,
-        "coverage_pct": 87.0,
+        "utt_count": 1290,
+        "coverage_pct": 87.1,
         "fffd": 0,
         "repetition": 0.0,
-        "off_script_pct": 0.2,
-        "chars_per_min": 845.0
+        "off_script_pct": 0.1,
+        "chars_per_min": 743.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,
@@ -3414,7 +3416,7 @@
     ],
     "name_disagreements": 0,
     "unique_pn_hallucination": [],
-    "unique_numbers": 11,
+    "unique_numbers": 14,
     "signals": {
       "mistral": {
         "utt_count": 1030,
@@ -3473,12 +3475,12 @@
         "chars_per_min": 194.0
       },
       "fun-asr": {
-        "utt_count": 1476,
+        "utt_count": 1474,
         "coverage_pct": 85.5,
         "fffd": 0,
-        "repetition": 0.003,
+        "repetition": 0.0,
         "off_script_pct": 1.1,
-        "chars_per_min": 208.0
+        "chars_per_min": 227.0
       },
       "qwen3.5-omni-plus": {
         "utt_count": 43,

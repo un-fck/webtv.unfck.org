@@ -55,7 +55,7 @@ tsx scripts/test-pv-parser.ts        # Validate PV parser across 6 languages
 psql "$DATABASE_URL" -f sql/migrations/<NNN_name>.sql
 
 # Eval system (independent from main app, see eval/README.md)
-pnpm eval -- --symbol=A/... --providers=assemblyai,gemini --languages=en
+pnpm eval -- --symbol=A/... --providers=assemblyai-universal-3-pro,gemini-3-flash --languages=en
 pnpm hf:upload-corpus         # Upload eval corpus to HuggingFace
 pnpm hf:push-corpus           # Push corpus via Python (requires uv)
 pnpm hf:build-gadebate        # Build GA debate metadata
@@ -78,9 +78,11 @@ Copy `.env.example` → `.env.local` and fill in values.
 **Required for the web app:**
 
 - `DATABASE_URL` — PostgreSQL connection string (Azure Database for PostgreSQL via PgBouncer port 6432). All tables live in the `webtv` schema and every query is explicitly schema-qualified (`webtv.<table>`); there is no `search_path` setup, so this works regardless of the connection's default schema.
-- `GEMINI_API_KEY` — transcription (Gemini)
-- `AZURE_OPENAI_ENDPOINT` — speaker identification, topics, propositions
-- `AZURE_OPENAI_API_KEY` — speaker identification, topics, propositions
+- `GEMINI_API_KEY` — transcription of the multilingual "floor" track + PV document alignment (Gemini)
+- `ASSEMBLYAI_API_KEY` — English transcription (AssemblyAI Universal-3 Pro)
+- `DASHSCOPE_API_KEY` — Chinese transcription (Alibaba Fun-ASR)
+- `AZURE_OPENAI_ENDPOINT` — fr/es/ar/ru transcription (gpt-4o-transcribe) + speaker identification, topics, propositions
+- `AZURE_OPENAI_API_KEY` — as above
 - `AZURE_OPENAI_API_VERSION` — defaults in `.env.example` (e.g. `2025-03-01-preview`)
 - `AUTH_SECRET` — HMAC secret signing login session cookies (`openssl rand -hex 32`). Required in production; falls back to a dev default otherwise.
 - `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` — outbound email for magic-link login, which gates the private **analysis** feature. `SMTP_FROM` falls back to `SMTP_USER`; `SMTP_HOST` defaults to `smtp.mailbox.org`.
@@ -92,7 +94,7 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Optional:**
 
-- `STT_PROVIDER` — STT provider name (default: `gemini`). Available: `gemini` (production, rich named-speaker output), `gemini-eval`, `assemblyai`, `azure-openai`, `azure-speech`, `elevenlabs`, `google-chirp`, `groq-whisper`, `alibaba`, `deepgram`, `mistral`, `cohere`. See `lib/providers/registry.ts`.
+- STT provider selection is **per-language**, configured in `lib/providers/config.ts` (`STT_ROUTING`), not via an env var. Provider keys are `{vendor}-{model}` (e.g. `assemblyai-universal-3-pro`, `azure-gpt-4o-transcribe`, `alibaba-fun-asr`, `gemini-3-flash`); see `lib/providers/registry.ts`. All Gemini providers emit numeric speaker IDs only — names are assigned downstream by the OpenAI speaker-ID stage.
 - `STT_ANALYSIS_MODEL` — Azure OpenAI model for speaker ID, resegmentation, topics, propositions (default: `gpt-5.4`)
 - `STT_ANALYSIS_MODEL_MINI` — Azure OpenAI model for cross-chunk normalization (default: `gpt-5.4-mini`)
 - `STT_ANALYSIS_MODEL_NANO` — Azure OpenAI model for sentence tagging (default: `gpt-5.4-nano`)
@@ -129,7 +131,7 @@ See `docs/ai.md` for the full pipeline with model details and design decisions.
 
 Triggered from the video page UI (`POST /api/transcripts`) or via the scheduled-processing cron (`/api/cron/process-scheduled`):
 
-1. **Transcribe** — provider-agnostic via `lib/providers/` (default `gemini`). Audio is downloaded from Kaltura, uploaded to the provider, and transcribed with speaker diarization. Long audio (>10 min) is chunked by the Gemini provider and stitched.
+1. **Transcribe** — provider selected **per language** via `lib/providers/config.ts` (`STT_ROUTING`: English→AssemblyAI Universal-3 Pro, fr/es/ar/ru→Azure gpt-4o-transcribe, Chinese→Alibaba Fun-ASR, floor→Gemini). Audio is downloaded from Kaltura and transcribed with numeric speaker diarization (no names — see step 2). Providers chunk long audio internally as needed.
 2. **Speaker identification + resegmentation** — `lib/pipeline/index.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping. (Pipeline stages live in `lib/pipeline/`.)
 3. **Topic definition** — identifies 5–10 substantive policy topics across the meeting (GPT-5.4).
 4. **Sentence tagging** — tags each non-chair sentence with 0–3 topic keys (GPT-5.4-nano, batched; rate-limited via Bottleneck — 20 concurrent / 10 per sec).
@@ -138,12 +140,12 @@ Triggered from the video page UI (`POST /api/transcripts`) or via the scheduled-
 
 Stages 2–4 run in `runAnalysisPipeline` (`lib/transcription.ts`) inside `identifySpeakers()`. **Two status axes** (since migration 003): `transcription_status` transitions `scheduled → transcribing → identifying_speakers → analyzing_topics → completed` (or `error`); `analysis_status` (`none | analyzing | completed | error`) is driven only by the on-demand analysis route. **Viewability = content exists** (a transcript with `statements` is shown to everyone regardless of any later/in-progress stage), so the cache/check lookups use `getActiveTranscriptByKalturaId()` (latest non-error row) rather than keying strictly on `completed`. In-progress and scheduled transcripts are surfaced to all viewers (with their stage) via the same polling, so others see live progress instead of a duplicate Transcribe button. Starting transcription/scheduling is idempotent per video+language via `withVideoLock()` (a `pg_advisory_xact_lock`), so simultaneous clicks reuse one transcript row.
 
-The provider is selected via `STT_PROVIDER` (default `gemini`). Analysis model names are configurable via `STT_ANALYSIS_MODEL` / `_MINI` / `_NANO`. Provider implementations live in `lib/providers/` (shared with the eval system).
+The provider is selected per language via `STT_ROUTING` in `lib/providers/config.ts` (`getSTTProvider(language)`). Analysis model names are configurable via `STT_ANALYSIS_MODEL` / `_MINI` / `_NANO`. Provider implementations live in `lib/providers/` (shared with the eval system).
 
-> Cross-chunk speaker normalization is described in `docs/ai.md` as a stage. The
-> production Gemini provider deduplicates speakers within its own chunking, and
-> there is no separate `normalizeSpeakers()` call in `runTranscriptionPipeline`.
-> Treat the doc as design intent and the code as the source of truth.
+> No provider names speakers itself — all emit opaque/numeric speaker labels, and
+> the OpenAI speaker-ID stage (step 2) assigns names from context. There is no
+> separate `normalizeSpeakers()` call in `runTranscriptionPipeline`; chunk
+> stitching and any within-chunk speaker handling are internal to each provider.
 
 **Scheduled transcription**: Videos can be queued for transcription before audio is available. `lib/db.ts:scheduleTranscript()` creates a `scheduled` status record. The cron `/api/cron/process-scheduled` (every 5 min) picks them up and starts transcription once Kaltura audio is available.
 

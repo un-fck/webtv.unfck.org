@@ -56,7 +56,9 @@ async function transcribeFile(
 }
 
 export const groqWhisper: TranscriptionProvider = {
-  name: "groq-whisper",
+  name: "groq-whisper-large-v3",
+  label: "Groq Whisper Large v3",
+  model: "whisper-large-v3",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -163,7 +165,7 @@ export const groqWhisper: TranscriptionProvider = {
       );
 
       return {
-        provider: "groq-whisper",
+        provider: "groq-whisper-large-v3",
         language: opts?.language || "en",
         fullText,
         utterances,

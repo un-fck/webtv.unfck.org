@@ -30,7 +30,9 @@ interface DeepgramResponse {
 }
 
 export const deepgram: TranscriptionProvider = {
-  name: "deepgram",
+  name: "deepgram-nova-3",
+  label: "Deepgram Nova-3",
+  model: "nova-3",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -118,7 +120,7 @@ export const deepgram: TranscriptionProvider = {
       );
 
       return {
-        provider: "deepgram",
+        provider: "deepgram-nova-3",
         language: lang,
         fullText,
         utterances,

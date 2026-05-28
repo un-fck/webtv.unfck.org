@@ -54,7 +54,9 @@ function segmentsToUtterances(
 }
 
 export const azureOpenai: TranscriptionProvider = {
-  name: "azure-openai",
+  name: "azure-gpt-4o-transcribe",
+  label: "Azure OpenAI GPT-4o Transcribe",
+  model: "gpt-4o-transcribe-diarize",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -141,7 +143,7 @@ export const azureOpenai: TranscriptionProvider = {
       );
 
       return {
-        provider: "azure-openai",
+        provider: "azure-gpt-4o-transcribe",
         language: opts?.language || "en",
         fullText,
         utterances,

@@ -54,7 +54,9 @@ async function transcribeFile(
 }
 
 export const mistral: TranscriptionProvider = {
-  name: "mistral",
+  name: "mistral-voxtral-mini",
+  label: "Mistral Voxtral Mini",
+  model: "voxtral-mini-latest",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -154,7 +156,7 @@ export const mistral: TranscriptionProvider = {
       );
 
       return {
-        provider: "mistral",
+        provider: "mistral-voxtral-mini",
         language: lang,
         fullText,
         utterances,

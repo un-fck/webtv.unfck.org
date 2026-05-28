@@ -125,12 +125,12 @@
       "off_script_pct": 0.0
     },
     "fun-asr": {
-      "utt_count": 1537,
-      "char_count": 158015,
+      "utt_count": 1540,
+      "char_count": 148634,
       "duration_min": 171.0,
       "last_end_min": 171.0,
-      "chars_per_min": 924.0,
-      "coverage_pct": 85.3,
+      "chars_per_min": 869.0,
+      "coverage_pct": 85.2,
       "fffd": 0,
       "repetition": 0.0,
       "script_mix": {

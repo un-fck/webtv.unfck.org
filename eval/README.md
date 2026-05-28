@@ -14,7 +14,7 @@ Uses UN Web TV audio + documents.un.org ground truth across all 6 UN official la
 npm run eval
 
 # Single session, single provider, single language
-npm run eval -- --symbol=S/PV.9826 --providers=assemblyai --languages=en
+npm run eval -- --symbol=S/PV.9826 --providers=assemblyai-universal-3-pro --languages=en
 
 # All sessions, English only
 npm run eval -- --languages=en
@@ -75,22 +75,26 @@ Sessions list: `eval/corpus/sessions.json` (20 sessions ≤ 90 min from 2024).
 
 ## Providers
 
-Provider implementations live in `lib/providers/` (shared with the main app). The eval runner imports them through `lib/providers/registry.ts`, so the same code that powers `STT_PROVIDER` on the production site is what gets benchmarked.
+Provider implementations live in `lib/providers/` (shared with the main app). The eval runner imports them through `lib/providers/registry.ts`. Command names (registry keys) follow `{vendor}-{model}`. Production language routing lives in `lib/providers/config.ts` (`STT_ROUTING`).
 
-| Provider      | Command name   | Model                    | Languages                                  | Pricing     |
-| ------------- | -------------- | ------------------------ | ------------------------------------------ | ----------- |
-| AssemblyAI    | `assemblyai`   | Universal-2              | all 6                                      | ~$0.27/hr   |
-| Azure OpenAI  | `azure-openai` | gpt-4o-transcribe        | all 6                                      | ~$0.06/hr   |
-| ElevenLabs    | `elevenlabs`   | Scribe v2                | all 6                                      | ~$0.40/hr   |
-| Azure Speech  | `azure-speech` | Cognitive Services Batch | all 6                                      | ~$0.36/hr   |
-| Gemini (eval) | `gemini-eval`  | gemini-3-flash-preview   | all 6                                      | ~$0.01/hr   |
-| Gemini (prod) | `gemini`       | gemini-3-flash-preview   | all 6                                      | ~$0.01/hr   |
-| Google Chirp  | `google-chirp` | Chirp 3 (Speech V2 API)  | en, fr, es, zh (no diarization for ar, ru) | ~$0.016/min |
-| Groq          | `groq-whisper` | whisper-large-v3         | all 6                                      | varies      |
-| Alibaba       | `alibaba`      | Qwen3-ASR-Flash          | all 6 (chunked)                            | varies      |
-| Deepgram      | `deepgram`     | Nova-3                   | all 6                                      | varies      |
-| Mistral       | `mistral`      | voxtral-mini-latest      | all 6                                      | varies      |
-| Cohere        | `cohere`       | (see provider)           | all 6                                      | varies      |
+| Provider                   | Command name (`--providers`) | Model                     | Pricing     |
+| -------------------------- | ---------------------------- | ------------------------- | ----------- |
+| AssemblyAI Universal-2     | `assemblyai-universal-2`     | universal-2               | ~$0.27/hr   |
+| AssemblyAI Universal-3 Pro | `assemblyai-universal-3-pro` | universal-3-pro           | ~$0.21/hr   |
+| Azure OpenAI               | `azure-gpt-4o-transcribe`    | gpt-4o-transcribe         | ~$0.06/hr   |
+| ElevenLabs                 | `elevenlabs-scribe-v2`       | Scribe v2                 | ~$0.40/hr   |
+| Azure Speech               | `azure-speech-batch`         | Cognitive Services Batch  | ~$0.36/hr   |
+| Gemini 3 Flash             | `gemini-3-flash`             | gemini-3-flash-preview    | ~$0.01/hr   |
+| Gemini 3.5 Flash           | `gemini-3.5-flash`           | gemini-3.5-flash          | ~$0.03/hr   |
+| Google Chirp               | `google-chirp-3`             | Chirp 3 (Speech V2 API)   | ~$0.016/min |
+| Groq                       | `groq-whisper-large-v3`      | whisper-large-v3          | varies      |
+| Alibaba Qwen3-ASR          | `alibaba-qwen3-asr`          | qwen3-asr-flash-filetrans | varies      |
+| Alibaba Qwen3.5-Omni       | `alibaba-qwen3.5-omni`       | qwen3.5-omni-plus         | varies      |
+| Alibaba Fun-ASR            | `alibaba-fun-asr`            | fun-asr (diarization)     | varies      |
+| Deepgram                   | `deepgram-nova-3`            | Nova-3                    | varies      |
+| Mistral Voxtral Mini       | `mistral-voxtral-mini`       | voxtral-mini-latest       | varies      |
+| Mistral Voxtral Small      | `mistral-voxtral-small`      | voxtral-small-latest      | varies      |
+| Cohere                     | `cohere`                     | cohere-transcribe-03-2026 | varies      |
 
 Add a provider by implementing the `TranscriptionProvider` interface (`lib/providers/types.ts`) and registering it in `lib/providers/registry.ts`.
 
@@ -167,7 +171,7 @@ eval/
 lib/providers/
   registry.ts               # Provider lookup by name
   types.ts                  # TranscriptionProvider interface
-  config.ts, models.ts      # STT_PROVIDER and analysis-model env wiring
+  config.ts, models.ts      # STT_ROUTING (per-language) and analysis-model env wiring
   convert.ts                # NormalizedTranscript → RawParagraph[] adapter
   gemini-production.ts      # Production Gemini provider (rich named speakers)
   gemini.ts                 # Eval Gemini provider (basic diarization)

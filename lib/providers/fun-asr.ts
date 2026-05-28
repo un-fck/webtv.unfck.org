@@ -6,7 +6,9 @@ import { transcribeViaFiletrans } from "./dashscope-asr";
 // timestamps. Text is rebuilt from word-level tokens (see joinWords) to repair
 // the Mandarin-first model's run-together English spacing.
 export const funAsr: TranscriptionProvider = {
-  name: "fun-asr",
+  name: "alibaba-fun-asr",
+  label: "Alibaba Fun-ASR",
+  model: "fun-asr",
   capabilities: {
     speakerIdentification: false,
     paragraphSegmentation: false,
@@ -15,7 +17,7 @@ export const funAsr: TranscriptionProvider = {
   async transcribe(audioUrl, opts) {
     const lang = apiLanguage(opts?.language);
     return transcribeViaFiletrans(
-      "fun-asr",
+      "alibaba-fun-asr",
       "fun-asr",
       { file_urls: [audioUrl] },
       {
