@@ -5,12 +5,17 @@ import { cn } from "@/lib/utils";
 import { STT_ROUTING } from "@/lib/providers/config";
 import { getProvider } from "@/lib/providers/registry";
 import { UN_LANGUAGES, getLanguageDisplayName } from "@/lib/languages";
+import { getCurrentUser, isAllowedDomain } from "@/lib/auth/service";
 
 export const metadata = {
   title: "About — UN Web TV Transcripts",
   description:
     "What UN Web TV Transcripts is, who it serves, how it works, and its accuracy and limitations.",
 };
+
+// Reads the current user to decide whether to render the experimental-features
+// section (UN-domain users only); must render dynamically per viewer.
+export const dynamic = "force-dynamic";
 
 /** Per-language transcription-model rows, derived from config. */
 const STT_ROWS = UN_LANGUAGES.map(({ code }) => ({
@@ -42,7 +47,13 @@ function Step({
   );
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // Only show the experimental-features section to logged-in users on a
+  // UN-system domain. Anonymous viewers and non-UN logged-in users don't see
+  // it at all (deliberate: experimental access is currently UN-only).
+  const user = await getCurrentUser();
+  const showExperimental = user ? await isAllowedDomain(user.email) : false;
+
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
@@ -294,6 +305,25 @@ export default function AboutPage() {
                 welcome.
               </p>
             </section>
+
+            {showExperimental && (
+              <section>
+                <h2 className={cn(typography.sectionTitle, "mb-3")}>
+                  Experimental features
+                </h2>
+                <p className="mb-3 text-muted-foreground">
+                  There are additional experimental features still being
+                  evaluated. If you&rsquo;d like to try them,{" "}
+                  <a
+                    href="mailto:david.pomerenke@un.org?subject=Experimental%20features%20access"
+                    className="text-un-blue underline underline-offset-4 hover:opacity-75"
+                  >
+                    contact us
+                  </a>{" "}
+                  with the email address of your account.
+                </p>
+              </section>
+            )}
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireExperimental } from "@/lib/auth/require-experimental";
 import { apiError } from "@/lib/api-error";
 import {
   getEntityProfileBySlug,
@@ -13,7 +13,7 @@ import {
  * their slug (e.g. `tom-fletcher`).
  */
 export async function GET(request: NextRequest) {
-  const auth = await requireUser();
+  const auth = await requireExperimental();
   if (auth.response) return auth.response;
 
   const { searchParams } = request.nextUrl;

@@ -1,0 +1,21 @@
+-- Migration 013: drop a redundant pre-history index on transcripts(entry_id).
+--
+-- The live DB carries TWO indexes covering the same column:
+--   * idx_entry_id              — origin unknown, not in any migration or
+--                                 schema.sql; predates the migration log
+--                                 (presumably created manually via psql).
+--   * idx_transcripts_entry_id  — declared by migration 001 and schema.sql;
+--                                 the authoritative one.
+--
+-- Both are plain btree indexes on transcripts(entry_id), so `idx_entry_id`
+-- is pure waste: extra write cost on every transcript insert/update and
+-- duplicate disk footprint with zero query benefit (Postgres picks indexes
+-- by shape, not name).
+--
+-- Apply once:
+--   psql "$DATABASE_URL" -f sql/migrations/013_drop_orphan_entry_id_index.sql
+--
+-- Idempotent — safe to re-run. No schema.sql change needed: the orphan was
+-- never declared there.
+
+DROP INDEX IF EXISTS webtv.idx_entry_id;

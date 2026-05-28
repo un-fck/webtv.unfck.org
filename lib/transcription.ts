@@ -432,6 +432,20 @@ export async function submitTranscription(
   options: GeminiTranscriptionOptions & {
     force?: boolean;
     existingTranscriptId?: string;
+    /**
+     * How to run the long-lived pipeline relative to the caller. In a
+     * serverless request/cron handler this MUST be Next's `after()`, otherwise
+     * Vercel may freeze/kill the function once the response is sent and the
+     * pipeline dies mid-flight. In a standalone Node script, leave it undefined:
+     * the default detaches the promise, which survives because the process
+     * stays alive (e.g. while `pollTranscription` awaits).
+     */
+    schedule?: (work: () => void) => void;
+    /**
+     * User who initiated this transcript (tracking only; daily limits are
+     * counter-based, not ownership-based). null/omitted for script runs.
+     */
+    createdBy?: string | null;
   } = {},
 ): Promise<{
   entryId: string;
@@ -485,6 +499,7 @@ export async function submitTranscription(
       kalturaId,
       null, // source_duration_ms unknown until transcription completes
       client,
+      options.createdBy ?? null,
     );
     return {
       transcriptId,
@@ -494,16 +509,23 @@ export async function submitTranscription(
   });
 
   if (result.started) {
-    runTranscriptionPipeline(
-      result.transcriptId,
-      entryId,
-      audioUrl,
-      options,
-      lang,
-      kalturaId,
-    ).catch((err) => {
-      perr("[Pipeline] Unhandled error:", err);
-    });
+    const runPipeline = () => {
+      runTranscriptionPipeline(
+        result.transcriptId,
+        entryId,
+        audioUrl,
+        options,
+        lang,
+        kalturaId,
+      ).catch((err) => {
+        perr("[Pipeline] Unhandled error:", err);
+      });
+    };
+    // In serverless contexts the caller passes `after` so the work is tied to
+    // the function's keep-alive window instead of a dangling promise. Scripts
+    // omit it and rely on the live process.
+    if (options.schedule) options.schedule(runPipeline);
+    else runPipeline();
   }
 
   return {

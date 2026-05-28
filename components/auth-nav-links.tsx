@@ -10,17 +10,21 @@ const linkClass = cn(
   "transition-colors hover:text-foreground",
 );
 
-// Top-level header links shown only to signed-in users.
+// Top-level header links shown only to signed-in users. The Speakers link is
+// further gated on experimental access so users without it don't see a link
+// they can't use.
 export function AuthNavLinks() {
-  const { email, loaded } = useAuth();
+  const { email, experimentalAccess, loaded } = useAuth();
 
   if (!loaded || !email) return null;
 
   return (
     <>
-      <Link href="/speakers" className={linkClass}>
-        Speakers
-      </Link>
+      {experimentalAccess && (
+        <Link href="/speakers" className={linkClass}>
+          Speakers
+        </Link>
+      )}
       <Link href="/subscriptions" className={linkClass}>
         Subscriptions
       </Link>

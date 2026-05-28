@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { readFileSync } from "fs";
 import "@/lib/load-env";
 import { extractKalturaId } from "./kaltura";
 import { slugFromSymbol } from "./meeting-slug";
@@ -28,8 +29,20 @@ REQUIRED_VARS.forEach((key) => {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
-  ssl: { rejectUnauthorized: false },
-  max: 5,
+  // Verify the server's TLS certificate (chain + hostname) against Node's
+  // built-in CA bundle. Azure Database for PostgreSQL presents certs chained to
+  // DigiCert roots that ship with Node, so no custom CA file is needed. The
+  // previous `rejectUnauthorized: false` encrypted the connection but trusted
+  // ANY certificate — i.e. no protection against a man-in-the-middle. Set
+  // PG_SSL_CA to a PEM path if a future Azure cert chain isn't in the bundle.
+  ssl: process.env.PG_SSL_CA
+    ? { ca: readFileSync(process.env.PG_SSL_CA, "utf8") }
+    : { rejectUnauthorized: true },
+  // Per-instance pool size. On Vercel many instances each hold their own pool,
+  // and PgBouncer (transaction mode) does the real fan-in to Postgres, so keep
+  // this small — a high number here just hogs PgBouncer client slots. Override
+  // with PG_POOL_MAX for long-running scripts that benefit from more.
+  max: Number(process.env.PG_POOL_MAX) || 2,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
 });
@@ -325,11 +338,15 @@ export async function saveTranscript(
   // Optional executor so this can run inside an advisory-locked transaction
   // (see withVideoLock) on the same connection as the lock.
   executor: Pick<Pool, "query"> = pool,
+  // User who initiated this transcript (tracking only; the daily limit is
+  // counter-based). null for script-initiated runs (e.g. pnpm retranscribe).
+  // On upsert we COALESCE so an existing creator is never overwritten by null.
+  createdBy: string | null = null,
 ): Promise<void> {
   await executor.query(
     q(
-      `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content, source_duration_ms)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content, source_duration_ms, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(transcript_id) DO UPDATE SET
          entry_id = EXCLUDED.entry_id,
          kaltura_id = COALESCE(EXCLUDED.kaltura_id, transcripts.kaltura_id),
@@ -338,6 +355,7 @@ export async function saveTranscript(
          language_code = EXCLUDED.language_code,
          content = EXCLUDED.content,
          source_duration_ms = COALESCE(EXCLUDED.source_duration_ms, transcripts.source_duration_ms),
+         created_by = COALESCE(transcripts.created_by, EXCLUDED.created_by),
          updated_at = NOW()`,
       [
         entryId,
@@ -350,6 +368,7 @@ export async function saveTranscript(
         languageCode,
         content,
         sourceDurationMs,
+        createdBy,
       ],
     ),
   );
@@ -404,6 +423,9 @@ export async function scheduleTranscript(
   startTime: number | null,
   endTime: number | null,
   languageCode: string = "en",
+  // User who queued this transcript (tracking only; see saveTranscript).
+  // null for any system-initiated scheduling.
+  createdBy: string | null = null,
 ): Promise<{ transcriptId: string; stage: TranscriptionStatus }> {
   return withVideoLock(kalturaId, null, async (client) => {
     const existing = await getActiveTranscriptByKalturaId(
@@ -420,8 +442,8 @@ export async function scheduleTranscript(
     const transcriptId = `scheduled-${assetId}-${Date.now()}`;
     await client.query(
       q(
-        `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content)
-       VALUES (?, ?, ?, ?, ?, ?, 'scheduled', ?, '{}')
+        `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, 'scheduled', ?, '{}', ?)
        ON CONFLICT(transcript_id) DO NOTHING`,
         [
           kalturaId,
@@ -431,6 +453,7 @@ export async function scheduleTranscript(
           endTime,
           `pending:${assetId}`,
           languageCode,
+          createdBy,
         ],
       ),
     );

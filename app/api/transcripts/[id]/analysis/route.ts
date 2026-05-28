@@ -10,15 +10,15 @@ import {
 } from "@/lib/db";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { apiError } from "@/lib/api-error";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireExperimental } from "@/lib/auth/require-experimental";
 
 export async function POST(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    // Analysis is a private feature — only signed-in users may run it.
-    const auth = await requireUser();
+    // Analysis is an experimental feature.
+    const auth = await requireExperimental();
     if (auth.response) return auth.response;
 
     const { id: transcriptId } = await context.params;

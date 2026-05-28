@@ -2,45 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getTranscript,
   getTranscriptByKalturaId,
-  deleteTranscriptsForEntry,
   scheduleTranscript,
 } from "@/lib/db";
 import {
   getKalturaAudioUrl,
   submitTranscription,
-  runSpeakerIdentification,
 } from "@/lib/transcription";
 import { after } from "next/server";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { bcp47ToKalturaName } from "@/lib/languages";
 import { apiError } from "@/lib/api-error";
 import { getCurrentUser } from "@/lib/auth/service";
+import { requireUser } from "@/lib/auth/require-user";
+import {
+  enforceUserDailyLimit,
+  enforceGlobalDailyLimit,
+} from "@/lib/rate-limit";
 import type { Transcript } from "@/lib/db";
 
+const TRANSCRIBE_USER_DAILY_LIMIT =
+  Number(process.env.TRANSCRIBE_USER_DAILY_LIMIT) || 5;
+const TRANSCRIBE_GLOBAL_DAILY_LIMIT =
+  Number(process.env.TRANSCRIBE_GLOBAL_DAILY_LIMIT) || 50;
+
+// The transcription pipeline runs in `after()` (see below), so this function's
+// keep-alive window must cover a full transcription + analysis run. 800s is the
+// Vercel Pro + Fluid Compute ceiling; lower to 300 if the deploy rejects it.
+export const maxDuration = 800;
+
 async function respondWithCached(cached: Transcript) {
-  if (!cached.content.statements) {
+  // Legacy rows: either no `statements` field at all, or an empty array (which
+  // historically triggered an auto-rerun of the analysis pipeline from this
+  // POST). Both now return the same error: a cached short-circuit must not
+  // silently kick off paid GPT work — recover via `pnpm retranscribe`.
+  if (
+    !cached.content.statements ||
+    cached.content.statements.length === 0
+  ) {
     return apiError(
       400,
       "old_format",
       "Transcript uses old format, please retranscribe",
     );
-  }
-
-  if (cached.content.statements.length === 0) {
-    // Run speaker identification in-process after the response is sent — no
-    // HTTP self-call, so it can't silently misfire to localhost in production.
-    after(async () => {
-      try {
-        await runSpeakerIdentification(cached.transcript_id);
-      } catch (err) {
-        console.error("Error running speaker identification:", err);
-      }
-    });
-
-    return NextResponse.json({
-      transcriptId: cached.transcript_id,
-      stage: "identifying_speakers",
-    });
   }
 
   const speakerMappings = await getSpeakerMapping(cached.transcript_id);
@@ -61,8 +64,7 @@ async function respondWithCached(cached: Transcript) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { kalturaId, force, assetId, language, schedule } =
-      await request.json();
+    const { kalturaId, assetId, language, schedule } = await request.json();
 
     if (!kalturaId) {
       return apiError(400, "missing_parameter", "kalturaId is required");
@@ -70,35 +72,66 @@ export async function POST(request: NextRequest) {
 
     const lang = language || "en";
 
+    // Generation requires login — viewing transcripts is fully public, but
+    // kicking off paid Gemini + GPT work is not. Placed *after* parameter
+    // validation and *before* the cache short-circuits below, because the
+    // cache short-circuits live inside `respondWithCached` (returned from the
+    // two cache-check blocks) and shouldn't be auth-gated — already-completed
+    // transcripts must remain viewable for everyone via this POST too.
+    //
+    // To keep that invariant, login + daily limits are enforced only on the
+    // schedule branch and the pre-`submitTranscription` start point.
+    const enforceTranscribeLimits = async (userId: string) => {
+      const userLimited = await enforceUserDailyLimit(
+        userId,
+        "transcribe",
+        TRANSCRIBE_USER_DAILY_LIMIT,
+      );
+      if (userLimited) return userLimited;
+      const globalLimited = await enforceGlobalDailyLimit(
+        "transcribe",
+        TRANSCRIBE_GLOBAL_DAILY_LIMIT,
+      );
+      if (globalLimited) return globalLimited;
+      return null;
+    };
+
     // Schedule action: queue transcript for later processing (video still live/upcoming).
     // Idempotent — returns the existing transcript if one is already queued/running/done.
     if (schedule) {
+      const auth = await requireUser();
+      if (auth.response) return auth.response;
+      const limited = await enforceTranscribeLimits(auth.user.id);
+      if (limited) return limited;
       const { transcriptId, stage } = await scheduleTranscript(
         assetId || kalturaId,
         kalturaId,
         null,
         null,
         lang,
+        auth.user.id,
       );
       return NextResponse.json({ transcriptId, stage });
     }
 
     // Fast cache check by stable player ID — avoids hitting Kaltura when we
-    // already have a completed transcript locally.
-    if (!force) {
+    // already have a completed transcript locally. Re-transcription of an
+    // existing transcript is intentionally NOT exposed here (cost/abuse): bad
+    // transcripts are re-run only via the local `pnpm retranscribe` script.
+    {
       const cached = await getTranscriptByKalturaId(kalturaId, lang);
       if (cached && cached.transcription_status === "completed") {
         return await respondWithCached(cached);
       }
     }
 
-    // Either forced or no fast-path hit — resolve via Kaltura for the legacy
-    // lookup and (if needed) to start a new transcription.
+    // No fast-path hit — resolve via Kaltura for the legacy lookup and (if
+    // needed) to start a new transcription.
     const kalturaLang = bcp47ToKalturaName(lang);
     const { entryId } = await getKalturaAudioUrl(kalturaId, kalturaLang);
 
-    // Check DB for existing transcript by resolved entry_id (unless force=true)
-    if (!force) {
+    // Check DB for existing transcript by resolved entry_id.
+    {
       const cached = await getTranscript(
         entryId,
         undefined,
@@ -110,17 +143,25 @@ export async function POST(request: NextRequest) {
       if (cached && cached.transcription_status === "completed") {
         return await respondWithCached(cached);
       }
-    } else {
-      await deleteTranscriptsForEntry(entryId, lang);
     }
 
+    // About to start (or resume) real work — require login + enforce per-user
+    // and global daily caps here, after every cache short-circuit, so only
+    // genuine starts are gated and counted.
+    const auth = await requireUser();
+    if (auth.response) return auth.response;
+    const limited = await enforceTranscribeLimits(auth.user.id);
+    if (limited) return limited;
+
     // Idempotent: reuses an in-progress transcript if one already exists for
-    // this video, so concurrent viewers don't kick off duplicate runs.
+    // this video, so concurrent viewers don't kick off duplicate runs. The
+    // pipeline runs in `after()` so it survives past this response on Vercel.
     const { transcriptId, stage, started } = await submitTranscription(
       kalturaId,
       {
-        force,
         language: lang,
+        schedule: after,
+        createdBy: auth.user.id,
       },
     );
     console.log(

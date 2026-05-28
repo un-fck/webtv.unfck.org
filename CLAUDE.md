@@ -21,6 +21,15 @@ has explicitly asked or approved it in this conversation. Write the migration
 file and hand the apply command to the user; let them run it. Read-only queries
 for investigation are fine.
 
+## Migrations always come with a matching `sql/schema.sql` update
+
+Every migration under `sql/migrations/NNN_*.sql` must come with an edit to
+`sql/schema.sql` in the same change. Migrations are the incremental log;
+`schema.sql` is the from-scratch snapshot. Edit the relevant `CREATE TABLE`
+directly (do not paste the migration's `ALTER TABLE`), mirror new indexes and
+constraints, and remove dropped objects. No placeholder "see migration NNN"
+comments without DDL. Data-only seeds (`INSERT`s) are deliberately omitted.
+
 ## Next.js: ALWAYS read docs before coding
 
 Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
@@ -161,7 +170,7 @@ The provider is selected per language via `STT_ROUTING` in `lib/providers/config
 - `processing_usage_events` — per-operation API cost tracking (provider, stage, operation, status, model, tokens, hours, rate card, USD-derivable). 33 columns, SERIAL PK.
 - `pv_contents` — cached PV/SR document content, composite PK `(pv_symbol, language)`, JSONB `content` plus `fetched_at` / `parsed_at`. Populated by `app/api/pv/route.ts`.
 
-There are **no foreign-key constraints** between these tables; referential integrity is enforced in application code only. `deleteTranscript()` and `deleteTranscriptsForEntry()` delete from `processing_usage_events` and `transcripts` inside a single `BEGIN/COMMIT` transaction (`withTransaction()` in `lib/db.ts`), so a partial delete can't leave orphaned usage rows.
+Historically the schema avoided FK constraints and enforced referential integrity in application code (e.g. `deleteTranscript()` and `deleteTranscriptsForEntry()` delete from `processing_usage_events` and `transcripts` inside a single `BEGIN/COMMIT` transaction via `withTransaction()` in `lib/db.ts`). New tables/columns may use FKs when they're a clear win — but adding FKs to **existing** tables requires an orphan-row audit first (existing inconsistent rows would block `ADD CONSTRAINT`) and may render manual app-level cascades redundant.
 
 **Key queries:** `searchVideos` (FTS with ILIKE/trigram fallback), `getVideosPage`, `getRecentVideos`, `getScheduledTranscripts`, `getAllTranscriptedEntries`, `getVideosNeedingPVCheck`, `getProcessingUsageSummaryByTranscript`.
 

@@ -42,6 +42,23 @@ export default async function SpeakerProfilePage({
     );
   }
 
+  if (!user.experimentalAccess) {
+    return (
+      <main className="min-h-screen bg-background">
+        <SiteHeader />
+        <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
+          <p className={cn(typography.body, "py-8 text-muted-foreground")}>
+            The speaker directory is an experimental feature. See the{" "}
+            <Link href="/about" className="text-un-blue hover:underline">
+              About page
+            </Link>{" "}
+            to request access.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   const profile = await getEntityProfileBySlug(entitySlug, personSlug ?? null);
   if (!profile) notFound();
 

@@ -21,6 +21,12 @@ const getSecret = () => {
 
 const COOKIE_NAME = "auth_session";
 
+/**
+ * Whether `email` belongs to a UN-system domain (per the `allowed_domains`
+ * table seeded by migration 002). No longer enforced at login — registration
+ * is open — but still used to gate UI surfaces aimed at UN colleagues (e.g.
+ * the "request experimental access" note on the About page).
+ */
 export async function isAllowedDomain(email: string): Promise<boolean> {
   const domain = email.toLowerCase().split("@")[1];
   if (!domain) return false;
@@ -132,15 +138,25 @@ export async function clearSession() {
 export interface AuthUser {
   id: string;
   email: string;
+  /** Single gate for all experimental features — toggled directly in the DB. */
+  experimentalAccess: boolean;
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   const session = await getSession();
   if (!session) return null;
-  const rows = await query<{ id: string; email: string }>(
-    `SELECT id, email FROM webtv.users WHERE id = ?`,
+  const rows = await query<{
+    id: string;
+    email: string;
+    experimental_access: boolean;
+  }>(
+    `SELECT id, email, experimental_access FROM webtv.users WHERE id = ?`,
     [session.userId],
   );
   if (!rows[0]) return null;
-  return { id: rows[0].id, email: rows[0].email };
+  return {
+    id: rows[0].id,
+    email: rows[0].email,
+    experimentalAccess: Boolean(rows[0].experimental_access),
+  };
 }

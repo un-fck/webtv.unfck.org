@@ -43,9 +43,7 @@ export default async function SpeakersPage() {
           </p>
         </div>
 
-        {user ? (
-          <SpeakerOverview entities={await getEntitySummaries()} />
-        ) : (
+        {!user ? (
           <p className={cn(typography.body, "text-muted-foreground")}>
             Please{" "}
             <Link href="/login" className="text-un-blue hover:underline">
@@ -53,6 +51,16 @@ export default async function SpeakersPage() {
             </Link>{" "}
             to browse speakers.
           </p>
+        ) : !user.experimentalAccess ? (
+          <p className={cn(typography.body, "text-muted-foreground")}>
+            The speaker directory is an experimental feature. See the{" "}
+            <Link href="/about" className="text-un-blue hover:underline">
+              About page
+            </Link>{" "}
+            to request access.
+          </p>
+        ) : (
+          <SpeakerOverview entities={await getEntitySummaries()} />
         )}
       </div>
     </main>

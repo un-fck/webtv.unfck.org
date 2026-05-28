@@ -289,7 +289,7 @@ export function TranscriptionPanel({
     viewMode,
   ]);
 
-  const handleTranscribe = async (force = false) => {
+  const handleTranscribe = async () => {
     // Guard against a double-click firing a second POST while one is in flight.
     if (startingRef.current) return;
     startingRef.current = true;
@@ -300,7 +300,7 @@ export function TranscriptionPanel({
       const response = await fetch("/api/transcripts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kalturaId, force, language: selectedLanguage }),
+        body: JSON.stringify({ kalturaId, language: selectedLanguage }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -423,7 +423,7 @@ export function TranscriptionPanel({
         setStage("error");
       });
     } else {
-      handleTranscribe(true);
+      handleTranscribe();
     }
   };
 

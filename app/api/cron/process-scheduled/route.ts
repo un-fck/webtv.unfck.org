@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 
 const ts = () => new Date().toTimeString().slice(0, 8);
 import { getScheduledTranscripts } from "@/lib/db";
 import { getKalturaAudioUrl, submitTranscription } from "@/lib/transcription";
 import { apiError } from "@/lib/api-error";
+
+// Each picked-up transcript starts a pipeline in `after()`; keep the function
+// alive long enough for those runs. 800s is the Vercel Pro + Fluid Compute
+// ceiling; lower to 300 if the deploy rejects it.
+export const maxDuration = 800;
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -42,6 +48,7 @@ export async function GET(request: NextRequest) {
       const { transcriptId } = await submitTranscription(kalturaId, {
         existingTranscriptId: item.transcript_id,
         language: item.language_code || "en",
+        schedule: after,
       });
 
       console.log(

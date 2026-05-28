@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Check cache first
+  // PV documents are public UN reference data, cached after first fetch. No
+  // rate limit — viewing/triggering a parse is part of the public-good surface.
   const cached = await getPVContent(symbol, lang);
   if (cached) {
     return NextResponse.json(cached.content);

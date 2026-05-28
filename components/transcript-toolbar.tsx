@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   Check,
   ChevronDown,
@@ -259,22 +260,37 @@ export function TranscriptToolbar({
         )}
 
         {/* Idle: production trigger. Generate now if the recording exists,
-            else queue it to run automatically once it does. */}
+            else queue it to run automatically once it does. Anonymous users
+            see a sign-in prompt instead — generation requires login so it can
+            be attributed and counted against the per-user daily cap. */}
         {!hasContent && !checking && stage === "idle" && !starting && (
-          <button
-            onClick={audioAvailable ? onTranscribe : onSchedule}
-            className={cn(
-              typography.label,
-              "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
-            )}
-            title={
-              audioAvailable
-                ? undefined
-                : "Queues the transcript to be generated automatically once the recording is available"
-            }
-          >
-            {audioAvailable ? "Generate transcript" : "Generate when available"}
-          </button>
+          isLoggedIn ? (
+            <button
+              onClick={audioAvailable ? onTranscribe : onSchedule}
+              className={cn(
+                typography.label,
+                "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
+              )}
+              title={
+                audioAvailable
+                  ? undefined
+                  : "Queues the transcript to be generated automatically once the recording is available"
+              }
+            >
+              {audioAvailable ? "Generate transcript" : "Generate when available"}
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className={cn(
+                typography.label,
+                "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
+              )}
+              title="Generating a transcript requires a free account"
+            >
+              Sign in to transcribe
+            </Link>
+          )
         )}
 
         {/* Bell: pure subscribe toggle, only while a transcript is pending. */}
