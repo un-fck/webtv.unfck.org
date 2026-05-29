@@ -369,8 +369,8 @@ export type SpeakerIdentificationResult =
 
 /**
  * Run speaker identification + the analysis pipeline for an existing transcript,
- * in-process. Shared by the `/api/identify-speakers` route and the
- * transcribe/check routes' fire-and-forget triggers — no HTTP self-call, so it
+ * in-process. Called from `runTranscriptionPipeline` (and indirectly from the
+ * `pollTranscription` stuck-stage recovery path) — no HTTP self-call, so it
  * works regardless of `NEXT_PUBLIC_BASE_URL` and avoids the extra round trip.
  */
 export async function runSpeakerIdentification(

@@ -185,7 +185,6 @@ Historically the schema avoided FK constraints and enforced referential integrit
 | `/api/transcripts`                   | POST   | Start or schedule transcription                                      |
 | `/api/transcripts/[id]`              | GET    | Poll transcript status / fetch result                                |
 | `/api/transcripts/[id]/analysis`     | POST   | Run proposition analysis on transcript                               |
-| `/api/identify-speakers`             | POST   | Run speaker identification + topic pipeline on a transcript          |
 | `/api/languages`                     | GET    | List available audio language tracks for a Kaltura entry             |
 | `/api/search`                        | GET    | Search video archive (`?q=...&offset=...`)                           |
 | `/api/pv`                            | GET    | Fetch / parse a PV document PDF and cache JSON in `pv_contents`      |

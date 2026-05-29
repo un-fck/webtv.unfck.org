@@ -106,7 +106,6 @@ app/
     transcripts/check/route.ts      # Cache lookup for an existing transcript
     transcripts/[id]/route.ts       # Poll transcript status / fetch result
     transcripts/[id]/analysis/...   # Run proposition analysis
-    identify-speakers/route.ts      # Speaker identification (Azure OpenAI)
     search/route.ts                 # Full-archive video search
     pv/route.ts                     # Fetch + cache PV document JSON
     pv/align/route.ts               # Align PV document with audio (timestamps)
