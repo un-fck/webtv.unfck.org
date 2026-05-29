@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
     sortRaw && SORT_VALUES.includes(sortRaw) ? sortRaw : "date_desc"
   ).split("_") as ["date" | "title", "asc" | "desc"];
 
-  const status = sp.get("status") === "scheduled" ? "scheduled" : "past";
   const dateRaw = sp.get("date");
   const date =
     dateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : undefined;
@@ -43,7 +42,6 @@ export async function GET(request: NextRequest) {
     date,
     bodies: multi(sp, "body"),
     categories: multi(sp, "category"),
-    status,
     docs: docs?.length ? docs : undefined,
     sortBy,
     sortDir,

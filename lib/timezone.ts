@@ -96,6 +96,27 @@ export function formatMeetingDate(
   });
 }
 
+// True when the given date/timestamp falls strictly after "today" in the
+// given timezone (i.e. tomorrow or later).
+export function isFutureDay(
+  dateOrTimestamp: string,
+  timezone: string,
+): boolean {
+  const tz = resolveTimezone(timezone);
+  const date =
+    dateOrTimestamp.length > 10
+      ? parseUNTimestamp(dateOrTimestamp)
+      : new Date(dateOrTimestamp + "T12:00:00Z");
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  return fmt(date) > fmt(new Date());
+}
+
 export function formatMeetingDateTime(
   scheduledTime: string | null,
   date: string,

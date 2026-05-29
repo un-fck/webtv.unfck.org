@@ -1267,11 +1267,9 @@ export async function getVideosPage(
   if (sortBy === "title") {
     orderBy = `clean_title ${sortDir === "asc" ? "ASC" : "DESC"}, date DESC`;
   } else {
-    if (status === "past" || !status) {
-      orderBy = `CASE WHEN scheduled_time IS NOT NULL AND scheduled_time >= NOW() THEN 0 ELSE 1 END ASC, date ${sortDir === "asc" ? "ASC" : "DESC"}, scheduled_time ${sortDir === "asc" ? "ASC" : "DESC"}`;
-    } else {
-      orderBy = `date ${sortDir === "asc" ? "ASC" : "DESC"}, scheduled_time ${sortDir === "asc" ? "ASC" : "DESC"}`;
-    }
+    // Day ordering follows sortDir; within a day, always earliest-first so
+    // meetings read chronologically as the day unfolds.
+    orderBy = `date ${sortDir === "asc" ? "ASC" : "DESC"}, scheduled_time ASC`;
   }
   // Stable tiebreaker on the primary key so OFFSET pagination never repeats or
   // skips rows that share the same date/scheduled_time (otherwise the same

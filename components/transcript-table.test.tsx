@@ -66,7 +66,7 @@ function renderTable() {
     <VideoTable
       videos={videos}
       totalCount={videos.length}
-      serverParams={{ page: 1, pageSize: 50, status: "past" }}
+      serverParams={{ page: 1, pageSize: 50 }}
       availableDates={[...new Set(videos.map((v) => v.date))]}
       filterOptions={{
         bodies: [

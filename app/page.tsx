@@ -20,7 +20,6 @@ export interface ServerParams {
   page: number;
   pageSize: number;
   sort?: string; // undefined = auto (date desc in normal mode, relevance in search)
-  status: "past" | "scheduled";
   date?: string;
   body?: string[];
   category?: string[];
@@ -40,8 +39,6 @@ function parseSearchParams(
   )
     ? String(raw.sort)
     : undefined; // auto: date desc in normal mode, relevance in search mode
-  const status =
-    String(raw.status ?? "") === "scheduled" ? "scheduled" : "past";
   const date =
     typeof raw.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.date)
       ? raw.date
@@ -71,7 +68,6 @@ function parseSearchParams(
     page,
     pageSize,
     sort,
-    status,
     date,
     body: body?.length ? body : undefined,
     category: category?.length ? category : undefined,
@@ -122,7 +118,6 @@ export default async function Home({
     date: params.date,
     bodies: params.body,
     categories: params.category,
-    status: params.status,
     docs: params.text,
     sortBy,
     sortDir,

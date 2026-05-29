@@ -29,6 +29,7 @@ import {
   formatMeetingTime,
   formatMeetingDate,
   formatMeetingDateTime,
+  isFutureDay,
 } from "@/lib/timezone";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
@@ -534,7 +535,6 @@ export function VideoTable({
       if (next.page > 1) sp.set("page", String(next.page));
       if (next.pageSize !== 50) sp.set("pageSize", String(next.pageSize));
       if (next.sort) sp.set("sort", next.sort);
-      if (next.status !== "past") sp.set("status", next.status);
       if (next.date) sp.set("date", next.date);
       next.body?.forEach((v) => sp.append("body", v));
       next.category?.forEach((v) => sp.append("category", v));
@@ -646,7 +646,6 @@ export function VideoTable({
     const sp = new URLSearchParams();
     sp.set("offset", String(browseRows.length));
     if (serverParams.sort) sp.set("sort", serverParams.sort);
-    if (serverParams.status !== "past") sp.set("status", serverParams.status);
     if (serverParams.date) sp.set("date", serverParams.date);
     serverParams.body?.forEach((v) => sp.append("body", v));
     serverParams.category?.forEach((v) => sp.append("category", v));
@@ -706,20 +705,6 @@ export function VideoTable({
   const toggleWithTranscript = () =>
     updateParams({ text: withTranscript ? undefined : ALL_DOC_TYPES });
 
-  const isScheduledView = serverParams.status === "scheduled";
-  const statusToggleOptions = [
-    {
-      label: "Recent",
-      active: !isScheduledView,
-      // Reset the ascending sort that Upcoming sets, back to newest-first.
-      onSelect: () => updateParams({ status: "past", sort: undefined }),
-    },
-    {
-      label: "Upcoming",
-      active: isScheduledView,
-      onSelect: () => updateParams({ status: "scheduled", sort: "date_asc" }),
-    },
-  ];
   const transcribedToggleOptions = [
     { label: "All", active: !withTranscript, onSelect: toggleWithTranscript },
     {
@@ -835,18 +820,27 @@ export function VideoTable({
   // Split the rows into per-day groups (one rendered table each) when grouping.
   type DisplayRow = (typeof displayRows)[number];
   const dayGroups = useMemo<
-    { day: string; rows: DisplayRow[] }[] | null
+    { day: string; rows: DisplayRow[]; isFuture: boolean }[] | null
   >(() => {
     if (!groupByDate) return null;
-    const groups: { day: string; rows: DisplayRow[] }[] = [];
+    const groups: { day: string; rows: DisplayRow[]; isFuture: boolean }[] = [];
     for (const r of displayRows) {
       if (r.showDay || groups.length === 0) {
-        groups.push({ day: r.dateLabel, rows: [] });
+        const ts = r.video.scheduledTime ?? r.video.date;
+        groups.push({
+          day: r.dateLabel,
+          rows: [],
+          isFuture: isFutureDay(ts, timezone),
+        });
       }
       groups[groups.length - 1].rows.push(r);
     }
     return groups;
-  }, [displayRows, groupByDate]);
+  }, [displayRows, groupByDate, timezone]);
+
+  const futureDayGroups = (dayGroups ?? []).filter((g) => g.isFuture);
+  const pastDayGroups = (dayGroups ?? []).filter((g) => !g.isFuture);
+  const [showFuture, setShowFuture] = useState(false);
 
   // Renders one meeting's table rows: an optional category subheader followed by
   // the data row. The day heading lives outside the table (one table per day).
@@ -941,6 +935,25 @@ export function VideoTable({
     );
   };
 
+  // Day section: large heading + a per-day table of meeting rows. Used for
+  // both past and (when expanded) future day groups.
+  const renderDayGroup = (group: { day: string; rows: DisplayRow[] }) => (
+    <div key={group.day}>
+      <h2 className="mb-3 text-xl font-bold tracking-tight text-foreground">
+        {group.day}
+      </h2>
+      <div className="overflow-hidden rounded-lg border border-gray-200">
+        <table className="w-full table-fixed text-sm">
+          <colgroup>
+            <col style={{ width: 132 }} />
+            <col />
+          </colgroup>
+          <tbody>{group.rows.map(renderMeetingRow)}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   const searchStatus = isSearching
     ? "Searching…"
     : isSearchMode && searchResults !== null && searchResults.length > 0
@@ -989,18 +1002,6 @@ export function VideoTable({
             Clear all filters
           </button>
         </>
-      ) : isScheduledView ? (
-        <p className="text-sm text-muted-foreground">
-          No upcoming meetings are scheduled right now. Check back soon, or
-          switch to{" "}
-          <button
-            onClick={() => updateParams({ status: "past" })}
-            className="text-un-blue underline-offset-4 hover:underline"
-          >
-            recent meetings
-          </button>
-          .
-        </p>
       ) : (
         <p className="text-sm text-muted-foreground">No meetings found.</p>
       )}
@@ -1009,24 +1010,23 @@ export function VideoTable({
 
   return (
     <div className="space-y-4">
-      {/* Unified filter toolbar — search on its own row, controls below */}
+      {/* Unified filter toolbar — search and controls on one row when space allows */}
       <div className="space-y-3">
-        <SearchInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSubmit={submitSearch}
-          isFocused={isSearchFocused}
-          setIsFocused={setIsSearchFocused}
-          className="w-full lg:w-1/2"
-        />
         <div className="flex flex-wrap items-center gap-2">
-          <SegmentedToggle options={statusToggleOptions} />
-          <SegmentedToggle options={transcribedToggleOptions} />
+          <SearchInput
+            value={inputValue}
+            onChange={setInputValue}
+            onSubmit={submitSearch}
+            isFocused={isSearchFocused}
+            setIsFocused={setIsSearchFocused}
+            className="w-full lg:w-1/2"
+          />
           <DateFilterPopover
             availableDates={availableDates}
             selectedDate={serverParams.date}
             onChange={(val) => updateParams({ date: val })}
           />
+          <SegmentedToggle options={transcribedToggleOptions} />
         </div>
         <CategoryFilterRows
           options={filterOptions.categories}
@@ -1116,24 +1116,31 @@ export function VideoTable({
             {emptyState}
           </div>
         ) : dayGroups ? (
-          <div className="space-y-10">
-            {dayGroups.map((group) => (
-              <div key={group.day}>
-                <h2 className="mb-3 text-xl font-bold tracking-tight text-foreground">
-                  {group.day}
-                </h2>
-                <div className="overflow-hidden rounded-lg border border-gray-200">
-                  <table className="w-full table-fixed text-sm">
-                    <colgroup>
-                      <col style={{ width: 132 }} />
-                      <col />
-                    </colgroup>
-                    <tbody>{group.rows.map(renderMeetingRow)}</tbody>
-                  </table>
-                </div>
+          <>
+            {futureDayGroups.length > 0 && (
+              <div className={cn(showFuture ? "mb-10 space-y-10" : "mb-4")}>
+                <button
+                  onClick={() => setShowFuture((v) => !v)}
+                  className={cn(
+                    "flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground",
+                    showFuture && "mb-3",
+                  )}
+                >
+                  {showFuture ? "Hide" : "Show"} future dates
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      showFuture && "rotate-180",
+                    )}
+                  />
+                </button>
+                {showFuture && futureDayGroups.map(renderDayGroup)}
               </div>
-            ))}
-          </div>
+            )}
+            <div className="space-y-10">
+              {pastDayGroups.map(renderDayGroup)}
+            </div>
+          </>
         ) : (
           // Search mode: a single ungrouped table with a leading Date column.
           <div className="overflow-hidden rounded-lg border border-gray-200">
