@@ -33,6 +33,14 @@ function HeaderNavItems() {
 }
 
 export function SiteHeader({ wide = false }: { wide?: boolean }) {
+  // Breakpoint above which the emblem moves outboard into the page margin.
+  // - Default container is max-w-5xl (1024px); outboard needs ~46px of side
+  //   margin → viewport ≥ ~1070px. We use 1152px for comfortable breathing.
+  // - Wide container is max-w-7xl (1280px); we need ~1326px before the emblem
+  //   even fits, so we wait for 1408px before folding outboard. Below that it
+  //   stays inline next to the wordmark.
+  const outboardOnly = wide ? "hidden min-[1408px]:block" : "hidden min-[1152px]:block";
+  const inlineOnly = wide ? "min-[1408px]:hidden" : "min-[1152px]:hidden";
   return (
     <header className="relative border-b border-border py-3">
       <div
@@ -60,7 +68,10 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
         <Link
           href="/"
           aria-label="UN Transcripts — home"
-          className="absolute top-1/2 right-[calc(100%-24.74px)] hidden h-10 w-[47.9px] -translate-y-1/2 transition-opacity hover:opacity-75 min-[1152px]:block"
+          className={cn(
+            "absolute top-1/2 right-[calc(100%-24.74px)] h-10 w-[47.9px] -translate-y-1/2 transition-opacity hover:opacity-75",
+            outboardOnly,
+          )}
         >
           <Image
             src="/images/un-emblem-colour.svg"
@@ -81,7 +92,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
             alt=""
             width={152}
             height={127}
-            className="h-10 w-[47.9px] shrink-0 select-none min-[1152px]:hidden"
+            className={cn("h-10 w-[47.9px] shrink-0 select-none", inlineOnly)}
             draggable={false}
           />
           {/* Both words are real text so the baseline lines up perfectly;
