@@ -94,7 +94,7 @@ Copy `.env.example` → `.env.local` and fill in values.
 - `AZURE_OPENAI_API_KEY` — as above
 - `AZURE_OPENAI_API_VERSION` — defaults in `.env.example` (e.g. `2025-03-01-preview`)
 - `AUTH_SECRET` — HMAC secret signing login session cookies (`openssl rand -hex 32`). Required in production; falls back to a dev default otherwise.
-- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` — outbound email for magic-link login, which gates the private **analysis** feature. `SMTP_FROM` falls back to `SMTP_USER`; `SMTP_HOST` defaults to `smtp.mailbox.org`.
+- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` — outbound email for magic-link login. Login is required to generate transcripts; experimental features (proposition analysis, speaker directory) additionally require the per-user `experimental_access` flag (migration 011). `SMTP_FROM` falls back to `SMTP_USER`; `SMTP_HOST` defaults to `smtp.mailbox.org`.
 
 **Production only:**
 
