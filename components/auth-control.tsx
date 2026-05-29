@@ -40,7 +40,7 @@ export function AuthControl() {
     return (
       <Link
         href="/login"
-        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
       >
         Sign in
       </Link>

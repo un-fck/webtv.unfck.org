@@ -5,7 +5,7 @@ import { VerifyForm } from "@/components/verify-form";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Signing in — UN Web TV Transcripts",
+  title: "Signing in — UN Transcripts",
 };
 
 export default function VerifyPage() {

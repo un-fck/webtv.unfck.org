@@ -294,7 +294,7 @@ export function VideoPageClient({
     <>
       <SiteHeader wide />
 
-      <div className={cn("mx-auto px-6 pb-16 sm:px-8", widePageWidth)}>
+      <div className={cn("mx-auto px-4 pb-16 sm:px-8", widePageWidth)}>
         <nav className="py-3">
           <a
             href={backHref}

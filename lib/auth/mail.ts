@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 
 import { getBaseUrl } from "@/lib/get-base-url";
 
-export const SITE_TITLE = "UN Web TV Transcripts";
+export const SITE_TITLE = "UN Transcripts";
 
 export const mailFrom = () =>
   `"${SITE_TITLE}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`;

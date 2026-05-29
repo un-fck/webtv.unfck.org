@@ -15,7 +15,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "UN Web TV Transcripts",
+  title: "UN Transcripts",
   description: "Browse UN Web TV videos with transcripts of all speeches",
 };
 

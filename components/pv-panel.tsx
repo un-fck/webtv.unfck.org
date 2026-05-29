@@ -250,7 +250,7 @@ export function PVPanel({
   return (
     <div className="space-y-3">
       {/* Metadata header — expandable for PV, simple label for SR */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
         {isSR ? (
           <span className="text-xs text-muted-foreground">
             {pvDoc.symbol} — {pvDoc.body}
@@ -277,7 +277,7 @@ export function PVPanel({
           <button
             onClick={handleAlign}
             disabled={aligning}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted disabled:opacity-50"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors hover:bg-muted disabled:opacity-50"
           >
             {aligning ? (
               <>
@@ -294,7 +294,7 @@ export function PVPanel({
         )}
 
         {isAligned && (
-          <span className="ml-auto text-xs text-emerald-600 dark:text-emerald-400">
+          <span className="ml-auto text-xs whitespace-nowrap text-emerald-600 dark:text-emerald-400">
             ✓ Aligned
           </span>
         )}

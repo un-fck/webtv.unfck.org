@@ -160,7 +160,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className={cn("mx-auto px-6 sm:px-8", pageWidth)}>
+      <div className={cn("mx-auto px-4 sm:px-8", pageWidth)}>
         <HomeHero />
         <div className="pb-24">
           <Suspense fallback={null}>{children}</Suspense>

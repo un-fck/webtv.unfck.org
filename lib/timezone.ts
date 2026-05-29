@@ -88,11 +88,20 @@ export function formatMeetingDate(
   if (dateStr === fmt(tomorrow)) return "Tomorrow";
   if (dateStr === fmt(yesterday)) return "Yesterday";
 
+  const currentYear = now.toLocaleDateString("en-US", {
+    timeZone: tz,
+    year: "numeric",
+  });
+  const dateYear = date.toLocaleDateString("en-US", {
+    timeZone: tz,
+    year: "numeric",
+  });
   return date.toLocaleDateString("en-US", {
     timeZone: tz,
-    weekday: "short",
+    weekday: "long",
     month: "short",
     day: "numeric",
+    ...(dateYear !== currentYear ? { year: "numeric" } : {}),
   });
 }
 

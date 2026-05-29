@@ -1,55 +1,117 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Menu } from "lucide-react";
 import { TimezonePicker } from "@/components/timezone-picker";
 import { AuthControl } from "@/components/auth-control";
 import { AuthNavLinks } from "@/components/auth-nav-links";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { typography } from "@/lib/typography";
 import { pageWidth, widePageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
+const navLinkClass = cn(
+  typography.meta,
+  "transition-colors hover:text-foreground",
+);
+
+// Items shared by the desktop bar and the mobile hamburger sheet so we don't
+// duplicate copy.
+function HeaderNavItems() {
+  return (
+    <>
+      <TimezonePicker />
+      <AuthNavLinks />
+      <Link href="/about" className={navLinkClass}>
+        About
+      </Link>
+    </>
+  );
+}
+
 export function SiteHeader({ wide = false }: { wide?: boolean }) {
   return (
-    <header className="border-b border-border py-3">
+    <header className="relative border-b border-border py-3">
       <div
         className={cn(
-          "mx-auto flex items-center gap-4 px-6 sm:px-8",
+          "relative mx-auto flex items-center gap-4 px-4 sm:px-8",
           wide ? widePageWidth : pageWidth,
         )}
       >
+        {/* On wide viewports the square emblem sits in the page margin
+            immediately to the left of the centered container; on smaller
+            viewports it folds back inline with the wordmark. Both branches
+            share the same logical Link so the entire branding click target
+            stays unified. */}
+        {/* Emblem aspect is ≈1.198:1 (wider than tall); arbitrary widths
+            below = round(height × 1.198). Explicit width is also required on
+            the absolutely-positioned anchor since the global
+            `img, video { max-width: 100% }` reset would otherwise clamp to the
+            parent's containing-block width — and an absolute parent with no
+            defined width collapses to 0.
+
+            The 24.74px right offset overshoots into the container's px-8
+            padding zone so the visible gap between emblem and "United Nations"
+            equals the original horizontal logo's emblem-wordmark gap
+            (23.01/126.89 ≈ 18.14% of emblem height → 7.26px at h-10). */}
         <Link
           href="/"
-          className="inline-flex items-center gap-4 transition-opacity hover:opacity-75"
+          aria-label="UN Transcripts — home"
+          className="absolute top-1/2 right-[calc(100%-24.74px)] hidden h-10 w-[47.9px] -translate-y-1/2 transition-opacity hover:opacity-75 min-[1152px]:block"
         >
           <Image
-            src="/images/un-logo-stacked-colour-english.svg"
+            src="/images/un-emblem-colour.svg"
             alt="United Nations"
-            width={402}
+            width={152}
             height={127}
-            className="h-8 w-auto shrink-0"
+            className="h-10 w-[47.9px] shrink-0 select-none"
+            draggable={false}
           />
-          <div className="h-8 w-px shrink-0 bg-border" />
-          <div className="flex items-center gap-2.5">
-            <span className="text-2xl leading-none tracking-tight text-foreground">
-              <span className="font-bold">WebTV</span>
-              <span className="font-normal"> Transcripts</span>
-            </span>
-            <span className="rounded bg-un-blue/10 px-2 py-1 text-[11px] leading-none font-bold tracking-wide text-un-blue uppercase">
-              Public Preview
-            </span>
-          </div>
+        </Link>
+        <Link
+          href="/"
+          aria-label="UN Transcripts — home"
+          className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-75"
+        >
+          <Image
+            src="/images/un-emblem-colour.svg"
+            alt=""
+            width={152}
+            height={127}
+            className="h-10 w-[47.9px] shrink-0 select-none min-[1152px]:hidden"
+            draggable={false}
+          />
+          {/* Both words are real text so the baseline lines up perfectly;
+              same size, only the weight differs. */}
+          <span className="text-[23.83px] leading-none tracking-tight text-foreground">
+            <span className="font-bold">United Nations</span>{" "}
+            <span className="font-light">Transcripts</span>
+          </span>
         </Link>
         <div className="ml-auto flex items-center gap-4">
-          <TimezonePicker />
-          <AuthNavLinks />
-          <Link
-            href="/about"
-            className={cn(
-              typography.meta,
-              "transition-colors hover:text-foreground",
-            )}
-          >
-            About
-          </Link>
+          {/* md+: inline nav. Below md it collapses into the hamburger so the
+              right rail stays uncluttered when more items appear after sign-in
+              (Speakers, Subscriptions, timezone picker). */}
+          <div className="hidden items-center gap-4 md:flex">
+            <HeaderNavItems />
+          </div>
+          <Popover>
+            <PopoverTrigger
+              aria-label="Open menu"
+              className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="flex w-48 flex-col gap-3 p-3"
+            >
+              <HeaderNavItems />
+            </PopoverContent>
+          </Popover>
           <AuthControl />
         </div>
       </div>

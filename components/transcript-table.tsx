@@ -28,7 +28,6 @@ import { rememberScheduleUrl } from "@/lib/schedule-return";
 import {
   formatMeetingTime,
   formatMeetingDate,
-  formatMeetingDateTime,
   isFutureDay,
 } from "@/lib/timezone";
 import { typography } from "@/lib/typography";
@@ -38,37 +37,43 @@ import { cn } from "@/lib/utils";
 // in display order. This also drives the day/category header ordering within
 // the schedule (CATEGORY_ORDER is the flattened form). Anything not listed
 // sorts after these (alphabetically); uncategorized ("") sorts last.
-const CATEGORY_GROUPS: string[][] = [
-  // Press & media
-  [
-    "Press Conferences",
-    "Media Stakeouts",
-    "Media",
-    "Concerts",
-    "Goals Lounge",
-    "SDG Studio",
-    "Features",
-  ],
-  // Principal organs & bodies
-  [
-    "General Assembly",
-    "Security Council",
-    "Economic and Social Council",
-    "Human Rights Council",
-    "Human Rights Treaty Bodies",
-    "Trusteeship Council",
-    "International Court of Justice",
-  ],
-  // Events & agencies
-  [
-    "Agencies, Funds & Programmes",
-    "High-level Events",
-    "Conferences",
-    "Side Events",
-    "Meetings & Events",
-  ],
+const CATEGORY_GROUPS: { label: string; items: string[] }[] = [
+  {
+    label: "Media",
+    items: [
+      "Press Conferences",
+      "Media Stakeouts",
+      "Media",
+      "Concerts",
+      "Goals Lounge",
+      "SDG Studio",
+      "Features",
+    ],
+  },
+  {
+    label: "Bodies",
+    items: [
+      "General Assembly",
+      "Security Council",
+      "Economic and Social Council",
+      "Human Rights Council",
+      "Human Rights Treaty Bodies",
+      "Trusteeship Council",
+      "International Court of Justice",
+    ],
+  },
+  {
+    label: "Events",
+    items: [
+      "Agencies, Funds & Programmes",
+      "High-level Events",
+      "Conferences",
+      "Side Events",
+      "Meetings & Events",
+    ],
+  },
 ];
-const CATEGORY_ORDER: string[] = CATEGORY_GROUPS.flat();
+const CATEGORY_ORDER: string[] = CATEGORY_GROUPS.flatMap((g) => g.items);
 const CATEGORY_RANK = new Map(CATEGORY_ORDER.map((c, i) => [c, i]));
 
 // Sort categories by the hardcoded order; unknown categories go after the known
@@ -198,10 +203,11 @@ function DateFilterPopover({
   );
 }
 
-// Category filter rendered inline as grouped rows of toggle pills (no dropdown).
-// Categories are bucketed into the semantic CATEGORY_GROUPS rows; only those
-// present in the data are shown. Any present category not in a defined group is
-// appended as a trailing row so nothing is dropped.
+// Category filter rendered inline as a single wrapping bar of toggle pills.
+// Categories are bucketed into the semantic CATEGORY_GROUPS; each group is
+// prefixed by its inline label and separated from the next by a thin "·".
+// Wrapping happens naturally on narrow viewports — there are no row boundaries
+// to break the visual structure.
 function CategoryFilterRows({
   options,
   selected,
@@ -221,48 +227,64 @@ function CategoryFilterRows({
     );
   };
 
-  // Hide rarely-used categories (fewer than 10 meetings) to keep the rows tidy.
+  // Hide rarely-used categories (fewer than 10 meetings) to keep the bar tidy.
   const present = new Set(options.filter((c) => (counts?.[c] ?? 0) >= 10));
-  const rows: string[][] = CATEGORY_GROUPS.map((group) =>
-    group.filter((c) => present.has(c)),
-  ).filter((row) => row.length > 0);
+  const groups: { label: string | null; items: string[] }[] =
+    CATEGORY_GROUPS.map(({ label, items }) => ({
+      label,
+      items: items.filter((c) => present.has(c)),
+    })).filter((g) => g.items.length > 0);
 
   // Any present category not in a defined group (incl. unknown future ones).
-  const grouped = new Set(CATEGORY_GROUPS.flat());
+  const grouped = new Set(CATEGORY_GROUPS.flatMap((g) => g.items));
   const ungrouped = [...present]
     .filter((c) => !grouped.has(c))
     .sort((a, b) => (counts?.[b] ?? 0) - (counts?.[a] ?? 0));
-  if (ungrouped.length > 0) rows.push(ungrouped);
+  if (ungrouped.length > 0) groups.push({ label: null, items: ungrouped });
 
-  if (rows.length === 0) return null;
+  if (groups.length === 0) return null;
+
+  const pill = (opt: string) => (
+    <button
+      key={opt}
+      onClick={() => toggle(opt)}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors ${
+        selected.includes(opt)
+          ? "bg-primary text-white"
+          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+      }`}
+    >
+      {opt}
+      {counts?.[opt] !== undefined && (
+        <span
+          className={cn(
+            "ml-1",
+            selected.includes(opt) ? "opacity-75" : "opacity-50",
+          )}
+        >
+          {counts[opt]}
+        </span>
+      )}
+    </button>
+  );
 
   return (
     <div className="space-y-1.5">
-      {rows.map((row, i) => (
-        <div key={i} className="flex flex-wrap gap-1.5">
-          {row.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => toggle(opt)}
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors ${
-                selected.includes(opt)
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              {opt}
-              {counts?.[opt] !== undefined && (
-                <span
-                  className={cn(
-                    "ml-1",
-                    selected.includes(opt) ? "opacity-75" : "opacity-50",
-                  )}
-                >
-                  {counts[opt]}
-                </span>
-              )}
-            </button>
-          ))}
+      {groups.map((g, i) => (
+        <div
+          key={g.label ?? `ungrouped-${i}`}
+          className="flex items-baseline gap-1"
+        >
+          {g.label && (
+            <span className="w-12 shrink-0 text-xs font-medium text-muted-foreground">
+              {g.label}
+            </span>
+          )}
+          {/* Pills wrap inside their own column so continuation lines start
+              under the first pill rather than back at the label. */}
+          <div className="flex flex-1 flex-wrap gap-1.5">
+            {g.items.map(pill)}
+          </div>
         </div>
       ))}
     </div>
@@ -331,49 +353,8 @@ function SearchInput({
   );
 }
 
-// Document-availability badges (AI transcript / verbatim / summary record).
-// Used in both the desktop table cell and the mobile card; `uppercase` is the
-// only visual difference between the two.
-function DocBadges({
-  hasTranscript,
-  pvAvailable,
-  pvSymbol,
-  uppercase,
-}: {
-  hasTranscript: boolean;
-  pvAvailable: boolean;
-  pvSymbol: string | null;
-  uppercase?: boolean;
-}) {
-  if (!hasTranscript && !pvAvailable) return null;
-  const isSR = pvSymbol?.includes("/SR.");
-  const caseClass = uppercase ? "uppercase" : "";
-  return (
-    <div className="flex flex-wrap gap-1">
-      {hasTranscript && (
-        <span
-          className={`inline-block rounded bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary ${caseClass}`}
-        >
-          transcript
-        </span>
-      )}
-      {pvAvailable && (
-        <span
-          className={`inline-block rounded px-1.5 py-px text-[10px] font-medium ${caseClass} ${
-            isSR
-              ? "bg-violet-500/10 text-violet-700"
-              : "bg-amber-500/10 text-amber-700"
-          }`}
-        >
-          {isSR ? "summary" : "verbatim"}
-        </span>
-      )}
-    </div>
-  );
-}
-
 // Compact letter chips for the desktop Transcripts column: T (AI transcript),
-// V (verbatim record), S (summary record). Color matches DocBadges; the full
+// V (verbatim record), S (summary record). The full
 // name is in a hover tooltip. Letters distinguish the three types far more
 // legibly than icons would at this size.
 function DocChips({
@@ -705,15 +686,6 @@ export function VideoTable({
   const toggleWithTranscript = () =>
     updateParams({ text: withTranscript ? undefined : ALL_DOC_TYPES });
 
-  const transcribedToggleOptions = [
-    { label: "All", active: !withTranscript, onSelect: toggleWithTranscript },
-    {
-      label: "Transcribed",
-      active: withTranscript,
-      onSelect: toggleWithTranscript,
-    },
-  ];
-
   // Search-result ordering: relevance (default, no sort param) vs newest-first.
   const searchSortOptions = [
     {
@@ -862,7 +834,7 @@ export function VideoTable({
       <Fragment key={video.slug}>
         {showCategory && (
           <tr className="bg-gray-50">
-            <td colSpan={2} className="px-4 pt-2 pb-1">
+            <td colSpan={2} className="px-4 py-1.5">
               {category ? (
                 <button
                   onClick={() =>
@@ -888,7 +860,10 @@ export function VideoTable({
           onClick={() => router.push(`/${video.slug}`)}
           className={cn(
             "cursor-pointer border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50",
-            isScheduled && "opacity-40",
+            // Future/scheduled rows recede via the same muted-foreground tone
+            // used by category headers and duration values — not opacity, which
+            // produced a fourth grey shade out of sync with the rest.
+            isScheduled && "text-muted-foreground",
           )}
         >
           {/* Date (search mode only — grouped mode shows it as a heading) */}
@@ -897,19 +872,19 @@ export function VideoTable({
               {dateLabel}
             </td>
           )}
-          {/* Time + duration */}
+          {/* Time (always) + duration (≥sm only — too cramped on mobile) */}
           <td className="px-4 py-2.5 align-top">
             <div className="flex items-baseline justify-between gap-2 tabular-nums">
               {time ? (
                 <span>{formatMeetingTime(time, timezone)}</span>
               ) : (
-                <span className="text-black/20">—</span>
+                <span className="text-muted-foreground/60">—</span>
               )}
-              {duration ? (
-                <span className="text-muted-foreground">{duration}</span>
-              ) : (
-                <span className="text-black/20">—</span>
-              )}
+              <span className="hidden text-muted-foreground sm:inline">
+                {duration ?? (
+                  <span className="text-muted-foreground/60">—</span>
+                )}
+              </span>
             </div>
           </td>
           {/* Title, prefixed with record badges */}
@@ -925,7 +900,7 @@ export function VideoTable({
             <a
               href={`/${video.slug}`}
               onClick={(e) => e.stopPropagation()}
-              className="text-black underline-offset-2 hover:underline"
+              className="underline-offset-2 hover:underline"
             >
               {video.cleanTitle}
             </a>
@@ -942,10 +917,12 @@ export function VideoTable({
       <h2 className="mb-3 text-xl font-bold tracking-tight text-foreground">
         {group.day}
       </h2>
-      <div className="overflow-hidden rounded-lg border border-gray-200">
+      {/* Mobile: drop the bordered card so the table flows edge-to-edge and
+          recovers the page-padding width. Desktop keeps the framed look. */}
+      <div className="-mx-4 overflow-hidden sm:mx-0 sm:rounded-lg sm:border sm:border-gray-200">
         <table className="w-full table-fixed text-sm">
           <colgroup>
-            <col style={{ width: 132 }} />
+            <col className="w-[72px] sm:w-[132px]" />
             <col />
           </colgroup>
           <tbody>{group.rows.map(renderMeetingRow)}</tbody>
@@ -1026,7 +1003,6 @@ export function VideoTable({
             selectedDate={serverParams.date}
             onChange={(val) => updateParams({ date: val })}
           />
-          <SegmentedToggle options={transcribedToggleOptions} />
         </div>
         <CategoryFilterRows
           options={filterOptions.categories}
@@ -1036,6 +1012,15 @@ export function VideoTable({
           }
           counts={filterOptions.categoryCounts}
         />
+        <label className="flex items-center gap-2 text-xs text-muted-foreground select-none cursor-pointer hover:text-foreground transition-colors">
+          <input
+            type="checkbox"
+            checked={withTranscript}
+            onChange={toggleWithTranscript}
+            className="h-3.5 w-3.5 cursor-pointer accent-primary"
+          />
+          Show only transcribed meetings
+        </label>
       </div>
 
       {/* Search results: count + sort (relevance vs date) */}
@@ -1046,71 +1031,8 @@ export function VideoTable({
         </div>
       )}
 
-      {/* Mobile Card View */}
-      {showEmptyState && (
-        <div className="overflow-hidden rounded-lg border border-gray-200 lg:hidden">
-          {emptyState}
-        </div>
-      )}
-      <div className={cn("grid gap-3 lg:hidden", showEmptyState && "hidden")}>
-        {rows.map((video) => {
-          const isLive = video.status === "live";
-          const isScheduled = video.status === "scheduled";
-          const duration = formatDuration(video.duration);
-          const dateTime = formatMeetingDateTime(
-            video.scheduledTime,
-            video.date,
-            timezone,
-          );
-
-          return (
-            <a
-              key={video.slug}
-              href={`/${video.slug}`}
-              className={`block rounded-lg border p-4 transition-colors hover:bg-muted/50 ${isScheduled ? "opacity-50" : ""}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <span
-                    className={`text-sm leading-tight ${isScheduled ? "text-muted-foreground" : "text-primary"}`}
-                  >
-                    {video.cleanTitle}
-                  </span>
-                  <DocBadges
-                    hasTranscript={video.hasTranscript}
-                    pvAvailable={video.pvAvailable}
-                    pvSymbol={video.pvSymbol}
-                  />
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {isLive ? (
-                    <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                  ) : (
-                    duration && (
-                      <span className={cn(typography.caption, "tabular-nums")}>
-                        {duration}
-                      </span>
-                    )
-                  )}
-                </div>
-              </div>
-              <div
-                className={cn(
-                  typography.caption,
-                  "mt-2 flex flex-wrap gap-x-3 gap-y-1",
-                )}
-              >
-                <span>{dateTime}</span>
-                {video.body && <span>• {video.body}</span>}
-                {video.category && <span>• {video.category}</span>}
-              </div>
-            </a>
-          );
-        })}
-      </div>
-
-      {/* Desktop view: one table per day, with the day as a text heading */}
-      <div className="hidden pt-2 lg:block">
+      {/* Schedule: one table per day, with the day as a text heading */}
+      <div className="pt-2">
         {showEmptyState ? (
           <div className="overflow-hidden rounded-lg border border-gray-200">
             {emptyState}
@@ -1143,11 +1065,11 @@ export function VideoTable({
           </>
         ) : (
           // Search mode: a single ungrouped table with a leading Date column.
-          <div className="overflow-hidden rounded-lg border border-gray-200">
+          <div className="-mx-4 overflow-hidden sm:mx-0 sm:rounded-lg sm:border sm:border-gray-200">
             <table className="w-full table-fixed text-sm">
               <colgroup>
-                <col style={{ width: 120 }} />
-                <col style={{ width: 132 }} />
+                <col style={{ width: 96 }} />
+                <col className="w-[72px] sm:w-[132px]" />
                 <col />
               </colgroup>
               <tbody>{displayRows.map(renderMeetingRow)}</tbody>

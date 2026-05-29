@@ -7,7 +7,7 @@ import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
-  title: "Subscriptions — UN Web TV Transcripts",
+  title: "Subscriptions — UN Transcripts",
   description: "Manage your transcript email notifications.",
 };
 
@@ -17,7 +17,7 @@ export default async function SubscriptionsPage() {
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
+      <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
           <a
             href="/"

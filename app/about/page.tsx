@@ -8,7 +8,7 @@ import { UN_LANGUAGES, getLanguageDisplayName } from "@/lib/languages";
 import { getCurrentUser, isAllowedDomain } from "@/lib/auth/service";
 
 export const metadata = {
-  title: "About — UN Web TV Transcripts",
+  title: "About — UN Transcripts",
   description:
     "What UN Web TV Transcripts is, who it serves, how it works, and its accuracy and limitations.",
 };
@@ -39,7 +39,7 @@ function Step({
       </div>
       <div className="pt-0.5">
         <h3 className={cn(typography.subTitle, "mb-1.5")}>{title}</h3>
-        <div className="text-sm leading-relaxed text-muted-foreground">
+        <div className="text-sm leading-relaxed text-foreground">
           {children}
         </div>
       </div>
@@ -57,7 +57,7 @@ export default async function AboutPage() {
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
+      <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
           <a
             href="/"
@@ -82,7 +82,7 @@ export default async function AboutPage() {
               <h2 className={cn(typography.sectionTitle, "mb-3")}>
                 What is this?
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-foreground">
                 UN Web TV Transcripts is a public preview tool that
                 automatically generates searchable text transcripts from United
                 Nations meeting recordings published on{" "}
@@ -102,11 +102,11 @@ export default async function AboutPage() {
               <h2 className={cn(typography.sectionTitle, "mb-3")}>
                 Who is it for?
               </h2>
-              <p className="mb-3 text-muted-foreground">
+              <p className="mb-3 text-foreground">
                 The tool is designed to help anyone who needs quick access to
                 the spoken content of UN meetings, including:
               </p>
-              <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
+              <ul className="list-disc space-y-1.5 pl-5 text-foreground">
                 {[
                   "Diplomats and delegation staff following proceedings across multiple organs",
                   "Researchers and academics studying UN debates and voting records",
@@ -123,11 +123,11 @@ export default async function AboutPage() {
               <h2 className={cn(typography.sectionTitle, "mb-3")}>
                 What meetings are covered?
               </h2>
-              <p className="mb-3 text-muted-foreground">
+              <p className="mb-3 text-foreground">
                 The tool covers public meetings recorded and published on UN Web
                 TV, including:
               </p>
-              <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
+              <ul className="list-disc space-y-1.5 pl-5 text-foreground">
                 {[
                   "Security Council (SC) — open meetings and briefings",
                   "General Assembly (GA) — plenary and main committee sessions",
@@ -138,7 +138,7 @@ export default async function AboutPage() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <p className="mt-3 text-muted-foreground">
+              <p className="mt-3 text-foreground">
                 Closed or confidential meetings are not recorded on Web TV and
                 are therefore not covered.
               </p>
@@ -189,7 +189,7 @@ export default async function AboutPage() {
               <h2 className={cn(typography.sectionTitle, "mb-3")}>
                 Transcription model per language
               </h2>
-              <p className="mb-4 text-muted-foreground">
+              <p className="mb-4 text-foreground">
                 Different speech-to-text providers excel at different languages,
                 so each track is routed to the model that performs best for it
                 in our evaluation.
@@ -208,7 +208,7 @@ export default async function AboutPage() {
                     {STT_ROWS.map((row) => (
                       <tr key={row.language} className="border-b last:border-0">
                         <td className="px-4 py-2">{row.language}</td>
-                        <td className="px-4 py-2 text-muted-foreground">
+                        <td className="px-4 py-2 text-foreground">
                           {row.provider}
                         </td>
                       </tr>
@@ -216,7 +216,7 @@ export default async function AboutPage() {
                   </tbody>
                 </table>
               </div>
-              <p className="mt-4 text-muted-foreground">
+              <p className="mt-4 text-foreground">
                 Post-processing — speaker identification and topic
                 classification — is performed by Azure OpenAI GPT-5.5 for all languages.
               </p>
@@ -246,12 +246,12 @@ export default async function AboutPage() {
                   (verbatim records, summary records, and resolutions).
                 </p>
               </div>
-              <p className="mb-3 text-muted-foreground">
+              <p className="mb-3 text-foreground">
                 Automatic transcription is much faster than human transcription
                 but introduces errors a human reviewer would catch. Common
                 issues include:
               </p>
-              <ul className="space-y-2 text-muted-foreground">
+              <ul className="space-y-2 text-foreground">
                 {[
                   "Proper nouns — country names, delegate names, place names, and UN document symbols may be misheard or misspelt",
                   "Technical terminology — legal or procedural phrases specific to UN practice may be transcribed incorrectly",
@@ -270,7 +270,7 @@ export default async function AboutPage() {
               <h2 className={cn(typography.sectionTitle, "mb-3")}>
                 Data sources
               </h2>
-              <ul className="space-y-3 text-muted-foreground">
+              <ul className="space-y-3 text-foreground">
                 {[
                   {
                     label: "UN Web TV",
@@ -293,7 +293,7 @@ export default async function AboutPage() {
 
             <section>
               <h2 className={cn(typography.sectionTitle, "mb-3")}>Status</h2>
-              <p className="text-muted-foreground">
+              <p className="text-foreground">
                 This tool is in <strong>Public Preview</strong>. Features,
                 coverage, and accuracy are actively being improved. Feedback is
                 welcome.
@@ -305,7 +305,7 @@ export default async function AboutPage() {
                 <h2 className={cn(typography.sectionTitle, "mb-3")}>
                   Experimental features
                 </h2>
-                <p className="mb-3 text-muted-foreground">
+                <p className="mb-3 text-foreground">
                   Additional features are in development, but currently still experimental. If you&rsquo;d like to try them,{" "}
                   <a
                     href="mailto:david.pomerenke@un.org?subject=Experimental%20features%20access"

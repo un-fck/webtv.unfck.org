@@ -127,7 +127,7 @@ export function TranscriptToolbar({
   const viewTabCount = 1 + (isLoggedIn ? 1 : 0) + (pvSymbol ? 1 : 0);
 
   return (
-    <div className="mb-3 flex items-center gap-3">
+    <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
       <h2 className={typography.sectionTitle}>Transcript</h2>
 
       {availableLanguages.length > 0 && (

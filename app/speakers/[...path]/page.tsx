@@ -29,7 +29,7 @@ export default async function SpeakerProfilePage({
     return (
       <main className="min-h-screen bg-background">
         <SiteHeader />
-        <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
+        <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
           <p className={cn(typography.body, "py-8 text-muted-foreground")}>
             Please{" "}
             <Link href="/login" className="text-un-blue hover:underline">
@@ -46,7 +46,7 @@ export default async function SpeakerProfilePage({
     return (
       <main className="min-h-screen bg-background">
         <SiteHeader />
-        <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
+        <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
           <p className={cn(typography.body, "py-8 text-muted-foreground")}>
             The speaker directory is an experimental feature. See the{" "}
             <Link href="/about" className="text-un-blue hover:underline">
@@ -72,7 +72,7 @@ export default async function SpeakerProfilePage({
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
+      <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
           <Link
             href="/speakers"

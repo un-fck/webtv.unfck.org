@@ -16,7 +16,7 @@ export const typography = {
   // Sub-section / step titles (methodology steps)
   subTitle: "text-base font-semibold text-foreground",
   // Intro / lead paragraph under a title
-  lead: "text-lg text-muted-foreground",
+  lead: "text-lg text-foreground",
   // Speaker name labels in transcript/PV/analysis views
   speakerLabel: "text-sm font-semibold tracking-wide text-foreground",
   // Default body / transcript paragraph text

@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth/service";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Sign in — UN Web TV Transcripts",
+  title: "Sign in — UN Transcripts",
 };
 
 export default async function LoginPage() {

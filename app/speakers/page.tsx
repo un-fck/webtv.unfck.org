@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Speakers — UN Web TV Transcripts",
+  title: "Speakers — UN Transcripts",
   description:
     "Browse everyone who has spoken across transcribed UN meetings, by country, group, and organ.",
 };
@@ -21,7 +21,7 @@ export default async function SpeakersPage() {
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
-      <div className={cn("mx-auto px-6 pb-12 sm:px-8", pageWidth)}>
+      <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
           <a
             href="/"
@@ -38,8 +38,7 @@ export default async function SpeakersPage() {
           <p className={typography.lead}>
             Everyone who has spoken across transcribed meetings, grouped by
             country, negotiating group, and UN organ. Experimental — speaker
-            names are AI-extracted; spelling and accent variants are merged, but
-            distinct names for the same person are not yet reconciled.
+            names are AI-extracted, and the same person or entity may appear in multiple variants.
           </p>
         </div>
 
