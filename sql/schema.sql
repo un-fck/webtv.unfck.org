@@ -13,7 +13,8 @@ SET search_path = webtv, public;
 CREATE TABLE IF NOT EXISTS videos (
     asset_id TEXT PRIMARY KEY,
     entry_id TEXT,
-    kaltura_id TEXT,
+    -- UNIQUE so video_subscriptions.kaltura_id can FK to it (migration 014).
+    kaltura_id TEXT UNIQUE,
     title TEXT NOT NULL,
     clean_title TEXT,
     date DATE NOT NULL,
@@ -43,7 +44,7 @@ CREATE TABLE IF NOT EXISTS videos (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_slug ON videos(slug);
 CREATE INDEX IF NOT EXISTS idx_videos_entry_id ON videos(entry_id);
-CREATE INDEX IF NOT EXISTS idx_videos_kaltura_id ON videos(kaltura_id);
+-- (kaltura_id is covered by the UNIQUE constraint's underlying index.)
 CREATE INDEX IF NOT EXISTS idx_videos_date ON videos(date);
 CREATE INDEX IF NOT EXISTS idx_videos_last_seen ON videos(last_seen);
 CREATE INDEX IF NOT EXISTS idx_videos_body ON videos(body);
@@ -123,14 +124,14 @@ CREATE INDEX IF NOT EXISTS idx_transcripts_status_kaltura ON transcripts(transcr
 CREATE INDEX IF NOT EXISTS transcripts_created_by_idx ON transcripts(created_by);
 -- ── speaker_mappings ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS speaker_mappings (
-    transcript_id TEXT PRIMARY KEY,
+    transcript_id TEXT PRIMARY KEY REFERENCES transcripts(transcript_id) ON DELETE CASCADE,
     mapping JSONB NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 -- ── processing_usage_events ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS processing_usage_events (
     id SERIAL PRIMARY KEY,
-    transcript_id TEXT NOT NULL,
+    transcript_id TEXT NOT NULL REFERENCES transcripts(transcript_id) ON DELETE CASCADE,
     provider TEXT NOT NULL,
     stage TEXT NOT NULL,
     operation TEXT NOT NULL,
@@ -179,23 +180,23 @@ CREATE TABLE IF NOT EXISTS feeds (
 );
 COMMENT ON TABLE feeds IS 'Curated transcript feeds, managed via SQL. Enabled feeds auto-transcribe newly-discovered matching videos.';
 CREATE TABLE IF NOT EXISTS feed_subscriptions (
-    user_id UUID NOT NULL,
-    feed_key TEXT NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    feed_key TEXT NOT NULL REFERENCES feeds(key) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (user_id, feed_key)
 );
 CREATE INDEX IF NOT EXISTS idx_feed_subscriptions_feed ON feed_subscriptions (feed_key);
 CREATE TABLE IF NOT EXISTS video_subscriptions (
-    user_id UUID NOT NULL,
-    kaltura_id TEXT NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kaltura_id TEXT NOT NULL REFERENCES videos(kaltura_id) ON DELETE CASCADE,
     language TEXT NOT NULL DEFAULT 'en',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (user_id, kaltura_id, language)
 );
 CREATE INDEX IF NOT EXISTS idx_video_subscriptions_kaltura ON video_subscriptions (kaltura_id);
 CREATE TABLE IF NOT EXISTS sent_transcript_notifications (
-    user_id UUID NOT NULL,
-    transcript_id TEXT NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    transcript_id TEXT NOT NULL REFERENCES transcripts(transcript_id) ON DELETE CASCADE,
     sent_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (user_id, transcript_id)
 );

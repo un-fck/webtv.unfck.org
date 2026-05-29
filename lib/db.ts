@@ -561,20 +561,9 @@ export async function withVideoLock<T>(
   });
 }
 
-export async function deleteTranscript(transcriptId: string): Promise<void> {
-  await withTransaction(async (client) => {
-    await client.query(
-      q("DELETE FROM webtv.processing_usage_events WHERE transcript_id = ?", [
-        transcriptId,
-      ]),
-    );
-    await client.query(
-      q("DELETE FROM webtv.transcripts WHERE transcript_id = ?", [
-        transcriptId,
-      ]),
-    );
-  });
-}
+// FK ON DELETE CASCADE (migration 014) handles `speaker_mappings`,
+// `processing_usage_events`, and `sent_transcript_notifications` — a single
+// DELETE on `transcripts` is atomic on its own, no transaction wrapper needed.
 
 export async function deleteTranscriptsForEntry(
   entryId: string,
@@ -582,20 +571,11 @@ export async function deleteTranscriptsForEntry(
 ): Promise<void> {
   const langFilter = languageCode ? " AND language_code = ?" : "";
   const args = languageCode ? [entryId, languageCode] : [entryId];
-
-  await withTransaction(async (client) => {
-    await client.query(
-      q(
-        `DELETE FROM webtv.processing_usage_events WHERE transcript_id IN (
-           SELECT transcript_id FROM webtv.transcripts WHERE entry_id = ?${langFilter}
-         )`,
-        args,
-      ),
-    );
-    await client.query(
-      q(`DELETE FROM webtv.transcripts WHERE entry_id = ?${langFilter}`, args),
-    );
-  });
+  const { text, values } = q(
+    `DELETE FROM webtv.transcripts WHERE entry_id = ?${langFilter}`,
+    args,
+  );
+  await pool.query(text, values);
 }
 
 export async function insertProcessingUsageEvent(
