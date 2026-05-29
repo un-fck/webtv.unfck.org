@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
                 ORDER BY t.created_at DESC
               ) AS rn
          FROM webtv.transcripts t
-         JOIN webtv.videos v ON v.entry_id = t.entry_id
+         JOIN webtv.videos v ON v.entry_id = COALESCE(t.kaltura_id, t.entry_id)
         WHERE t.transcription_status = 'completed'
           AND t.start_time IS NULL
           AND t.source_duration_ms IS NOT NULL
