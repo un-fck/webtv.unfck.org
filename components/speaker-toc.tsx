@@ -1,6 +1,6 @@
 "use client";
 
-import type { SpeakerMapping } from "@/lib/speakers";
+import type { SpeakerInfo, SpeakerMapping } from "@/lib/speakers";
 import { TocItem, useTocActiveScroll } from "@/components/toc-item";
 import { formatTimecode } from "@/lib/transcript-formatting";
 import { typography } from "@/lib/typography";
@@ -29,6 +29,23 @@ interface SpeakerTocProps {
   selectedTopic?: string | null;
   topicColor?: string | null;
   statements?: StatementForTopic[] | null;
+}
+
+export function getSpeakerInfoFlags(info: SpeakerInfo | undefined) {
+  const hasAffiliation = !!info?.affiliation;
+  const hasGroup = !!info?.group;
+  const hasFunction =
+    !!info?.function &&
+    info.function.toLowerCase() !== "representative" &&
+    !/^speaker\s/i.test(info.function);
+  return { hasAffiliation, hasGroup, hasFunction };
+}
+
+export function hasMeaningfulSpeakerInfo(
+  info: SpeakerInfo | undefined,
+): boolean {
+  const { hasAffiliation, hasGroup, hasFunction } = getSpeakerInfoFlags(info);
+  return hasAffiliation || hasGroup || hasFunction;
 }
 
 function segmentHasTopic(
@@ -66,13 +83,8 @@ export function SpeakerToc({
         const firstStmtIndex = segment.statementIndices[0] ?? 0;
         const info = speakerMappings[firstStmtIndex.toString()];
 
-        const hasAffiliation = !!info?.affiliation;
-        const hasGroup = !!info?.group;
-        const hasFunction =
-          !!info?.function &&
-          info.function.toLowerCase() !== "representative" &&
-          !/^speaker\s/i.test(info.function);
-        // Skip entries with no meaningful info
+        const { hasAffiliation, hasGroup, hasFunction } =
+          getSpeakerInfoFlags(info);
         if (!hasAffiliation && !hasGroup && !hasFunction) return null;
 
         const hasTopic =

@@ -8,7 +8,7 @@ import {
   type TranscriptionPanelData,
   type LanguageOption,
 } from "./transcription-panel";
-import { SpeakerToc } from "./speaker-toc";
+import { SpeakerToc, hasMeaningfulSpeakerInfo } from "./speaker-toc";
 import { PVSpeakerToc } from "./pv-panel";
 import { SiteHeader } from "./site-header";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
@@ -443,9 +443,16 @@ export function VideoPageClient({
               </div>
 
               {/* Speakers — collapsible, scrollable. Shows speakers for the active tab only. */}
-              {((panelData?.viewMode === "pv" && panelData?.pvSpeakers) ||
+              {((panelData?.viewMode === "pv" &&
+                (panelData.pvSpeakers?.length ?? 0) > 0) ||
                 (panelData?.viewMode === "transcript" &&
-                  panelData?.segments)) && (
+                  panelData.segments?.some((segment) =>
+                    hasMeaningfulSpeakerInfo(
+                      panelData.speakerMappings[
+                        (segment.statementIndices[0] ?? 0).toString()
+                      ],
+                    ),
+                  ))) && (
                 <div className="flex min-h-0 flex-1 flex-col">
                   <button
                     onClick={() => setSpeakersOpen((v) => !v)}
