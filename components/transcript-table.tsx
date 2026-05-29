@@ -727,7 +727,9 @@ export function VideoTable({
     }[]
   >(() => {
     const labelOf = (v: Video) =>
-      formatMeetingDate(v.scheduledTime ?? v.date, timezone);
+      formatMeetingDate(v.scheduledTime ?? v.date, timezone, {
+        shortWeekday: !groupByDate,
+      });
 
     // In search mode rows stay as-is and no group headers are emitted.
     const ordered = rows.map((video) => ({
@@ -1066,12 +1068,7 @@ export function VideoTable({
         ) : (
           // Search mode: a single ungrouped table with a leading Date column.
           <div className="-mx-4 overflow-hidden sm:mx-0 sm:rounded-lg sm:border sm:border-gray-200">
-            <table className="w-full table-fixed text-sm">
-              <colgroup>
-                <col style={{ width: 96 }} />
-                <col className="w-[72px] sm:w-[132px]" />
-                <col />
-              </colgroup>
+            <table className="w-full text-sm">
               <tbody>{displayRows.map(renderMeetingRow)}</tbody>
             </table>
           </div>

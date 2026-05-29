@@ -60,6 +60,7 @@ export function formatMeetingTime(timestamp: string, timezone: string): string {
 export function formatMeetingDate(
   dateOrTimestamp: string,
   timezone: string,
+  options: { shortWeekday?: boolean } = {},
 ): string {
   const tz = resolveTimezone(timezone);
   const date =
@@ -98,7 +99,7 @@ export function formatMeetingDate(
   });
   return date.toLocaleDateString("en-US", {
     timeZone: tz,
-    weekday: "long",
+    weekday: options.shortWeekday ? "short" : "long",
     month: "short",
     day: "numeric",
     ...(dateYear !== currentYear ? { year: "numeric" } : {}),
