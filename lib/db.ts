@@ -1541,6 +1541,41 @@ export async function getVideoByKalturaId(
   return mapVideoRow(result.rows[0]);
 }
 
+/**
+ * For each transcript, return statementIndex → durationMs (end − start) for
+ * every statement. Used by the speaker directory to drop short statements
+ * (where the camera typically hasn't framed the speaker yet) from counts and
+ * feeds at the source.
+ */
+export async function getStatementDurationsForTranscripts(
+  transcriptIds: string[],
+): Promise<Map<string, Map<number, number>>> {
+  const out = new Map<string, Map<number, number>>();
+  if (transcriptIds.length === 0) return out;
+  const result = await pool.query(
+    `SELECT t.transcript_id,
+            (s.ord - 1)::int                       AS statement_index,
+            (s.stmt->>'end')::float8
+              - (s.stmt->>'start')::float8         AS duration_ms
+       FROM webtv.transcripts t,
+            jsonb_array_elements(t.content->'statements')
+              WITH ORDINALITY AS s(stmt, ord)
+      WHERE t.transcript_id = ANY($1::text[])`,
+    [transcriptIds],
+  );
+  for (const row of result.rows) {
+    const tid = row.transcript_id as string;
+    let inner = out.get(tid);
+    if (!inner) {
+      inner = new Map();
+      out.set(tid, inner);
+    }
+    const d = row.duration_ms;
+    inner.set(Number(row.statement_index), d == null ? 0 : Number(d));
+  }
+  return out;
+}
+
 // ── Feeds & subscriptions (migration 004) ─────────────────────────────────────
 
 export interface Feed {

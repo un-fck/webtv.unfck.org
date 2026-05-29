@@ -1,9 +1,18 @@
 import {
   getSpeakerMappingsWithMeta,
+  getStatementDurationsForTranscripts,
   getStatementsForRefs,
   type SpeakerInfo,
   type SpeakerMappingWithMeta,
 } from "@/lib/db";
+
+/**
+ * Statements shorter than this are dropped from the speaker directory entirely
+ * — they're typically procedural one-liners ("I thank the representative…"),
+ * and their video thumbnails almost never frame the speaker. Filtering at the
+ * index level keeps entity/person/meeting counts and the feed in sync (DRY).
+ */
+const MIN_STATEMENT_DURATION_MS = 30_000;
 import { getCountryName } from "@/lib/country-lookup";
 import { meetingSlugFromVideo } from "@/lib/meeting-slug";
 import { slugify } from "@/lib/speaker-keys";
@@ -128,28 +137,36 @@ async function resolveCountryNames(
 // these rows is cheap (tens of ms for ~37k entries), so we only memoize the DB
 // fetch. Acceptable for an experimental, single-instance feature.
 const ROWS_TTL_MS = 300_000;
-let rowsCache: { at: number; rows: SpeakerMappingWithMeta[] } | null = null;
-let rowsInflight: Promise<SpeakerMappingWithMeta[]> | null = null;
+interface CachedRows {
+  rows: SpeakerMappingWithMeta[];
+  /** transcriptId → (statementIndex → durationMs). Missing entries = unknown. */
+  durations: Map<string, Map<number, number>>;
+}
+let rowsCache: { at: number; data: CachedRows } | null = null;
+let rowsInflight: Promise<CachedRows> | null = null;
 
-async function cachedRows(): Promise<SpeakerMappingWithMeta[]> {
+async function cachedRows(): Promise<CachedRows> {
   if (rowsCache && Date.now() - rowsCache.at < ROWS_TTL_MS) {
-    return rowsCache.rows;
+    return rowsCache.data;
   }
   if (!rowsInflight) {
-    rowsInflight = getSpeakerMappingsWithMeta()
-      .then((rows) => {
-        rowsCache = { at: Date.now(), rows };
-        return rows;
-      })
-      .finally(() => {
-        rowsInflight = null;
-      });
+    rowsInflight = (async () => {
+      const rows = await getSpeakerMappingsWithMeta();
+      const durations = await getStatementDurationsForTranscripts(
+        rows.map((r) => r.transcript_id),
+      );
+      const data: CachedRows = { rows, durations };
+      rowsCache = { at: Date.now(), data };
+      return data;
+    })().finally(() => {
+      rowsInflight = null;
+    });
   }
   return rowsInflight;
 }
 
 async function buildSpeakerIndexFromRows(): Promise<SpeakerIndex> {
-  const rows = await cachedRows();
+  const { rows, durations } = await cachedRows();
   const countryNames = await resolveCountryNames(rows);
   const index: SpeakerIndex = { entities: new Map() };
 
@@ -160,12 +177,20 @@ async function buildSpeakerIndexFromRows(): Promise<SpeakerIndex> {
       asset_id: row.asset_id ?? row.entry_id,
     });
 
+    const txDurations = durations.get(row.transcript_id);
     for (const [idxStr, value] of Object.entries(row.mapping)) {
       // Skip the 3 legacy string-format entries and any empty rows.
       if (typeof value !== "object" || value === null) continue;
       const info = value as SpeakerInfo;
       const statementIndex = Number(idxStr);
       if (!Number.isInteger(statementIndex)) continue;
+
+      // Drop short statements at the source so every downstream count
+      // (entity, person, meeting, feed) stays consistent. Unknown duration
+      // (transcript content missing the statement) is also dropped.
+      const durationMs = txDurations?.get(statementIndex);
+      if (durationMs == null || durationMs < MIN_STATEMENT_DURATION_MS)
+        continue;
 
       const ref: SpeakerRef = {
         transcriptId: row.transcript_id,
