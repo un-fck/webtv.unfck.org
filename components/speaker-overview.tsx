@@ -24,16 +24,29 @@ const MIN_STATEMENTS = 10;
 function EntityRow({
   entity,
   searching,
+  query,
 }: {
   entity: EntitySummary;
   searching: boolean;
+  query: string;
 }) {
   const [open, setOpen] = useState(false);
-  // Hide low-volume people unless the user is searching (still discoverable).
-  const namedPeople = entity.people.filter(
-    (p) => p.name && (searching || p.statementCount >= MIN_STATEMENTS),
-  );
+
+  const labelMatches =
+    searching && entity.label.toLowerCase().includes(query);
+  // Person-match-only: search hit persons inside this org but not the org name
+  // itself. Auto-expand and filter the list down to the matching persons.
+  const personMatchOnly = searching && !labelMatches;
+
+  const allNamedPeople = entity.people.filter((p) => p.name);
+  const visibleNamedPeople = personMatchOnly
+    ? allNamedPeople.filter((p) => p.name!.toLowerCase().includes(query))
+    : allNamedPeople.filter(
+        (p) => searching || p.statementCount >= MIN_STATEMENTS,
+      );
   const unattributed = entity.people.find((p) => !p.name);
+
+  const effectiveOpen = open || personMatchOnly;
 
   return (
     <li className="border-b border-border/60 py-2">
@@ -41,12 +54,15 @@ function EntityRow({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-label={open ? "Collapse" : "Expand"}
+          aria-expanded={effectiveOpen}
+          aria-label={effectiveOpen ? "Collapse" : "Expand"}
           className="rounded p-0.5 text-muted-foreground hover:text-foreground"
         >
           <ChevronRight
-            className={cn("h-4 w-4 transition-transform", open && "rotate-90")}
+            className={cn(
+              "h-4 w-4 transition-transform",
+              effectiveOpen && "rotate-90",
+            )}
           />
         </button>
         <Link
@@ -58,9 +74,14 @@ function EntityRow({
         <span className={cn(typography.caption)}>{entity.statementCount}</span>
       </div>
 
-      {open && (
+      {effectiveOpen && (
         <ul className="mt-1 ml-7 space-y-0.5">
-          {namedPeople.map((p) => (
+          {personMatchOnly && (
+            <li className={cn(typography.caption, "mb-1")}>
+              {visibleNamedPeople.length} of {allNamedPeople.length} members
+            </li>
+          )}
+          {visibleNamedPeople.map((p) => (
             <li key={p.name} className="flex items-center gap-2">
               <Link
                 href={profileHref(entity.slug, p.name)}
@@ -74,7 +95,7 @@ function EntityRow({
               <span className={typography.caption}>{p.statementCount}</span>
             </li>
           ))}
-          {unattributed && (
+          {!personMatchOnly && unattributed && (
             <li className={cn(typography.caption, "italic")}>
               + {unattributed.statementCount} unattributed statements
             </li>
@@ -88,11 +109,11 @@ function EntityRow({
 export function SpeakerOverview({ entities }: { entities: EntitySummary[] }) {
   const [filter, setFilter] = useState("");
 
-  const searching = filter.trim() !== "";
+  const query = filter.trim().toLowerCase();
+  const searching = query !== "";
 
   const filtered = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    if (!q) {
+    if (!query) {
       // Default view: hide low-volume entities, but never hide countries.
       return entities.filter(
         (e) => e.kind === "country" || e.statementCount >= MIN_STATEMENTS,
@@ -100,10 +121,10 @@ export function SpeakerOverview({ entities }: { entities: EntitySummary[] }) {
     }
     return entities.filter(
       (e) =>
-        e.label.toLowerCase().includes(q) ||
-        e.people.some((p) => p.name?.toLowerCase().includes(q)),
+        e.label.toLowerCase().includes(query) ||
+        e.people.some((p) => p.name?.toLowerCase().includes(query)),
     );
-  }, [entities, filter]);
+  }, [entities, query]);
 
   const byKind = useMemo(() => {
     const map = new Map<EntityKind, EntitySummary[]>();
@@ -142,7 +163,12 @@ export function SpeakerOverview({ entities }: { entities: EntitySummary[] }) {
               ) : (
                 <ul>
                   {list.map((e) => (
-                    <EntityRow key={e.slug} entity={e} searching={searching} />
+                    <EntityRow
+                      key={e.slug}
+                      entity={e}
+                      searching={searching}
+                      query={query}
+                    />
                   ))}
                 </ul>
               )}

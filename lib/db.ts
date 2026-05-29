@@ -1493,6 +1493,9 @@ export async function getSpeakerMappingsWithMeta(): Promise<
        LEFT JOIN LATERAL (
          SELECT * FROM webtv.videos v
           WHERE v.entry_id = t.entry_id
+             OR v.kaltura_id = t.kaltura_id
+             OR v.kaltura_id = t.entry_id
+             OR v.entry_id = t.kaltura_id
           ORDER BY v.last_seen DESC NULLS LAST
           LIMIT 1
        ) v ON TRUE
