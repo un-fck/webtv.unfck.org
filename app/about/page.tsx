@@ -157,24 +157,18 @@ export default async function AboutPage() {
                 </Step>
 
                 <Step number="2" title="Audio transcription">
-                  Each language track is transcribed by a speech-to-text model
-                  chosen for that language (see the table below) — no single
-                  model is best across all of them. The model converts spoken
-                  words into text with timestamps and tracks when the speaker
-                  changes, but it does <em>not</em> try to name the speakers;
-                  that is done in the next step. UN meetings provide separate
-                  audio channels per language (plus the original
-                  &ldquo;floor&rdquo; mix), and each is transcribed
-                  independently. Machine translation is not applied — text
-                  appears in the language it was spoken.
+                  We transcribe the existing UN audio channels — the original
+                  &ldquo;floor&rdquo; mix and each official UN interpretation
+                  channel — directly. No machine translation is applied. Each
+                  channel is transcribed by a speech-to-text model chosen for
+                  that language (see the table below).
                 </Step>
 
                 <Step number="3" title="Speaker identification">
                   After transcription, a second AI model analyses the text and
                   audio to assign names and affiliations to each speaker where
                   possible. It uses contextual clues — such as the chair
-                  introducing delegates, country name mentions, and speaking
-                  patterns — together with the official list of participants
+                  introducing delegates, country name mentions, and speaker diarization — together with the official list of participants
                   when available.
                 </Step>
 
@@ -186,10 +180,7 @@ export default async function AboutPage() {
                 </Step>
 
                 <Step number="5" title="Official record alignment">
-                  Where official verbatim records (PV documents) exist, the
-                  system attempts to align them with the AI transcript. This
-                  links the audio timestamps to the formally approved text,
-                  providing a higher-confidence reference.
+                  Where official verbatim or summary records (PV/SR documents) exist, the system retrieves them and adds timestamps to align the text with the video. Besides timestamps, no AI processing is involved for these documents.
                 </Step>
               </div>
             </section>
@@ -201,8 +192,7 @@ export default async function AboutPage() {
               <p className="mb-4 text-muted-foreground">
                 Different speech-to-text providers excel at different languages,
                 so each track is routed to the model that performs best for it
-                in our evaluation. Speaker names are always assigned afterwards
-                by the speaker-identification step, not by these models.
+                in our evaluation.
               </p>
               <div className="overflow-hidden rounded-lg border">
                 <table className="w-full text-sm">
@@ -226,6 +216,10 @@ export default async function AboutPage() {
                   </tbody>
                 </table>
               </div>
+              <p className="mt-4 text-muted-foreground">
+                Post-processing — speaker identification and topic
+                classification — is performed by Azure OpenAI GPT-5.5 for all languages.
+              </p>
             </section>
 
             <section>
@@ -247,7 +241,7 @@ export default async function AboutPage() {
                     rel="noopener noreferrer"
                     className="underline underline-offset-2 hover:opacity-75"
                   >
-                    UN documentation system
+                    UN Official Document System
                   </a>{" "}
                   (verbatim records, summary records, and resolutions).
                 </p>
@@ -283,7 +277,7 @@ export default async function AboutPage() {
                     desc: "Meeting recordings and metadata, delivered via the Kaltura media platform (publicly accessible at webtv.un.org).",
                   },
                   {
-                    label: "UN Document System",
+                    label: "UN Official Document System",
                     desc: "Official verbatim records (PV documents) retrieved from documents.un.org where available.",
                   },
                 ].map(({ label, desc }) => (
@@ -312,8 +306,7 @@ export default async function AboutPage() {
                   Experimental features
                 </h2>
                 <p className="mb-3 text-muted-foreground">
-                  There are additional experimental features still being
-                  evaluated. If you&rsquo;d like to try them,{" "}
+                  Additional features are in development, but currently still experimental. If you&rsquo;d like to try them,{" "}
                   <a
                     href="mailto:david.pomerenke@un.org?subject=Experimental%20features%20access"
                     className="text-un-blue underline underline-offset-4 hover:opacity-75"
