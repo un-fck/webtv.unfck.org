@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { pool, q } from "@/lib/db";
 import { apiError } from "@/lib/api-error";
 
@@ -137,17 +138,20 @@ export async function enforceGlobalDailyLimit(
     windowMs: DAY_MS,
   });
   if (result.allowed) return null;
-  // Structured trip log — visible in Vercel logs today, ingestible by Sentry
-  // when added. Carries enough context to alert on without leaking PII.
-  console.warn(
-    JSON.stringify({
-      event: "global_daily_ceiling_tripped",
-      bucket,
-      limit,
-      count: result.count,
-      reset_in_seconds: Math.ceil(result.resetMs / 1000),
-    }),
-  );
+  // Surface the trip both in logs and as a Sentry warning so an alert can fire.
+  // No PII (no user id, no IP) — just the bucket, limit, and how far over.
+  const meta = {
+    bucket,
+    limit,
+    count: result.count,
+    reset_in_seconds: Math.ceil(result.resetMs / 1000),
+  };
+  console.warn(JSON.stringify({ event: "global_daily_ceiling_tripped", ...meta }));
+  Sentry.captureMessage(`Global daily ceiling tripped: ${bucket}`, {
+    level: "warning",
+    tags: { kind: "global_daily_ceiling" },
+    extra: meta,
+  });
   return rateLimitedResponse(
     result.resetMs,
     `Daily capacity for this service has been reached. Please try again after UTC midnight.`,
