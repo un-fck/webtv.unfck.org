@@ -726,6 +726,66 @@ export async function getTranscriptByKalturaId(
   return mapTranscriptRowForDisplay(result.rows[0]);
 }
 
+// A row in `transcribing | identifying_speakers | analyzing_topics` whose
+// `updated_at` hasn't moved in this long is treated as abandoned (the serverless
+// process died without flipping the row to `error`). Chosen well above the
+// longest realistic single-stage runtime (a ~6h meeting at ~1× through STT)
+// so we never kill a job that's actually progressing.
+const STUCK_TRANSCRIPT_THRESHOLD = "2 hours";
+
+// Marks any in-process transcripts matching the filter as `error` if their
+// `updated_at` is older than STUCK_TRANSCRIPT_THRESHOLD. Runs inline before
+// active-transcript reads so the UI never displays a permanently stuck row.
+// Also clears stale `analysis_status = 'analyzing'` runs on the same axis.
+async function expireStuckTranscripts(
+  filter: { kalturaId?: string; entryId?: string; transcriptId?: string },
+  executor: Pick<Pool, "query"> = pool,
+): Promise<void> {
+  const conds: string[] = [];
+  const args: unknown[] = [];
+  if (filter.kalturaId) {
+    conds.push("kaltura_id = ?");
+    args.push(filter.kalturaId);
+  }
+  if (filter.entryId) {
+    conds.push("entry_id = ?");
+    args.push(filter.entryId);
+  }
+  if (filter.transcriptId) {
+    conds.push("transcript_id = ?");
+    args.push(filter.transcriptId);
+  }
+  if (conds.length === 0) return;
+  const scope = conds.join(" AND ");
+  await executor.query(
+    q(
+      `UPDATE webtv.transcripts
+          SET transcription_status = 'error',
+              error_message = COALESCE(NULLIF(error_message, ''),
+                'Pipeline stalled (no progress for >${STUCK_TRANSCRIPT_THRESHOLD}); auto-marked as error.'),
+              pipeline_lock = NULL,
+              updated_at = NOW()
+        WHERE ${scope}
+          AND transcription_status IN ('transcribing','identifying_speakers','analyzing_topics')
+          AND updated_at < NOW() - INTERVAL '${STUCK_TRANSCRIPT_THRESHOLD}'`,
+      args,
+    ),
+  );
+  await executor.query(
+    q(
+      `UPDATE webtv.transcripts
+          SET analysis_status = 'error',
+              error_message = COALESCE(NULLIF(error_message, ''),
+                'Analysis stalled (no progress for >${STUCK_TRANSCRIPT_THRESHOLD}); auto-marked as error.'),
+              updated_at = NOW()
+        WHERE ${scope}
+          AND analysis_status = 'analyzing'
+          AND updated_at < NOW() - INTERVAL '${STUCK_TRANSCRIPT_THRESHOLD}'`,
+      args,
+    ),
+  );
+}
+
 // Latest non-error transcript for a player ID — completed, in-progress, or
 // scheduled. Powers the viewability path: a transcript is shown whenever its
 // content exists, and in-progress/scheduled rows are surfaced to all viewers
@@ -735,6 +795,7 @@ export async function getActiveTranscriptByKalturaId(
   languageCode?: string,
   executor: Pick<Pool, "query"> = pool,
 ): Promise<Transcript | null> {
+  await expireStuckTranscripts({ kalturaId }, executor);
   const conditions: string[] = [
     "kaltura_id = ?",
     "transcription_status <> 'error'",
@@ -764,6 +825,7 @@ export async function getActiveTranscriptByEntryId(
   languageCode?: string,
   executor: Pick<Pool, "query"> = pool,
 ): Promise<Transcript | null> {
+  await expireStuckTranscripts({ entryId }, executor);
   const conditions: string[] = [
     "entry_id = ?",
     "start_time IS NULL",
