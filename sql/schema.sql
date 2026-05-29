@@ -14,7 +14,9 @@ CREATE TABLE IF NOT EXISTS videos (
     asset_id TEXT PRIMARY KEY,
     entry_id TEXT,
     -- UNIQUE so video_subscriptions.kaltura_id can FK to it (migration 014).
-    kaltura_id TEXT UNIQUE,
+    -- NOT NULL since migration 015: kaltura_id is the canonical pivot for the
+    -- transcripts↔videos join (always derivable from asset_id).
+    kaltura_id TEXT UNIQUE NOT NULL,
     title TEXT NOT NULL,
     clean_title TEXT,
     date DATE NOT NULL,
@@ -84,7 +86,11 @@ COMMENT ON TABLE allowed_domains IS 'Allowed email domains for login. Entity ''*
 -- ── transcripts ───────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS transcripts (
     entry_id TEXT NOT NULL,
-    kaltura_id TEXT,
+    -- NOT NULL since migration 015 and FK to videos.kaltura_id since migration
+    -- 016: canonical pivot for the transcripts↔videos join
+    -- (v.kaltura_id = t.kaltura_id). entry_id stays for intra-table primary
+    -- lookups but is never used for cross-table joins.
+    kaltura_id TEXT NOT NULL REFERENCES videos(kaltura_id) ON DELETE CASCADE,
     transcript_id TEXT NOT NULL PRIMARY KEY,
     start_time DOUBLE PRECISION,
     end_time DOUBLE PRECISION,

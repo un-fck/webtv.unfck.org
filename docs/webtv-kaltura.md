@@ -65,25 +65,22 @@ Each flavor carries:
 
 | Table | `asset_id` | `kaltura_id` | `entry_id` |
 |---|---|---|---|
-| `videos` | **PK** | player ID (from `extractKalturaId`) | canonical, resolved & cached |
-| `transcripts` | — | player ID (newer rows) | **NOT NULL** — the entry the transcript was produced from |
+| `videos` | **PK** | **NOT NULL, UNIQUE** — player ID (from `extractKalturaId`) | canonical, resolved & cached (nullable until resolution) |
+| `transcripts` | — | **NOT NULL** — player ID | **NOT NULL** — the canonical entry the transcript was produced from |
 
-There are **no foreign keys**. A transcript is linked to a video purely by matching IDs. Lookups try the IDs in order of cost:
+**Canonical cross-table join: `JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id`** (migration 015). Both columns are `NOT NULL`; `videos.kaltura_id` is `UNIQUE`; `transcripts.kaltura_id` FKs to it with `ON DELETE CASCADE` (migration 016). Never join on `entry_id` — `videos.entry_id` can lag the canonical resolution (sometimes holds the pre-redirect player ID) while `transcripts.entry_id` always holds the canonical, so the two can silently fail to match. `entry_id` is fine for intra-table lookups.
 
-1. **By `kaltura_id`** — cheap, no Kaltura call. Preferred (`getActiveTranscriptByKalturaId`, `getTranscriptByKalturaId`).
-2. **Fall back to resolving `entry_id`** (one Kaltura API call) and looking up by that (`getActiveTranscriptByEntryId`, `getTranscript`).
+Lookups go through `getActiveTranscriptByKalturaId` / `getTranscriptByKalturaId` — a single equality on `kaltura_id`, no Kaltura call. The legacy "fall back to resolving `entry_id`" path is gone (migration 015 makes it dead — every transcript has a `kaltura_id` matching `videos.kaltura_id`).
 
-"Active" lookups return the **latest non-`error`** full-meeting row (`start_time`/`end_time` NULL), so a failed re-transcription can't mask an older good one. (Both the kaltura-id and entry-id variants enforce this; the entry-id variant was added after a bug where it didn't — see below.)
+"Active" lookups return the **latest non-`error`** full-meeting row (`start_time`/`end_time` NULL), so a failed re-transcription can't mask an older good one.
 
 ## Legacy-data gotchas (the redirect case)
 
-When `kaltura_id != entry_id` **and** the rows are old, three independent problems can stack up. The example video hit all three:
+When `kaltura_id != entry_id` **and** the rows are old, three independent problems used to stack up. The example video hit all three:
 
-1. **Transcript rows with `kaltura_id = NULL`.** Older rows predate the `kaltura_id` column being populated. The cheap step-1 lookup misses entirely, forcing the **Kaltura-resolution fallback on every page load** → the "Checking for existing transcript…" spinner can take several seconds (cold DB connection + extra Kaltura round trip + large JSONB payload), even though the per-call Kaltura latency itself is only ~200 ms.
-2. **Stale `videos.entry_id`.** For redirected videos, `videos.entry_id` may hold the **pre-redirect player ID** (`1_hrmtg9f4`) rather than the true canonical (`1_yuo0w3j6`). The `resolveEntryId` cache would then hand back the wrong entry — so we can't blindly trust it to skip the Kaltura call for these rows.
-3. **Newer `error` row masking an older `completed` one.** A meeting transcribed successfully and later re-transcribed unsuccessfully has both a `completed` and a newer `error` row under the same `entry_id`. A naive "latest row, any status" lookup returns the error and reports "no transcript." This is exactly why the entry-id fallback must use the **non-error** `getActiveTranscriptByEntryId` rather than plain `getTranscript`.
-
-> **Normalizing fix (not yet applied):** a one-off backfill that, for affected rows, sets `transcripts.kaltura_id` to the player ID and corrects `videos.entry_id` to the true canonical entry would let the fast path hit and remove the redirect fragility. It must resolve the canonical ID per video, so it's a deliberate migration.
+1. **Transcript rows with `kaltura_id = NULL`.** Older rows predated the `kaltura_id` column being populated. The cheap step-1 lookup missed entirely, forcing the Kaltura-resolution fallback on every page load. **Fixed by migration 015** — `transcripts.kaltura_id` is now `NOT NULL`, backfilled via `scripts/backfill-kaltura-ids.ts`.
+2. **Stale `videos.entry_id`.** For redirected videos, `videos.entry_id` may hold the **pre-redirect player ID** rather than the true canonical. This is **why we pivot on `kaltura_id`, not `entry_id`, for all cross-table joins** — see the table above. The `resolveEntryId` cache still can't be blindly trusted, but no query reaches it through `videos.entry_id` any more.
+3. **Newer `error` row masking an older `completed` one.** A meeting transcribed successfully and later re-transcribed unsuccessfully has both a `completed` and a newer `error` row under the same `kaltura_id`. A naive "latest row, any status" lookup returns the error and reports "no transcript." This is exactly why `getActiveTranscriptByKalturaId` filters out `error` rows rather than returning a plain `latest`.
 
 ## Schedule Scraping
 

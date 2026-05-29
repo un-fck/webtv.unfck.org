@@ -45,7 +45,7 @@ const targets = args.filter((a) => !a.startsWith("--"));
 interface Row {
   transcript_id: string;
   entry_id: string;
-  kaltura_id: string | null;
+  kaltura_id: string;
   language_code: string | null;
   slug: string | null;
   vid_s: number | null;
@@ -79,7 +79,7 @@ async function selectCandidates(): Promise<Row[]> {
                 ORDER BY t.created_at DESC
               ) AS rn
          FROM webtv.transcripts t
-         JOIN webtv.videos v ON v.entry_id = COALESCE(t.kaltura_id, t.entry_id)
+         JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
         WHERE t.transcription_status = 'completed'
           AND t.start_time IS NULL
           AND t.content ? 'statements'
@@ -117,7 +117,7 @@ async function main() {
   for (const r of selected) {
     try {
       const { entryId } = await getKalturaAudioUrl(
-        r.kaltura_id || r.entry_id,
+        r.kaltura_id,
         getLanguageFullName(r.language_code || "en"),
       );
       entryByTranscript.set(r.transcript_id, entryId);

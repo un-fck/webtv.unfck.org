@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   const { rows } = await pool.query<{
     transcript_id: string;
     entry_id: string;
-    kaltura_id: string | null;
+    kaltura_id: string;
     language_code: string | null;
     source_duration_ms: number;
     baseline_ms: number;
@@ -55,11 +55,11 @@ export async function GET(request: NextRequest) {
               t.content->'statements' AS statements,
               -- Only the row the app serves: latest completed per video+language.
               ROW_NUMBER() OVER (
-                PARTITION BY COALESCE(t.kaltura_id, t.entry_id), t.language_code
+                PARTITION BY t.kaltura_id, t.language_code
                 ORDER BY t.created_at DESC
               ) AS rn
          FROM webtv.transcripts t
-         JOIN webtv.videos v ON v.entry_id = COALESCE(t.kaltura_id, t.entry_id)
+         JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
         WHERE t.transcription_status = 'completed'
           AND t.start_time IS NULL
           AND t.source_duration_ms IS NOT NULL

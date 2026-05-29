@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const errors: string[] = [];
 
   for (const t of transcripts) {
-    const playerId = t.kaltura_id || t.entry_id;
+    const playerId = t.kaltura_id;
     try {
       const video = await getVideoByKalturaId(playerId);
       if (!video) continue;

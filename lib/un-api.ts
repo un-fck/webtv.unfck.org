@@ -65,10 +65,14 @@ export function videoToRecord(
   const part_number =
     video.partNumber !== null ? String(video.partNumber) : null;
 
+  const kaltura_id = extractKalturaId(video.id);
+  if (!kaltura_id) {
+    throw new Error(`videoToRecord: cannot derive kaltura_id from ${video.id}`);
+  }
   return {
     asset_id: video.id,
     entry_id: null, // Will be resolved later
-    kaltura_id: extractKalturaId(video.id),
+    kaltura_id,
     title: video.title,
     clean_title: video.cleanTitle,
     date: video.date,

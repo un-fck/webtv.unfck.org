@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getActiveTranscriptByEntryId,
-  getActiveTranscriptByKalturaId,
-} from "@/lib/db";
-import { getKalturaAudioUrl } from "@/lib/transcription";
+import { getActiveTranscriptByKalturaId } from "@/lib/db";
 import { getSpeakerMapping } from "@/lib/speakers";
-import { bcp47ToKalturaName } from "@/lib/languages";
 import { apiError } from "@/lib/api-error";
 import { getCurrentUser } from "@/lib/auth/service";
 
@@ -23,14 +18,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Latest non-error transcript (completed, in-progress, or scheduled) — by
-    // the stable player ID, with a legacy fallback via the resolved entry.
-    let cached = await getActiveTranscriptByKalturaId(kalturaId, language);
-    if (!cached) {
-      const kalturaLang = bcp47ToKalturaName(language);
-      const { entryId } = await getKalturaAudioUrl(kalturaId, kalturaLang);
-      cached = await getActiveTranscriptByEntryId(entryId, language);
-    }
+    // Latest non-error transcript (completed, in-progress, or scheduled) by the
+    // stable player ID. Since migration 015 every transcript has a kaltura_id
+    // matching videos.kaltura_id, so the legacy entry-id fallback is dead.
+    const cached = await getActiveTranscriptByKalturaId(kalturaId, language);
 
     if (!cached || cached.transcription_status === "error") {
       return NextResponse.json({ cached: false });

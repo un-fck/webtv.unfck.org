@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getVideoBySlug,
-  getTranscript,
-  getTranscriptByKalturaId,
-} from "@/lib/db";
+import { getVideoBySlug, getTranscriptByKalturaId } from "@/lib/db";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import {
   getSpeakerMapping,
@@ -11,8 +7,6 @@ import {
   formatSpeakerInfo,
 } from "@/lib/speakers";
 import { getCountryName } from "@/lib/country-lookup";
-import { resolveEntryId } from "@/lib/kaltura-helpers";
-import { extractKalturaId } from "@/lib/kaltura";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 
 export async function GET(
@@ -39,38 +33,16 @@ export async function GET(
     }
 
     const video = recordToVideo(record, false);
-    const kalturaId = extractKalturaId(record.asset_id);
     const metadata = await getVideoMetadata(record.asset_id);
 
     const language = request.nextUrl.searchParams.get("language") || undefined;
 
-    // Fast path: look up by the stable player ID (no Kaltura round-trip).
-    let transcript = kalturaId
-      ? await getTranscriptByKalturaId(kalturaId, language)
-      : null;
-
-    // Fall back to resolving the entry ID for legacy rows that pre-date the
-    // `kaltura_id` column.
-    if (!transcript) {
-      const entryId = await resolveEntryId(record.asset_id, record.entry_id);
-      if (!entryId) {
-        const response = NextResponse.json({
-          video,
-          metadata,
-          transcript: null,
-          error: "Unable to resolve video entry ID",
-        });
-        response.headers.set("Content-Type", "application/json; charset=utf-8");
-        return response;
-      }
-      transcript = await getTranscript(
-        entryId,
-        undefined,
-        undefined,
-        true,
-        language,
-      );
-    }
+    // Look up by the stable player ID. kaltura_id is the canonical pivot
+    // (migration 015), so a single equality covers every transcript.
+    const transcript = await getTranscriptByKalturaId(
+      record.kaltura_id,
+      language,
+    );
 
     if (!transcript) {
       const response = NextResponse.json({
@@ -120,7 +92,7 @@ export async function GET(
     const topics = transcript.content.topics || {};
 
     // Timestamps are already realignment-shifted by the display getter
-    // (getTranscriptByKalturaId / getTranscript).
+    // (getTranscriptByKalturaId).
     const transcriptData = transcript.content.statements.map(
       (stmt, index: number) => {
         const info = speakerMappings[index.toString()];
@@ -148,7 +120,7 @@ export async function GET(
     const response = NextResponse.json({
       video: {
         id: record.asset_id,
-        kaltura_id: kalturaId,
+        kaltura_id: record.kaltura_id,
         title: video.title,
         clean_title: video.cleanTitle,
         url: video.url,

@@ -44,7 +44,7 @@ type Stmt = TranscriptContent["statements"][number];
 export interface RealignInput {
   transcriptId: string;
   entryId: string;
-  kalturaId: string | null;
+  kalturaId: string;
   languageCode: string | null;
   statements: Stmt[];
   /** Audio length recorded at transcription time (ms). null for legacy rows. */
@@ -227,7 +227,7 @@ export async function realignTranscript(
 
   const lang = getLanguageFullName(input.languageCode || "en");
   const { entryId, audioUrl } = await getKalturaAudioUrl(
-    input.kalturaId || input.entryId,
+    input.kalturaId,
     lang,
   );
 

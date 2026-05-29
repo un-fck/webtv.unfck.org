@@ -1,7 +1,6 @@
 import { Pool } from "pg";
 import { readFileSync } from "fs";
 import "@/lib/load-env";
-import { extractKalturaId } from "./kaltura";
 import { slugFromSymbol } from "./meeting-slug";
 import { applyTimeOffset } from "./transcript-offset";
 
@@ -129,7 +128,7 @@ export interface TranscriptContent {
 
 export interface Transcript {
   entry_id: string;
-  kaltura_id: string | null;
+  kaltura_id: string;
   transcript_id: string;
   start_time: number | null;
   end_time: number | null;
@@ -218,7 +217,7 @@ export interface ProcessingUsageSummaryRow {
 function mapTranscriptRow(row: Record<string, unknown>): Transcript {
   return {
     entry_id: row.entry_id as string,
-    kaltura_id: (row.kaltura_id as string | null) ?? null,
+    kaltura_id: row.kaltura_id as string,
     transcript_id: row.transcript_id as string,
     start_time: row.start_time as number | null,
     end_time: row.end_time as number | null,
@@ -247,45 +246,6 @@ function mapTranscriptRowForDisplay(row: Record<string, unknown>): Transcript {
   const t = mapTranscriptRow(row);
   if (!t.time_offset_ms) return t;
   return { ...t, content: applyTimeOffset(t.content, t.time_offset_ms) };
-}
-
-export async function getTranscript(
-  entryId: string,
-  startTime?: number,
-  endTime?: number,
-  completedOnly = true,
-  languageCode?: string,
-): Promise<Transcript | null> {
-  const statusFilter = completedOnly
-    ? "AND transcription_status = 'completed'"
-    : "";
-  const langFilter = languageCode ? "AND language_code = ?" : "";
-  const args: unknown[] = [entryId];
-
-  let sql: string;
-  if (startTime !== undefined && endTime !== undefined) {
-    sql = `SELECT * FROM webtv.transcripts WHERE entry_id = ? AND start_time = ? AND end_time = ? ${statusFilter} ${langFilter} ORDER BY updated_at DESC LIMIT 1`;
-    args.push(startTime, endTime);
-  } else {
-    sql = `SELECT * FROM webtv.transcripts WHERE entry_id = ? AND start_time IS NULL AND end_time IS NULL ${statusFilter} ${langFilter} ORDER BY updated_at DESC LIMIT 1`;
-  }
-  if (languageCode) args.push(languageCode);
-
-  const result = await pool.query(q(sql, args));
-  if (result.rows.length === 0) return null;
-  return mapTranscriptRowForDisplay(result.rows[0]);
-}
-
-export async function getAllTranscriptsForEntry(
-  entryId: string,
-): Promise<Transcript[]> {
-  const result = await pool.query(
-    q(
-      "SELECT * FROM webtv.transcripts WHERE entry_id = ? AND status = 'completed' ORDER BY start_time ASC",
-      [entryId],
-    ),
-  );
-  return result.rows.map(mapTranscriptRow);
 }
 
 export interface TranscriptLanguageInfo {
@@ -331,7 +291,9 @@ export async function saveTranscript(
   status: TranscriptionStatus,
   languageCode: string | null,
   content: TranscriptContent,
-  kalturaId: string | null = null,
+  // The video's stable player ID (videos.kaltura_id). Required — see migration
+  // 015 + CLAUDE.md "Joining transcripts ↔ videos".
+  kalturaId: string,
   // Actual audio length we transcribed (ms). Frozen baseline for detecting
   // later WebTV re-cuts (see migration 008). null when unknown.
   sourceDurationMs: number | null = null,
@@ -349,7 +311,7 @@ export async function saveTranscript(
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(transcript_id) DO UPDATE SET
          entry_id = EXCLUDED.entry_id,
-         kaltura_id = COALESCE(EXCLUDED.kaltura_id, transcripts.kaltura_id),
+         kaltura_id = EXCLUDED.kaltura_id,
          audio_url = EXCLUDED.audio_url,
          transcription_status = EXCLUDED.transcription_status,
          language_code = EXCLUDED.language_code,
@@ -816,50 +778,16 @@ export async function getActiveTranscriptByKalturaId(
   return mapTranscriptRowForDisplay(result.rows[0]);
 }
 
-// Latest non-error full-meeting transcript for a resolved (canonical) entry.
-// Mirrors getActiveTranscriptByKalturaId for the entry-id path so that a newer
-// `error` row (e.g. a failed re-transcription) can't mask an older usable
-// (completed/in-progress) transcript for the same entry.
-export async function getActiveTranscriptByEntryId(
-  entryId: string,
-  languageCode?: string,
-  executor: Pick<Pool, "query"> = pool,
-): Promise<Transcript | null> {
-  await expireStuckTranscripts({ entryId }, executor);
-  const conditions: string[] = [
-    "entry_id = ?",
-    "start_time IS NULL",
-    "end_time IS NULL",
-    "transcription_status <> 'error'",
-  ];
-  const args: unknown[] = [entryId];
-  if (languageCode) {
-    conditions.push("language_code = ?");
-    args.push(languageCode);
-  }
-  const result = await executor.query(
-    q(
-      `SELECT * FROM webtv.transcripts WHERE ${conditions.join(" AND ")}
-       ORDER BY updated_at DESC LIMIT 1`,
-      args,
-    ),
-  );
-  if (result.rows.length === 0) return null;
-  return mapTranscriptRowForDisplay(result.rows[0]);
-}
-
 export async function getAllTranscriptedEntries(): Promise<string[]> {
-  // Return identifiers that match `videos.entry_id`. Some legacy transcripts
-  // were keyed by a resolved (canonical) entry that differs from the
-  // pre-redirect Kaltura ID stored on `videos.entry_id`, so we also accept a
-  // match via `videos.kaltura_id` (the stable player ID) when available.
+  // Returns videos.entry_id values for every video with at least one completed
+  // transcript. Joined on the canonical pivot (v.kaltura_id = t.kaltura_id) —
+  // see CLAUDE.md "Joining transcripts ↔ videos".
   const result = await pool.query(
     `SELECT DISTINCT v.entry_id
        FROM webtv.videos v
-       JOIN webtv.transcripts t
-         ON t.transcription_status = 'completed'
-        AND (t.entry_id = v.entry_id OR t.kaltura_id = v.kaltura_id)
-      WHERE v.entry_id IS NOT NULL`,
+       JOIN webtv.transcripts t ON v.kaltura_id = t.kaltura_id
+      WHERE t.transcription_status = 'completed'
+        AND v.entry_id IS NOT NULL`,
   );
   return result.rows.map((row) => row.entry_id as string);
 }
@@ -867,7 +795,7 @@ export async function getAllTranscriptedEntries(): Promise<string[]> {
 export interface VideoRecord {
   asset_id: string;
   entry_id: string | null;
-  kaltura_id: string | null;
+  kaltura_id: string;
   title: string;
   clean_title: string | null;
   date: string;
@@ -894,7 +822,7 @@ function mapVideoRow(row: Record<string, unknown>): VideoRecord {
   return {
     asset_id: row.asset_id as string,
     entry_id: row.entry_id as string | null,
-    kaltura_id: (row.kaltura_id as string | null) ?? null,
+    kaltura_id: row.kaltura_id as string,
     title: row.title as string,
     clean_title: row.clean_title as string | null,
     date: row.date as string,
@@ -974,7 +902,7 @@ export async function saveVideo(
            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(asset_id) DO UPDATE SET
              entry_id = COALESCE(EXCLUDED.entry_id, videos.entry_id),
-             kaltura_id = COALESCE(EXCLUDED.kaltura_id, videos.kaltura_id),
+             kaltura_id = EXCLUDED.kaltura_id,
              title = EXCLUDED.title,
              clean_title = EXCLUDED.clean_title,
              scheduled_time = EXCLUDED.scheduled_time,
@@ -992,7 +920,7 @@ export async function saveVideo(
           [
             video.asset_id,
             video.entry_id,
-            video.kaltura_id ?? extractKalturaId(video.asset_id),
+            video.kaltura_id,
             video.title,
             video.clean_title,
             video.date,
@@ -1059,7 +987,7 @@ const VISIBLE_VIDEO = `(
   OR EXISTS (
     SELECT 1 FROM webtv.transcripts t
     WHERE t.transcription_status = 'completed'
-      AND (t.entry_id = videos.entry_id OR t.kaltura_id = videos.kaltura_id)
+      AND t.kaltura_id = videos.kaltura_id
   )
 )`;
 
@@ -1532,15 +1460,7 @@ export async function getSpeakerMappingsWithMeta(): Promise<
             COALESCE(v.clean_title, v.title) AS title, v.date
        FROM webtv.speaker_mappings sm
        JOIN webtv.transcripts t ON t.transcript_id = sm.transcript_id
-       LEFT JOIN LATERAL (
-         SELECT * FROM webtv.videos v
-          WHERE v.entry_id = t.entry_id
-             OR v.kaltura_id = t.kaltura_id
-             OR v.kaltura_id = t.entry_id
-             OR v.entry_id = t.kaltura_id
-          ORDER BY v.last_seen DESC NULLS LAST
-          LIMIT 1
-       ) v ON TRUE
+       LEFT JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
       WHERE t.transcription_status <> 'error'
       ORDER BY t.entry_id,
                (t.transcription_status = 'completed') DESC,
@@ -1609,19 +1529,13 @@ export async function getStatementsForRefs(
   return out;
 }
 
-// Resolve a video by its stable player ID (or canonical entry as a fallback),
-// matching the join semantics used elsewhere between transcripts and videos.
+// Resolve a video by its stable player ID. kaltura_id is the canonical pivot
+// (NOT NULL + UNIQUE; see migration 015), so a single equality is sufficient.
 export async function getVideoByKalturaId(
   kalturaId: string,
 ): Promise<VideoRecord | null> {
   const result = await pool.query(
-    q(
-      `SELECT * FROM webtv.videos
-        WHERE kaltura_id = ? OR entry_id = ?
-        ORDER BY (kaltura_id = ?) DESC
-        LIMIT 1`,
-      [kalturaId, kalturaId, kalturaId],
-    ),
+    q(`SELECT * FROM webtv.videos WHERE kaltura_id = ? LIMIT 1`, [kalturaId]),
   );
   if (result.rows.length === 0) return null;
   return mapVideoRow(result.rows[0]);
@@ -1721,9 +1635,8 @@ export interface UserVideoSubscription {
 export async function getUserVideoSubscriptions(
   userId: string,
 ): Promise<UserVideoSubscription[]> {
-  // emailed_at: the notification ledger is keyed by transcript_id, so join
-  // through transcripts (matched on the same kaltura_id, or its entry_id) to
-  // find whether this user has already been emailed for this video.
+  // emailed_at: notification ledger keyed by transcript_id, joined back through
+  // transcripts on the canonical kaltura_id pivot.
   const result = await pool.query(
     q(
       `SELECT vs.kaltura_id, vs.language, vs.created_at,
@@ -1732,11 +1645,10 @@ export async function getUserVideoSubscriptions(
                  FROM webtv.sent_transcript_notifications stn
                  JOIN webtv.transcripts t ON t.transcript_id = stn.transcript_id
                 WHERE stn.user_id = vs.user_id
-                  AND (t.kaltura_id = vs.kaltura_id OR t.entry_id = vs.kaltura_id)
+                  AND t.kaltura_id = vs.kaltura_id
               ) AS emailed_at
          FROM webtv.video_subscriptions vs
-         LEFT JOIN webtv.videos v
-           ON v.kaltura_id = vs.kaltura_id OR v.entry_id = vs.kaltura_id
+         LEFT JOIN webtv.videos v ON v.kaltura_id = vs.kaltura_id
         WHERE vs.user_id = ?
         ORDER BY vs.created_at DESC`,
       [userId],
@@ -1792,7 +1704,7 @@ export async function getUserFeedSubscriptions(
 
 export interface CompletedTranscriptRef {
   transcript_id: string;
-  kaltura_id: string | null;
+  kaltura_id: string;
   entry_id: string;
   language_code: string | null;
 }
@@ -1813,7 +1725,7 @@ export async function getRecentlyCompletedTranscripts(
   );
   return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
-    kaltura_id: (row.kaltura_id as string | null) ?? null,
+    kaltura_id: row.kaltura_id as string,
     entry_id: row.entry_id as string,
     language_code: (row.language_code as string | null) ?? null,
   }));

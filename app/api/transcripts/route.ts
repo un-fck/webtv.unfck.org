@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getTranscript,
   getTranscriptByKalturaId,
   scheduleTranscript,
 } from "@/lib/db";
-import {
-  getKalturaAudioUrl,
-  submitTranscription,
-} from "@/lib/transcription";
+import { submitTranscription } from "@/lib/transcription";
 import { after } from "next/server";
 import { getSpeakerMapping } from "@/lib/speakers";
-import { bcp47ToKalturaName } from "@/lib/languages";
 import { apiError } from "@/lib/api-error";
 import { getCurrentUser } from "@/lib/auth/service";
 import { requireUser } from "@/lib/auth/require-user";
@@ -114,10 +109,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ transcriptId, stage });
     }
 
-    // Fast cache check by stable player ID — avoids hitting Kaltura when we
-    // already have a completed transcript locally. Re-transcription of an
-    // existing transcript is intentionally NOT exposed here (cost/abuse): bad
-    // transcripts are re-run only via the local `pnpm retranscribe` script.
+    // Cache check by stable player ID — kaltura_id is the canonical pivot
+    // (migration 015), so a single lookup finds any existing completed row.
+    // Re-transcription of an existing transcript is intentionally NOT exposed
+    // here (cost/abuse): bad transcripts are re-run only via the local
+    // `pnpm retranscribe` script.
     {
       const cached = await getTranscriptByKalturaId(kalturaId, lang);
       if (cached && cached.transcription_status === "completed") {
@@ -125,28 +121,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // No fast-path hit — resolve via Kaltura for the legacy lookup and (if
-    // needed) to start a new transcription.
-    const kalturaLang = bcp47ToKalturaName(lang);
-    const { entryId } = await getKalturaAudioUrl(kalturaId, kalturaLang);
-
-    // Check DB for existing transcript by resolved entry_id.
-    {
-      const cached = await getTranscript(
-        entryId,
-        undefined,
-        undefined,
-        true,
-        lang,
-      );
-
-      if (cached && cached.transcription_status === "completed") {
-        return await respondWithCached(cached);
-      }
-    }
-
     // About to start (or resume) real work — require login + enforce per-user
-    // and global daily caps here, after every cache short-circuit, so only
+    // and global daily caps here, after the cache short-circuit, so only
     // genuine starts are gated and counted.
     const auth = await requireUser();
     if (auth.response) return auth.response;
@@ -156,7 +132,7 @@ export async function POST(request: NextRequest) {
     // Idempotent: reuses an in-progress transcript if one already exists for
     // this video, so concurrent viewers don't kick off duplicate runs. The
     // pipeline runs in `after()` so it survives past this response on Vercel.
-    const { transcriptId, stage, started } = await submitTranscription(
+    const { transcriptId, stage, started, entryId } = await submitTranscription(
       kalturaId,
       {
         language: lang,
