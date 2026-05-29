@@ -21,6 +21,9 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
         themeLight: {
           accentBackground: "#009edb",
           accentForeground: "#ffffff",
+          // Soft white halo so the widget reads as elevated against the
+          // dark video player / page chrome behind it.
+          boxShadow: "0 2px 12px rgba(255, 255, 255, 0.85)",
         },
         // Override the bug-oriented defaults so the widget reads as general
         // feedback. Option names per @sentry/core FeedbackTextConfiguration —
