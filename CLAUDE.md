@@ -28,7 +28,19 @@ Every migration under `sql/migrations/NNN_*.sql` must come with an edit to
 `schema.sql` is the from-scratch snapshot. Edit the relevant `CREATE TABLE`
 directly (do not paste the migration's `ALTER TABLE`), mirror new indexes and
 constraints, and remove dropped objects. No placeholder "see migration NNN"
-comments without DDL. Data-only seeds (`INSERT`s) are deliberately omitted.
+comments without DDL.
+
+Data-only seeds (`INSERT`s) live in `sql/seed.sql`, not `schema.sql`. If a
+migration adds default rows (like `005`/`007` did for feeds), also append the
+same idempotent `INSERT ... ON CONFLICT DO NOTHING` to `seed.sql` so a fresh
+database provisioned via `schema.sql + seed.sql` ends up in the same state as
+one walked through the migration log.
+
+Fresh-DB provisioning order:
+```
+psql "$DATABASE_URL" -f sql/schema.sql   # structure
+psql "$DATABASE_URL" -f sql/seed.sql     # default data (feeds, allowed_domains)
+```
 
 ## Next.js: ALWAYS read docs before coding
 
