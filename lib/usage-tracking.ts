@@ -8,9 +8,16 @@ import type {
   ChatCompletionCreateParamsNonStreaming,
 } from "openai/resources/chat/completions/completions";
 
-import { GEMINI_RATE_CARD_VERSION, GEMINI_MODEL_PRICING } from "./config";
-import { insertProcessingUsageEvent } from "./db";
+import {
+  insertProcessingUsageEvent,
+  type ProcessingUsageProvider,
+} from "./db";
 import type { GeminiUsageMetadata } from "./gemini-transcription";
+import { estimateCostUsd } from "./providers/pricing";
+import type {
+  TranscriptionProvider,
+  TranscriptUsage,
+} from "./providers/types";
 
 // Where failed usage-event inserts are spooled for later backfill. Override
 // with USAGE_EVENTS_FAILED_PATH; defaults to the OS temp dir (writable on Vercel).
@@ -101,6 +108,24 @@ export async function trackOpenAIChatCompletion({
       const durationMs = Date.now() - start;
       const usage = completion.usage;
 
+      const cachedInput = usage?.prompt_tokens_details?.cached_tokens ?? 0;
+      // OpenAI's `prompt_tokens` includes cached tokens; the pricing table
+      // bills cached separately, so subtract before passing as input.
+      const promptUncached = Math.max(
+        0,
+        (usage?.prompt_tokens ?? 0) - cachedInput,
+      );
+      const reasoningTokens =
+        usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+      const cost = estimateCostUsd({
+        provider: "openai",
+        model,
+        inputTokens: promptUncached,
+        cachedInputTokens: cachedInput,
+        outputTokens: usage?.completion_tokens ?? 0,
+        reasoningTokens,
+      });
+
       await safeInsertUsageEvent({
         transcript_id: transcriptId ?? "unknown",
         provider: "openai",
@@ -110,11 +135,14 @@ export async function trackOpenAIChatCompletion({
         model,
         input_tokens: usage?.prompt_tokens ?? null,
         output_tokens: usage?.completion_tokens ?? null,
-        reasoning_tokens:
-          usage?.completion_tokens_details?.reasoning_tokens ?? null,
-        cached_input_tokens:
-          usage?.prompt_tokens_details?.cached_tokens ?? null,
+        reasoning_tokens: reasoningTokens || null,
+        cached_input_tokens: cachedInput || null,
         total_tokens: usage?.total_tokens ?? null,
+        rate_card_version: cost?.pricing.rateCardVersion ?? null,
+        pricing_meta: safeObject({
+          estimated_cost_usd: cost?.costUsd ?? null,
+          pricing: cost?.pricing ?? null,
+        }),
         duration_ms: durationMs,
         request_meta: safeObject(requestMeta),
       });
@@ -174,19 +202,14 @@ export async function trackGeminiTranscription({
   durationMs,
   requestMeta,
 }: GeminiTrackedCallArgs): Promise<void> {
-  const pricing = GEMINI_MODEL_PRICING[model];
   const usageHours = audioSeconds ? audioSeconds / 3600 : null;
-
-  // Estimate cost: input + output + thinking tokens
-  let estimatedCostUsd: number | null = null;
-  if (pricing) {
-    const { promptTokenCount, candidatesTokenCount, thoughtsTokenCount } =
-      usageMetadata;
-    estimatedCostUsd =
-      (promptTokenCount * pricing.inputPerM) / 1_000_000 +
-      (candidatesTokenCount * pricing.outputPerM) / 1_000_000 +
-      (thoughtsTokenCount * pricing.thinkingPerM) / 1_000_000;
-  }
+  const cost = estimateCostUsd({
+    provider: "gemini",
+    model,
+    inputTokens: usageMetadata.promptTokenCount,
+    outputTokens: usageMetadata.candidatesTokenCount,
+    reasoningTokens: usageMetadata.thoughtsTokenCount,
+  });
 
   await safeInsertUsageEvent({
     transcript_id: transcriptId ?? "unknown",
@@ -202,13 +225,129 @@ export async function trackGeminiTranscription({
     usage_hours: usageHours,
     usage_seconds: audioSeconds ? Math.round(audioSeconds) : null,
     usage_quantity_type: audioSeconds ? "audio_hours" : null,
-    rate_card_version: GEMINI_RATE_CARD_VERSION,
+    rate_card_version: cost?.pricing.rateCardVersion ?? null,
     base_rate_per_hour_usd: null, // Gemini is token-priced, not hour-priced
     pricing_meta: safeObject({
-      estimated_cost_usd: estimatedCostUsd,
-      pricing,
+      estimated_cost_usd: cost?.costUsd ?? null,
+      pricing: cost?.pricing ?? null,
     }),
     duration_ms: durationMs,
     request_meta: safeObject(requestMeta),
+  });
+}
+
+/**
+ * Map a registry `provider.name` (e.g. `assemblyai-universal-3-pro`) to the
+ * vendor token stored in `processing_usage_events.provider`. Keeps the column
+ * to a closed vendor enum while still letting the pricing table key on
+ * `${vendor}/${model}` for finer-grained rates.
+ */
+function vendorFromProviderName(name: string): ProcessingUsageProvider {
+  if (name.startsWith("gemini")) return "gemini";
+  if (name.startsWith("assemblyai")) return "assemblyai";
+  if (name.startsWith("azure")) return "azure-openai";
+  if (name.startsWith("alibaba")) return "alibaba";
+  if (name.startsWith("openai")) return "openai";
+  // Unknown — log loudly so a missing mapping doesn't silently mis-label rows.
+  console.warn(
+    `[usage-tracking] Unknown provider name "${name}" — defaulting vendor to "openai". Add a case to vendorFromProviderName.`,
+  );
+  return "openai";
+}
+
+interface TrackTranscriptionArgs {
+  transcriptId: string;
+  provider: TranscriptionProvider;
+  usage?: TranscriptUsage;
+  durationMs: number;
+  requestMeta?: Record<string, unknown>;
+}
+
+/**
+ * Vendor-neutral entry point for the `transcribing` stage. Pulls token /
+ * audio-second counters from the provider's normalized `usage` field, looks
+ * up the rate in `lib/providers/pricing.ts`, and writes one
+ * `processing_usage_events` row with `pricing_meta.estimated_cost_usd`
+ * populated whenever the pricing table covers the (vendor, model) pair.
+ */
+export async function trackTranscription({
+  transcriptId,
+  provider,
+  usage,
+  durationMs,
+  requestMeta,
+}: TrackTranscriptionArgs): Promise<void> {
+  const vendor = vendorFromProviderName(provider.name);
+  const model = provider.model;
+  const audioSeconds = usage?.audioSeconds ?? null;
+  const usageHours = audioSeconds ? audioSeconds / 3600 : null;
+
+  const cost = estimateCostUsd({
+    provider: vendor,
+    model,
+    inputTokens: usage?.inputTokens,
+    outputTokens: usage?.outputTokens,
+    reasoningTokens: usage?.reasoningTokens,
+    cachedInputTokens: usage?.cachedInputTokens,
+    audioSeconds: audioSeconds ?? undefined,
+  });
+
+  const baseRate =
+    cost?.pricing.kind === "audio_hours" ? cost.pricing.perHourUsd : null;
+
+  await safeInsertUsageEvent({
+    transcript_id: transcriptId,
+    provider: vendor,
+    stage: UsageStages.transcribing,
+    operation: UsageOperations.transcribe,
+    status: "success",
+    model,
+    input_tokens: usage?.inputTokens ?? null,
+    output_tokens: usage?.outputTokens ?? null,
+    reasoning_tokens: usage?.reasoningTokens ?? null,
+    cached_input_tokens: usage?.cachedInputTokens ?? null,
+    usage_hours: usageHours,
+    usage_seconds: audioSeconds != null ? Math.round(audioSeconds) : null,
+    usage_quantity_type: audioSeconds != null ? "audio_hours" : null,
+    rate_card_version: cost?.pricing.rateCardVersion ?? null,
+    base_rate_per_hour_usd: baseRate,
+    pricing_meta: safeObject({
+      estimated_cost_usd: cost?.costUsd ?? null,
+      pricing: cost?.pricing ?? null,
+    }),
+    duration_ms: durationMs,
+    request_meta: safeObject({
+      provider_name: provider.name,
+      ...(requestMeta ?? {}),
+    }),
+  });
+}
+
+export async function trackTranscriptionError({
+  transcriptId,
+  provider,
+  durationMs,
+  error,
+  requestMeta,
+}: {
+  transcriptId: string;
+  provider: TranscriptionProvider;
+  durationMs: number;
+  error: unknown;
+  requestMeta?: Record<string, unknown>;
+}): Promise<void> {
+  await safeInsertUsageEvent({
+    transcript_id: transcriptId,
+    provider: vendorFromProviderName(provider.name),
+    stage: UsageStages.transcribing,
+    operation: UsageOperations.transcribe,
+    status: "error",
+    model: provider.model,
+    duration_ms: durationMs,
+    request_meta: safeObject({
+      provider_name: provider.name,
+      ...(requestMeta ?? {}),
+    }),
+    error_message: error instanceof Error ? error.message : String(error),
   });
 }

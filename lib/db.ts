@@ -15,7 +15,12 @@ export type TranscriptionStatus =
   | "error";
 // On-demand proposition analysis, independent of transcript viewability.
 export type AnalysisStatus = "none" | "analyzing" | "completed" | "error";
-export type ProcessingUsageProvider = "openai" | "gemini";
+export type ProcessingUsageProvider =
+  | "openai"
+  | "gemini"
+  | "azure-openai"
+  | "assemblyai"
+  | "alibaba";
 export type ProcessingUsageStatus = "success" | "error";
 
 const REQUIRED_VARS = ["DATABASE_URL"] as const;
@@ -636,11 +641,9 @@ export async function getProcessingUsageSummaryByTranscript(
          COALESCE(SUM(total_tokens), 0) AS total_tokens,
          COALESCE(SUM(usage_hours), 0) AS usage_hours,
          COALESCE(SUM(usage_seconds), 0) AS usage_seconds,
-         COALESCE(SUM(CASE
-           WHEN usage_hours IS NOT NULL
-             THEN usage_hours * (COALESCE(base_rate_per_hour_usd, 0) + COALESCE(feature_rate_per_hour_usd, 0))
-           ELSE 0
-         END), 0) AS estimated_cost_usd
+         COALESCE(SUM(
+           COALESCE((pricing_meta->>'estimated_cost_usd')::float, 0)
+         ), 0) AS estimated_cost_usd
        FROM webtv.processing_usage_events
        WHERE transcript_id = ?
        GROUP BY provider, stage

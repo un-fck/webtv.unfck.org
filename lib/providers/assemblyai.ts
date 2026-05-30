@@ -71,12 +71,14 @@ function makeAssemblyai(
         text: u.text,
       }));
 
+      const audioSeconds: number | undefined = result.audio_duration;
       return {
         provider: name,
         language: result.language_code || opts?.language || "en",
         fullText: result.text || "",
         utterances,
-        durationMs: result.audio_duration ? result.audio_duration * 1000 : 0,
+        durationMs: audioSeconds ? audioSeconds * 1000 : 0,
+        usage: audioSeconds ? { audioSeconds } : undefined,
         raw: result,
       } satisfies NormalizedTranscript;
     },

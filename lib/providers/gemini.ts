@@ -36,6 +36,7 @@ function makeGeminiProvider(
         { language: opts?.language, model },
       );
 
+      const usageMeta = result.usageMetadata;
       return {
         provider: name,
         language: opts?.language ?? "en",
@@ -48,6 +49,12 @@ function makeGeminiProvider(
           words: para.words,
         })),
         durationMs: result.audioSeconds * 1000,
+        usage: {
+          inputTokens: usageMeta.promptTokenCount,
+          outputTokens: usageMeta.candidatesTokenCount,
+          reasoningTokens: usageMeta.thoughtsTokenCount || undefined,
+          audioSeconds: result.audioSeconds || undefined,
+        },
         raw: result,
       };
     },

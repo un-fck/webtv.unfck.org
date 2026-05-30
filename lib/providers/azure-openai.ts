@@ -76,6 +76,15 @@ export const azureOpenai: TranscriptionProvider = {
       let utterances: NormalizedTranscript["utterances"] = [];
       let fullText = "";
       let totalDurationMs = 0;
+      // gpt-4o-transcribe returns a `usage` object with audio/text input
+      // tokens and text output tokens. Sum across chunks for billing.
+      let inputTokens = 0;
+      let outputTokens = 0;
+
+      const addUsage = (raw: { usage?: { input_tokens?: number; output_tokens?: number } }) => {
+        inputTokens += raw.usage?.input_tokens ?? 0;
+        outputTokens += raw.usage?.output_tokens ?? 0;
+      };
 
       if (fileSize <= MAX_FILE_SIZE) {
         console.log(`  [Azure] Transcribing...`);
@@ -84,6 +93,7 @@ export const azureOpenai: TranscriptionProvider = {
         fullText = raw.text || utterances.map((u) => u.text).join(" ");
         totalDurationMs =
           utterances.length > 0 ? utterances[utterances.length - 1].end : 0;
+        addUsage(raw);
       } else {
         console.log(
           `  [Azure] File too large (${(fileSize / 1024 / 1024).toFixed(0)}MB), splitting into chunks...`,
@@ -130,6 +140,7 @@ export const azureOpenai: TranscriptionProvider = {
               totalDurationMs,
               lastSeg.end * 1000 + offsetMs,
             );
+          addUsage(raw);
         }
         fullText = textParts.join(" ");
 
@@ -142,12 +153,22 @@ export const azureOpenai: TranscriptionProvider = {
         `  [Azure] Done in ${((Date.now() - t0) / 1000).toFixed(1)}s — ${utterances.length} utterances, ${(totalDurationMs / 1000 / 60).toFixed(0)}min audio`,
       );
 
+      const hasTokens = inputTokens > 0 || outputTokens > 0;
       return {
         provider: "azure-gpt-4o-transcribe",
         language: opts?.language || "en",
         fullText,
         utterances,
         durationMs: totalDurationMs,
+        usage: hasTokens
+          ? {
+              inputTokens,
+              outputTokens,
+              audioSeconds: totalDurationMs > 0 ? totalDurationMs / 1000 : undefined,
+            }
+          : totalDurationMs > 0
+            ? { audioSeconds: totalDurationMs / 1000 }
+            : undefined,
         raw: { utterances },
       } satisfies NormalizedTranscript;
     } finally {

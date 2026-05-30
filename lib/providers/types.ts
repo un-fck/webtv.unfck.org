@@ -17,6 +17,19 @@ export interface TranscriptUtterance {
   words?: TranscriptWord[];
 }
 
+/** Vendor-neutral usage metadata, populated by each provider with whatever
+ * its API exposes. Token-priced providers fill tokens; audio-hour-priced
+ * providers fill audioSeconds; both may be set when both are known. */
+export interface TranscriptUsage {
+  inputTokens?: number;
+  outputTokens?: number;
+  /** Gemini "thoughts" / reasoning tokens — separate from output. */
+  reasoningTokens?: number;
+  cachedInputTokens?: number;
+  /** Audio length transcribed (from the provider's response, not local probe). */
+  audioSeconds?: number;
+}
+
 /** Normalized output from any provider */
 export interface NormalizedTranscript {
   provider: string;
@@ -24,6 +37,10 @@ export interface NormalizedTranscript {
   fullText: string;
   utterances: TranscriptUtterance[];
   durationMs: number;
+  /** Whatever billing-relevant counters the provider exposed (tokens, audio
+   * seconds). Read by the main-app call site to populate usage events;
+   * deliberately optional so eval-only providers don't have to fill it. */
+  usage?: TranscriptUsage;
   raw: unknown;
 }
 

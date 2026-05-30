@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { pool, q } from "../lib/db";
+import { PROVIDER_PRICING } from "../lib/providers/pricing";
 
 const sinceArg = process.argv.find((arg) => arg.startsWith("--since="));
 const since = sinceArg ? sinceArg.slice("--since=".length).trim() : null;
@@ -14,21 +15,14 @@ if (since && !/^\d{4}-\d{2}-\d{2}$/.test(since)) {
   process.exit(1);
 }
 
-type Pricing = {
-  inputPerM: number;
-  cachedInputPerM: number;
-  outputPerM: number;
-};
+function openaiPricing(model: string) {
+  const p = PROVIDER_PRICING[`openai/${model}`];
+  if (!p || p.kind !== "tokens")
+    throw new Error(`No token pricing for openai/${model}`);
+  return p;
+}
 
-const OPENAI_MODEL_PRICING: Record<string, Pricing> = {
-  "gpt-5.4": { inputPerM: 1.25, cachedInputPerM: 0.125, outputPerM: 10 },
-  "gpt-5.4-mini": { inputPerM: 0.25, cachedInputPerM: 0.025, outputPerM: 2 },
-  "gpt-5.4-nano": { inputPerM: 0.05, cachedInputPerM: 0.005, outputPerM: 0.4 },
-};
-
-function assumedModelForStage(
-  stage: string,
-): keyof typeof OPENAI_MODEL_PRICING {
+function assumedModelForStage(stage: string): string {
   return stage === "tagging_sentences" ? "gpt-5.4-nano" : "gpt-5.4";
 }
 
@@ -92,7 +86,7 @@ async function run() {
           MAX(usage_hours) AS usage_hours,
           MAX(usage_seconds) AS usage_seconds
         FROM processing_usage_events
-        WHERE provider IN ('gemini', 'assemblyai')
+        WHERE provider IN ('gemini', 'assemblyai', 'azure-openai', 'alibaba')
           AND usage_hours IS NOT NULL
           ${sincePredicate}
         GROUP BY transcript_id
@@ -192,7 +186,7 @@ async function run() {
           transcript_id,
           MAX(usage_hours) AS usage_hours
         FROM processing_usage_events
-        WHERE provider IN ('gemini', 'assemblyai')
+        WHERE provider IN ('gemini', 'assemblyai', 'azure-openai', 'alibaba')
           AND usage_hours IS NOT NULL
           ${sincePredicate}
         GROUP BY transcript_id
@@ -285,14 +279,15 @@ async function run() {
   let openaiCostPerHour = 0;
   const projectedRows = stageRows.map((stage) => {
     const model = assumedModelForStage(String(stage.stage));
-    const pricing = OPENAI_MODEL_PRICING[model];
+    const pricing = openaiPricing(model);
     const uncachedInput = Math.max(
       0,
       stage.input_tokens_per_hour - stage.cached_input_tokens_per_hour,
     );
     const hourlyCost =
       (uncachedInput * pricing.inputPerM) / 1_000_000 +
-      (stage.cached_input_tokens_per_hour * pricing.cachedInputPerM) /
+      (stage.cached_input_tokens_per_hour *
+        (pricing.cachedInputPerM ?? pricing.inputPerM)) /
         1_000_000 +
       (stage.output_tokens_per_hour * pricing.outputPerM) / 1_000_000;
     openaiCostPerHour += hourlyCost;
@@ -319,7 +314,7 @@ async function run() {
           MAX(usage_hours) AS usage_hours,
           MAX(usage_seconds) AS usage_seconds
         FROM processing_usage_events
-        WHERE provider IN ('gemini', 'assemblyai')
+        WHERE provider IN ('gemini', 'assemblyai', 'azure-openai', 'alibaba')
           AND usage_hours IS NOT NULL
           ${sincePredicate}
         GROUP BY transcript_id

@@ -1,0 +1,178 @@
+/**
+ * Unified pricing table for every provider that can emit a
+ * `processing_usage_events` row, keyed by the provider/model identifier the
+ * usage event will carry.
+ *
+ * Two pricing shapes:
+ *   - `audio_hours`: priced per hour of input audio (AssemblyAI, Fun-ASR).
+ *   - `tokens`: priced per million input/output tokens (Gemini, Azure
+ *     transcribe, OpenAI chat models, token-priced Alibaba models).
+ *
+ * Lookup happens at insert time inside `lib/usage-tracking.ts`, which produces
+ * `pricing_meta.estimated_cost_usd` consistently across vendors. Rates here
+ * are the source of truth — nothing else in the codebase should hold a
+ * pricing table.
+ *
+ * Each entry tracks a `rateCardVersion` (YYYY-MM-DD of the rate sheet it was
+ * copied from) so historical events stay interpretable when prices change:
+ * bump the version on the same day you change the numbers.
+ *
+ * Confidence notes:
+ *   - AssemblyAI, Azure gpt-4o-transcribe and Gemini rates verified
+ *     2026-05-30 from the public pricing pages (assemblyai.com/pricing,
+ *     developers.openai.com/api/docs/pricing, ai.google.dev/gemini-api/docs/pricing).
+ *   - OpenAI chat-model rates carried forward from the prior internal table
+ *     (lib/config.ts → scripts/usage-benchmark.ts).
+ *   - Alibaba (Qwen3-ASR / Fun-ASR) is not published in English on
+ *     alibabacloud.com — left as 0 with TODO until rates are confirmed from
+ *     the DashScope console or Chinese-region pricing page.
+ */
+
+export type AudioHoursPricing = {
+  kind: "audio_hours";
+  perHourUsd: number;
+  rateCardVersion: string;
+};
+
+export type TokenPricing = {
+  kind: "tokens";
+  /** USD per 1M input (prompt / audio-input) tokens. */
+  inputPerM: number;
+  /** USD per 1M output (completion / text-output) tokens. */
+  outputPerM: number;
+  /** USD per 1M cached-input tokens (OpenAI). */
+  cachedInputPerM?: number;
+  /** USD per 1M thinking / reasoning tokens (Gemini "thoughts"). */
+  thinkingPerM?: number;
+  rateCardVersion: string;
+};
+
+export type Pricing = AudioHoursPricing | TokenPricing;
+
+/**
+ * Pricing keyed by `${provider}/${model}`. Provider comes from
+ * `processing_usage_events.provider` and model from `.model`, so the key is
+ * formed at the lookup site as `${event.provider}/${event.model}`.
+ *
+ * Why composite keys? `provider` alone is not granular enough (gpt-5.4 vs
+ * gpt-5.4-mini share `openai` but have very different rates), and `model`
+ * alone collides across vendors.
+ */
+export const PROVIDER_PRICING: Record<string, Pricing> = {
+  // ── OpenAI analysis models (moved here from scripts/usage-benchmark.ts) ──
+  "openai/gpt-5.4": {
+    kind: "tokens",
+    inputPerM: 1.25,
+    cachedInputPerM: 0.125,
+    outputPerM: 10,
+    rateCardVersion: "2026-01-01", // TODO: confirm date
+  },
+  "openai/gpt-5.4-mini": {
+    kind: "tokens",
+    inputPerM: 0.25,
+    cachedInputPerM: 0.025,
+    outputPerM: 2,
+    rateCardVersion: "2026-01-01", // TODO: confirm date
+  },
+  "openai/gpt-5.4-nano": {
+    kind: "tokens",
+    inputPerM: 0.05,
+    cachedInputPerM: 0.005,
+    outputPerM: 0.4,
+    rateCardVersion: "2026-01-01", // TODO: confirm date
+  },
+
+  // ── Gemini ──
+  // Audio input is billed at a higher rate than text/image/video (1.00 vs
+  // 0.50 for 3-flash-preview); we use the audio rate because every Gemini
+  // call in this app is either transcription or PV alignment (audio-bearing).
+  // Output rate includes thinking tokens per Google's docs.
+  "gemini/gemini-3-flash-preview": {
+    kind: "tokens",
+    inputPerM: 1.0,
+    outputPerM: 3.0,
+    thinkingPerM: 3.0,
+    rateCardVersion: "2026-05-30",
+  },
+  "gemini/gemini-3.5-flash": {
+    kind: "tokens",
+    inputPerM: 1.5,
+    outputPerM: 9.0,
+    thinkingPerM: 9.0,
+    rateCardVersion: "2026-05-30",
+  },
+
+  // ── Azure OpenAI transcribe (token-priced like the OpenAI API) ──
+  // Rates from OpenAI's public pricing page; Azure mirrors them.
+  "azure-openai/gpt-4o-transcribe-diarize": {
+    kind: "tokens",
+    inputPerM: 2.5, // audio input
+    outputPerM: 10.0, // text output
+    rateCardVersion: "2026-05-30",
+  },
+
+  // ── AssemblyAI (per-hour async pricing) ──
+  "assemblyai/universal-3-pro": {
+    kind: "audio_hours",
+    perHourUsd: 0.21,
+    rateCardVersion: "2026-05-30",
+  },
+  "assemblyai/universal-2": {
+    kind: "audio_hours",
+    perHourUsd: 0.15,
+    rateCardVersion: "2026-05-30",
+  },
+
+  // ── Alibaba (Qwen3-ASR-Flash, Qwen3.5-Omni, Fun-ASR) ──
+  // Intentionally NOT in the table: DashScope ASR pricing is not published in
+  // English on alibabacloud.com and third-party aggregators disagree by >1000×.
+  // Until a rate is confirmed from the DashScope console, leave the lookup to
+  // return null so cost stays NULL instead of being silently summed as $0.
+};
+
+/**
+ * Compute USD cost for a usage event. Returns `null` when the
+ * provider/model isn't in the pricing table or required counters are missing.
+ */
+export function estimateCostUsd(args: {
+  provider: string;
+  model: string | null | undefined;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  cachedInputTokens?: number | null;
+  reasoningTokens?: number | null;
+  audioSeconds?: number | null;
+}): { costUsd: number; pricing: Pricing } | null {
+  if (!args.model) return null;
+  const pricing = PROVIDER_PRICING[`${args.provider}/${args.model}`];
+  if (!pricing) return null;
+
+  if (pricing.kind === "audio_hours") {
+    if (!args.audioSeconds) return null;
+    return {
+      costUsd: (args.audioSeconds / 3600) * pricing.perHourUsd,
+      pricing,
+    };
+  }
+
+  // tokens
+  const input = args.inputTokens ?? 0;
+  const cachedInput = args.cachedInputTokens ?? 0;
+  const output = args.outputTokens ?? 0;
+  const reasoning = args.reasoningTokens ?? 0;
+  if (input + cachedInput + output + reasoning === 0) return null;
+
+  // OpenAI bills cached-input separately; the `inputTokens` it returns is the
+  // *non-cached* portion. Token-priced providers without a cached tier just
+  // ignore cachedInputPerM (defaults to inputPerM if undefined).
+  const cachedRate = pricing.cachedInputPerM ?? pricing.inputPerM;
+  const thinkingRate = pricing.thinkingPerM ?? pricing.outputPerM;
+
+  const costUsd =
+    (input * pricing.inputPerM) / 1_000_000 +
+    (cachedInput * cachedRate) / 1_000_000 +
+    (output * pricing.outputPerM) / 1_000_000 +
+    (reasoning * thinkingRate) / 1_000_000;
+
+  return { costUsd, pricing };
+}

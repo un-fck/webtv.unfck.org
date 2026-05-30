@@ -142,12 +142,29 @@ export async function transcribeViaFiletrans(
     : 0;
   console.log(`  [${providerName}] Done — ${utterances.length} sentences`);
 
+  const audioSeconds = durationMs > 0 ? durationMs / 1000 : undefined;
+  // Filetrans responses may carry a top-level `usage` object on token-priced
+  // models (e.g. qwen3-asr-flash). fun-asr is per-second and typically omits it.
+  const taskUsage = (task as { usage?: { input_tokens?: number; output_tokens?: number } })
+    .usage;
+  const inputTokens = taskUsage?.input_tokens;
+  const outputTokens = taskUsage?.output_tokens;
+  const hasTokens = (inputTokens ?? 0) > 0 || (outputTokens ?? 0) > 0;
   return {
     provider: providerName,
     language: lang,
     fullText: textParts.join(" "),
     utterances,
     durationMs,
+    usage:
+      hasTokens || audioSeconds
+        ? {
+            ...(hasTokens
+              ? { inputTokens: inputTokens ?? 0, outputTokens: outputTokens ?? 0 }
+              : {}),
+            ...(audioSeconds ? { audioSeconds } : {}),
+          }
+        : undefined,
     raw: task,
   } satisfies NormalizedTranscript;
 }

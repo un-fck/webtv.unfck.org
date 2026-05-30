@@ -35,12 +35,14 @@ interface AsrSentence {
   speaker_id?: string;
 }
 
+type ChunkUsage = { input_tokens?: number; output_tokens?: number };
+
 /** Call a DashScope multimodal model with base64 audio via the generation endpoint */
 async function transcribeChunk(
   model: string,
   audioPath: string,
   language?: string,
-): Promise<AsrSentence[]> {
+): Promise<{ sentences: AsrSentence[]; usage?: ChunkUsage }> {
   const audioData = fs.readFileSync(audioPath);
   const base64 = audioData.toString("base64");
   const dataUri = `data:audio/mp3;base64,${base64}`;
@@ -77,24 +79,31 @@ async function transcribeChunk(
   }
 
   const data = (await res.json()) as AsrResponse;
+  const usage = data.usage;
   const text = data.output?.choices?.[0]?.message?.content?.[0]?.text || "";
 
-  if (!text) return [];
+  if (!text) return { sentences: [], usage };
 
   // Parse the ASR output — Qwen3-ASR-Flash returns JSON with sentences
   try {
     const parsed = JSON.parse(text);
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed.sentences) return parsed.sentences;
+    if (Array.isArray(parsed)) return { sentences: parsed, usage };
+    if (parsed.sentences) return { sentences: parsed.sentences, usage };
     if (parsed.text) {
-      return [{ begin_time: 0, end_time: 0, text: parsed.text }];
+      return {
+        sentences: [{ begin_time: 0, end_time: 0, text: parsed.text }],
+        usage,
+      };
     }
   } catch {
     // Plain text response
-    return [{ begin_time: 0, end_time: 0, text }];
+    return {
+      sentences: [{ begin_time: 0, end_time: 0, text }],
+      usage,
+    };
   }
 
-  return [];
+  return { sentences: [], usage };
 }
 
 /** Split audio into chunks using ffmpeg */
@@ -182,14 +191,18 @@ function makeAlibaba(
           PARALLEL_CHUNKS,
           async (chunk, i) => {
             const tChunk = Date.now();
-            const sentences = await transcribeChunk(model, chunk.path, apiLang);
+            const { sentences, usage } = await transcribeChunk(
+              model,
+              chunk.path,
+              apiLang,
+            );
             console.log(
               `  [${name}] Chunk ${i + 1}/${chunks.length} done in ${((Date.now() - tChunk) / 1000).toFixed(1)}s (${sentences.length} sentences)`,
             );
             try {
               fs.unlinkSync(chunk.path);
             } catch {}
-            return { sentences, offsetMs: chunk.offsetMs };
+            return { sentences, usage, offsetMs: chunk.offsetMs };
           },
         );
 
@@ -200,8 +213,12 @@ function makeAlibaba(
 
         const utterances: NormalizedTranscript["utterances"] = [];
         const fullTextParts: string[] = [];
+        let inputTokens = 0;
+        let outputTokens = 0;
 
-        for (const { sentences, offsetMs } of chunkResults) {
+        for (const { sentences, usage, offsetMs } of chunkResults) {
+          inputTokens += usage?.input_tokens ?? 0;
+          outputTokens += usage?.output_tokens ?? 0;
           for (const s of sentences) {
             const text = s.text.trim();
             if (!text) continue;
@@ -225,12 +242,21 @@ function makeAlibaba(
           `  [${name}] Done in ${((Date.now() - t0) / 1000).toFixed(1)}s — ${utterances.length} utterances, ${(durationMs / 1000 / 60).toFixed(0)}min audio`,
         );
 
+        const audioSeconds = durationMs > 0 ? durationMs / 1000 : undefined;
+        const hasTokens = inputTokens > 0 || outputTokens > 0;
         return {
           provider: name,
           language: lang || "en",
           fullText: fullTextParts.join(" "),
           utterances,
           durationMs,
+          usage:
+            hasTokens || audioSeconds
+              ? {
+                  ...(hasTokens ? { inputTokens, outputTokens } : {}),
+                  ...(audioSeconds ? { audioSeconds } : {}),
+                }
+              : undefined,
           raw: { chunkResults },
         } satisfies NormalizedTranscript;
       } finally {

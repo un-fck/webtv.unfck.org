@@ -20,9 +20,8 @@ import {
 import { identifySpeakers } from "./pipeline";
 import type { SpeakerMapping } from "./speakers";
 import {
-  trackGeminiTranscription,
-  UsageOperations,
-  UsageStages,
+  trackTranscription,
+  trackTranscriptionError,
 } from "./usage-tracking";
 import { bcp47ToKalturaName } from "./languages";
 import type { GeminiTranscriptionOptions } from "./gemini-transcription";
@@ -251,34 +250,40 @@ async function runTranscriptionPipeline(
     );
 
     const start = Date.now();
-    const transcript = await provider.transcribe(audioUrl, {
-      language: languageCode,
-    });
+    let transcript;
+    try {
+      transcript = await provider.transcribe(audioUrl, {
+        language: languageCode,
+      });
+    } catch (err) {
+      await trackTranscriptionError({
+        transcriptId,
+        provider,
+        durationMs: Date.now() - start,
+        error: err,
+        requestMeta: { language: languageCode },
+      });
+      throw err;
+    }
     const durationMs = Date.now() - start;
 
     const paragraphs: RawParagraph[] = toRawParagraphs(transcript);
     const speakerMapping: SpeakerMapping | undefined = undefined;
 
-    // Track Gemini-specific usage if available
     const rawResult = transcript.raw as GeminiTranscriptionResult | undefined;
-    if (rawResult?.usageMetadata) {
-      await trackGeminiTranscription({
-        transcriptId,
-        stage: UsageStages.transcribing,
-        operation: UsageOperations.transcribe,
-        model: "gemini-3-flash-preview",
-        usageMetadata: rawResult.usageMetadata,
-        audioSeconds: rawResult.audioSeconds,
-        durationMs,
-        requestMeta: {
-          provider: provider.name,
-          chunked: rawResult.chunked,
-          chunkCount: rawResult.chunkCount,
-          withThinking: options.withThinking ?? false,
-          paragraph_count: paragraphs.length,
-        },
-      });
-    }
+    await trackTranscription({
+      transcriptId,
+      provider,
+      usage: transcript.usage,
+      durationMs,
+      requestMeta: {
+        // Gemini-only fields are harmless on other providers (undefined).
+        chunked: rawResult?.chunked,
+        chunkCount: rawResult?.chunkCount,
+        withThinking: options.withThinking ?? false,
+        paragraph_count: paragraphs.length,
+      },
+    });
 
     plog(
       `[Pipeline] Transcription complete: ${paragraphs.length} segments (${provider.name}, ${durationMs}ms)`,
