@@ -79,7 +79,7 @@ export async function analyzePropositions(
     client,
     transcriptId,
     stage: UsageStages.analyzingPropositions,
-    operation: UsageOperations.openaiAnalyzePropositions,
+    operation: UsageOperations.analyzePropositions,
     model: getAnalysisModel(),
     requestMeta: {
       paragraph_count: paragraphs.length,

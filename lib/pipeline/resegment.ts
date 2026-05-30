@@ -92,7 +92,7 @@ export async function resegmentParagraph(
     client,
     transcriptId,
     stage: UsageStages.resegmenting,
-    operation: UsageOperations.openaiResegmentParagraph,
+    operation: UsageOperations.resegmentParagraph,
     model: getAnalysisModel(),
     requestMeta: {
       paragraph_index: paragraphIndex ?? null,

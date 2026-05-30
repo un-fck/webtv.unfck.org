@@ -125,7 +125,7 @@ export async function identifySpeakers(
       client,
       transcriptId,
       stage: UsageStages.identifyingSpeakers,
-      operation: UsageOperations.openaiInitialSpeakerMapping,
+      operation: UsageOperations.initialSpeakerMapping,
       model: getAnalysisModel(),
       requestMeta: { paragraph_count: paragraphs.length },
       request: {

@@ -357,7 +357,7 @@ export async function alignPVWithAudio(
     await trackGeminiTranscription({
       transcriptId: pvDoc.symbol,
       stage: UsageStages.aligningPv,
-      operation: UsageOperations.geminiPvAlignment,
+      operation: UsageOperations.pvAlignment,
       model: GEMINI_MODEL,
       usageMetadata: combinedUsage,
       audioSeconds: totalSeconds,

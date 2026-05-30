@@ -60,7 +60,7 @@ export async function defineTopics(
     client,
     transcriptId,
     stage: UsageStages.analyzingTopics,
-    operation: UsageOperations.openaiDefineTopics,
+    operation: UsageOperations.defineTopics,
     model: getAnalysisModel(),
     requestMeta: {
       paragraph_count: paragraphs.length,

@@ -265,7 +265,7 @@ async function runTranscriptionPipeline(
       await trackGeminiTranscription({
         transcriptId,
         stage: UsageStages.transcribing,
-        operation: UsageOperations.geminiTranscribe,
+        operation: UsageOperations.transcribe,
         model: "gemini-3-flash-preview",
         usageMetadata: rawResult.usageMetadata,
         audioSeconds: rawResult.audioSeconds,

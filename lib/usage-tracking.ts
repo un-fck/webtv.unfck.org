@@ -28,14 +28,17 @@ export const UsageStages = {
   aligningPv: "aligning_pv",
 } as const;
 
+// Vendor-neutral stage-action names. The actual vendor/model lives in the
+// `provider` and `model` columns of processing_usage_events — keep these
+// labels descriptive of what the call does, not who serves it.
 export const UsageOperations = {
-  openaiInitialSpeakerMapping: "openai_initial_speaker_mapping",
-  openaiResegmentParagraph: "openai_resegment_paragraph",
-  openaiDefineTopics: "openai_define_topics",
-  openaiTagSentenceTopics: "openai_tag_sentence_topics",
-  openaiAnalyzePropositions: "openai_analyze_propositions",
-  geminiTranscribe: "gemini_transcribe",
-  geminiPvAlignment: "gemini_pv_alignment",
+  initialSpeakerMapping: "initial_speaker_mapping",
+  resegmentParagraph: "resegment_paragraph",
+  defineTopics: "define_topics",
+  tagSentenceTopics: "tag_sentence_topics",
+  analyzePropositions: "analyze_propositions",
+  transcribe: "transcribe",
+  pvAlignment: "pv_alignment",
 } as const;
 
 function safeObject(value: unknown): object | null {

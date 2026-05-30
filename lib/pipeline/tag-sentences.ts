@@ -114,7 +114,7 @@ export async function tagSentencesWithTopics(
             client,
             transcriptId,
             stage: UsageStages.taggingSentences,
-            operation: UsageOperations.openaiTagSentenceTopics,
+            operation: UsageOperations.tagSentenceTopics,
             model: getAnalysisModelMini(),
             requestMeta: {
               batch_size: batch.length,
