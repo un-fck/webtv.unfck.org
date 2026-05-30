@@ -24,12 +24,11 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
           // Soft white halo so the widget reads as elevated against the
           // dark video player / page chrome behind it.
           boxShadow: "0 2px 12px rgba(255, 255, 255, 0.85)",
+          borderRadius: "0.5rem",
         },
-        // Override the bug-oriented defaults so the widget reads as general
-        // feedback. Option names per @sentry/core FeedbackTextConfiguration —
         // `triggerLabel` (not `buttonLabel`) is the right key for the
-        // floating button text.
-        triggerLabel: "Feedback",
+        // floating button text per @sentry/core FeedbackTextConfiguration.
+        triggerLabel: "Give Feedback",
         triggerAriaLabel: "Open feedback form",
         formTitle: "Share feedback",
         submitButtonLabel: "Send",
@@ -38,6 +37,36 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
       }),
     ],
   });
+
+  // Sentry's feedback widget has no `showIcon` option, so hide the megaphone
+  // by injecting CSS into the widget's shadow root once it mounts. The host
+  // element is `#sentry-feedback`; the trigger's icon is the inline <svg>.
+  if (typeof window !== "undefined") {
+    const hideIcon = (host: Element) => {
+      const shadow = (host as HTMLElement).shadowRoot;
+      if (!shadow || shadow.querySelector("style[data-feedback-icon-hide]"))
+        return;
+      const style = document.createElement("style");
+      style.setAttribute("data-feedback-icon-hide", "");
+      style.textContent =
+        ".widget__actor { border-radius: 0.5rem; } " +
+        ".widget__actor svg { display: none; } " +
+        // On small screens Sentry hides the label, leaving an empty button.
+        // Hide the trigger entirely below the Tailwind `sm` breakpoint.
+        "@media (max-width: 639px) { .widget__actor { display: none; } }";
+      shadow.appendChild(style);
+    };
+    const existing = document.getElementById("sentry-feedback");
+    if (existing) hideIcon(existing);
+    const observer = new MutationObserver(() => {
+      const host = document.getElementById("sentry-feedback");
+      if (host) {
+        hideIcon(host);
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
 }
 
 // Required by Next 15+ for client-side router instrumentation.
