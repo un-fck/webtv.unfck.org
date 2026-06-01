@@ -78,27 +78,24 @@ Returns the video object with full transcript data including statements, speaker
     "language": "en",
     "statements": [
       {
-        "start": 12000,
-        "end": 45000,
+        "statement_number": 1,
+        "speaker": { "name": "...", "function": "President", "affiliation": "FRA", "group": null },
         "paragraphs": [
           {
-            "start": 12000,
-            "end": 45000,
             "sentences": [
               {
                 "text": "The meeting is called to order.",
-                "start": 12000,
-                "end": 15000,
-                "topic_keys": ["procedural"]
+                "start": 12.0,
+                "end": 15.0,
+                "topics": [{ "key": "procedural", "label": "Procedural", "description": "..." }],
+                "words": [
+                  { "text": "The", "start": 12.0, "end": 12.2 },
+                  { "text": "meeting", "start": 12.2, "end": 12.6 }
+                ]
               }
-            ],
-            "words": [
-              { "text": "The", "start": 12000, "end": 12200 },
-              { "text": "meeting", "start": 12200, "end": 12600 }
             ]
           }
-        ],
-        "words": [...]
+        ]
       }
     ],
     "speakerMappings": {
@@ -142,11 +139,10 @@ Returns the video object with full transcript data including statements, speaker
 
 **Key fields:**
 
-- `statements[]` — speaker turns, each containing paragraphs with sentences and word-level timestamps (in milliseconds)
-- `speakerMappings` — maps statement index (as string) to speaker info (name, function, affiliation as ISO 3166-1 alpha-3, group)
-- `topics` — policy topics identified in the discussion, keyed by slug
-- `propositions` — stakeholder position analysis (only present if analysis has been run)
-- `topic_keys` on sentences — which topics each sentence relates to (0-3 per sentence)
+- `statements[]` — speaker turns; each has `paragraphs[].sentences[]` with `text`, `start`/`end` (**seconds**, floating point), `topics`, and an optional per-sentence `words[]` array with `text` + `start`/`end` in seconds. `words` is omitted when the underlying STT provider didn't supply word-level timing.
+- `speaker` on each statement — resolved speaker info (name, function, affiliation as ISO 3166-1 alpha-3, group).
+- `topics[]` on each sentence — 0–3 topics this sentence relates to (key + label + description, denormalized for convenience).
+- `propositions` (top-level) — stakeholder position analysis (only present if analysis has been run).
 
 ## Authentication
 

@@ -110,6 +110,15 @@ export async function GET(
                   label: topics[key]?.label || key,
                   description: topics[key]?.description || "",
                 })) || [],
+              ...(sent.words && sent.words.length > 0
+                ? {
+                    words: sent.words.map((w) => ({
+                      text: w.text,
+                      start: w.start / 1000,
+                      end: w.end / 1000,
+                    })),
+                  }
+                : {}),
             })),
           })),
           speaker: formatSpeakerInfo(info, countryNames),
