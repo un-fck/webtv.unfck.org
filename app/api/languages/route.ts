@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAvailableAudioLanguages } from "@/lib/transcription";
-import { getTranscriptLanguagesForEntry } from "@/lib/db";
+import { getTranscriptLanguagesByKalturaId } from "@/lib/db";
 import {
   kalturaNameToBcp47,
   getLanguageDisplayName,
@@ -23,8 +23,12 @@ export async function GET(request: NextRequest) {
       kalturaLanguages.map((l) => kalturaNameToBcp47(l.language)),
     );
 
-    // Get existing transcript statuses for this entry
-    const transcriptInfos = await getTranscriptLanguagesForEntry(entryId);
+    // Look up existing transcript statuses by kaltura_id (URL-stable) rather
+    // than entry_id (resolved-at-write-time canonical). The entry-id path
+    // dropped legitimate transcripts whenever the canonical post-redirect
+    // entry drifted between write and read — see CLAUDE.md "Joining
+    // transcripts ↔ videos".
+    const transcriptInfos = await getTranscriptLanguagesByKalturaId(kalturaId);
     const statusByLang = new Map(
       transcriptInfos.map((t) => [t.language_code, t.transcription_status]),
     );

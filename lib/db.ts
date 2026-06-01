@@ -259,13 +259,29 @@ export interface TranscriptLanguageInfo {
   transcript_id: string;
 }
 
-export async function getTranscriptLanguagesForEntry(
-  entryId: string,
+// Transcript languages + status for a video, keyed on `kaltura_id` (the
+// URL-stable player ID). Filtering by `entry_id` instead would mean trusting
+// that a fresh Kaltura redirect resolution agrees with what was stored on
+// the transcript row when it was first created — that has been seen to
+// diverge for legacy/edge rows and silently drops valid transcripts. Since
+// migration 015 every transcript row has a kaltura_id, so this is reliable.
+//
+// Returns at most one row per `language_code`: when retries / forced reruns
+// leave multiple rows for the same (kaltura_id, language) — typically an
+// error'd row plus a completed retry — pick the most recently updated, so
+// the picker shows the user-meaningful state instead of an undefined
+// ordering between same-language rows.
+export async function getTranscriptLanguagesByKalturaId(
+  kalturaId: string,
 ): Promise<TranscriptLanguageInfo[]> {
   const result = await pool.query(
     q(
-      "SELECT language_code, transcription_status, transcript_id FROM webtv.transcripts WHERE entry_id = ? ORDER BY language_code",
-      [entryId],
+      `SELECT DISTINCT ON (language_code)
+              language_code, transcription_status, transcript_id
+         FROM webtv.transcripts
+        WHERE kaltura_id = ?
+        ORDER BY language_code, updated_at DESC`,
+      [kalturaId],
     ),
   );
   return result.rows.map((row) => ({
@@ -532,14 +548,19 @@ export async function withVideoLock<T>(
 // `processing_usage_events`, and `sent_transcript_notifications` — a single
 // DELETE on `transcripts` is atomic on its own, no transaction wrapper needed.
 
-export async function deleteTranscriptsForEntry(
-  entryId: string,
+// Used by the `pnpm retranscribe` (force: true) path to wipe existing rows
+// before re-running the pipeline. Keyed on `kaltura_id` rather than
+// `entry_id` so the DELETE can't miss rows whose stored entry_id drifted
+// from the current Kaltura redirect resolution (see CLAUDE.md "Joining
+// transcripts ↔ videos" + the languages-route fix that motivated this).
+export async function deleteTranscriptsForKalturaId(
+  kalturaId: string,
   languageCode?: string,
 ): Promise<void> {
   const langFilter = languageCode ? " AND language_code = ?" : "";
-  const args = languageCode ? [entryId, languageCode] : [entryId];
+  const args = languageCode ? [kalturaId, languageCode] : [kalturaId];
   const { text, values } = q(
-    `DELETE FROM webtv.transcripts WHERE entry_id = ?${langFilter}`,
+    `DELETE FROM webtv.transcripts WHERE kaltura_id = ?${langFilter}`,
     args,
   );
   await pool.query(text, values);
