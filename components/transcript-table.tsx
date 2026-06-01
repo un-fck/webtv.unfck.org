@@ -1014,7 +1014,7 @@ export function VideoTable({
           }
           counts={filterOptions.categoryCounts}
         />
-        <label className="flex items-center gap-2 text-xs text-muted-foreground select-none cursor-pointer hover:text-foreground transition-colors">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground select-none cursor-pointer hover:text-foreground transition-colors">
           <input
             type="checkbox"
             checked={withTranscript}
