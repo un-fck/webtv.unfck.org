@@ -18,13 +18,13 @@ CREATE TABLE IF NOT EXISTS videos (
     -- transcripts↔videos join (always derivable from asset_id).
     kaltura_id TEXT UNIQUE NOT NULL,
     title TEXT NOT NULL,
-    clean_title TEXT,
+    clean_title TEXT NOT NULL,
     date DATE NOT NULL,
-    scheduled_time TIMESTAMPTZ,
-    duration INTEGER,
+    scheduled_time TIMESTAMPTZ NOT NULL,
+    duration INTEGER NOT NULL,
     url TEXT NOT NULL,
     body TEXT,
-    category TEXT,
+    category TEXT NOT NULL,
     event_code TEXT,
     event_type TEXT,
     session_number TEXT,
@@ -77,6 +77,8 @@ CREATE TABLE IF NOT EXISTS magic_tokens (
 );
 CREATE INDEX IF NOT EXISTS idx_magic_tokens_expires ON magic_tokens (expires_at);
 CREATE INDEX IF NOT EXISTS idx_magic_tokens_cleanup ON magic_tokens (expires_at) WHERE used_at IS NULL;
+-- Per-email cooldown check (`recentTokenExists`); migration 015.
+CREATE INDEX IF NOT EXISTS idx_magic_tokens_email_unused ON magic_tokens (email) WHERE used_at IS NULL;
 CREATE TABLE IF NOT EXISTS allowed_domains (
     entity TEXT NOT NULL,
     domain TEXT NOT NULL,
@@ -98,9 +100,14 @@ CREATE TABLE IF NOT EXISTS transcripts (
     -- Two status axes (migration 003). Splitting them lets on-demand
     -- proposition analysis run without flipping the transcript off "completed"
     -- (which would hide it from viewers keyed off transcription_status).
-    transcription_status TEXT NOT NULL,
-    analysis_status TEXT NOT NULL DEFAULT 'none',
-    language_code TEXT,
+    transcription_status TEXT NOT NULL
+      CHECK (transcription_status IN (
+        'scheduled', 'transcribing', 'identifying_speakers',
+        'analyzing_topics', 'completed', 'error'
+      )),
+    analysis_status TEXT NOT NULL DEFAULT 'none'
+      CHECK (analysis_status IN ('none', 'analyzing', 'completed', 'error')),
+    language_code TEXT NOT NULL,
     content JSONB NOT NULL DEFAULT '{}',
     pipeline_lock TIMESTAMPTZ,
     error_message TEXT,
@@ -121,7 +128,7 @@ CREATE TABLE IF NOT EXISTS transcripts (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_transcripts_entry_id ON transcripts(entry_id);
+-- (entry_id alone is covered by the compound idx_transcripts_entry_lang below.)
 CREATE INDEX IF NOT EXISTS idx_transcripts_entry_lang ON transcripts(entry_id, language_code);
 CREATE INDEX IF NOT EXISTS idx_transcripts_kaltura_lang ON transcripts(kaltura_id, language_code);
 -- Covering index — lets getAllTranscriptedEntries scan only the index (no table rows)
@@ -163,7 +170,6 @@ CREATE TABLE IF NOT EXISTS processing_usage_events (
 );
 CREATE INDEX IF NOT EXISTS idx_usage_transcript_id ON processing_usage_events(transcript_id);
 CREATE INDEX IF NOT EXISTS idx_usage_provider_stage ON processing_usage_events(provider, stage);
-CREATE INDEX IF NOT EXISTS idx_usage_created_at ON processing_usage_events(created_at);
 -- ── pv_contents ───────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS pv_contents (
     pv_symbol TEXT NOT NULL,
