@@ -305,7 +305,7 @@ async function runTranscriptionPipeline(
       content,
       kalturaId,
       // Audio length we just transcribed — frozen baseline for re-cut detection.
-      transcript.durationMs ?? null,
+      transcript.durationMs != null ? Math.round(transcript.durationMs) : null,
     );
     if (speakerMapping) {
       await setSpeakerMapping(transcriptId, speakerMapping);
