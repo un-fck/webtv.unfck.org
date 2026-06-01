@@ -1705,12 +1705,13 @@ export async function getUserVideoSubscriptions(
 export async function addFeedSubscription(
   userId: string,
   feedKey: string,
+  language: string,
 ): Promise<void> {
   await pool.query(
     q(
-      `INSERT INTO webtv.feed_subscriptions (user_id, feed_key)
-       VALUES (?, ?) ON CONFLICT DO NOTHING`,
-      [userId, feedKey],
+      `INSERT INTO webtv.feed_subscriptions (user_id, feed_key, language)
+       VALUES (?, ?, ?) ON CONFLICT DO NOTHING`,
+      [userId, feedKey, language],
     ),
   );
 }
@@ -1718,24 +1719,35 @@ export async function addFeedSubscription(
 export async function removeFeedSubscription(
   userId: string,
   feedKey: string,
+  language: string,
 ): Promise<void> {
   await pool.query(
     q(
-      `DELETE FROM webtv.feed_subscriptions WHERE user_id = ? AND feed_key = ?`,
-      [userId, feedKey],
+      `DELETE FROM webtv.feed_subscriptions
+        WHERE user_id = ? AND feed_key = ? AND language = ?`,
+      [userId, feedKey, language],
     ),
   );
 }
 
+export interface UserFeedSubscription {
+  feed_key: string;
+  language: string;
+}
+
 export async function getUserFeedSubscriptions(
   userId: string,
-): Promise<string[]> {
+): Promise<UserFeedSubscription[]> {
   const result = await pool.query(
-    q(`SELECT feed_key FROM webtv.feed_subscriptions WHERE user_id = ?`, [
-      userId,
-    ]),
+    q(
+      `SELECT feed_key, language FROM webtv.feed_subscriptions WHERE user_id = ?`,
+      [userId],
+    ),
   );
-  return result.rows.map((row) => row.feed_key as string);
+  return result.rows.map((row) => ({
+    feed_key: row.feed_key as string,
+    language: row.language as string,
+  }));
 }
 
 // ── Notification engine queries ───────────────────────────────────────────────
@@ -1774,17 +1786,22 @@ export interface Recipient {
   email: string;
 }
 
-// Users with a per-video subscription matching this player ID (any language).
+// Users with a per-video subscription matching this player ID AND the
+// completing transcript's language. Subscriptions are per-(video, language)
+// (see `video_subscriptions` PK); dropping the language filter would email
+// Spanish subscribers when the Chinese transcript completes, etc.
 export async function getVideoSubscribers(
   kalturaId: string,
+  language: string,
 ): Promise<Recipient[]> {
   const result = await pool.query(
     q(
       `SELECT DISTINCT u.id AS user_id, u.email
          FROM webtv.video_subscriptions vs
          JOIN webtv.users u ON u.id = vs.user_id
-        WHERE vs.kaltura_id = ?`,
-      [kalturaId],
+        WHERE vs.kaltura_id = ?
+          AND vs.language = ?`,
+      [kalturaId, language],
     ),
   );
   return result.rows.map((row) => ({
@@ -1793,9 +1810,13 @@ export async function getVideoSubscribers(
   }));
 }
 
-// Users subscribed to any of the given feed keys.
+// Users subscribed to any of the given feed keys for the given language.
+// Feed subscriptions are per-(feed, language) since migration 018; dropping
+// the language filter would email everyone subscribed to e.g. "Security
+// Council" each time ANY language of a matching meeting completed.
 export async function getFeedSubscribers(
   feedKeys: string[],
+  language: string,
 ): Promise<Recipient[]> {
   if (feedKeys.length === 0) return [];
   const result = await pool.query(
@@ -1803,8 +1824,9 @@ export async function getFeedSubscribers(
       `SELECT DISTINCT u.id AS user_id, u.email
          FROM webtv.feed_subscriptions fs
          JOIN webtv.users u ON u.id = fs.user_id
-        WHERE fs.feed_key = ANY(?)`,
-      [feedKeys],
+        WHERE fs.feed_key = ANY(?)
+          AND fs.language = ?`,
+      [feedKeys, language],
     ),
   );
   return result.rows.map((row) => ({

@@ -25,11 +25,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ loggedIn: true, subscribed });
   }
 
-  const [feeds, feedKeys, videoSubscriptions] = await Promise.all([
+  const [feeds, feedSubs, videoSubscriptions] = await Promise.all([
     getAllFeeds(),
     getUserFeedSubscriptions(user.id),
     getUserVideoSubscriptions(user.id),
   ]);
+
+  // Group {feed_key, language}[] into { [feed_key]: language[] } so the UI
+  // can render each feed row with its currently-subscribed languages.
+  const languagesByFeed = new Map<string, string[]>();
+  for (const sub of feedSubs) {
+    const list = languagesByFeed.get(sub.feed_key) ?? [];
+    list.push(sub.language);
+    languagesByFeed.set(sub.feed_key, list);
+  }
 
   return NextResponse.json({
     loggedIn: true,
@@ -39,7 +48,7 @@ export async function GET(request: NextRequest) {
         key: f.key,
         label: f.label,
         description: f.description,
-        subscribed: feedKeys.includes(f.key),
+        subscribedLanguages: languagesByFeed.get(f.key) ?? [],
       })),
     videoSubscriptions,
   });

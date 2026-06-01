@@ -36,15 +36,26 @@ export async function GET(request: NextRequest) {
 
   for (const t of transcripts) {
     const playerId = t.kaltura_id;
+    const language = t.language_code;
+    if (!language) {
+      // Defensive: schema allows NULL but every real row has a code. If a
+      // legacy NULL row sneaks through we can't tell who to notify, so skip.
+      console.warn(
+        `[notifications] Skipping ${t.transcript_id}: NULL language_code`,
+      );
+      continue;
+    }
     try {
       const video = await getVideoByKalturaId(playerId);
       if (!video) continue;
 
       // Recipients = per-video subscribers ∪ subscribers of any matching feed.
+      // Both filtered by the completing transcript's language — subscriptions
+      // are per-(video, language) and per-(feed, language).
       const feedKeys = matchFeeds(video, allFeeds);
       const [videoSubs, feedSubs] = await Promise.all([
-        getVideoSubscribers(playerId),
-        getFeedSubscribers(feedKeys),
+        getVideoSubscribers(playerId, language),
+        getFeedSubscribers(feedKeys, language),
       ]);
 
       const byUser = new Map<string, Recipient>();

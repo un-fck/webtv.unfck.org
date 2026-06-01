@@ -194,8 +194,9 @@ COMMENT ON TABLE feeds IS 'Curated transcript feeds, managed via SQL. Enabled fe
 CREATE TABLE IF NOT EXISTS feed_subscriptions (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     feed_key TEXT NOT NULL REFERENCES feeds(key) ON DELETE CASCADE,
+    language TEXT NOT NULL DEFAULT 'en',
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    PRIMARY KEY (user_id, feed_key)
+    PRIMARY KEY (user_id, feed_key, language)
 );
 CREATE INDEX IF NOT EXISTS idx_feed_subscriptions_feed ON feed_subscriptions (feed_key);
 CREATE TABLE IF NOT EXISTS video_subscriptions (

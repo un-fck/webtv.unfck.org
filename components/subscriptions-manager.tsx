@@ -3,15 +3,19 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
+import { UN_LANGUAGES } from "@/lib/languages";
+
+// Languages users can subscribe a feed in. Same set as the per-video toggle
+// (the 6 UN languages plus the original-audio "floor" track).
+const FEED_SUB_LANGUAGES = UN_LANGUAGES;
 
 interface FeedOption {
   key: string;
   label: string;
   description: string | null;
-  subscribed: boolean;
+  subscribedLanguages: string[];
 }
 
 interface VideoSub {
@@ -49,20 +53,40 @@ export function SubscriptionsManager() {
 
   useEffect(load, [load]);
 
-  const toggleFeed = async (key: string, next: boolean) => {
+  const toggleFeed = async (key: string, language: string, next: boolean) => {
+    const apply = (langs: string[]) =>
+      next
+        ? langs.includes(language)
+          ? langs
+          : [...langs, language]
+        : langs.filter((l) => l !== language);
     setFeeds((prev) =>
-      prev.map((f) => (f.key === key ? { ...f, subscribed: next } : f)),
+      prev.map((f) =>
+        f.key === key
+          ? { ...f, subscribedLanguages: apply(f.subscribedLanguages) }
+          : f,
+      ),
     );
     try {
       const res = await fetch("/api/subscriptions/feed", {
         method: next ? "POST" : "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ feedKey: key }),
+        body: JSON.stringify({ feedKey: key, language }),
       });
       if (!res.ok) throw new Error();
     } catch {
+      // Revert optimistic update.
       setFeeds((prev) =>
-        prev.map((f) => (f.key === key ? { ...f, subscribed: !next } : f)),
+        prev.map((f) =>
+          f.key === key
+            ? {
+                ...f,
+                subscribedLanguages: next
+                  ? f.subscribedLanguages.filter((l) => l !== language)
+                  : [...f.subscribedLanguages, language],
+              }
+            : f,
+        ),
       );
     }
   };
@@ -113,9 +137,9 @@ export function SubscriptionsManager() {
           {feeds.map((feed) => (
             <div
               key={feed.key}
-              className="flex items-center justify-between gap-4 px-4 py-3"
+              className="flex flex-wrap items-start justify-between gap-4 px-4 py-3"
             >
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className={typography.body}>{feed.label}</p>
                 {feed.description && (
                   <p
@@ -125,10 +149,28 @@ export function SubscriptionsManager() {
                   </p>
                 )}
               </div>
-              <Switch
-                checked={feed.subscribed}
-                onCheckedChange={(v) => toggleFeed(feed.key, v)}
-              />
+              <div className="flex shrink-0 flex-wrap gap-1">
+                {FEED_SUB_LANGUAGES.map((lang) => {
+                  const active = feed.subscribedLanguages.includes(lang.code);
+                  return (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => toggleFeed(feed.key, lang.code, !active)}
+                      aria-pressed={active}
+                      title={`${active ? "Unsubscribe" : "Subscribe"} — ${lang.name}`}
+                      className={cn(
+                        "rounded-md border px-2 py-1 text-xs uppercase transition-colors",
+                        active
+                          ? "border-un-blue bg-un-blue text-white"
+                          : "border-border text-muted-foreground hover:bg-muted",
+                      )}
+                    >
+                      {lang.code}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>

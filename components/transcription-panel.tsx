@@ -164,6 +164,12 @@ export function TranscriptionPanel({
   // show instant feedback before the server resolves Kaltura and starts polling.
   const [starting, setStarting] = useState(false);
   const startingRef = useRef(false);
+  // Cancels any in-flight cache check + polling when the language tab changes,
+  // the kalturaId switches, or the component unmounts. Without this, a poll
+  // loop started for `zh` keeps writing `setStage` / `setRawParagraphs` /
+  // `setStatements` into the freshly-reset panel after the user switches to
+  // `en`, so the new tab inherits the previous language's progress + preview.
+  const pollAbortRef = useRef<AbortController | null>(null);
 
   const {
     activeSegmentIndex,
@@ -329,7 +335,12 @@ export function TranscriptionPanel({
       }
       if (data.stage) setStage(data.stage);
       if (data.raw_paragraphs) setRawParagraphs(data.raw_paragraphs);
-      if (data.transcriptId) await pollForCompletion(data.transcriptId);
+      if (data.transcriptId) {
+        // Bind to the active language's controller so a tab switch aborts the
+        // long-running poll instead of leaking state into the new language.
+        const signal = pollAbortRef.current?.signal ?? new AbortController().signal;
+        await pollForCompletion(data.transcriptId, signal);
+      }
     } catch (err) {
       startingRef.current = false;
       setStarting(false);
@@ -369,20 +380,32 @@ export function TranscriptionPanel({
     }
   };
 
-  const pollForCompletion = async (tid: string) => {
+  const pollForCompletion = async (tid: string, signal: AbortSignal) => {
     let pollCount = 0;
     const maxTranscriptionPolls = 200;
 
     while (true) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
+      if (signal.aborted) return;
       pollCount++;
 
-      const pollResponse = await fetch(
-        `/api/transcripts/${encodeURIComponent(tid)}`,
-      );
+      let pollResponse: Response;
+      try {
+        pollResponse = await fetch(
+          `/api/transcripts/${encodeURIComponent(tid)}`,
+          { signal },
+        );
+      } catch (err) {
+        if (signal.aborted) return;
+        throw err;
+      }
       if (!pollResponse.ok) throw new Error("Failed to poll transcript status");
 
       const data = await pollResponse.json();
+      // Re-check after every await: language could have changed while the
+      // response was in flight, in which case nothing on this row applies to
+      // the now-visible panel.
+      if (signal.aborted) return;
       if (data.stage) setStage(data.stage);
       if (data.raw_paragraphs && !rawParagraphs)
         setRawParagraphs(data.raw_paragraphs);
@@ -395,6 +418,7 @@ export function TranscriptionPanel({
         ) {
           setSpeakerMappings(data.speakerMappings);
           await loadCountryNames(data.speakerMappings);
+          if (signal.aborted) return;
         }
       }
 
@@ -418,7 +442,9 @@ export function TranscriptionPanel({
     if (transcriptId) {
       setStage("transcribing");
       setErrorMessage(null);
-      pollForCompletion(transcriptId).catch((err) => {
+      const signal = pollAbortRef.current?.signal ?? new AbortController().signal;
+      pollForCompletion(transcriptId, signal).catch((err) => {
+        if (signal.aborted) return;
         setErrorMessage(err instanceof Error ? err.message : "Retry failed");
         setStage("error");
       });
@@ -597,13 +623,20 @@ export function TranscriptionPanel({
     setStage("idle");
     setChecking(true);
 
+    const ctrl = new AbortController();
+    pollAbortRef.current = ctrl;
+    const signal = ctrl.signal;
+
     const checkCache = async () => {
       try {
         const response = await fetch(
           `/api/transcripts/check?kalturaId=${encodeURIComponent(kalturaId)}&language=${encodeURIComponent(selectedLanguage)}`,
+          { signal },
         );
+        if (signal.aborted) return;
         if (response.ok) {
           const data = await response.json();
+          if (signal.aborted) return;
           if (data.transcriptId) setTranscriptId(data.transcriptId);
           if (data.statements && data.statements.length > 0) {
             setStatements(data.statements);
@@ -612,6 +645,7 @@ export function TranscriptionPanel({
             if (data.speakerMappings) {
               setSpeakerMappings(data.speakerMappings);
               await loadCountryNames(data.speakerMappings);
+              if (signal.aborted) return;
             }
             // Analysis runs on its own axis — surface in-progress analysis so a
             // viewer who loads mid-analysis sees "Analyzing…" rather than the
@@ -623,7 +657,8 @@ export function TranscriptionPanel({
             setRawParagraphs(data.raw_paragraphs);
             if (data.stage) setStage(data.stage);
             if (data.transcriptId) {
-              pollForCompletion(data.transcriptId).catch((err) => {
+              pollForCompletion(data.transcriptId, signal).catch((err) => {
+                if (signal.aborted) return;
                 setErrorMessage(
                   err instanceof Error ? err.message : "Pipeline failed",
                 );
@@ -642,7 +677,8 @@ export function TranscriptionPanel({
             // Transcription is in progress (started by anyone) — show its stage
             // and poll, so this viewer doesn't start a duplicate.
             setStage(data.stage);
-            pollForCompletion(data.transcriptId).catch((err) => {
+            pollForCompletion(data.transcriptId, signal).catch((err) => {
+              if (signal.aborted) return;
               setErrorMessage(
                 err instanceof Error ? err.message : "Pipeline failed",
               );
@@ -651,13 +687,15 @@ export function TranscriptionPanel({
           }
         }
       } catch (err) {
+        if (signal.aborted) return;
         console.log("Cache check failed:", err);
       } finally {
-        setChecking(false);
+        if (!signal.aborted) setChecking(false);
       }
     };
 
     checkCache();
+    return () => ctrl.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kalturaId, selectedLanguage, loadCountryNames]);
 
