@@ -1034,7 +1034,7 @@ export function VideoTable({
       )}
 
       {/* Schedule: one table per day, with the day as a text heading */}
-      <div className="pt-2">
+      <div>
         {showEmptyState ? (
           <div className="overflow-hidden rounded-lg border border-gray-200">
             {emptyState}
@@ -1046,17 +1046,17 @@ export function VideoTable({
                 <button
                   onClick={() => setShowFuture((v) => !v)}
                   className={cn(
-                    "flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground",
+                    "flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground",
                     showFuture && "mb-3",
                   )}
                 >
-                  {showFuture ? "Hide" : "Show"} future dates
                   <ChevronDown
                     className={cn(
-                      "h-4 w-4 transition-transform",
+                      "h-3.5 w-3.5 transition-transform",
                       showFuture && "rotate-180",
                     )}
                   />
+                  {showFuture ? "Hide" : "Show"} future dates
                 </button>
                 {showFuture && futureDayGroups.map(renderDayGroup)}
               </div>
