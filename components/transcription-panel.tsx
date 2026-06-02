@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import type { SpeakerMapping } from "@/lib/speakers";
 import type { Video } from "@/lib/un-api";
 import { getCountryName } from "@/lib/country-lookup";
@@ -160,6 +161,7 @@ export function TranscriptionPanel({
   const [propositions, setPropositions] = useState<Proposition[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("transcript");
   const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
+  const t = useTranslations("transcript.panel");
   // Covers the POST round-trip (click → response) so the Generate button can
   // show instant feedback before the server resolves Kaltura and starts polling.
   const [starting, setStarting] = useState(false);
@@ -743,17 +745,14 @@ export function TranscriptionPanel({
       {checking && stage === "idle" && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          <span>Checking for existing transcript...</span>
+          <span>{t("checkingForTranscript")}</span>
         </div>
       )}
 
       {stage === "scheduled" && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <div className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60" />
-          <span>
-            Queued for transcription — it will start automatically once the
-            recording is available.
-          </span>
+          <span>{t("queuedForTranscription")}</span>
         </div>
       )}
 
@@ -784,10 +783,9 @@ export function TranscriptionPanel({
           <div className="mt-8 flex flex-col items-center gap-4 text-center">
             <BarChart3 className="h-10 w-10 text-muted-foreground/50" />
             <div>
-              <p className="text-sm font-medium">No analysis yet</p>
+              <p className="text-sm font-medium">{t("noAnalysisYet")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Identify key propositions and stakeholder positions across the
-                transcript.
+                {t("noAnalysisBody")}
               </p>
             </div>
             <button
@@ -798,10 +796,10 @@ export function TranscriptionPanel({
               {analyzingPropositions ? (
                 <span className="flex items-center gap-2">
                   <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Analyzing...
+                  {t("analyzing")}
                 </span>
               ) : (
-                "Run Analysis"
+                t("runAnalysis")
               )}
             </button>
           </div>
@@ -851,23 +849,23 @@ export function TranscriptionPanel({
             {video.status === "live" || video.status === "scheduled" ? (
               <>
                 <p className="mb-1 text-sm font-medium text-foreground">
-                  No transcript available yet
+                  {t("noTranscriptYet")}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  This meeting hasn&apos;t finished yet. Use{" "}
-                  <span className="font-medium">Generate when available</span>{" "}
-                  to queue it — the transcript will be generated automatically
-                  once the recording is available.
+                  {t.rich("noTranscriptHintPending", {
+                    strong: (chunks) => (
+                      <span className="font-medium">{chunks}</span>
+                    ),
+                  })}
                 </p>
               </>
             ) : (
               <>
                 <p className="mb-1 text-sm font-medium text-foreground">
-                  No transcript available yet
+                  {t("noTranscriptYet")}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Generate an AI transcript to read along with speaker
-                  identification, topic tagging, and analysis.
+                  {t("noTranscriptHintFinished")}
                 </p>
               </>
             )}

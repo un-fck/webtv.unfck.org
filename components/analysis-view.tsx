@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import type { SpeakerMapping } from "@/lib/speakers";
 import type { Proposition } from "@/lib/pipeline";
@@ -30,12 +31,7 @@ const STANCE_COLORS: Record<
   },
 };
 
-const STANCE_LABELS: Record<string, string> = {
-  support: "Support",
-  oppose: "Oppose",
-  conditional: "Conditional",
-  neutral: "Neutral",
-};
+type StanceKey = "support" | "oppose" | "conditional" | "neutral";
 
 interface Statement {
   paragraphs: Array<{
@@ -89,6 +85,9 @@ export function AnalysisView({
   const [expandedPositions, setExpandedPositions] = useState<Set<string>>(
     new Set(),
   );
+  const t = useTranslations("analysis");
+  const tStance = useTranslations("analysis.stance");
+  const tSpeaker = useTranslations("transcript.view");
 
   const toggleProp = (key: string) => {
     setExpandedProps((prev) => {
@@ -127,7 +126,7 @@ export function AnalysisView({
     ) {
       return (
         <span className="text-sm font-medium">
-          Speaker {statementIndex + 1}
+          {tSpeaker("speakerN", { n: statementIndex + 1 })}
         </span>
       );
     }
@@ -183,7 +182,7 @@ export function AnalysisView({
                     key={pos.stance}
                     className={`rounded-full px-2 py-0.5 text-xs ${STANCE_COLORS[pos.stance].bg} ${STANCE_COLORS[pos.stance].text}`}
                   >
-                    {STANCE_LABELS[pos.stance]}: {pos.stakeholders.length}
+                    {tStance(pos.stance as StanceKey)}: {pos.stakeholders.length}
                   </span>
                 ))}
               </div>
@@ -207,7 +206,7 @@ export function AnalysisView({
                               colors.text,
                             )}
                           >
-                            {STANCE_LABELS[pos.stance]}
+                            {tStance(pos.stance as StanceKey)}
                           </span>
                         </div>
                         <div className="mb-1 text-sm font-medium">
@@ -223,8 +222,10 @@ export function AnalysisView({
                             className="mt-2 text-xs text-primary hover:underline"
                           >
                             {isPosExpanded
-                              ? "Hide quotes"
-                              : `View quotes (${pos.evidence.length})`}
+                              ? t("hideQuotes")
+                              : t("viewQuotes", {
+                                  count: pos.evidence.length,
+                                })}
                           </button>
                         )}
 
@@ -257,7 +258,7 @@ export function AnalysisView({
                                     onClick={() =>
                                       onJumpToTimestamp(stmtData.start)
                                     }
-                                    title="Click to jump to video"
+                                    title={t("clickToJump")}
                                   >
                                     <p
                                       dir="auto"

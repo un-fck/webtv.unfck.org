@@ -177,5 +177,150 @@
     "tryAgain": "Try again",
     "meetingNotFound": "Meeting not found",
     "meetingNotFoundHint": "This meeting could not be found. It may have been removed or renamed."
+  },
+  "languages": {
+    "floor": "Floor (Original)",
+    "en": "English",
+    "fr": "French",
+    "es": "Spanish",
+    "ar": "Arabic",
+    "zh": "Chinese",
+    "ru": "Russian"
+  },
+  "transcript": {
+    "toolbar": {
+      "transcript": "Transcript",
+      "analysis": "Analysis",
+      "verbatimRecord": "Verbatim Record",
+      "summaryRecord": "Summary Record",
+      "noAudio": "No audio",
+      "transcriptAvailable": "Transcript available",
+      "inProgress": "In progress",
+      "transcriptionMustComplete": "Transcription must complete before analysis",
+      "generating": "Generating…",
+      "generateTranscript": "Generate transcript",
+      "generateWhenAvailable": "Generate when available",
+      "generateWhenAvailableTooltip": "Queues the transcript to be generated automatically once the recording is available",
+      "signInToTranscribe": "Sign in to transcribe",
+      "signInRequiredTooltip": "Generating a transcript requires a free account",
+      "share": "Share",
+      "linkCopied": "Link copied to clipboard!",
+      "download": "Download",
+      "downloadDocx": "Text Document",
+      "downloadExcel": "Excel Table",
+      "downloadJson": "JSON API"
+    },
+    "view": {
+      "speaker": "Speaker",
+      "speakerN": "Speaker {n}"
+    },
+    "panel": {
+      "checkingForTranscript": "Checking for existing transcript…",
+      "queuedForTranscription": "Queued for transcription — it will start automatically once the recording is available.",
+      "noAnalysisYet": "No analysis yet",
+      "noAnalysisBody": "Identify key propositions and stakeholder positions across the transcript.",
+      "runAnalysis": "Run Analysis",
+      "analyzing": "Analyzing…",
+      "noTranscriptYet": "No transcript available yet",
+      "noTranscriptHintPending": "This meeting hasn't finished yet. Use <strong>Generate when available</strong> to queue it — the transcript will be generated automatically once the recording is available.",
+      "noTranscriptHintFinished": "Generate an AI transcript to read along with speaker identification, topic tagging, and analysis."
+    },
+    "highlightsOnly": "Highlights only",
+    "allContent": "All content"
+  },
+  "video": {
+    "removed": "This video has been removed from UN Web TV.",
+    "removedHadTranscript": "The transcript below was generated while the recording was still available.",
+    "removedNoTranscript": "The recording is no longer available to play or transcribe.",
+    "backToHomepage": "← Back to homepage"
+  },
+  "pv": {
+    "loadingVerbatim": "Loading Verbatim Record…",
+    "loadingSummary": "Loading Summary Record…",
+    "aligning": "Aligning…",
+    "alignWithAudio": "Align with audio",
+    "aligned": "✓ Aligned",
+    "provisional": "(Provisional)",
+    "president": "President",
+    "members": "Members",
+    "agenda": "Agenda",
+    "jumpToTimestamp": "Jump to this timestamp",
+    "paragraphTimestamp": "Paragraph timestamp",
+    "viewPdf": "PDF"
+  },
+  "analysis": {
+    "stance": {
+      "support": "Support",
+      "oppose": "Oppose",
+      "conditional": "Conditional",
+      "neutral": "Neutral"
+    },
+    "hideQuotes": "Hide quotes",
+    "viewQuotes": "View quotes ({count})",
+    "jumpToTimestamp": "Jump to this timestamp",
+    "clickToJump": "Click to jump to video"
+  },
+  "subscribeToggle": {
+    "subscribed": "Subscribed",
+    "emailMeWhenReady": "Email me when ready",
+    "subscribedTooltip": "You'll be emailed when this transcript is ready. Click to unsubscribe.",
+    "subscribeTooltip": "Email me when this transcript is ready"
+  },
+  "subscriptionsManager": {
+    "feeds": "Feeds",
+    "feedsCaption": "Subscribe to a feed to be emailed whenever a matching meeting is transcribed.",
+    "noFeeds": "No feeds available.",
+    "followedMeetings": "Followed meetings",
+    "followedMeetingsCaption": "Individual meetings you asked to be emailed about.",
+    "noFollowedMeetings": "You aren't following any individual meetings. Use <bell>Email me when ready</bell> on a meeting page.",
+    "emailMeWhenReady": "Email me when ready",
+    "emailedAt": "Emailed {date}",
+    "willEmailWhenReady": "We'll email you when the transcript is ready",
+    "remove": "Remove",
+    "loading": "Loading…",
+    "subscribe": "Subscribe",
+    "unsubscribe": "Unsubscribe"
+  },
+  "statementFeed": {
+    "loading": "Loading…",
+    "noText": "(no text)",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "viewTranscript": "View transcript",
+    "endOfStatements": "End of statements."
+  },
+  "speakerProfile": {
+    "loading": "Loading…",
+    "noStatements": "No statements yet.",
+    "statementsCount": "{count, plural, one {# statement} other {# statements}}",
+    "meetingsCount": "{count, plural, one {# meeting} other {# meetings}}",
+    "peopleCount": "{count, plural, one {# person} other {# people}}",
+    "kindCountry": "Country",
+    "kindGroup": "Group / coalition",
+    "kindOrg": "UN organ / agency"
+  },
+  "speakerOverview": {
+    "noMatches": "No matches.",
+    "filterPlaceholder": "Filter by country, group, organ, or person…",
+    "countries": "Countries",
+    "groups": "Groups & coalitions",
+    "organs": "UN organs & agencies",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "membersFraction": "{visible} of {total} members",
+    "unattributedStatements": "+ {count, plural, one {# unattributed statement} other {# unattributed statements}}"
+  },
+  "corner": {
+    "un20Aria": "Visit UN 2.0 Network"
+  },
+  "email": {
+    "magicLink": {
+      "subject": "Sign in to UN Transcripts",
+      "heading": "Sign in to UN Transcripts",
+      "body": "Click the button below to sign in. This link is valid for 15 minutes.",
+      "cta": "Sign in",
+      "fallback": "Or copy and paste this URL into your browser:",
+      "ignoreNote": "If you didn't request this email, you can safely ignore it."
+    }
   }
 }

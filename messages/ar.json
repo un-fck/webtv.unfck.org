@@ -177,5 +177,150 @@
     "tryAgain": "أعد المحاولة",
     "meetingNotFound": "لم يُعثر على الجلسة",
     "meetingNotFoundHint": "تعذّر العثور على هذه الجلسة. ربما تكون قد حُذفت أو أُعيدت تسميتها."
+  },
+  "languages": {
+    "floor": "الأصلي (القاعة)",
+    "en": "الإنجليزية",
+    "fr": "الفرنسية",
+    "es": "الإسبانية",
+    "ar": "العربية",
+    "zh": "الصينية",
+    "ru": "الروسية"
+  },
+  "transcript": {
+    "toolbar": {
+      "transcript": "التفريغ",
+      "analysis": "التحليل",
+      "verbatimRecord": "محضر حرفي",
+      "summaryRecord": "محضر موجز",
+      "noAudio": "لا يوجد صوت",
+      "transcriptAvailable": "التفريغ متاح",
+      "inProgress": "قيد التنفيذ",
+      "transcriptionMustComplete": "يجب أن يكتمل التفريغ قبل التحليل",
+      "generating": "جاري الإنشاء…",
+      "generateTranscript": "إنشاء التفريغ",
+      "generateWhenAvailable": "الإنشاء عند التوفر",
+      "generateWhenAvailableTooltip": "يضيف التفريغ إلى قائمة الانتظار ليتم إنشاؤه تلقائيًا فور توفر التسجيل",
+      "signInToTranscribe": "تسجيل الدخول للتفريغ",
+      "signInRequiredTooltip": "يتطلب إنشاء التفريغ حسابًا مجانيًا",
+      "share": "مشاركة",
+      "linkCopied": "تم نسخ الرابط إلى الحافظة!",
+      "download": "تنزيل",
+      "downloadDocx": "مستند نصي",
+      "downloadExcel": "جدول Excel",
+      "downloadJson": "واجهة JSON"
+    },
+    "view": {
+      "speaker": "المتكلم",
+      "speakerN": "المتكلم {n}"
+    },
+    "panel": {
+      "checkingForTranscript": "البحث عن تفريغ موجود…",
+      "queuedForTranscription": "في قائمة الانتظار للتفريغ — سيبدأ تلقائيًا فور توفر التسجيل.",
+      "noAnalysisYet": "لا يوجد تحليل بعد",
+      "noAnalysisBody": "حدد المقترحات الرئيسية ومواقف الأطراف المعنية في جميع أنحاء التفريغ.",
+      "runAnalysis": "تشغيل التحليل",
+      "analyzing": "جاري التحليل…",
+      "noTranscriptYet": "لا يتوفر تفريغ بعد",
+      "noTranscriptHintPending": "لم تنتهِ هذه الجلسة بعد. استخدم <strong>الإنشاء عند التوفر</strong> لإضافتها إلى قائمة الانتظار — سيُنشَأ التفريغ تلقائيًا فور توفر التسجيل.",
+      "noTranscriptHintFinished": "أنشئ تفريغًا بواسطة الذكاء الاصطناعي لمتابعة الجلسة مع تحديد المتكلمين، ووسم المواضيع، والتحليل."
+    },
+    "highlightsOnly": "أبرز المقاطع فقط",
+    "allContent": "كل المحتوى"
+  },
+  "pv": {
+    "loadingVerbatim": "جاري تحميل المحضر الحرفي…",
+    "loadingSummary": "جاري تحميل المحضر الموجز…",
+    "aligning": "جاري المواءمة…",
+    "alignWithAudio": "المواءمة مع الصوت",
+    "aligned": "✓ تمت المواءمة",
+    "provisional": "(مؤقت)",
+    "president": "الرئيس",
+    "members": "الأعضاء",
+    "agenda": "جدول الأعمال",
+    "jumpToTimestamp": "الانتقال إلى هذا الوقت",
+    "paragraphTimestamp": "وقت الفقرة",
+    "viewPdf": "PDF"
+  },
+  "analysis": {
+    "stance": {
+      "support": "مؤيد",
+      "oppose": "معارض",
+      "conditional": "مشروط",
+      "neutral": "محايد"
+    },
+    "hideQuotes": "إخفاء الاقتباسات",
+    "viewQuotes": "عرض الاقتباسات ({count})",
+    "jumpToTimestamp": "الانتقال إلى هذا الوقت",
+    "clickToJump": "انقر للانتقال إلى الفيديو"
+  },
+  "subscriptionsManager": {
+    "feeds": "الموجزات",
+    "feedsCaption": "اشترك في موجز لتصلك رسالة بريد إلكتروني كلما تم تفريغ جلسة تطابقه.",
+    "noFeeds": "لا توجد موجزات متاحة.",
+    "followedMeetings": "الجلسات المتابَعة",
+    "followedMeetingsCaption": "الجلسات الفردية التي طلبت أن تُخطَر عنها.",
+    "noFollowedMeetings": "أنت لا تتابع أي جلسات فردية. استخدم <bell>أخطرني بالبريد</bell> في صفحة الجلسة.",
+    "emailMeWhenReady": "أخطرني بالبريد",
+    "emailedAt": "أُرسل في {date}",
+    "willEmailWhenReady": "سنرسل إليك رسالة عندما يكون التفريغ جاهزًا",
+    "remove": "إزالة",
+    "loading": "جارٍ التحميل…",
+    "subscribe": "اشتراك",
+    "unsubscribe": "إلغاء الاشتراك"
+  },
+  "statementFeed": {
+    "loading": "جارٍ التحميل…",
+    "noText": "(لا يوجد نص)",
+    "showMore": "عرض المزيد",
+    "showLess": "عرض أقل",
+    "viewTranscript": "عرض التفريغ",
+    "endOfStatements": "نهاية المداخلات."
+  },
+  "speakerProfile": {
+    "loading": "جارٍ التحميل…",
+    "noStatements": "لا توجد مداخلات بعد.",
+    "statementsCount": "{count, plural, =0 {لا توجد مداخلات} one {مداخلة واحدة} two {مداخلتان} few {# مداخلات} many {# مداخلة} other {# مداخلة}}",
+    "meetingsCount": "{count, plural, =0 {لا توجد جلسات} one {جلسة واحدة} two {جلستان} few {# جلسات} many {# جلسة} other {# جلسة}}",
+    "peopleCount": "{count, plural, =0 {لا يوجد أشخاص} one {شخص واحد} two {شخصان} few {# أشخاص} many {# شخصًا} other {# شخصًا}}",
+    "kindCountry": "بلد",
+    "kindGroup": "مجموعة / تحالف",
+    "kindOrg": "جهاز / وكالة الأمم المتحدة"
+  },
+  "speakerOverview": {
+    "noMatches": "لا توجد نتائج.",
+    "filterPlaceholder": "تصفية حسب البلد أو المجموعة أو الجهاز أو الشخص…",
+    "countries": "البلدان",
+    "groups": "المجموعات والتحالفات",
+    "organs": "أجهزة ووكالات الأمم المتحدة",
+    "collapse": "طي",
+    "expand": "توسيع",
+    "membersFraction": "{visible} من {total} أعضاء",
+    "unattributedStatements": "+ {count, plural, =0 {لا توجد مداخلات غير منسوبة} one {مداخلة غير منسوبة} two {مداخلتان غير منسوبتين} few {# مداخلات غير منسوبة} many {# مداخلة غير منسوبة} other {# مداخلة غير منسوبة}}"
+  },
+  "corner": {
+    "un20Aria": "زيارة شبكة UN 2.0"
+  },
+  "email": {
+    "magicLink": {
+      "subject": "تسجيل الدخول إلى UN Transcripts",
+      "heading": "تسجيل الدخول إلى UN Transcripts",
+      "body": "انقر على الزر أدناه لتسجيل الدخول. هذا الرابط صالح لمدة 15 دقيقة.",
+      "cta": "تسجيل الدخول",
+      "fallback": "أو انسخ هذا الرابط والصقه في متصفحك:",
+      "ignoreNote": "إذا لم تطلب هذه الرسالة، يمكنك تجاهلها بأمان."
+    }
+  },
+  "video": {
+    "removed": "تمت إزالة هذا الفيديو من UN Web TV.",
+    "removedHadTranscript": "أُنشئ التفريغ أدناه عندما كان التسجيل لا يزال متاحًا.",
+    "removedNoTranscript": "لم يعد التسجيل متاحًا للتشغيل أو التفريغ.",
+    "backToHomepage": "← العودة إلى الصفحة الرئيسية"
+  },
+  "subscribeToggle": {
+    "subscribed": "مشترك",
+    "emailMeWhenReady": "أخطرني بالبريد",
+    "subscribedTooltip": "ستصلك رسالة عند جاهزية هذا التفريغ. انقر لإلغاء الاشتراك.",
+    "subscribeTooltip": "أخطرني بالبريد عند جاهزية هذا التفريغ"
   }
 }

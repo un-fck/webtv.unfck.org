@@ -8,6 +8,7 @@ import {
   forwardRef,
   type ReactNode,
 } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight, AudioLines } from "lucide-react";
 import type { PVDocument, PVTurn } from "@/lib/pv-parser";
 import { findReferences } from "@/lib/pv-reference-linking";
@@ -92,6 +93,7 @@ export function PVPanel({
   const [activeTurnIndex, setActiveTurnIndex] = useState<number>(-1);
   const [activeParaIndex, setActiveParaIndex] = useState<number>(-1);
   const turnRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const t = useTranslations("pv");
 
   // Fetch PV document
   useEffect(() => {
@@ -228,8 +230,9 @@ export function PVPanel({
     return (
       <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        Loading{" "}
-        {pvSymbol.includes("/SR.") ? "Summary Record" : "Verbatim Record"}...
+        {pvSymbol.includes("/SR.")
+          ? t("loadingSummary")
+          : t("loadingVerbatim")}
       </div>
     );
   }
@@ -268,7 +271,7 @@ export function PVPanel({
             )}
             {pvDoc.symbol} — {pvDoc.body}
             {pvDoc.session ? `, ${pvDoc.session}` : ""}
-            {pvDoc.status === "provisional" ? " (Provisional)" : ""}
+            {pvDoc.status === "provisional" ? ` ${t("provisional")}` : ""}
           </button>
         )}
 
@@ -282,20 +285,20 @@ export function PVPanel({
             {aligning ? (
               <>
                 <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Aligning…
+                {t("aligning")}
               </>
             ) : (
               <>
                 <AudioLines className="h-3 w-3" />
-                Align with audio
+                {t("alignWithAudio")}
               </>
             )}
           </button>
         )}
 
         {isAligned && (
-          <span className="ml-auto text-xs whitespace-nowrap text-emerald-600 dark:text-emerald-400">
-            ✓ Aligned
+          <span className="ms-auto text-xs whitespace-nowrap text-emerald-600 dark:text-emerald-400">
+            {t("aligned")}
           </span>
         )}
       </div>
@@ -304,7 +307,7 @@ export function PVPanel({
         <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-xs">
           {pvDoc.president && (
             <div>
-              <span className="font-medium">President:</span>{" "}
+              <span className="font-medium">{t("president")}:</span>{" "}
               {pvDoc.president.name} ({pvDoc.president.country})
             </div>
           )}
@@ -312,7 +315,7 @@ export function PVPanel({
           {pvDoc.members.length > 0 && (
             <div>
               <span className="font-medium">
-                Members ({pvDoc.members.length}):
+                {t("members")} ({pvDoc.members.length}):
               </span>
               <div className="mt-1 grid grid-cols-1 gap-0.5 sm:grid-cols-2">
                 {pvDoc.members.map((m, i) => (
@@ -326,7 +329,7 @@ export function PVPanel({
 
           {pvDoc.agendaItems.length > 0 && (
             <div>
-              <span className="font-medium">Agenda:</span>
+              <span className="font-medium">{t("agenda")}:</span>
               <ul className="mt-1 list-inside list-disc text-muted-foreground">
                 {pvDoc.agendaItems.map((item, i) => (
                   <li key={i}>{item}</li>
@@ -381,6 +384,7 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
     { turn, turnIndex, isActive, activeParaIndex, isAligned, onSeek },
     ref,
   ) {
+    const t = useTranslations("pv");
     const hasTimestamp = turn.startTime !== undefined && turn.startTime >= 0;
     const hasParagraphTimestamps =
       turn.paragraphTimestamps && turn.paragraphTimestamps.some((t) => t >= 0);
@@ -421,7 +425,7 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
                 typography.caption,
                 "rounded px-1.5 py-0.5 transition-colors hover:bg-muted hover:text-primary",
               )}
-              title="Jump to this timestamp"
+              title={t("jumpToTimestamp")}
             >
               {formatTimecodeMs(turn.startTime!)}
             </button>
@@ -483,7 +487,7 @@ const PVTurnCard = forwardRef<HTMLDivElement, PVTurnCardProps>(
                   {hasParaTs && (
                     <span
                       className="mr-1.5 text-[10px] text-muted-foreground"
-                      title="Paragraph timestamp"
+                      title={t("paragraphTimestamp")}
                     >
                       {formatTimecodeMs(paraTs!)}
                     </span>

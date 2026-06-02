@@ -177,5 +177,150 @@
     "tryAgain": "Попробовать снова",
     "meetingNotFound": "Заседание не найдено",
     "meetingNotFoundHint": "Это заседание не удалось найти. Возможно, оно было удалено или переименовано."
+  },
+  "languages": {
+    "floor": "Оригинал (зальный)",
+    "en": "Английский",
+    "fr": "Французский",
+    "es": "Испанский",
+    "ar": "Арабский",
+    "zh": "Китайский",
+    "ru": "Русский"
+  },
+  "transcript": {
+    "toolbar": {
+      "transcript": "Расшифровка",
+      "analysis": "Анализ",
+      "verbatimRecord": "Стенографический отчёт",
+      "summaryRecord": "Краткий отчёт",
+      "noAudio": "Нет аудио",
+      "transcriptAvailable": "Расшифровка доступна",
+      "inProgress": "Выполняется",
+      "transcriptionMustComplete": "Расшифровка должна завершиться до анализа",
+      "generating": "Генерация…",
+      "generateTranscript": "Сгенерировать расшифровку",
+      "generateWhenAvailable": "Сгенерировать, когда станет доступно",
+      "generateWhenAvailableTooltip": "Поставит расшифровку в очередь — она будет создана автоматически, как только запись станет доступна",
+      "signInToTranscribe": "Войти, чтобы расшифровать",
+      "signInRequiredTooltip": "Для генерации расшифровки нужен бесплатный аккаунт",
+      "share": "Поделиться",
+      "linkCopied": "Ссылка скопирована в буфер обмена!",
+      "download": "Скачать",
+      "downloadDocx": "Текстовый документ",
+      "downloadExcel": "Таблица Excel",
+      "downloadJson": "JSON API"
+    },
+    "view": {
+      "speaker": "Выступающий",
+      "speakerN": "Выступающий {n}"
+    },
+    "panel": {
+      "checkingForTranscript": "Поиск существующей расшифровки…",
+      "queuedForTranscription": "В очереди на расшифровку — начнётся автоматически, как только запись станет доступна.",
+      "noAnalysisYet": "Анализ ещё не выполнен",
+      "noAnalysisBody": "Определите ключевые предложения и позиции участников по всей расшифровке.",
+      "runAnalysis": "Запустить анализ",
+      "analyzing": "Анализируем…",
+      "noTranscriptYet": "Расшифровка пока недоступна",
+      "noTranscriptHintPending": "Это заседание ещё не закончилось. Используйте <strong>Сгенерировать, когда станет доступно</strong>, чтобы поставить в очередь — расшифровка будет создана автоматически, как только запись станет доступна.",
+      "noTranscriptHintFinished": "Сгенерируйте расшифровку с помощью ИИ, чтобы читать с идентификацией выступающих, разметкой тем и анализом."
+    },
+    "highlightsOnly": "Только ключевое",
+    "allContent": "Весь текст"
+  },
+  "pv": {
+    "loadingVerbatim": "Загрузка стенографического отчёта…",
+    "loadingSummary": "Загрузка краткого отчёта…",
+    "aligning": "Выравнивание…",
+    "alignWithAudio": "Выровнять по аудио",
+    "aligned": "✓ Выровнено",
+    "provisional": "(Предварительный)",
+    "president": "Председатель",
+    "members": "Члены",
+    "agenda": "Повестка дня",
+    "jumpToTimestamp": "Перейти к этой временной метке",
+    "paragraphTimestamp": "Временная метка абзаца",
+    "viewPdf": "PDF"
+  },
+  "analysis": {
+    "stance": {
+      "support": "Поддержка",
+      "oppose": "Против",
+      "conditional": "Условно",
+      "neutral": "Нейтрально"
+    },
+    "hideQuotes": "Скрыть цитаты",
+    "viewQuotes": "Показать цитаты ({count})",
+    "jumpToTimestamp": "Перейти к этой временной метке",
+    "clickToJump": "Нажмите, чтобы перейти к видео"
+  },
+  "subscriptionsManager": {
+    "feeds": "Каналы",
+    "feedsCaption": "Подпишитесь на канал, чтобы получать письмо каждый раз, когда расшифровывается подходящее заседание.",
+    "noFeeds": "Каналы недоступны.",
+    "followedMeetings": "Отслеживаемые заседания",
+    "followedMeetingsCaption": "Отдельные заседания, о которых вы попросили вас уведомить.",
+    "noFollowedMeetings": "Вы не отслеживаете ни одного отдельного заседания. Используйте <bell>Уведомить по почте</bell> на странице заседания.",
+    "emailMeWhenReady": "Уведомить по почте",
+    "emailedAt": "Отправлено {date}",
+    "willEmailWhenReady": "Мы пришлём письмо, как только расшифровка будет готова",
+    "remove": "Удалить",
+    "loading": "Загрузка…",
+    "subscribe": "Подписаться",
+    "unsubscribe": "Отписаться"
+  },
+  "statementFeed": {
+    "loading": "Загрузка…",
+    "noText": "(нет текста)",
+    "showMore": "Показать больше",
+    "showLess": "Показать меньше",
+    "viewTranscript": "Перейти к расшифровке",
+    "endOfStatements": "Конец выступлений."
+  },
+  "speakerProfile": {
+    "loading": "Загрузка…",
+    "noStatements": "Пока нет выступлений.",
+    "statementsCount": "{count, plural, one {# выступление} few {# выступления} many {# выступлений} other {# выступления}}",
+    "meetingsCount": "{count, plural, one {# заседание} few {# заседания} many {# заседаний} other {# заседания}}",
+    "peopleCount": "{count, plural, one {# человек} few {# человека} many {# человек} other {# человека}}",
+    "kindCountry": "Страна",
+    "kindGroup": "Группа / коалиция",
+    "kindOrg": "Орган / учреждение ООН"
+  },
+  "speakerOverview": {
+    "noMatches": "Нет результатов.",
+    "filterPlaceholder": "Фильтр по стране, группе, органу или человеку…",
+    "countries": "Страны",
+    "groups": "Группы и коалиции",
+    "organs": "Органы и учреждения ООН",
+    "collapse": "Свернуть",
+    "expand": "Развернуть",
+    "membersFraction": "{visible} из {total} членов",
+    "unattributedStatements": "+ {count, plural, one {# не атрибутированное выступление} few {# не атрибутированных выступления} many {# не атрибутированных выступлений} other {# не атрибутированных выступления}}"
+  },
+  "corner": {
+    "un20Aria": "Перейти на сайт UN 2.0 Network"
+  },
+  "email": {
+    "magicLink": {
+      "subject": "Вход в UN Transcripts",
+      "heading": "Вход в UN Transcripts",
+      "body": "Нажмите кнопку ниже, чтобы войти. Ссылка действительна 15 минут.",
+      "cta": "Войти",
+      "fallback": "Или скопируйте и вставьте эту ссылку в адресную строку браузера:",
+      "ignoreNote": "Если вы не запрашивали это письмо, можете спокойно его проигнорировать."
+    }
+  },
+  "video": {
+    "removed": "Это видео удалено с UN Web TV.",
+    "removedHadTranscript": "Расшифровка ниже была создана, пока запись ещё была доступна.",
+    "removedNoTranscript": "Запись больше недоступна для воспроизведения или расшифровки.",
+    "backToHomepage": "← Назад на главную"
+  },
+  "subscribeToggle": {
+    "subscribed": "Подписан",
+    "emailMeWhenReady": "Уведомить по почте",
+    "subscribedTooltip": "Вы получите письмо, когда эта расшифровка будет готова. Нажмите, чтобы отписаться.",
+    "subscribeTooltip": "Уведомить меня по почте, когда эта расшифровка будет готова"
   }
 }

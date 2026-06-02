@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { ProfileBubble } from "@/lib/speaker-index";
 import { VideoMoment } from "@/components/video-moment";
@@ -22,8 +23,11 @@ function formatDate(date: string | null): string {
 
 function ExpandableText({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
+  const t = useTranslations("statementFeed");
   if (!text) {
-    return <span className="text-muted-foreground italic">(no text)</span>;
+    return (
+      <span className="text-muted-foreground italic">{t("noText")}</span>
+    );
   }
   const sentences = text.split(/(?<=[.!?])\s+/);
   const truncated = sentences.length > PREVIEW_SENTENCES;
@@ -43,7 +47,7 @@ function ExpandableText({ text }: { text: string }) {
             onClick={() => setExpanded((v) => !v)}
             className="font-medium text-un-blue hover:underline"
           >
-            {expanded ? "Show less" : "Show more"}
+            {expanded ? t("showLess") : t("showMore")}
           </button>
         </>
       )}
@@ -76,6 +80,7 @@ function SpeakerBadges({ bubble }: { bubble: ProfileBubble }) {
 }
 
 function StatementCard({ bubble }: { bubble: ProfileBubble }) {
+  const t = useTranslations("statementFeed");
   return (
     <li className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
       <div className="mb-2">
@@ -104,7 +109,7 @@ function StatementCard({ bubble }: { bubble: ProfileBubble }) {
           href={`/${bubble.meetingSlug}`}
           className="hover:text-un-blue hover:underline"
         >
-          {bubble.meetingTitle || "View transcript"} →
+          {bubble.meetingTitle || t("viewTranscript")} →
         </Link>
       </div>
     </li>
@@ -129,6 +134,7 @@ export function StatementFeed({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("statementFeed");
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -186,11 +192,13 @@ export function StatementFeed({
       {hasMore && <div ref={sentinelRef} aria-hidden className="h-px" />}
 
       {loading && (
-        <p className={cn(typography.caption, "mt-6 text-center")}>Loading…</p>
+        <p className={cn(typography.caption, "mt-6 text-center")}>
+          {t("loading")}
+        </p>
       )}
       {!hasMore && bubbles.length > 0 && (
         <p className={cn(typography.caption, "mt-6 text-center")}>
-          End of statements.
+          {t("endOfStatements")}
         </p>
       )}
     </>

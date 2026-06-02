@@ -177,5 +177,150 @@
     "tryAgain": "重试",
     "meetingNotFound": "未找到该会议",
     "meetingNotFoundHint": "无法找到此会议。它可能已被删除或重命名。"
+  },
+  "languages": {
+    "floor": "原始(现场)",
+    "en": "英语",
+    "fr": "法语",
+    "es": "西班牙语",
+    "ar": "阿拉伯语",
+    "zh": "中文",
+    "ru": "俄语"
+  },
+  "transcript": {
+    "toolbar": {
+      "transcript": "转录",
+      "analysis": "分析",
+      "verbatimRecord": "逐字记录",
+      "summaryRecord": "简要记录",
+      "noAudio": "无音频",
+      "transcriptAvailable": "转录可用",
+      "inProgress": "处理中",
+      "transcriptionMustComplete": "转录必须先完成才能进行分析",
+      "generating": "生成中…",
+      "generateTranscript": "生成转录",
+      "generateWhenAvailable": "在可用时生成",
+      "generateWhenAvailableTooltip": "将转录加入队列,录像可用后将自动生成",
+      "signInToTranscribe": "登录以转录",
+      "signInRequiredTooltip": "生成转录需要免费账户",
+      "share": "分享",
+      "linkCopied": "链接已复制到剪贴板!",
+      "download": "下载",
+      "downloadDocx": "文本文档",
+      "downloadExcel": "Excel 表格",
+      "downloadJson": "JSON API"
+    },
+    "view": {
+      "speaker": "发言者",
+      "speakerN": "发言者 {n}"
+    },
+    "panel": {
+      "checkingForTranscript": "正在检查现有转录…",
+      "queuedForTranscription": "已加入转录队列 — 录像可用后将自动开始。",
+      "noAnalysisYet": "尚无分析",
+      "noAnalysisBody": "识别整份转录中的关键主张以及各方立场。",
+      "runAnalysis": "运行分析",
+      "analyzing": "正在分析…",
+      "noTranscriptYet": "尚无可用的转录",
+      "noTranscriptHintPending": "本次会议尚未结束。使用<strong>在可用时生成</strong>将其加入队列 — 录像可用后将自动生成转录。",
+      "noTranscriptHintFinished": "生成 AI 转录,以便边读边查看发言者识别、主题标签和分析。"
+    },
+    "highlightsOnly": "仅显示要点",
+    "allContent": "全部内容"
+  },
+  "pv": {
+    "loadingVerbatim": "正在加载逐字记录…",
+    "loadingSummary": "正在加载简要记录…",
+    "aligning": "正在对齐…",
+    "alignWithAudio": "与音频对齐",
+    "aligned": "✓ 已对齐",
+    "provisional": "(临时)",
+    "president": "主席",
+    "members": "成员",
+    "agenda": "议程",
+    "jumpToTimestamp": "跳到此时间点",
+    "paragraphTimestamp": "段落时间戳",
+    "viewPdf": "PDF"
+  },
+  "analysis": {
+    "stance": {
+      "support": "支持",
+      "oppose": "反对",
+      "conditional": "有条件",
+      "neutral": "中立"
+    },
+    "hideQuotes": "隐藏引述",
+    "viewQuotes": "查看引述 ({count})",
+    "jumpToTimestamp": "跳到此时间点",
+    "clickToJump": "点击跳到视频"
+  },
+  "subscriptionsManager": {
+    "feeds": "订阅源",
+    "feedsCaption": "订阅一个源,每当有匹配的会议被转录时即可收到邮件。",
+    "noFeeds": "暂无可用的订阅源。",
+    "followedMeetings": "关注的会议",
+    "followedMeetingsCaption": "您要求收到邮件通知的单个会议。",
+    "noFollowedMeetings": "您尚未关注任何单个会议。请在会议页面使用<bell>准备好时邮件通知我</bell>。",
+    "emailMeWhenReady": "准备好时邮件通知我",
+    "emailedAt": "已于 {date} 发送",
+    "willEmailWhenReady": "转录准备好后我们将向您发送邮件",
+    "remove": "移除",
+    "loading": "加载中…",
+    "subscribe": "订阅",
+    "unsubscribe": "取消订阅"
+  },
+  "statementFeed": {
+    "loading": "加载中…",
+    "noText": "(无文本)",
+    "showMore": "显示更多",
+    "showLess": "显示更少",
+    "viewTranscript": "查看转录",
+    "endOfStatements": "发言列表结束。"
+  },
+  "speakerProfile": {
+    "loading": "加载中…",
+    "noStatements": "暂无发言。",
+    "statementsCount": "{count, plural, =0 {无发言} other {# 条发言}}",
+    "meetingsCount": "{count, plural, =0 {无会议} other {# 场会议}}",
+    "peopleCount": "{count, plural, =0 {无人} other {# 人}}",
+    "kindCountry": "国家",
+    "kindGroup": "集团 / 联盟",
+    "kindOrg": "联合国机构 / 机关"
+  },
+  "speakerOverview": {
+    "noMatches": "无匹配项。",
+    "filterPlaceholder": "按国家、集团、机构或人员筛选…",
+    "countries": "国家",
+    "groups": "集团与联盟",
+    "organs": "联合国机构与机关",
+    "collapse": "折叠",
+    "expand": "展开",
+    "membersFraction": "{total} 名成员中的 {visible} 名",
+    "unattributedStatements": "+ {count, plural, =0 {无未归属发言} other {# 条未归属发言}}"
+  },
+  "corner": {
+    "un20Aria": "访问 UN 2.0 网络"
+  },
+  "email": {
+    "magicLink": {
+      "subject": "登录 UN Transcripts",
+      "heading": "登录 UN Transcripts",
+      "body": "点击下方按钮登录。此链接 15 分钟内有效。",
+      "cta": "登录",
+      "fallback": "或将以下链接复制粘贴到浏览器中:",
+      "ignoreNote": "如果您没有请求此邮件,可以安全地忽略它。"
+    }
+  },
+  "video": {
+    "removed": "本视频已从联合国网络电视移除。",
+    "removedHadTranscript": "下方的转录是在录像仍然可用时生成的。",
+    "removedNoTranscript": "录像不再可用于播放或转录。",
+    "backToHomepage": "← 返回首页"
+  },
+  "subscribeToggle": {
+    "subscribed": "已订阅",
+    "emailMeWhenReady": "准备好时邮件通知我",
+    "subscribedTooltip": "此转录准备好后,我们将发送邮件通知您。点击取消订阅。",
+    "subscribeTooltip": "此转录准备好后通过邮件通知我"
   }
 }

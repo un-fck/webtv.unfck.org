@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 
@@ -22,6 +23,7 @@ const styles = `
 
 export function AnimatedCornerLogo() {
   const pathname = usePathname();
+  const t = useTranslations("corner");
 
   const [visible, setVisible] = useState(false);
   const [cornerClass, setCornerClass] = useState("corner-slide-hidden");
@@ -60,7 +62,7 @@ export function AnimatedCornerLogo() {
         target="_blank"
         rel="noopener noreferrer"
         className={`fixed bottom-0 left-0 z-30 hidden cursor-pointer transition-opacity [clip-path:polygon(0_0,0_100%,100%_100%)] hover:opacity-80 md:block ${cornerClass}`}
-        aria-label="Visit UN 2.0 Network"
+        aria-label={t("un20Aria")}
       >
         <Image
           src="/images/un-two-zero-corner.svg"

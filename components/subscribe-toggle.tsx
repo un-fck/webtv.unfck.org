@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Bell, BellRing } from "lucide-react";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ export function SubscribeToggle({ kalturaId, language }: SubscribeToggleProps) {
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
+  const t = useTranslations("subscribeToggle");
 
   useEffect(() => {
     let cancelled = false;
@@ -64,9 +66,7 @@ export function SubscribeToggle({ kalturaId, language }: SubscribeToggleProps) {
       onClick={toggle}
       disabled={pending}
       title={
-        subscribed
-          ? "You'll be emailed when this transcript is ready. Click to unsubscribe."
-          : "Email me when this transcript is ready"
+        subscribed ? t("subscribedTooltip") : t("subscribeTooltip")
       }
       className={cn(
         typography.label,
@@ -81,7 +81,7 @@ export function SubscribeToggle({ kalturaId, language }: SubscribeToggleProps) {
       ) : (
         <Bell className="h-3.5 w-3.5" />
       )}
-      {subscribed ? "Subscribed" : "Email me when ready"}
+      {subscribed ? t("subscribed") : t("emailMeWhenReady")}
     </button>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ChevronRight } from "lucide-react";
 import type { EntityKind, EntitySummary } from "@/lib/speaker-index";
@@ -8,11 +9,12 @@ import { slugify } from "@/lib/speaker-keys";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
-const SECTIONS: { kind: EntityKind; title: string }[] = [
-  { kind: "country", title: "Countries" },
-  { kind: "group", title: "Groups & coalitions" },
-  { kind: "org", title: "UN organs & agencies" },
-];
+const SECTION_KINDS: EntityKind[] = ["country", "group", "org"];
+const SECTION_TITLE_KEY: Record<EntityKind, "countries" | "groups" | "organs"> = {
+  country: "countries",
+  group: "groups",
+  org: "organs",
+};
 
 function profileHref(slug: string, name?: string | null) {
   const base = `/speakers/${slug}`;
@@ -31,6 +33,7 @@ function EntityRow({
   query: string;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("speakerOverview");
 
   const labelMatches =
     searching && entity.label.toLowerCase().includes(query);
@@ -55,7 +58,7 @@ function EntityRow({
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={effectiveOpen}
-          aria-label={effectiveOpen ? "Collapse" : "Expand"}
+          aria-label={effectiveOpen ? t("collapse") : t("expand")}
           className="rounded p-0.5 text-muted-foreground hover:text-foreground"
         >
           <ChevronRight
@@ -78,7 +81,10 @@ function EntityRow({
         <ul className="mt-1 ml-7 space-y-0.5">
           {personMatchOnly && (
             <li className={cn(typography.caption, "mb-1")}>
-              {visibleNamedPeople.length} of {allNamedPeople.length} members
+              {t("membersFraction", {
+                visible: visibleNamedPeople.length,
+                total: allNamedPeople.length,
+              })}
             </li>
           )}
           {visibleNamedPeople.map((p) => (
@@ -97,7 +103,9 @@ function EntityRow({
           ))}
           {!personMatchOnly && unattributed && (
             <li className={cn(typography.caption, "italic")}>
-              + {unattributed.statementCount} unattributed statements
+              {t("unattributedStatements", {
+                count: unattributed.statementCount,
+              })}
             </li>
           )}
         </ul>
@@ -108,6 +116,7 @@ function EntityRow({
 
 export function SpeakerOverview({ entities }: { entities: EntitySummary[] }) {
   const [filter, setFilter] = useState("");
+  const t = useTranslations("speakerOverview");
 
   const query = filter.trim().toLowerCase();
   const searching = query !== "";
@@ -142,7 +151,7 @@ export function SpeakerOverview({ entities }: { entities: EntitySummary[] }) {
         type="search"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        placeholder="Filter by country, group, organ, or person…"
+        placeholder={t("filterPlaceholder")}
         className={cn(
           typography.body,
           "mb-8 w-full max-w-md rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-un-blue",
@@ -150,16 +159,16 @@ export function SpeakerOverview({ entities }: { entities: EntitySummary[] }) {
       />
 
       <div className="grid gap-10 lg:grid-cols-3">
-        {SECTIONS.map(({ kind, title }) => {
+        {SECTION_KINDS.map((kind) => {
           const list = byKind.get(kind) ?? [];
           return (
             <section key={kind}>
               <h2 className={cn(typography.sectionTitle, "mb-3")}>
-                {title}{" "}
+                {t(SECTION_TITLE_KEY[kind])}{" "}
                 <span className={typography.caption}>({list.length})</span>
               </h2>
               {list.length === 0 ? (
-                <p className={cn(typography.caption)}>No matches.</p>
+                <p className={cn(typography.caption)}>{t("noMatches")}</p>
               ) : (
                 <ul>
                   {list.map((e) => (

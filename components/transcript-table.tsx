@@ -25,13 +25,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { useTimezone } from "@/lib/hooks/use-timezone";
+import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { rememberScheduleUrl } from "@/lib/schedule-return";
-import {
-  formatMeetingTime,
-  formatMeetingDate,
-  isFutureDay,
-} from "@/lib/timezone";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -133,7 +128,7 @@ function DateFilterPopover({
   selectedDate: string | undefined;
   onChange: (date: string | undefined) => void;
 }) {
-  const { timezone } = useTimezone();
+  const { formatMeetingDate } = useMeetingFormat();
   const t = useT();
   const isActive = !!selectedDate;
 
@@ -165,7 +160,7 @@ function DateFilterPopover({
       <PopoverTrigger className={toolbarTriggerClass(isActive)}>
         <CalendarIcon className="h-4 w-4" />
         <span>
-          {selectedDate ? formatMeetingDate(selectedDate, timezone) : t("date")}
+          {selectedDate ? formatMeetingDate(selectedDate) : t("date")}
         </span>
         {selectedDate ? (
           <X
@@ -483,7 +478,8 @@ export function VideoTable({
   const router = useRouter();
   const t = useT();
   const searchParams = useSearchParams();
-  const { timezone } = useTimezone();
+  const { formatMeetingDate, formatMeetingTime, isFutureDay } =
+    useMeetingFormat();
 
   // Search state (client-side, uses /api/search)
   const [inputValue, setInputValue] = useState(serverParams.q || "");
@@ -738,7 +734,7 @@ export function VideoTable({
     }[]
   >(() => {
     const labelOf = (v: Video) =>
-      formatMeetingDate(v.scheduledTime ?? v.date, timezone, {
+      formatMeetingDate(v.scheduledTime ?? v.date, {
         shortWeekday: !groupByDate,
       });
 
@@ -800,7 +796,7 @@ export function VideoTable({
       }
     }
     return out;
-  }, [rows, groupByDate, timezone]);
+  }, [rows, groupByDate, formatMeetingDate]);
 
   // Split the rows into per-day groups (one rendered table each) when grouping.
   type DisplayRow = (typeof displayRows)[number];
@@ -815,13 +811,13 @@ export function VideoTable({
         groups.push({
           day: r.dateLabel,
           rows: [],
-          isFuture: isFutureDay(ts, timezone),
+          isFuture: isFutureDay(ts),
         });
       }
       groups[groups.length - 1].rows.push(r);
     }
     return groups;
-  }, [displayRows, groupByDate, timezone]);
+  }, [displayRows, groupByDate, isFutureDay]);
 
   const futureDayGroups = (dayGroups ?? []).filter((g) => g.isFuture);
   const pastDayGroups = (dayGroups ?? []).filter((g) => !g.isFuture);
@@ -889,7 +885,7 @@ export function VideoTable({
           <td className="px-4 py-2.5 align-top">
             <div className="flex items-baseline justify-between gap-2 tabular-nums">
               {time ? (
-                <span>{formatMeetingTime(time, timezone)}</span>
+                <span>{formatMeetingTime(time)}</span>
               ) : (
                 <span className="text-muted-foreground/60">—</span>
               )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
   Check,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import type { LanguageOption } from "@/components/transcription-panel";
 import type { Stage } from "@/components/stage-progress";
+import { useLanguageDisplayName } from "@/lib/hooks/use-language-display-name";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 import { SubscribeToggle } from "@/components/subscribe-toggle";
@@ -72,6 +74,8 @@ export function TranscriptToolbar({
   const [showCopied, setShowCopied] = useState(false);
   const languageButtonRef = useRef<HTMLDivElement>(null);
   const downloadButtonRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("transcript.toolbar");
+  const displayName = useLanguageDisplayName();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -96,9 +100,7 @@ export function TranscriptToolbar({
     }
   }, [showDownloadMenu, showLanguageMenu]);
 
-  const selectedLangName =
-    availableLanguages.find((l) => l.code === selectedLanguage)?.name ??
-    (selectedLanguage === "en" ? "English" : selectedLanguage.toUpperCase());
+  const selectedLangName = displayName(selectedLanguage);
 
   const handleShare = async () => {
     await onShare();
@@ -128,7 +130,7 @@ export function TranscriptToolbar({
 
   return (
     <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-      <h2 className={typography.sectionTitle}>Transcript</h2>
+      <h2 className={typography.sectionTitle}>{t("transcript")}</h2>
 
       {availableLanguages.length > 0 && (
         <div className="relative" ref={languageButtonRef}>
@@ -163,10 +165,10 @@ export function TranscriptToolbar({
                         : "hover:bg-muted"
                   }`}
                 >
-                  <span className="flex-1">{lang.name}</span>
+                  <span className="flex-1">{displayName(lang.code)}</span>
                   {!lang.available && (
                     <span className="text-[10px] text-muted-foreground/40">
-                      No audio
+                      {t("noAudio")}
                     </span>
                   )}
                   {lang.code === selectedLanguage && (
@@ -175,7 +177,7 @@ export function TranscriptToolbar({
                   {lang.available && lang.transcriptStatus === "completed" && (
                     <span
                       className="h-2 w-2 rounded-full bg-green-500"
-                      title="Transcript available"
+                      title={t("transcriptAvailable")}
                     />
                   )}
                   {lang.available &&
@@ -184,7 +186,7 @@ export function TranscriptToolbar({
                     lang.transcriptStatus !== "error" && (
                       <span
                         className="h-2 w-2 animate-pulse rounded-full bg-amber-500"
-                        title="In progress"
+                        title={t("inProgress")}
                       />
                     )}
                 </button>
@@ -206,7 +208,7 @@ export function TranscriptToolbar({
               }`}
             >
               <FileText className="h-3 w-3" />
-              Transcript
+              {t("transcript")}
             </button>
             {isLoggedIn && (
               <button
@@ -219,12 +221,12 @@ export function TranscriptToolbar({
                 disabled={stage !== "completed" && !hasPropositions}
                 title={
                   stage !== "completed" && !hasPropositions
-                    ? "Transcription must complete before analysis"
+                    ? t("transcriptionMustComplete")
                     : undefined
                 }
               >
                 <BarChart3 className="h-3 w-3" />
-                Analysis
+                {t("analysis")}
               </button>
             )}
             {pvSymbol && (
@@ -238,8 +240,8 @@ export function TranscriptToolbar({
               >
                 <BookOpen className="h-3 w-3" />
                 {pvSymbol?.includes("/SR.")
-                  ? "Summary Record"
-                  : "Verbatim Record"}
+                  ? t("summaryRecord")
+                  : t("verbatimRecord")}
               </button>
             )}
           </div>
@@ -255,7 +257,7 @@ export function TranscriptToolbar({
             )}
           >
             <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            Generating…
+            {t("generating")}
           </button>
         )}
 
@@ -272,12 +274,12 @@ export function TranscriptToolbar({
                 "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
               )}
               title={
-                audioAvailable
-                  ? undefined
-                  : "Queues the transcript to be generated automatically once the recording is available"
+                audioAvailable ? undefined : t("generateWhenAvailableTooltip")
               }
             >
-              {audioAvailable ? "Generate transcript" : "Generate when available"}
+              {audioAvailable
+                ? t("generateTranscript")
+                : t("generateWhenAvailable")}
             </button>
           ) : (
             <Link
@@ -286,9 +288,9 @@ export function TranscriptToolbar({
                 typography.label,
                 "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
               )}
-              title="Generating a transcript requires a free account"
+              title={t("signInRequiredTooltip")}
             >
-              Sign in to transcribe
+              {t("signInToTranscribe")}
             </Link>
           )
         )}
@@ -307,11 +309,11 @@ export function TranscriptToolbar({
                   "rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted",
                 )}
               >
-                Share
+                {t("share")}
               </button>
               {showCopied && (
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs whitespace-nowrap text-background">
-                  Link copied to clipboard!
+                  {t("linkCopied")}
                 </div>
               )}
             </div>
@@ -323,7 +325,7 @@ export function TranscriptToolbar({
                   "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted",
                 )}
               >
-                Download
+                {t("download")}
                 <ChevronDown className="h-3 w-3" />
               </button>
               {showDownloadMenu && (
@@ -335,7 +337,7 @@ export function TranscriptToolbar({
                     }}
                     className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
                   >
-                    Text Document
+                    {t("downloadDocx")}
                   </button>
                   <button
                     onClick={() => {
@@ -344,7 +346,7 @@ export function TranscriptToolbar({
                     }}
                     className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
                   >
-                    Excel Table
+                    {t("downloadExcel")}
                   </button>
                   <button
                     onClick={() => {
@@ -353,7 +355,7 @@ export function TranscriptToolbar({
                     }}
                     className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
                   >
-                    JSON API
+                    {t("downloadJson")}
                   </button>
                 </div>
               )}

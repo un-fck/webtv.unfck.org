@@ -32,6 +32,9 @@ export function getTimezoneOptions(): TimezoneOption[] {
 
 function formatTzLabel(tz: string): string {
   const now = new Date();
+  // "en-US" hardcoded here because the timezone *name* (PST, GMT, EST, …) is
+  // a stable abbreviation that's not really localized in UN usage. The label
+  // is only ever shown inside the timezone picker dropdown.
   const short = new Intl.DateTimeFormat("en-US", {
     timeZone: tz,
     timeZoneName: "short",
@@ -47,57 +50,85 @@ export function resolveTimezone(value: string): string {
   return value === BROWSER_TIMEZONE ? getBrowserTimezone() : value;
 }
 
-export function formatMeetingTime(timestamp: string, timezone: string): string {
+// ── Localized formatting ────────────────────────────────────────────────
+//
+// The functions below take an explicit locale + relative-day strings so they
+// stay pure (no React / next-intl dependency). The client hook
+// `useMeetingFormat()` in lib/hooks/use-meeting-format.ts is the standard
+// caller — it pulls locale from useLocale() and the relative strings from
+// the schedule.{today,tomorrow,yesterday} message keys. Server-side callers
+// can use these directly with explicit args.
+
+export type RelativeDayStrings = {
+  today: string;
+  tomorrow: string;
+  yesterday: string;
+};
+
+export type MeetingFormatContext = {
+  timezone: string;
+  locale: string;
+  relative: RelativeDayStrings;
+};
+
+export function formatMeetingTime(
+  timestamp: string,
+  ctx: { timezone: string; locale: string },
+): string {
   const date = parseUNTimestamp(timestamp);
-  const tz = resolveTimezone(timezone);
-  return date.toLocaleTimeString("en-GB", {
+  const tz = resolveTimezone(ctx.timezone);
+  return date.toLocaleTimeString(ctx.locale, {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: tz,
+    hourCycle: "h23",
   });
 }
 
 export function formatMeetingDate(
   dateOrTimestamp: string,
-  timezone: string,
+  ctx: MeetingFormatContext,
   options: { shortWeekday?: boolean } = {},
 ): string {
-  const tz = resolveTimezone(timezone);
+  const tz = resolveTimezone(ctx.timezone);
   const date =
     dateOrTimestamp.length > 10
       ? parseUNTimestamp(dateOrTimestamp)
       : new Date(dateOrTimestamp + "T12:00:00Z");
 
   const now = new Date();
-  const fmt = (d: Date) =>
-    d.toLocaleDateString("en-US", {
+  // For day-equality comparison we want a stable ISO-like format regardless of
+  // user locale — keep "en-CA" hardcoded so this is direction-of-time logic,
+  // not display.
+  const isoDay = (d: Date) =>
+    d.toLocaleDateString("en-CA", {
       timeZone: tz,
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     });
 
-  const todayStr = fmt(now);
-  const dateStr = fmt(date);
+  const todayStr = isoDay(now);
+  const dateStr = isoDay(date);
 
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  if (dateStr === todayStr) return "Today";
-  if (dateStr === fmt(tomorrow)) return "Tomorrow";
-  if (dateStr === fmt(yesterday)) return "Yesterday";
+  if (dateStr === todayStr) return ctx.relative.today;
+  if (dateStr === isoDay(tomorrow)) return ctx.relative.tomorrow;
+  if (dateStr === isoDay(yesterday)) return ctx.relative.yesterday;
 
-  const currentYear = now.toLocaleDateString("en-US", {
+  const currentYear = now.toLocaleDateString("en-CA", {
     timeZone: tz,
     year: "numeric",
   });
-  const dateYear = date.toLocaleDateString("en-US", {
+  const dateYear = date.toLocaleDateString("en-CA", {
     timeZone: tz,
     year: "numeric",
   });
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(ctx.locale, {
     timeZone: tz,
     weekday: options.shortWeekday ? "short" : "long",
     month: "short",
@@ -107,12 +138,12 @@ export function formatMeetingDate(
 }
 
 // True when the given date/timestamp falls strictly after "today" in the
-// given timezone (i.e. tomorrow or later).
+// given timezone (i.e. tomorrow or later). Locale-agnostic.
 export function isFutureDay(
   dateOrTimestamp: string,
-  timezone: string,
+  ctx: { timezone: string },
 ): boolean {
-  const tz = resolveTimezone(timezone);
+  const tz = resolveTimezone(ctx.timezone);
   const date =
     dateOrTimestamp.length > 10
       ? parseUNTimestamp(dateOrTimestamp)
@@ -130,8 +161,8 @@ export function isFutureDay(
 export function formatMeetingDateTime(
   scheduledTime: string | null,
   date: string,
-  timezone: string,
+  ctx: MeetingFormatContext,
 ): string {
-  if (!scheduledTime) return formatMeetingDate(date, timezone);
-  return `${formatMeetingDate(scheduledTime, timezone)} ${formatMeetingTime(scheduledTime, timezone)}`;
+  if (!scheduledTime) return formatMeetingDate(date, ctx);
+  return `${formatMeetingDate(scheduledTime, ctx)} ${formatMeetingTime(scheduledTime, ctx)}`;
 }

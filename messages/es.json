@@ -177,5 +177,150 @@
     "tryAgain": "Reintentar",
     "meetingNotFound": "Reunión no encontrada",
     "meetingNotFoundHint": "No se pudo encontrar esta reunión. Es posible que se haya eliminado o renombrado."
+  },
+  "languages": {
+    "floor": "Original (sala)",
+    "en": "Inglés",
+    "fr": "Francés",
+    "es": "Español",
+    "ar": "Árabe",
+    "zh": "Chino",
+    "ru": "Ruso"
+  },
+  "transcript": {
+    "toolbar": {
+      "transcript": "Transcripción",
+      "analysis": "Análisis",
+      "verbatimRecord": "Acta literal",
+      "summaryRecord": "Acta resumida",
+      "noAudio": "Sin audio",
+      "transcriptAvailable": "Transcripción disponible",
+      "inProgress": "En curso",
+      "transcriptionMustComplete": "La transcripción debe finalizar antes del análisis",
+      "generating": "Generando…",
+      "generateTranscript": "Generar transcripción",
+      "generateWhenAvailable": "Generar cuando esté disponible",
+      "generateWhenAvailableTooltip": "Pone la transcripción en cola para generarla automáticamente cuando la grabación esté disponible",
+      "signInToTranscribe": "Iniciar sesión para transcribir",
+      "signInRequiredTooltip": "Generar una transcripción requiere una cuenta gratuita",
+      "share": "Compartir",
+      "linkCopied": "¡Enlace copiado al portapapeles!",
+      "download": "Descargar",
+      "downloadDocx": "Documento de texto",
+      "downloadExcel": "Tabla Excel",
+      "downloadJson": "API JSON"
+    },
+    "view": {
+      "speaker": "Orador",
+      "speakerN": "Orador {n}"
+    },
+    "panel": {
+      "checkingForTranscript": "Buscando una transcripción existente…",
+      "queuedForTranscription": "En cola para transcripción — comenzará automáticamente cuando la grabación esté disponible.",
+      "noAnalysisYet": "Aún no hay análisis",
+      "noAnalysisBody": "Identifique las propuestas clave y las posiciones de las partes interesadas a lo largo de la transcripción.",
+      "runAnalysis": "Ejecutar análisis",
+      "analyzing": "Analizando…",
+      "noTranscriptYet": "Aún no hay transcripción disponible",
+      "noTranscriptHintPending": "Esta reunión aún no ha terminado. Use <strong>Generar cuando esté disponible</strong> para ponerla en cola — la transcripción se generará automáticamente cuando la grabación esté disponible.",
+      "noTranscriptHintFinished": "Genere una transcripción de IA para seguir la reunión con identificación de oradores, etiquetado temático y análisis."
+    },
+    "highlightsOnly": "Solo destacados",
+    "allContent": "Todo el contenido"
+  },
+  "pv": {
+    "loadingVerbatim": "Cargando acta literal…",
+    "loadingSummary": "Cargando acta resumida…",
+    "aligning": "Alineando…",
+    "alignWithAudio": "Alinear con el audio",
+    "aligned": "✓ Alineado",
+    "provisional": "(Provisional)",
+    "president": "Presidente",
+    "members": "Miembros",
+    "agenda": "Orden del día",
+    "jumpToTimestamp": "Ir a esta marca de tiempo",
+    "paragraphTimestamp": "Marca de tiempo del párrafo",
+    "viewPdf": "PDF"
+  },
+  "analysis": {
+    "stance": {
+      "support": "A favor",
+      "oppose": "En contra",
+      "conditional": "Condicional",
+      "neutral": "Neutral"
+    },
+    "hideQuotes": "Ocultar citas",
+    "viewQuotes": "Ver citas ({count})",
+    "jumpToTimestamp": "Ir a esta marca de tiempo",
+    "clickToJump": "Haga clic para ir al vídeo"
+  },
+  "subscriptionsManager": {
+    "feeds": "Feeds",
+    "feedsCaption": "Suscríbase a un feed para recibir un correo cada vez que se transcriba una reunión que coincida.",
+    "noFeeds": "No hay feeds disponibles.",
+    "followedMeetings": "Reuniones seguidas",
+    "followedMeetingsCaption": "Reuniones individuales sobre las que pidió ser notificado.",
+    "noFollowedMeetings": "No está siguiendo ninguna reunión individual. Use <bell>Avisarme por correo</bell> en la página de una reunión.",
+    "emailMeWhenReady": "Avisarme por correo",
+    "emailedAt": "Enviado el {date}",
+    "willEmailWhenReady": "Le enviaremos un correo cuando la transcripción esté lista",
+    "remove": "Quitar",
+    "loading": "Cargando…",
+    "subscribe": "Suscribirse",
+    "unsubscribe": "Cancelar suscripción"
+  },
+  "statementFeed": {
+    "loading": "Cargando…",
+    "noText": "(sin texto)",
+    "showMore": "Mostrar más",
+    "showLess": "Mostrar menos",
+    "viewTranscript": "Ver transcripción",
+    "endOfStatements": "Fin de las intervenciones."
+  },
+  "speakerProfile": {
+    "loading": "Cargando…",
+    "noStatements": "Aún no hay intervenciones.",
+    "statementsCount": "{count, plural, one {# intervención} other {# intervenciones}}",
+    "meetingsCount": "{count, plural, one {# reunión} other {# reuniones}}",
+    "peopleCount": "{count, plural, one {# persona} other {# personas}}",
+    "kindCountry": "País",
+    "kindGroup": "Grupo / coalición",
+    "kindOrg": "Órgano / organismo de la ONU"
+  },
+  "speakerOverview": {
+    "noMatches": "Sin resultados.",
+    "filterPlaceholder": "Filtrar por país, grupo, órgano o persona…",
+    "countries": "Países",
+    "groups": "Grupos y coaliciones",
+    "organs": "Órganos y organismos de la ONU",
+    "collapse": "Contraer",
+    "expand": "Expandir",
+    "membersFraction": "{visible} de {total} miembros",
+    "unattributedStatements": "+ {count, plural, one {# intervención sin atribuir} other {# intervenciones sin atribuir}}"
+  },
+  "corner": {
+    "un20Aria": "Visitar la red UN 2.0"
+  },
+  "email": {
+    "magicLink": {
+      "subject": "Iniciar sesión en UN Transcripts",
+      "heading": "Iniciar sesión en UN Transcripts",
+      "body": "Haga clic en el botón siguiente para iniciar sesión. Este enlace es válido durante 15 minutos.",
+      "cta": "Iniciar sesión",
+      "fallback": "O copie y pegue esta dirección en su navegador:",
+      "ignoreNote": "Si no solicitó este correo, puede ignorarlo con seguridad."
+    }
+  },
+  "video": {
+    "removed": "Este vídeo se ha retirado de UN Web TV.",
+    "removedHadTranscript": "La transcripción siguiente se generó mientras la grabación aún estaba disponible.",
+    "removedNoTranscript": "La grabación ya no está disponible para reproducirse ni transcribirse.",
+    "backToHomepage": "← Volver al inicio"
+  },
+  "subscribeToggle": {
+    "subscribed": "Suscrito",
+    "emailMeWhenReady": "Avisarme por correo",
+    "subscribedTooltip": "Recibirá un correo cuando esta transcripción esté lista. Haga clic para cancelar la suscripción.",
+    "subscribeTooltip": "Avisarme por correo cuando esta transcripción esté lista"
   }
 }

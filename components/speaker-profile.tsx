@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type {
   EntityKind,
@@ -9,10 +10,10 @@ import { slugify } from "@/lib/speaker-keys";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
-const KIND_LABEL: Record<EntityKind, string> = {
-  country: "Country",
-  group: "Group / coalition",
-  org: "UN organ / agency",
+const KIND_KEY: Record<EntityKind, "kindCountry" | "kindGroup" | "kindOrg"> = {
+  country: "kindCountry",
+  group: "kindGroup",
+  org: "kindOrg",
 };
 
 // Stable-ish avatar tint from the label, so each profile feels distinct.
@@ -64,6 +65,7 @@ export function SpeakerProfile({
   initialNextOffset: number;
   initialHasMore: boolean;
 }) {
+  const t = useTranslations("speakerProfile");
   const displayName = personName ?? label;
   const namedPeople = people.filter((p) => p.name);
 
@@ -88,24 +90,14 @@ export function SpeakerProfile({
               {label}
             </Link>
           ) : (
-            KIND_LABEL[kind]
+            t(KIND_KEY[kind])
           )}
         </p>
         <p className={cn(typography.caption, "mt-3")}>
-          <span className="font-semibold text-foreground">
-            {totalStatements}
-          </span>{" "}
-          statements ·{" "}
-          <span className="font-semibold text-foreground">{meetingCount}</span>{" "}
-          meetings
+          {t("statementsCount", { count: totalStatements })} ·{" "}
+          {t("meetingsCount", { count: meetingCount })}
           {!personName && namedPeople.length > 0 && (
-            <>
-              {" · "}
-              <span className="font-semibold text-foreground">
-                {namedPeople.length}
-              </span>{" "}
-              people
-            </>
+            <> · {t("peopleCount", { count: namedPeople.length })}</>
           )}
         </p>
       </header>

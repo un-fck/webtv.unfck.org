@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Bell } from "lucide-react";
+import { useLanguageDisplayName } from "@/lib/hooks/use-language-display-name";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 import { UN_LANGUAGES } from "@/lib/languages";
@@ -39,6 +41,8 @@ export function SubscriptionsManager() {
   const [loading, setLoading] = useState(true);
   const [feeds, setFeeds] = useState<FeedOption[]>([]);
   const [videoSubs, setVideoSubs] = useState<VideoSub[]>([]);
+  const t = useTranslations("subscriptionsManager");
+  const displayName = useLanguageDisplayName();
 
   const load = useCallback(() => {
     fetch("/api/subscriptions")
@@ -114,24 +118,25 @@ export function SubscriptionsManager() {
 
   if (loading) {
     return (
-      <p className={cn(typography.body, "text-muted-foreground")}>Loading…</p>
+      <p className={cn(typography.body, "text-muted-foreground")}>
+        {t("loading")}
+      </p>
     );
   }
 
   return (
     <div className="space-y-10">
       <section>
-        <h2 className={cn(typography.sectionTitle, "mb-1")}>Feeds</h2>
+        <h2 className={cn(typography.sectionTitle, "mb-1")}>{t("feeds")}</h2>
         <p className={cn(typography.caption, "mb-4 text-muted-foreground")}>
-          Subscribe to a feed to be emailed whenever a matching meeting is
-          transcribed.
+          {t("feedsCaption")}
         </p>
         <div className="divide-y divide-border rounded-lg border border-border">
           {feeds.length === 0 && (
             <p
               className={cn(typography.body, "px-4 py-6 text-muted-foreground")}
             >
-              No feeds available.
+              {t("noFeeds")}
             </p>
           )}
           {feeds.map((feed) => (
@@ -158,7 +163,7 @@ export function SubscriptionsManager() {
                       type="button"
                       onClick={() => toggleFeed(feed.key, lang.code, !active)}
                       aria-pressed={active}
-                      title={`${active ? "Unsubscribe" : "Subscribe"} — ${lang.name}`}
+                      title={`${active ? t("unsubscribe") : t("subscribe")} — ${displayName(lang.code)}`}
                       className={cn(
                         "rounded-md border px-2 py-1 text-xs uppercase transition-colors",
                         active
@@ -178,18 +183,20 @@ export function SubscriptionsManager() {
 
       <section>
         <h2 className={cn(typography.sectionTitle, "mb-1")}>
-          Followed meetings
+          {t("followedMeetings")}
         </h2>
         <p className={cn(typography.caption, "mb-4 text-muted-foreground")}>
-          Individual meetings you asked to be emailed about.
+          {t("followedMeetingsCaption")}
         </p>
         {videoSubs.length === 0 ? (
           <p className={cn(typography.body, "text-muted-foreground")}>
-            You aren&apos;t following any individual meetings. Use{" "}
-            <span className="inline-flex items-center gap-1">
-              <Bell className="h-3.5 w-3.5" /> Email me when ready
-            </span>{" "}
-            on a meeting page.
+            {t.rich("noFollowedMeetings", {
+              bell: (chunks) => (
+                <span className="inline-flex items-center gap-1">
+                  <Bell className="h-3.5 w-3.5" /> {chunks}
+                </span>
+              ),
+            })}
           </p>
         ) : (
           <ul className="divide-y divide-border rounded-lg border border-border">
@@ -216,10 +223,12 @@ export function SubscriptionsManager() {
                   >
                     {sub.emailed_at ? (
                       <span className="text-un-blue">
-                        Emailed {formatEmailedAt(sub.emailed_at)}
+                        {t("emailedAt", {
+                          date: formatEmailedAt(sub.emailed_at),
+                        })}
                       </span>
                     ) : (
-                      "We'll email you when the transcript is ready"
+                      t("willEmailWhenReady")
                     )}
                   </p>
                 </div>
@@ -230,7 +239,7 @@ export function SubscriptionsManager() {
                     "shrink-0 text-muted-foreground transition-colors hover:text-foreground",
                   )}
                 >
-                  Remove
+                  {t("remove")}
                 </button>
               </li>
             ))}

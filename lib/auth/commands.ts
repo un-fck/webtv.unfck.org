@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { sendMagicLink } from "./mail";
 import {
@@ -23,37 +23,37 @@ type ActionResult = { success: true } | { success: false; error: string };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function requestMagicLink(email: string): Promise<ActionResult> {
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "login" });
   if (!email || typeof email !== "string" || !email.trim()) {
-    return { success: false, error: "Email required" };
+    return { success: false, error: t("errorEmailRequired") };
   }
   const trimmedEmail = email.trim();
   if (!EMAIL_RE.test(trimmedEmail)) {
-    return { success: false, error: "Invalid email address" };
+    return { success: false, error: t("errorInvalidEmail") };
   }
   if (await recentTokenExists(trimmedEmail)) {
-    return {
-      success: false,
-      error:
-        "A magic link was recently sent. Please check your email or wait a few minutes.",
-    };
+    return { success: false, error: t("errorRecentToken") };
   }
   try {
     const token = await createMagicToken(trimmedEmail);
-    await sendMagicLink(trimmedEmail, token);
+    await sendMagicLink(trimmedEmail, token, locale);
     return { success: true };
   } catch (error) {
     console.error("Error sending magic link:", error);
-    return { success: false, error: "Failed to send email. Please try again." };
+    return { success: false, error: t("errorSendFailed") };
   }
 }
 
 export async function verifyMagicToken(token: string): Promise<ActionResult> {
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "verify" });
   if (!token || typeof token !== "string") {
-    return { success: false, error: "Missing token" };
+    return { success: false, error: t("errorMissingToken") };
   }
   const email = await verifyMagicTokenService(token);
   if (!email) {
-    return { success: false, error: "Invalid or expired link" };
+    return { success: false, error: t("errorInvalidLink") };
   }
   const userId = await upsertUser(email);
   await createSession(userId);

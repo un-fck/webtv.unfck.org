@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { SpeakerMapping } from "@/lib/speakers";
 import { getTopicColor } from "@/components/transcription-panel";
 import { formatTimecode } from "@/lib/transcript-formatting";
@@ -68,15 +69,16 @@ function renderSpeakerInfo(
   statementIndex: number | undefined,
   speakerMappings: SpeakerMapping,
   countryNames: Map<string, string>,
+  labels: { speaker: string; speakerN: (n: number) => string },
 ) {
   if (statementIndex === undefined) {
-    return <span>Speaker</span>;
+    return <span>{labels.speaker}</span>;
   }
 
   const info = speakerMappings[statementIndex.toString()];
 
   if (!info || (!info.affiliation && !info.group && !info.function)) {
-    return <span>Speaker {statementIndex + 1}</span>;
+    return <span>{labels.speakerN(statementIndex + 1)}</span>;
   }
 
   return (
@@ -131,6 +133,11 @@ export function TranscriptView({
   topicCollapsed,
   onSeek,
 }: TranscriptViewProps) {
+  const t = useTranslations("transcript.view");
+  const speakerLabels = {
+    speaker: t("speaker"),
+    speakerN: (n: number) => t("speakerN", { n }),
+  };
   const allTopicKeys = Object.keys(topics);
   const highlightColor = selectedTopic
     ? getTopicColor(selectedTopic, allTopicKeys)
@@ -162,6 +169,7 @@ export function TranscriptView({
                   firstStmtIndex,
                   speakerMappings,
                   countryNames,
+                  speakerLabels,
                 )}
               </div>
               <button

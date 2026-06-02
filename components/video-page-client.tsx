@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { VideoPlayer } from "./video-player";
 import {
   TranscriptionPanel,
@@ -13,8 +14,7 @@ import { PVSpeakerToc } from "./pv-panel";
 import { SiteHeader } from "./site-header";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
-import { useTimezone } from "@/lib/hooks/use-timezone";
-import { formatMeetingTime, formatMeetingDate } from "@/lib/timezone";
+import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { getPVDocumentUrl } from "@/lib/pv-documents";
 import { UN_LANGUAGES } from "@/lib/languages";
 import { getScheduleReturnUrl } from "@/lib/schedule-return";
@@ -35,7 +35,9 @@ export function VideoPageClient({
   metadata,
   isLoggedIn,
 }: VideoPageClientProps) {
-  const { timezone } = useTimezone();
+  const { formatMeetingDate, formatMeetingTime } = useMeetingFormat();
+  const t = useTranslations("transcript");
+  const tVideo = useTranslations("video");
   const [player, setPlayer] = useState<{
     currentTime: number;
     play: () => void;
@@ -269,7 +271,7 @@ export function VideoPageClient({
                   }`}
                 >
                   <FoldVertical className="h-3 w-3" />
-                  <span>Highlights only</span>
+                  <span>{t("highlightsOnly")}</span>
                 </button>
                 <button
                   onClick={() => setTopicCollapsed(false)}
@@ -280,7 +282,7 @@ export function VideoPageClient({
                   }`}
                 >
                   <UnfoldVertical className="h-3 w-3" />
-                  <span>All content</span>
+                  <span>{t("allContent")}</span>
                 </button>
               </div>
             )}
@@ -300,7 +302,7 @@ export function VideoPageClient({
             href={backHref}
             className="text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            ← Back to homepage
+            {tVideo("backToHomepage")}
           </a>
         </nav>
 
@@ -314,13 +316,11 @@ export function VideoPageClient({
             <div ref={videoWrapperRef} className="h-full w-full">
               {video.removed ? (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-6 text-center text-white">
-                  <p className={typography.body}>
-                    This video has been removed from UN Web TV.
-                  </p>
+                  <p className={typography.body}>{tVideo("removed")}</p>
                   <p className={cn(typography.caption, "text-white/70")}>
                     {video.hasTranscript
-                      ? "The transcript below was generated while the recording was still available."
-                      : "The recording is no longer available to play or transcribe."}
+                      ? tVideo("removedHadTranscript")
+                      : tVideo("removedNoTranscript")}
                   </p>
                 </div>
               ) : (
@@ -350,12 +350,9 @@ export function VideoPageClient({
             >
               {[
                 video.date &&
-                  formatMeetingDate(
-                    video.scheduledTime ?? video.date,
-                    timezone,
-                  ),
+                  formatMeetingDate(video.scheduledTime ?? video.date),
                 video.scheduledTime &&
-                  formatMeetingTime(video.scheduledTime, timezone),
+                  formatMeetingTime(video.scheduledTime),
                 video.body,
                 video.category,
                 video.duration,
