@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Check, RotateCcw } from "lucide-react";
 
 export type Stage =
@@ -11,14 +12,20 @@ export type Stage =
   | "completed"
   | "error";
 
-export const STAGES: { key: Stage; label: string }[] = [
-  { key: "transcribing", label: "Transcribing audio" },
-  { key: "identifying_speakers", label: "Identifying speakers" },
-  { key: "analyzing_topics", label: "Analyzing topics" },
-];
+export const STAGE_KEYS = [
+  "transcribing",
+  "identifying_speakers",
+  "analyzing_topics",
+] as const satisfies readonly Stage[];
+
+const LABEL_KEY: Record<(typeof STAGE_KEYS)[number], string> = {
+  transcribing: "transcribing",
+  identifying_speakers: "identifyingSpeakers",
+  analyzing_topics: "analyzingTopics",
+};
 
 export function getStageIndex(stage: Stage): number {
-  return STAGES.findIndex((s) => s.key === stage);
+  return STAGE_KEYS.findIndex((k) => k === stage);
 }
 
 export function StageProgress({
@@ -30,12 +37,15 @@ export function StageProgress({
   errorMessage?: string;
   onRetry?: () => void;
 }) {
+  const t = useTranslations("pipeline");
   const currentIndex =
-    currentStage === "completed" ? STAGES.length : getStageIndex(currentStage);
+    currentStage === "completed"
+      ? STAGE_KEYS.length
+      : getStageIndex(currentStage);
 
   return (
     <div className="mb-4 space-y-2">
-      {STAGES.map((stage, idx) => {
+      {STAGE_KEYS.map((key, idx) => {
         const isDone = currentStage === "completed" || idx < currentIndex;
         const isActive =
           idx === currentIndex &&
@@ -44,7 +54,7 @@ export function StageProgress({
         const isError = currentStage === "error" && idx === currentIndex;
 
         return (
-          <div key={stage.key} className="flex items-center gap-2 text-sm">
+          <div key={key} className="flex items-center gap-2 text-sm">
             {isDone ? (
               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
                 <Check className="h-3 w-3 text-white" />
@@ -63,7 +73,7 @@ export function StageProgress({
             <span
               className={`${isDone ? "text-foreground" : isActive ? "font-medium text-foreground" : isError ? "text-red-600" : "text-muted-foreground"}`}
             >
-              {stage.label}
+              {t(LABEL_KEY[key])}
               {isActive && (
                 <span className="ml-2 text-muted-foreground">...</span>
               )}
@@ -79,7 +89,7 @@ export function StageProgress({
               onClick={onRetry}
               className="flex items-center gap-1 rounded bg-red-100 px-2 py-1 text-xs hover:bg-red-200"
             >
-              <RotateCcw className="h-3 w-3" /> Retry
+              <RotateCcw className="h-3 w-3" /> {t("retry")}
             </button>
           )}
         </div>

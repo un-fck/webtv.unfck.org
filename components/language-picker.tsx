@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Languages } from "lucide-react";
 import { useTransition } from "react";
 import {
@@ -29,6 +29,7 @@ export function LanguagePicker() {
   const pathname = usePathname();
   const active = useLocale() as Locale;
   const [pending, startTransition] = useTransition();
+  const t = useTranslations("header");
 
   function pick(locale: Locale) {
     if (locale === active) return;
@@ -43,7 +44,7 @@ export function LanguagePicker() {
   return (
     <Popover>
       <PopoverTrigger
-        aria-label="Language"
+        aria-label={t("language")}
         className={cn(
           "flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
           pending && "opacity-60",

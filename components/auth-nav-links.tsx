@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { typography } from "@/lib/typography";
@@ -15,6 +16,7 @@ const linkClass = cn(
 // they can't use.
 export function AuthNavLinks() {
   const { email, experimentalAccess, loaded } = useAuth();
+  const t = useTranslations("header");
 
   if (!loaded || !email) return null;
 
@@ -22,11 +24,11 @@ export function AuthNavLinks() {
     <>
       {experimentalAccess && (
         <Link href="/speakers" className={linkClass}>
-          Speakers
+          {t("speakers")}
         </Link>
       )}
       <Link href="/subscriptions" className={linkClass}>
-        Subscriptions
+        {t("subscriptions")}
       </Link>
     </>
   );

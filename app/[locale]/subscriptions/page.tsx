@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SubscriptionsManager } from "@/components/subscriptions-manager";
@@ -6,13 +7,18 @@ import { typography } from "@/lib/typography";
 import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
-export const metadata = {
-  title: "Subscriptions — UN Transcripts",
-  description: "Manage your transcript email notifications.",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("subscriptionsTitle"),
+    description: t("subscriptionsDescription"),
+  };
+}
 
 export default async function SubscriptionsPage() {
   const user = await getCurrentUser();
+  const t = await getTranslations("subscriptions");
+  const tHome = await getTranslations("home");
 
   return (
     <main className="min-h-screen bg-background">
@@ -26,26 +32,29 @@ export default async function SubscriptionsPage() {
               "transition-colors hover:text-foreground",
             )}
           >
-            ← Back to homepage
+            {tHome("backToHomepage")}
           </Link>
         </nav>
         <div className="max-w-2xl">
           <div className="mb-10">
-            <h1 className={cn(typography.pageTitle, "mb-3")}>Subscriptions</h1>
-            <p className={typography.lead}>
-              Get an email when transcripts you care about are ready.
-            </p>
+            <h1 className={cn(typography.pageTitle, "mb-3")}>{t("title")}</h1>
+            <p className={typography.lead}>{t("lead")}</p>
           </div>
 
           {user ? (
             <SubscriptionsManager />
           ) : (
             <p className={cn(typography.body, "text-muted-foreground")}>
-              Please{" "}
-              <Link href="/login" className="text-un-blue hover:underline">
-                sign in
-              </Link>{" "}
-              to manage your subscriptions.
+              {t.rich("signInPrompt", {
+                signInLink: (chunks) => (
+                  <Link
+                    href="/login"
+                    className="text-un-blue hover:underline"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </p>
           )}
         </div>

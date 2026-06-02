@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SpeakerOverview } from "@/components/speaker-overview";
@@ -9,14 +10,18 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Speakers — UN Transcripts",
-  description:
-    "Browse everyone who has spoken across transcribed UN meetings, by country, group, and organ.",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("speakersTitle"),
+    description: t("speakersDescription"),
+  };
+}
 
 export default async function SpeakersPage() {
   const user = await getCurrentUser();
+  const t = await getTranslations("speakers");
+  const tHome = await getTranslations("home");
 
   return (
     <main className="min-h-screen bg-background">
@@ -30,33 +35,33 @@ export default async function SpeakersPage() {
               "transition-colors hover:text-foreground",
             )}
           >
-            ← Back to homepage
+            {tHome("backToHomepage")}
           </Link>
         </nav>
         <div className="mb-10 max-w-2xl">
-          <h1 className={cn(typography.pageTitle, "mb-3")}>Speakers</h1>
-          <p className={typography.lead}>
-            Everyone who has spoken across transcribed meetings, grouped by
-            country, negotiating group, and UN organ. Experimental — speaker
-            names are AI-extracted, and the same person or entity may appear in multiple variants.
-          </p>
+          <h1 className={cn(typography.pageTitle, "mb-3")}>{t("title")}</h1>
+          <p className={typography.lead}>{t("lead")}</p>
         </div>
 
         {!user ? (
           <p className={cn(typography.body, "text-muted-foreground")}>
-            Please{" "}
-            <Link href="/login" className="text-un-blue hover:underline">
-              sign in
-            </Link>{" "}
-            to browse speakers.
+            {t.rich("signInPrompt", {
+              signInLink: (chunks) => (
+                <Link href="/login" className="text-un-blue hover:underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         ) : !user.experimentalAccess ? (
           <p className={cn(typography.body, "text-muted-foreground")}>
-            The speaker directory is an experimental feature. See the{" "}
-            <Link href="/about" className="text-un-blue hover:underline">
-              About page
-            </Link>{" "}
-            to request access.
+            {t.rich("experimentalGated", {
+              aboutLink: (chunks) => (
+                <Link href="/about" className="text-un-blue hover:underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         ) : (
           <SpeakerOverview entities={await getEntitySummaries()} />

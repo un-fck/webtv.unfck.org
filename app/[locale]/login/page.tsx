@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { LoginForm } from "@/components/login-form";
@@ -5,9 +6,10 @@ import { getCurrentUser } from "@/lib/auth/service";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Sign in — UN Transcripts",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("metadata");
+  return { title: t("loginTitle") };
+}
 
 export default async function LoginPage({
   params,

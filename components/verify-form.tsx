@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { verifyMagicToken } from "@/lib/auth/commands";
@@ -11,6 +12,7 @@ export function VerifyForm() {
   const token = searchParams.get("token");
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
+  const t = useTranslations("verify");
 
   useEffect(() => {
     if (!token || started.current) return;
@@ -25,7 +27,7 @@ export function VerifyForm() {
     });
   }, [token, router]);
 
-  const message = token ? error : "Missing sign-in token.";
+  const message = token ? error : t("missingToken");
 
   if (message) {
     return (
@@ -35,11 +37,11 @@ export function VerifyForm() {
           href="/login"
           className="mt-3 inline-block text-sm font-medium text-un-blue hover:underline"
         >
-          Back to sign in
+          {t("backToSignIn")}
         </Link>
       </div>
     );
   }
 
-  return <p className="text-center text-muted-foreground">Signing you in…</p>;
+  return <p className="text-center text-muted-foreground">{t("signingIn")}</p>;
 }

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SpeakerProfile } from "@/components/speaker-profile";
@@ -20,6 +21,7 @@ export default async function SpeakerProfilePage({
   params: Promise<{ path: string[] }>;
 }) {
   const user = await getCurrentUser();
+  const t = await getTranslations("speakers");
 
   const { path } = await params;
   const entitySlug = path[0] ?? "";
@@ -31,11 +33,13 @@ export default async function SpeakerProfilePage({
         <SiteHeader />
         <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
           <p className={cn(typography.body, "py-8 text-muted-foreground")}>
-            Please{" "}
-            <Link href="/login" className="text-un-blue hover:underline">
-              sign in
-            </Link>{" "}
-            to browse speakers.
+            {t.rich("signInPrompt", {
+              signInLink: (chunks) => (
+                <Link href="/login" className="text-un-blue hover:underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         </div>
       </main>
@@ -48,11 +52,13 @@ export default async function SpeakerProfilePage({
         <SiteHeader />
         <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
           <p className={cn(typography.body, "py-8 text-muted-foreground")}>
-            The speaker directory is an experimental feature. See the{" "}
-            <Link href="/about" className="text-un-blue hover:underline">
-              About page
-            </Link>{" "}
-            to request access.
+            {t.rich("experimentalGated", {
+              aboutLink: (chunks) => (
+                <Link href="/about" className="text-un-blue hover:underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         </div>
       </main>
@@ -81,7 +87,7 @@ export default async function SpeakerProfilePage({
               "transition-colors hover:text-foreground",
             )}
           >
-            ← All speakers
+            {t("backToAllSpeakers")}
           </Link>
         </nav>
         <SpeakerProfile

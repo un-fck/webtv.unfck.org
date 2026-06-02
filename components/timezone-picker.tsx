@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Globe } from "lucide-react";
 import {
   Popover,
@@ -19,13 +20,14 @@ export function TimezonePicker() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const options = useMemo(() => getTimezoneOptions(), []);
+  const t = useTranslations("header");
 
   if (!mounted || options.length <= 1) return null;
 
   return (
     <Popover>
       <PopoverTrigger
-        aria-label="Timezone"
+        aria-label={t("timezone")}
         className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <Globe className="h-4 w-4" />

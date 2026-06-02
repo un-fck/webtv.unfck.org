@@ -3,7 +3,7 @@ import { Roboto, Noto_Sans_Arabic, Noto_Sans_SC } from "next/font/google";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getMessages, setRequestLocale } from "next-intl/server";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import "../globals.css";
 import { AnimatedCornerLogo } from "@/components/animated-corner-logo";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -45,10 +45,18 @@ const notoSC = Noto_Sans_SC({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "UN Transcripts",
-  description: "Browse UN Web TV videos with transcripts of all speeches",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "metadata" });
+  return {
+    title: t("siteTitle"),
+    description: t("siteDescription"),
+  };
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

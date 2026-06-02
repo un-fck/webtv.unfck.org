@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Menu } from "lucide-react";
 import { LanguagePicker } from "@/components/language-picker";
@@ -27,11 +28,12 @@ const navLinkClass = cn(
 // of the preferences because it changes the whole UI; timezone only affects
 // displayed times.
 function HeaderNavItems() {
+  const t = useTranslations("header");
   return (
     <>
       <AuthNavLinks />
       <Link href="/about" className={navLinkClass}>
-        About
+        {t("about")}
       </Link>
       <LanguagePicker />
       <TimezonePicker />
@@ -40,6 +42,7 @@ function HeaderNavItems() {
 }
 
 export function SiteHeader({ wide = false }: { wide?: boolean }) {
+  const t = useTranslations("header");
   // Breakpoint above which the emblem moves outboard into the page margin.
   // - Default container is max-w-5xl (1024px); outboard needs ~46px of side
   //   margin → viewport ≥ ~1070px. We use 1152px for comfortable breathing.
@@ -74,7 +77,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
             (23.01/126.89 ≈ 18.14% of emblem height → 7.26px at h-10). */}
         <Link
           href="/"
-          aria-label="UN Transcripts — home"
+          aria-label={t("logoAlt")}
           className={cn(
             "absolute top-1/2 right-[calc(100%-24.74px)] h-10 w-[47.9px] -translate-y-1/2 transition-opacity hover:opacity-75",
             outboardOnly,
@@ -91,7 +94,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
         </Link>
         <Link
           href="/"
-          aria-label="UN Transcripts — home"
+          aria-label={t("logoAlt")}
           className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-75"
         >
           <Image
@@ -118,7 +121,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
           </div>
           <Popover>
             <PopoverTrigger
-              aria-label="Open menu"
+              aria-label={t("openMenu")}
               className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden"
             >
               <Menu className="h-5 w-5" />

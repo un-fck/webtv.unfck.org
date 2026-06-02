@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Video } from "@/lib/un-api";
 import { CalendarIcon, ChevronDown, Search, SearchX, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
@@ -38,9 +39,9 @@ import { cn } from "@/lib/utils";
 // in display order. This also drives the day/category header ordering within
 // the schedule (CATEGORY_ORDER is the flattened form). Anything not listed
 // sorts after these (alphabetically); uncategorized ("") sorts last.
-const CATEGORY_GROUPS: { label: string; items: string[] }[] = [
+const CATEGORY_GROUPS: { labelKey: "media" | "bodies" | "events"; items: string[] }[] = [
   {
-    label: "Media",
+    labelKey: "media",
     items: [
       "Press Conferences",
       "Media Stakeouts",
@@ -52,7 +53,7 @@ const CATEGORY_GROUPS: { label: string; items: string[] }[] = [
     ],
   },
   {
-    label: "Bodies",
+    labelKey: "bodies",
     items: [
       "General Assembly",
       "Security Council",
@@ -64,7 +65,7 @@ const CATEGORY_GROUPS: { label: string; items: string[] }[] = [
     ],
   },
   {
-    label: "Events",
+    labelKey: "events",
     items: [
       "Agencies, Funds & Programmes",
       "High-level Events",
@@ -119,6 +120,10 @@ const toolbarTriggerClass = (active: boolean) =>
       : "border-slate-300 bg-white text-muted-foreground hover:text-foreground",
   );
 
+function useT() {
+  return useTranslations("schedule");
+}
+
 function DateFilterPopover({
   availableDates,
   selectedDate,
@@ -129,6 +134,7 @@ function DateFilterPopover({
   onChange: (date: string | undefined) => void;
 }) {
   const { timezone } = useTimezone();
+  const t = useT();
   const isActive = !!selectedDate;
 
   // Build set of date strings that have videos
@@ -159,7 +165,7 @@ function DateFilterPopover({
       <PopoverTrigger className={toolbarTriggerClass(isActive)}>
         <CalendarIcon className="h-4 w-4" />
         <span>
-          {selectedDate ? formatMeetingDate(selectedDate, timezone) : "Date"}
+          {selectedDate ? formatMeetingDate(selectedDate, timezone) : t("date")}
         </span>
         {selectedDate ? (
           <X
@@ -228,11 +234,12 @@ function CategoryFilterRows({
     );
   };
 
+  const t = useTranslations("schedule.categories");
   // Hide rarely-used categories (fewer than 10 meetings) to keep the bar tidy.
   const present = new Set(options.filter((c) => (counts?.[c] ?? 0) >= 10));
   const groups: { label: string | null; items: string[] }[] =
-    CATEGORY_GROUPS.map(({ label, items }) => ({
-      label,
+    CATEGORY_GROUPS.map(({ labelKey, items }) => ({
+      label: t(labelKey),
       items: items.filter((c) => present.has(c)),
     })).filter((g) => g.items.length > 0);
 
@@ -309,6 +316,8 @@ function SearchInput({
   setIsFocused: (focused: boolean) => void;
   className?: string;
 }) {
+  const t = useT();
+  const placeholder = t("searchPlaceholder");
   const highlighted = isFocused || value.trim().length > 0;
   return (
     <div className={`group relative ${className ?? ""}`}>
@@ -320,7 +329,7 @@ function SearchInput({
       </div>
       <input
         type="text"
-        placeholder="Search all meetings…"
+        placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && onSubmit(value)}
@@ -472,6 +481,7 @@ export function VideoTable({
   filterOptions,
 }: VideoTableProps) {
   const router = useRouter();
+  const t = useT();
   const searchParams = useSearchParams();
   const { timezone } = useTimezone();
 
@@ -690,12 +700,12 @@ export function VideoTable({
   // Search-result ordering: relevance (default, no sort param) vs newest-first.
   const searchSortOptions = [
     {
-      label: "Relevance",
+      label: t("relevance"),
       active: !serverParams.sort,
       onSelect: () => updateParams({ sort: undefined }),
     },
     {
-      label: "Date",
+      label: t("date"),
       active: !!serverParams.sort?.startsWith("date"),
       onSelect: () => updateParams({ sort: "date_desc" }),
     },
@@ -1022,7 +1032,7 @@ export function VideoTable({
             onChange={toggleWithTranscript}
             className="h-3.5 w-3.5 cursor-pointer accent-primary"
           />
-          Show only transcribed meetings
+          {t("showOnlyTranscribed")}
         </label>
       </div>
 
@@ -1057,7 +1067,7 @@ export function VideoTable({
                       showFuture && "rotate-180",
                     )}
                   />
-                  {showFuture ? "Hide" : "Show"} future dates
+                  {showFuture ? t("hideFutureDates") : t("showFutureDates")}
                 </button>
                 {showFuture && futureDayGroups.map(renderDayGroup)}
               </div>
@@ -1085,15 +1095,15 @@ export function VideoTable({
             disabled={loadingMore}
             className="rounded-full border border-border px-6 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loadingMore ? "Loading…" : "Load more"}
+            {loadingMore ? t("loading") : t("loadMore")}
           </button>
         </div>
       )}
       {!hasMore && tableData.length > 0 && (
         <div className="pt-4 text-center text-sm text-muted-foreground">
           {isSearchMode
-            ? `${tableData.length.toLocaleString()} ${tableData.length === 1 ? "result" : "results"}`
-            : `${totalCount.toLocaleString()} ${totalCount === 1 ? "meeting" : "meetings"}`}
+            ? t("results", { count: tableData.length })
+            : t("meetings", { count: totalCount })}
         </div>
       )}
     </div>
