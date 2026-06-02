@@ -92,7 +92,11 @@ export interface ParagraphInput {
 }
 
 export function normalizeText(text: string): string {
-  return text.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  // Unicode-aware: keep any letter or number from any script (Han, Cyrillic,
+  // Arabic, Latin, digits). The Latin-only `[a-z0-9]` form collapsed every
+  // non-Latin sentence to "", causing matchWordsToText to consume exactly one
+  // word per sentence (silently losing ~half the text on Chinese transcripts).
+  return text.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
 }
 
 export function speakersEqual(a: SpeakerInfo, b: SpeakerInfo): boolean {

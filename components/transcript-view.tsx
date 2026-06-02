@@ -37,6 +37,33 @@ interface SpeakerSegment {
   timestamp: number;
 }
 
+type SentencePart = { text: string; word?: Word; wordIdx?: number };
+
+/**
+ * Walk sent.text and sent.words[] together to produce the spans for rendering.
+ * Each word becomes a clickable/karaoke-tracked part; everything between or
+ * around words (spaces, punctuation, Chinese 。 etc.) becomes a plain part.
+ * Sourcing the rendered text from sent.text means nothing visible is ever
+ * dropped — a broken words[] just yields fewer interactive spans, which is
+ * exactly the visible signal we want when a provider misbehaves.
+ */
+function weaveSentenceParts(text: string, words?: Word[]): SentencePart[] {
+  if (!words || words.length === 0) return [{ text }];
+  const parts: SentencePart[] = [];
+  let cursor = 0;
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    if (!w.text) continue;
+    const idx = text.indexOf(w.text, cursor);
+    if (idx === -1) continue; // word text not present in remaining sentence — skip its handler
+    if (idx > cursor) parts.push({ text: text.slice(cursor, idx) });
+    parts.push({ text: w.text, word: w, wordIdx: i });
+    cursor = idx + w.text.length;
+  }
+  if (cursor < text.length) parts.push({ text: text.slice(cursor) });
+  return parts;
+}
+
 function renderSpeakerInfo(
   statementIndex: number | undefined,
   speakerMappings: SpeakerMapping,
@@ -219,53 +246,30 @@ export function TranscriptView({
                                 .filter(Boolean)
                                 .join(" ");
 
-                              if (sent.words && sent.words.length > 0) {
-                                if (isHighlighted && highlightColor) {
-                                  return (
-                                    <span
-                                      key={sentIdx}
-                                      className={pillClass}
-                                      style={{
-                                        backgroundColor: highlightColor + "30",
-                                        display: "inline",
-                                      }}
-                                    >
-                                      {sent.words.map((word, wordIdx) => {
-                                        const isActiveWord =
-                                          isSentActive &&
-                                          wordIdx === activeWordIndex;
-                                        return (
-                                          <span
-                                            key={wordIdx}
-                                            onClick={() =>
-                                              onSeek(word.start / 1000)
-                                            }
-                                            className="cursor-pointer hover:opacity-70"
-                                            style={{
-                                              textDecorationLine: isActiveWord
-                                                ? "underline"
-                                                : "none",
-                                              textDecorationColor: isActiveWord
-                                                ? "hsl(var(--primary))"
-                                                : "transparent",
-                                              textDecorationThickness: "2px",
-                                              textUnderlineOffset: "3px",
-                                            }}
-                                          >
-                                            {word.text}{" "}
-                                          </span>
-                                        );
-                                      })}
-                                    </span>
-                                  );
-                                }
-                                return sent.words.map((word, wordIdx) => {
+                              // Source the visible text from sent.text and
+                              // attach click/karaoke handlers to the spans
+                              // that match a word. Whitespace and punctuation
+                              // between words (or trailing punctuation like
+                              // Chinese "。") render inline as non-interactive
+                              // spans. Inserting trailing spaces between words
+                              // would be wrong for CJK — use whatever is in
+                              // sent.text instead.
+                              const parts = weaveSentenceParts(
+                                sent.text,
+                                sent.words,
+                              );
+                              const wholeIsClickable = !parts.some((p) => p.word);
+                              const inner = parts.map((part, partIdx) => {
+                                if (part.word) {
                                   const isActiveWord =
-                                    isSentActive && wordIdx === activeWordIndex;
+                                    isSentActive &&
+                                    part.wordIdx === activeWordIndex;
                                   return (
                                     <span
-                                      key={`${sentIdx}-${wordIdx}`}
-                                      onClick={() => onSeek(word.start / 1000)}
+                                      key={partIdx}
+                                      onClick={() =>
+                                        onSeek(part.word!.start / 1000)
+                                      }
                                       className="cursor-pointer hover:opacity-70"
                                       style={{
                                         textDecorationLine: isActiveWord
@@ -278,22 +282,27 @@ export function TranscriptView({
                                         textUnderlineOffset: "3px",
                                       }}
                                     >
-                                      {word.text}{" "}
+                                      {part.text}
                                     </span>
                                   );
-                                });
-                              }
+                                }
+                                return <span key={partIdx}>{part.text}</span>;
+                              });
 
-                              // No per-word timing: seek/highlight at the
-                              // sentence (provider segment) level — its real
-                              // start/end is the smallest honest timed unit.
                               return (
                                 <span
                                   key={sentIdx}
-                                  onClick={() => onSeek(sent.start / 1000)}
-                                  className={`cursor-pointer hover:opacity-70 ${
-                                    isHighlighted ? pillClass : ""
-                                  }`}
+                                  {...(wholeIsClickable
+                                    ? {
+                                        onClick: () =>
+                                          onSeek(sent.start / 1000),
+                                      }
+                                    : {})}
+                                  className={`${
+                                    wholeIsClickable
+                                      ? "cursor-pointer hover:opacity-70 "
+                                      : ""
+                                  }${isHighlighted ? pillClass : ""}`}
                                   style={{
                                     ...(isHighlighted && highlightColor
                                       ? {
@@ -302,17 +311,21 @@ export function TranscriptView({
                                           display: "inline",
                                         }
                                       : {}),
-                                    textDecorationLine: isSentActive
-                                      ? "underline"
-                                      : "none",
-                                    textDecorationColor: isSentActive
-                                      ? "hsl(var(--primary))"
-                                      : "transparent",
-                                    textDecorationThickness: "2px",
-                                    textUnderlineOffset: "3px",
+                                    ...(wholeIsClickable
+                                      ? {
+                                          textDecorationLine: isSentActive
+                                            ? "underline"
+                                            : "none",
+                                          textDecorationColor: isSentActive
+                                            ? "hsl(var(--primary))"
+                                            : "transparent",
+                                          textDecorationThickness: "2px",
+                                          textUnderlineOffset: "3px",
+                                        }
+                                      : {}),
                                   }}
                                 >
-                                  {sent.text}{" "}
+                                  {inner}{" "}
                                 </span>
                               );
                             })}
