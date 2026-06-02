@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -38,12 +39,9 @@ export function AuthControl() {
 
   if (!email) {
     return (
-      <Link
-        href="/login"
-        className="text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
-      >
-        Sign in
-      </Link>
+      <Button variant="outline" size="sm" asChild>
+        <Link href="/login">Sign in</Link>
+      </Button>
     );
   }
 

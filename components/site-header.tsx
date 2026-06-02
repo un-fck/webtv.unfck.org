@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { Menu } from "lucide-react";
+import { LanguagePicker } from "@/components/language-picker";
 import { TimezonePicker } from "@/components/timezone-picker";
 import { AuthControl } from "@/components/auth-control";
 import { AuthNavLinks } from "@/components/auth-nav-links";
@@ -20,14 +21,20 @@ const navLinkClass = cn(
 
 // Items shared by the desktop bar and the mobile hamburger sheet so we don't
 // duplicate copy.
+//
+// Order: page-nav links first, then preference controls (language → timezone),
+// then auth (rendered separately, outside this fragment). Language is leftmost
+// of the preferences because it changes the whole UI; timezone only affects
+// displayed times.
 function HeaderNavItems() {
   return (
     <>
-      <TimezonePicker />
       <AuthNavLinks />
       <Link href="/about" className={navLinkClass}>
         About
       </Link>
+      <LanguagePicker />
+      <TimezonePicker />
     </>
   );
 }

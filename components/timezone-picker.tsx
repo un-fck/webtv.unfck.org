@@ -1,9 +1,15 @@
 "use client";
 
-import { useTimezone } from "@/lib/hooks/use-timezone";
-import { getTimezoneOptions } from "@/lib/timezone";
 import { useEffect, useMemo, useState } from "react";
 import { Globe } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useTimezone } from "@/lib/hooks/use-timezone";
+import { getTimezoneOptions } from "@/lib/timezone";
+import { cn } from "@/lib/utils";
 
 export function TimezonePicker() {
   const { timezone, setTimezone } = useTimezone();
@@ -17,25 +23,36 @@ export function TimezonePicker() {
   if (!mounted || options.length <= 1) return null;
 
   return (
-    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-      <Globe className="h-3.5 w-3.5 shrink-0" />
-      <select
-        value={timezone}
-        onChange={(e) => setTimezone(e.target.value)}
+    <Popover>
+      <PopoverTrigger
         aria-label="Timezone"
-        className="cursor-pointer appearance-none border-none bg-transparent pr-4 text-sm text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "right 0 center",
-        }}
+        className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
+        <Globe className="h-4 w-4" />
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-56 p-1">
+        <ul className="flex flex-col">
+          {options.map((opt) => (
+            <li key={opt.value}>
+              <button
+                type="button"
+                onClick={() => setTimezone(opt.value)}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted",
+                  opt.value === timezone
+                    ? "font-semibold text-foreground"
+                    : "text-muted-foreground",
+                )}
+              >
+                <span>{opt.label}</span>
+                {opt.value === timezone && (
+                  <span className="ml-2 text-xs text-un-blue">●</span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
   );
 }
