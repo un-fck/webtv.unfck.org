@@ -2,16 +2,26 @@ import { describe, it, expect, vi } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { VideoTable } from "@/components/transcript-table";
 import type { Video } from "@/lib/un-api";
 
+const messages = JSON.parse(
+  readFileSync(join(__dirname, "..", "messages", "en.json"), "utf8"),
+);
+
 // next/navigation is unavailable outside the Next runtime — stub the hooks the
-// table reads.
+// table reads. next-intl also pulls in `redirect` / `permanentRedirect` at
+// module load, so spread the real module and override only the hooks.
 const push = vi.fn();
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push, replace: vi.fn(), prefetch: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
-}));
+vi.mock("next/navigation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/navigation")>();
+  return {
+    ...actual,
+    useRouter: () => ({ push, replace: vi.fn(), prefetch: vi.fn() }),
+    useSearchParams: () => new URLSearchParams(),
+  };
+});
 
 interface VideoFixture {
   id: string;
@@ -63,20 +73,27 @@ const videos: Video[] = fixtures.slice(0, 6).map((fx) => ({
 
 function renderTable() {
   return render(
-    <VideoTable
-      videos={videos}
-      totalCount={videos.length}
-      serverParams={{ page: 1, pageSize: 50 }}
-      availableDates={[...new Set(videos.map((v) => v.date))]}
-      filterOptions={{
-        bodies: [
-          ...new Set(videos.map((v) => v.body).filter(Boolean)),
-        ] as string[],
-        categories: [...new Set(videos.map((v) => v.category))],
-        bodyCounts: {},
-        categoryCounts: {},
-      }}
-    />,
+    <NextIntlClientProvider
+      locale="en"
+      messages={messages}
+      timeZone="UTC"
+      now={new Date("2026-01-01T00:00:00Z")}
+    >
+      <VideoTable
+        videos={videos}
+        totalCount={videos.length}
+        serverParams={{ page: 1, pageSize: 50 }}
+        availableDates={[...new Set(videos.map((v) => v.date))]}
+        filterOptions={{
+          bodies: [
+            ...new Set(videos.map((v) => v.body).filter(Boolean)),
+          ] as string[],
+          categories: [...new Set(videos.map((v) => v.category))],
+          bodyCounts: {},
+          categoryCounts: {},
+        }}
+      />
+    </NextIntlClientProvider>,
   );
 }
 

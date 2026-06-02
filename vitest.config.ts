@@ -8,7 +8,13 @@ const env = { DATABASE_URL: "postgresql://test:test@localhost:5432/test" };
 // Two projects: deterministic Node unit tests for lib/, and jsdom + React
 // Testing Library tests for components/.
 export default defineConfig({
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    // Next 16 ships no `exports` map, so the extensionless specifier
+    // `next/navigation` (used internally by next-intl) fails Node's ESM
+    // resolver under Vitest. Map it to the actual file.
+    alias: [{ find: /^next\/navigation$/, replacement: "next/navigation.js" }],
+  },
   test: {
     projects: [
       {
@@ -28,6 +34,10 @@ export default defineConfig({
           include: ["components/**/*.test.tsx"],
           setupFiles: ["./vitest.setup.ts"],
           env,
+          // next-intl imports `next/navigation` extensionless; Next 16 has no
+          // `exports` map, so Node's ESM resolver rejects it. Inlining routes
+          // the import through Vite's resolver, which honors the alias above.
+          server: { deps: { inline: ["next-intl"] } },
         },
       },
     ],

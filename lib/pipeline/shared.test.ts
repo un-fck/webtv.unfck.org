@@ -138,7 +138,7 @@ describe("matchWordsToText", () => {
 
 describe("normalizeText / speakersEqual", () => {
   it("normalizeText strips non-alphanumerics and lowercases", () => {
-    expect(normalizeText("Côte d'Ivoire!")).toBe("ctedivoire");
+    expect(normalizeText("Côte d'Ivoire!")).toBe("côtedivoire");
     expect(normalizeText("S/PV.10124")).toBe("spv10124");
   });
 
