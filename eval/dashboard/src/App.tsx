@@ -143,7 +143,7 @@ function App() {
           </a>{" "}
           &middot;{" "}
           <a
-            href="https://github.com/un-fck/webtv.unfck.org/tree/main/eval"
+            href="https://github.com/united-nations/transcripts/tree/main/eval"
             target="_blank"
             rel="noopener"
           >

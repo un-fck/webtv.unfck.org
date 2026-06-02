@@ -2,7 +2,7 @@
 
 Browse and search UN Web TV videos with AI-generated transcripts, speaker identification, and topic analysis.
 
-**Live site**: [webtv.unfck.org](https://webtv.unfck.org)
+**Live site**: [transcripts-un-two-zero.org](https://transcripts-un-two-zero.org)
 
 ## Overview
 

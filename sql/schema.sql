@@ -1,4 +1,4 @@
--- Azure PostgreSQL schema for webtv.unfck.org
+-- Azure PostgreSQL schema for UN Transcripts
 -- Apply once to provision a new database:
 --   psql "$DATABASE_URL" -f sql/schema.sql
 --
