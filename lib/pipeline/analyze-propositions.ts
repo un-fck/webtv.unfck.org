@@ -8,6 +8,7 @@ import {
   UsageStages,
 } from "@/lib/usage-tracking";
 import { getAnalysisModel } from "@/lib/providers/models";
+import { getLanguageFullName } from "@/lib/languages";
 import type { ParagraphInput } from "./shared";
 
 const EvidenceQuoteSchema = z.object({
@@ -44,6 +45,7 @@ export async function analyzePropositions(
   speakerMapping: SpeakerMapping,
   client: AzureOpenAI,
   transcriptId?: string,
+  sourceLanguage?: string,
 ): Promise<Proposition[]> {
   console.log(`  → Analyzing propositions...`);
 
@@ -93,6 +95,12 @@ export async function analyzePropositions(
           role: "system",
           content: `You are analyzing a UN proceedings transcript to identify key propositions and stakeholder positions.
 
+OUTPUT LANGUAGE: ${getLanguageFullName(sourceLanguage ?? "en")}
+- Write free-text fields (title, statement, summary) in the OUTPUT LANGUAGE shown above.
+- The key field is always a kebab-case ASCII slug — never localize it.
+- The stance field is always one of the enum values: support / oppose / conditional / neutral — never localize it.
+- Stakeholder names and quotes come verbatim from the transcript — keep them in their original script as they appear.
+
 TASK:
 1. Identify 3-8 distinct PROPOSITIONS discussed in the transcript
    - A proposition is a specific claim, demand, or position that stakeholders can support or oppose
@@ -106,13 +114,13 @@ TASK:
    - Provide EVIDENCE: specific quotes from the transcript for each stakeholder
 
 OUTPUT FORMAT:
-- key: kebab-case slug (2-5 words)
-- title: Short display title (2-5 words)  
-- statement: The full proposition as a clear statement
+- key: kebab-case ASCII slug (2-5 words)
+- title: Short display title (2-5 words) in the OUTPUT LANGUAGE
+- statement: The full proposition as a clear statement in the OUTPUT LANGUAGE
 - positions: Array of positions, each with:
-  - stance: support/oppose/conditional/neutral
-  - stakeholders: Array of speaker names/organizations
-  - summary: 1-sentence summary of their position
+  - stance: support/oppose/conditional/neutral (enum — never translated)
+  - stakeholders: Array of speaker names/organizations (verbatim from transcript)
+  - summary: 1-sentence summary of their position in the OUTPUT LANGUAGE
   - evidence: Array of quotes, sorted by importance/relevance, each with:
     - stakeholder: Which stakeholder said this (must be in stakeholders array)
     - quote: EXACT quote from the transcript (1-3 sentences, must appear verbatim in text)

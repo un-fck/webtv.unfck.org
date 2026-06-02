@@ -68,6 +68,7 @@ export async function POST(
         speakerMapping,
         client,
         transcriptId,
+        transcript.language_code ?? undefined,
       );
 
       await updateTranscriptContent(transcriptId, {

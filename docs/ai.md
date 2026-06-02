@@ -98,7 +98,9 @@ Low-confidence splits are discarded.
 
 Identifies 5-10 substantive policy topics discussed in the transcript. Each topic must appear in at least 2 different statements by different speakers. Chair/President/Moderator paragraphs are excluded from the input.
 
-**Output per topic:** `key` (kebab-case slug), `label` (human-readable), `description` (1-2 sentences).
+**Output per topic:** `key` (kebab-case ASCII slug, never localized), `label` (human-readable, in transcript source language), `description` (1-2 sentences, in transcript source language).
+
+> **Output language:** Since the i18n cutover, free-text fields (topic labels and descriptions, proposition statements and position summaries, speaker functions and group names) are emitted in the transcript's source language (`transcripts.language_code`), not in English. Stable enum/key fields (topic keys, stance enums, ISO country codes) remain ASCII. Speaker names are always preserved verbatim from the transcript and never transliterated. Transcripts analyzed before this change retain their English labels until someone re-runs analysis.
 
 ## 5. Sentence-level topic tagging
 

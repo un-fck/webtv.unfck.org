@@ -15,6 +15,7 @@ import {
   UsageStages,
 } from "@/lib/usage-tracking";
 import { getAnalysisModel } from "@/lib/providers/models";
+import { getLanguageFullName } from "@/lib/languages";
 import {
   type ParagraphInput,
   type SpeakerMapping,
@@ -97,10 +98,21 @@ export async function identifySpeakers(
   paragraphs: ParagraphInput[],
   transcriptId?: string,
   prebuiltMapping?: SpeakerMapping,
+  sourceLanguage?: string,
 ) {
   if (!paragraphs?.length) {
     throw new Error("No paragraphs provided");
   }
+
+  // Resolve source language from the transcript record if not provided by the
+  // caller. The downstream prompts use this to emit free-text fields in the
+  // transcript's language (topic labels, group names, etc.).
+  let resolvedSourceLanguage = sourceLanguage;
+  if (!resolvedSourceLanguage && transcriptId) {
+    const transcriptRow = await getTranscriptById(transcriptId);
+    resolvedSourceLanguage = transcriptRow?.language_code ?? undefined;
+  }
+  const langName = getLanguageFullName(resolvedSourceLanguage ?? "en");
 
   const client = createOpenAIClient();
   let finalParagraphs = [...paragraphs];
@@ -135,6 +147,11 @@ export async function identifySpeakers(
           {
             role: "system",
             content: `You are an expert at identifying speakers in UN proceedings. For each paragraph in the transcript, extract the speaker's name, function/title, affiliation, and country-group information strictly from the context.
+
+OUTPUT LANGUAGE: ${langName}
+- The transcript is in ${langName}. Write free-text fields (function/title, group description) in ${langName}.
+- Speaker names come verbatim from the transcript — keep them in their original script (do not transliterate).
+- Affiliation should be an ISO-3166 country code or recognized organization abbreviation (e.g., USA, FRA, UN, WHO, UNICEF) — never localize these codes.
 
 CRITICAL: Identify WHO IS ACTUALLY SPEAKING each paragraph, NOT who is being introduced or mentioned.
 
@@ -503,6 +520,7 @@ ${transcriptParts.join("\n\n")}`,
         finalMapping,
         client,
         transcriptId,
+        resolvedSourceLanguage,
       );
       taggedStatements = await tagSentencesWithTopics(
         statementsWithSentences,
@@ -510,6 +528,7 @@ ${transcriptParts.join("\n\n")}`,
         finalMapping,
         client,
         transcriptId,
+        resolvedSourceLanguage,
       );
 
       // Save topics immediately so the frontend can show them while propositions are analyzed

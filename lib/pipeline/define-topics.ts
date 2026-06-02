@@ -8,6 +8,7 @@ import {
   UsageStages,
 } from "@/lib/usage-tracking";
 import { getAnalysisModel } from "@/lib/providers/models";
+import { getLanguageFullName } from "@/lib/languages";
 import type { ParagraphInput } from "./shared";
 
 const TopicDefinitions = z.object({
@@ -25,6 +26,7 @@ export async function defineTopics(
   speakerMapping: SpeakerMapping,
   client: AzureOpenAI,
   transcriptId?: string,
+  sourceLanguage?: string,
 ): Promise<
   Record<string, { key: string; label: string; description: string }>
 > {
@@ -79,11 +81,16 @@ TASK:
 - Each topic must appear in at least 2 different statements by different speakers
 - Focus on substantive policy topics, not procedural matters
 - For each topic provide:
-  - key: kebab-case slug (2-4 words, e.g., "climate-finance")
-  - label: Human-readable title with proper case, spaces, and special characters (e.g., "Climate Finance")
-  - description: Clear 1-2 sentence explanation
+  - key: kebab-case slug (2-4 words, always ASCII, e.g., "climate-finance")
+  - label: Human-readable title in the OUTPUT LANGUAGE (proper case, spaces, native script)
+  - description: Clear 1-2 sentence explanation in the OUTPUT LANGUAGE
 
-EXAMPLES:
+OUTPUT LANGUAGE: ${getLanguageFullName(sourceLanguage ?? "en")}
+- Write the label and description fields in the OUTPUT LANGUAGE shown above.
+- The key field is always a kebab-case ASCII slug regardless of OUTPUT LANGUAGE — never localize it.
+- Examples below are in English purely for illustration; produce your actual output in the OUTPUT LANGUAGE.
+
+EXAMPLES (illustrative only — match the OUTPUT LANGUAGE in your response):
 - key: "climate-finance", label: "Climate Finance", description: "Financing mechanisms for climate action and adaptation"
 - key: "peacekeeping-mandate", label: "Peacekeeping Mandate", description: "Scope and renewal of peacekeeping operations"
 - key: "humanitarian-access", label: "Humanitarian Access", description: "Ensuring humanitarian aid reaches affected populations"

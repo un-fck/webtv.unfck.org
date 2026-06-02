@@ -9,6 +9,7 @@ import {
   UsageStages,
 } from "@/lib/usage-tracking";
 import { getAnalysisModelMini } from "@/lib/providers/models";
+import { getLanguageFullName } from "@/lib/languages";
 import type { StatementWithSentences } from "./shared";
 
 export async function tagSentencesWithTopics(
@@ -17,6 +18,7 @@ export async function tagSentencesWithTopics(
   speakerMapping: SpeakerMapping,
   client: AzureOpenAI,
   transcriptId?: string,
+  sourceLanguage?: string,
 ): Promise<StatementWithSentences[]> {
   console.log(`  → Tagging sentences with topics...`);
 
@@ -127,6 +129,8 @@ export async function tagSentencesWithTopics(
                 {
                   role: "system",
                   content: `You are categorizing UN proceeding sentences by topic.
+
+The sentences are in ${getLanguageFullName(sourceLanguage ?? "en")}; topic descriptions may be in the same language. Match sentences to topic keys based on meaning regardless of language. Return only the kebab-case ASCII topic keys — never localize them.
 
 AVAILABLE TOPICS:
 ${topicDescriptions}
