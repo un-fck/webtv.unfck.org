@@ -82,6 +82,23 @@
       "bodies": "الأجهزة",
       "events": "الفعاليات"
     },
+    "categoryNames": {
+      "Press Conferences": "مؤتمرات صحفية",
+      "Media Stakeouts": "لقاء مع وسائل الإعلام",
+      "Media": "وسائل الإعلام",
+      "General Assembly": "الجمعية العامة",
+      "Security Council": "مجلس الأمن",
+      "Economic and Social Council": "المجلس الاقتصادي والاجتماعي",
+      "Human Rights Council": "مجلس حقوق الإنسان",
+      "Human Rights Treaty Bodies": "هيئات معاهدات حقوق الإنسان",
+      "Trusteeship Council": "مجلس الوصاية",
+      "International Court of Justice": "محكمة العدل الدولية",
+      "Agencies, Funds & Programmes": "الوكالات والصناديق والبرامج",
+      "High-level Events": "اجتماعات رفيعة المستوى",
+      "Conferences": "مؤتمرات",
+      "Side Events": "أحداث جانبية",
+      "Meetings & Events": "اجتماعات وأحداث"
+    },
     "loading": "جارٍ التحميل…",
     "results": "{count, plural, =0 {لا توجد نتائج} one {نتيجة واحدة} two {نتيجتان} few {# نتائج} many {# نتيجة} other {# نتيجة}}",
     "meetings": "{count, plural, =0 {لا توجد جلسات} one {جلسة واحدة} two {جلستان} few {# جلسات} many {# جلسة} other {# جلسة}}",

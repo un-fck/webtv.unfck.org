@@ -82,6 +82,23 @@
       "bodies": "机构",
       "events": "活动"
     },
+    "categoryNames": {
+      "Press Conferences": "新闻发布会",
+      "Media Stakeouts": "媒体候访",
+      "Media": "媒体",
+      "General Assembly": "联合国大会",
+      "Security Council": "安全理事会",
+      "Economic and Social Council": "经济及社会理事会",
+      "Human Rights Council": "人权理事会",
+      "Human Rights Treaty Bodies": "人权条约机构",
+      "Trusteeship Council": "托管理事会",
+      "International Court of Justice": "国际法院",
+      "Agencies, Funds & Programmes": "机构、基金和方案",
+      "High-level Events": "高级别活动",
+      "Conferences": "会议",
+      "Side Events": "边会",
+      "Meetings & Events": "会议和活动"
+    },
     "loading": "加载中…",
     "results": "{count, plural, =0 {无结果} other {# 条结果}}",
     "meetings": "{count, plural, =0 {无会议} other {# 场会议}}",

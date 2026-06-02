@@ -82,6 +82,23 @@
       "bodies": "Organes",
       "events": "Événements"
     },
+    "categoryNames": {
+      "Press Conferences": "Conférences de presse",
+      "Media Stakeouts": "Rencontre avec les médias",
+      "Media": "Médias",
+      "General Assembly": "Assemblée générale",
+      "Security Council": "Conseil de sécurité",
+      "Economic and Social Council": "Conseil économique et social",
+      "Human Rights Council": "Conseil des droits de l'homme",
+      "Human Rights Treaty Bodies": "Organes conventionnels",
+      "Trusteeship Council": "Conseil de tutelle",
+      "International Court of Justice": "Cour internationale de Justice",
+      "Agencies, Funds & Programmes": "Organismes, fonds et programmes",
+      "High-level Events": "Événements de haut niveau",
+      "Conferences": "Conférences",
+      "Side Events": "Événements parallèles",
+      "Meetings & Events": "Réunions et événements"
+    },
     "loading": "Chargement…",
     "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
     "meetings": "{count, plural, =0 {Aucune réunion} one {# réunion} other {# réunions}}",

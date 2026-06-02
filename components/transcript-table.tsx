@@ -119,6 +119,18 @@ function useT() {
   return useTranslations("schedule");
 }
 
+// Categories come from WebTV as raw strings (English, because our scraper
+// hits /en/schedule/). Display them in the active locale via a hand-built
+// lookup table seeded from per-locale WebTV scrapes; fall back to the raw
+// string when no translation exists (e.g. WebTV-only branded events like
+// "Goals Lounge", "SDG Studio", or future categories we haven't catalogued
+// yet). `t.has(key)` avoids next-intl throwing for missing keys.
+function useCategoryName(): (category: string) => string {
+  const t = useTranslations("schedule.categoryNames");
+  return (category: string): string =>
+    category && t.has(category) ? t(category) : category;
+}
+
 function DateFilterPopover({
   availableDates,
   selectedDate,
@@ -247,6 +259,7 @@ function CategoryFilterRows({
 
   if (groups.length === 0) return null;
 
+  const tCategory = useCategoryName();
   const pill = (opt: string) => (
     <button
       key={opt}
@@ -257,7 +270,7 @@ function CategoryFilterRows({
           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
       }`}
     >
-      {opt}
+      {tCategory(opt)}
       {counts?.[opt] !== undefined && (
         <span
           className={cn(
@@ -477,6 +490,7 @@ export function VideoTable({
 }: VideoTableProps) {
   const router = useRouter();
   const t = useT();
+  const tCategory = useCategoryName();
   const searchParams = useSearchParams();
   const { formatMeetingDate, formatMeetingTime, isFutureDay } =
     useMeetingFormat();
@@ -857,10 +871,12 @@ export function VideoTable({
                     activeCategory && "text-primary",
                   )}
                 >
-                  {category}
+                  {tCategory(category)}
                 </button>
               ) : (
-                <span className={typography.tableHeader}>Uncategorized</span>
+                <span className={typography.tableHeader}>
+                  {t("uncategorized")}
+                </span>
               )}
             </td>
           </tr>

@@ -82,6 +82,23 @@
       "bodies": "Органы",
       "events": "Мероприятия"
     },
+    "categoryNames": {
+      "Press Conferences": "Пресс-конференции",
+      "Media Stakeouts": "Встречи с журналистами",
+      "Media": "СМИ",
+      "General Assembly": "Генеральная Ассамблея",
+      "Security Council": "Совет Безопасности",
+      "Economic and Social Council": "Экономический и Социальный Совет",
+      "Human Rights Council": "Совет по правам человека",
+      "Human Rights Treaty Bodies": "Договорные органы по правам человека",
+      "Trusteeship Council": "Совет по Опеке",
+      "International Court of Justice": "Международный Суд",
+      "Agencies, Funds & Programmes": "Учреждения, фонды и программы",
+      "High-level Events": "Мероприятия высокого уровня",
+      "Conferences": "Конференции",
+      "Side Events": "Параллельные мероприятия",
+      "Meetings & Events": "Заседания и мероприятия"
+    },
     "loading": "Загрузка…",
     "results": "{count, plural, =0 {Нет результатов} one {# результат} few {# результата} many {# результатов} other {# результата}}",
     "meetings": "{count, plural, =0 {Нет заседаний} one {# заседание} few {# заседания} many {# заседаний} other {# заседания}}",
