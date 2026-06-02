@@ -1,178 +1,178 @@
 {
   "metadata": {
-    "siteTitle": "UN Transcripts",
-    "siteDescription": "Browse UN Web TV videos with transcripts of all speeches",
-    "aboutTitle": "About — UN Transcripts",
-    "aboutDescription": "What UN Web TV Transcripts is, who it serves, how it works, and its accuracy and limitations.",
-    "loginTitle": "Sign in — UN Transcripts",
-    "verifyTitle": "Signing in — UN Transcripts",
-    "speakersTitle": "Speakers — UN Transcripts",
-    "speakersDescription": "Browse everyone who has spoken across transcribed UN meetings, by country, group, and organ.",
-    "subscriptionsTitle": "Subscriptions — UN Transcripts",
-    "subscriptionsDescription": "Manage your transcript email notifications."
+    "siteTitle": "Стенограммы ООН",
+    "siteDescription": "Просмотр видеозаписей UN Web TV со стенограммами всех выступлений",
+    "aboutTitle": "О проекте — Стенограммы ООН",
+    "aboutDescription": "Что такое UN Web TV Transcripts, для кого он предназначен, как он работает, а также его точность и ограничения.",
+    "loginTitle": "Вход — Стенограммы ООН",
+    "verifyTitle": "Выполняется вход — Стенограммы ООН",
+    "speakersTitle": "Выступающие — Стенограммы ООН",
+    "speakersDescription": "Просмотр всех, кто выступал на заседаниях ООН со стенограммами, по странам, группам и органам.",
+    "subscriptionsTitle": "Подписки — Стенограммы ООН",
+    "subscriptionsDescription": "Управление уведомлениями о готовых стенограммах по электронной почте."
   },
   "header": {
-    "about": "About",
-    "speakers": "Speakers",
-    "subscriptions": "Subscriptions",
-    "signIn": "Sign in",
-    "signOut": "Sign out",
-    "signedInAs": "Signed in as",
-    "accountMenu": "Account menu",
-    "openMenu": "Open menu",
-    "language": "Language",
-    "timezone": "Timezone",
-    "logoAlt": "UN Transcripts — home"
+    "about": "О проекте",
+    "speakers": "Выступающие",
+    "subscriptions": "Подписки",
+    "signIn": "Войти",
+    "signOut": "Выйти",
+    "signedInAs": "Вход выполнен под именем",
+    "accountMenu": "Меню аккаунта",
+    "openMenu": "Открыть меню",
+    "language": "Язык",
+    "timezone": "Часовой пояс",
+    "logoAlt": "Стенограммы ООН — главная"
   },
   "home": {
-    "publicPreview": "Public Preview",
-    "headline": "Read what was said at the UN.",
-    "lead": "Catch up on UN debates in minutes. Skim transcripts, search by speaker, jump to the moment in the recording.",
-    "notice": "Automatically generated from UN Web TV recordings, not official UN records.",
-    "learnMore": "Learn more →",
-    "backToHomepage": "← Back to homepage"
+    "publicPreview": "Публичная превью-версия",
+    "headline": "Читайте то, что было сказано в ООН.",
+    "lead": "Знакомьтесь с дебатами ООН за считаные минуты. Просматривайте стенограммы, ищите по выступающим, переходите к нужному моменту записи.",
+    "notice": "Создано автоматически на основе записей UN Web TV; не является официальным документом ООН.",
+    "learnMore": "Подробнее →",
+    "backToHomepage": "← Назад на главную"
   },
   "login": {
-    "title": "Sign In",
-    "subtitle": "Enter your email address to receive a sign-in link.",
-    "emailLabel": "Email address",
-    "emailPlaceholder": "you@example.com",
-    "submit": "Send sign-in link",
-    "submitting": "Sending...",
-    "sentTitle": "Please check your email",
-    "sentBody": "We have sent a sign-in link to {email}",
-    "errorEmailRequired": "Email required",
-    "errorInvalidEmail": "Invalid email address",
-    "errorRecentToken": "A magic link was recently sent. Please check your email or wait a few minutes.",
-    "errorSendFailed": "Failed to send email. Please try again."
+    "title": "Вход",
+    "subtitle": "Введите ваш адрес электронной почты, чтобы получить ссылку для входа.",
+    "emailLabel": "Адрес электронной почты",
+    "emailPlaceholder": "vy@primer.com",
+    "submit": "Отправить ссылку для входа",
+    "submitting": "Отправка…",
+    "sentTitle": "Проверьте свою электронную почту",
+    "sentBody": "Мы отправили ссылку для входа на адрес {email}",
+    "errorEmailRequired": "Требуется адрес электронной почты",
+    "errorInvalidEmail": "Недействительный адрес электронной почты",
+    "errorRecentToken": "Ссылка для входа была отправлена недавно. Проверьте почту или подождите несколько минут.",
+    "errorSendFailed": "Не удалось отправить письмо. Попробуйте ещё раз."
   },
   "verify": {
-    "heading": "Complete sign-in",
-    "loading": "Loading…",
-    "signingIn": "Signing you in…",
-    "missingToken": "Missing sign-in token.",
-    "errorMissingToken": "Missing token",
-    "errorInvalidLink": "Invalid or expired link",
-    "backToSignIn": "Back to sign in"
+    "heading": "Завершение входа",
+    "loading": "Загрузка…",
+    "signingIn": "Выполняется вход…",
+    "missingToken": "Отсутствует токен для входа.",
+    "errorMissingToken": "Отсутствует токен",
+    "errorInvalidLink": "Недействительная или просроченная ссылка",
+    "backToSignIn": "Назад ко входу"
   },
   "pipeline": {
-    "transcribing": "Transcribing audio",
-    "identifyingSpeakers": "Identifying speakers",
-    "analyzingTopics": "Analyzing topics",
-    "scheduled": "Scheduled",
-    "retry": "Retry"
+    "transcribing": "Транскрибируем аудио",
+    "identifyingSpeakers": "Определяем выступающих",
+    "analyzingTopics": "Анализируем темы",
+    "scheduled": "Запланировано",
+    "retry": "Повторить"
   },
   "schedule": {
-    "today": "Today",
-    "tomorrow": "Tomorrow",
-    "yesterday": "Yesterday",
-    "showFutureDates": "Show future dates",
-    "hideFutureDates": "Hide future dates",
-    "loadMore": "Load more",
-    "searchPlaceholder": "Search all meetings…",
-    "showOnlyTranscribed": "Show only transcribed meetings",
-    "date": "Date",
-    "noResults": "No meetings match these filters.",
-    "uncategorized": "Uncategorized",
+    "today": "Сегодня",
+    "tomorrow": "Завтра",
+    "yesterday": "Вчера",
+    "showFutureDates": "Показать будущие даты",
+    "hideFutureDates": "Скрыть будущие даты",
+    "loadMore": "Загрузить ещё",
+    "searchPlaceholder": "Поиск по всем заседаниям…",
+    "showOnlyTranscribed": "Только заседания со стенограммой",
+    "date": "Дата",
+    "noResults": "По этим фильтрам нет заседаний.",
+    "uncategorized": "Без категории",
     "categories": {
-      "media": "Media",
-      "bodies": "Bodies",
-      "events": "Events"
+      "media": "СМИ",
+      "bodies": "Органы",
+      "events": "Мероприятия"
     },
-    "loading": "Loading…",
-    "results": "{count, plural, =0 {No results} one {# result} other {# results}}",
-    "meetings": "{count, plural, =0 {No meetings} one {# meeting} other {# meetings}}",
-    "relevance": "Relevance"
+    "loading": "Загрузка…",
+    "results": "{count, plural, =0 {Нет результатов} one {# результат} few {# результата} many {# результатов} other {# результата}}",
+    "meetings": "{count, plural, =0 {Нет заседаний} one {# заседание} few {# заседания} many {# заседаний} other {# заседания}}",
+    "relevance": "Релевантность"
   },
   "speakers": {
-    "title": "Speakers",
-    "lead": "Everyone who has spoken across transcribed meetings, grouped by country, negotiating group, and UN organ. Experimental — speaker names are AI-extracted, and the same person or entity may appear in multiple variants.",
-    "signInPrompt": "Please <signInLink>sign in</signInLink> to browse speakers.",
-    "experimentalGated": "The speaker directory is an experimental feature. See the <aboutLink>About page</aboutLink> to request access.",
-    "backToAllSpeakers": "← All speakers"
+    "title": "Выступающие",
+    "lead": "Все, кто выступал на заседаниях со стенограммой, сгруппированы по странам, переговорным группам и органам ООН. Экспериментально — имена выступающих извлекаются ИИ, и один и тот же человек или субъект может появиться в нескольких вариантах.",
+    "signInPrompt": "Пожалуйста, <signInLink>войдите</signInLink>, чтобы просматривать выступающих.",
+    "experimentalGated": "Каталог выступающих — экспериментальная функция. См. <aboutLink>страницу «О проекте»</aboutLink>, чтобы запросить доступ.",
+    "backToAllSpeakers": "← Все выступающие"
   },
   "subscriptions": {
-    "title": "Subscriptions",
-    "lead": "Get an email when transcripts you care about are ready.",
-    "signInPrompt": "Please <signInLink>sign in</signInLink> to manage your subscriptions."
+    "title": "Подписки",
+    "lead": "Получайте письмо, когда будут готовы интересующие вас стенограммы.",
+    "signInPrompt": "Пожалуйста, <signInLink>войдите</signInLink>, чтобы управлять подписками."
   },
   "about": {
-    "pageTitle": "About",
-    "tagline": "Automatic transcripts for UN Web TV meetings.",
+    "pageTitle": "О проекте",
+    "tagline": "Автоматические стенограммы заседаний UN Web TV.",
     "whatIsThis": {
-      "heading": "What is this?",
-      "body": "UN Web TV Transcripts is a public preview tool that automatically generates searchable text transcripts from United Nations meeting recordings published on <webtvLink>UN Web TV</webtvLink>."
+      "heading": "Что это?",
+      "body": "UN Web TV Transcripts — инструмент в публичной превью-версии, автоматически создающий доступные для поиска текстовые стенограммы из записей заседаний Организации Объединенных Наций, опубликованных на <webtvLink>UN Web TV</webtvLink>."
     },
     "whoIsItFor": {
-      "heading": "Who is it for?",
-      "intro": "The tool is designed to help anyone who needs quick access to the spoken content of UN meetings, including:",
-      "item1": "Diplomats and delegation staff following proceedings across multiple organs",
-      "item2": "Researchers and academics studying UN debates and voting records",
-      "item3": "Journalists covering United Nations affairs",
-      "item4": "Civil society organisations monitoring policy discussions",
-      "item5": "UN Secretariat staff reviewing meeting records"
+      "heading": "Для кого это?",
+      "intro": "Инструмент призван помочь всем, кому нужен быстрый доступ к произнесённым на заседаниях ООН выступлениям, в том числе:",
+      "item1": "Дипломатам и сотрудникам делегаций, следящим за работой нескольких органов",
+      "item2": "Исследователям и учёным, изучающим дебаты и голосования ООН",
+      "item3": "Журналистам, освещающим деятельность Организации Объединенных Наций",
+      "item4": "Организациям гражданского общества, отслеживающим политические обсуждения",
+      "item5": "Сотрудникам Секретариата ООН, изучающим материалы заседаний"
     },
     "coverage": {
-      "heading": "What meetings are covered?",
-      "intro": "The tool covers public meetings recorded and published on UN Web TV, including:",
-      "item1": "Security Council (SC) — open meetings and briefings",
-      "item2": "General Assembly (GA) — plenary and main committee sessions",
-      "item3": "Human Rights Council (HRC)",
-      "item4": "Economic and Social Council (ECOSOC)",
-      "item5": "Other inter-governmental bodies as available on Web TV",
-      "closed": "Closed or confidential meetings are not recorded on Web TV and are therefore not covered."
+      "heading": "Какие заседания охватываются?",
+      "intro": "Инструмент охватывает открытые заседания, записанные и опубликованные на UN Web TV, включая:",
+      "item1": "Совет Безопасности — открытые заседания и брифинги",
+      "item2": "Генеральная Ассамблея — пленарные заседания и главные комитеты",
+      "item3": "Совет по правам человека",
+      "item4": "Экономический и Социальный Совет",
+      "item5": "Другие межправительственные органы, доступные на Web TV",
+      "closed": "Закрытые или конфиденциальные заседания не записываются на Web TV и поэтому не охватываются."
     },
     "howItWorks": {
-      "heading": "How it works",
-      "step1Title": "Meeting schedule collection",
-      "step1Body": "The system monitors UN Web TV for newly published meeting recordings. Meeting metadata — title, date, UN organ, and document references — is extracted from the Web TV website and stored.",
-      "step2Title": "Audio transcription",
-      "step2Body": "We transcribe the existing UN audio channels — the original \"floor\" mix and each official UN interpretation channel — directly. No machine translation is applied. Each channel is transcribed by a speech-to-text model chosen for that language (see the table below).",
-      "step3Title": "Speaker identification",
-      "step3Body": "After transcription, a second AI model analyses the text and audio to assign names and affiliations to each speaker where possible. It uses contextual clues — such as the chair introducing delegates, country name mentions, and speaker diarization — together with the official list of participants when available.",
-      "step4Title": "Topic analysis",
-      "step4Body": "The transcript is automatically analysed to identify the main policy topics discussed, using categories relevant to UN proceedings (e.g. humanitarian affairs, international peace and security, human rights).",
-      "step5Title": "Official record alignment",
-      "step5Body": "Where official verbatim or summary records (PV/SR documents) exist, the system retrieves them and adds timestamps to align the text with the video. Besides timestamps, no AI processing is involved for these documents."
+      "heading": "Как это работает",
+      "step1Title": "Сбор расписания заседаний",
+      "step1Body": "Система следит за UN Web TV в поиске вновь опубликованных записей. Метаданные заседаний — заголовок, дата, орган ООН и ссылки на документы — извлекаются с сайта Web TV и сохраняются.",
+      "step2Title": "Транскрибирование аудио",
+      "step2Body": "Мы транскрибируем непосредственно существующие аудиоканалы ООН — оригинальное «зальное» сведение и каждый официальный канал устного перевода. Машинный перевод не применяется. Каждый канал транскрибируется моделью распознавания речи, подобранной для соответствующего языка (см. таблицу ниже).",
+      "step3Title": "Идентификация выступающих",
+      "step3Body": "После транскрибирования вторая модель ИИ анализирует текст и аудио, чтобы по возможности присвоить выступающим имена и принадлежность. Она использует контекстные подсказки — председатель представляет делегатов, упоминания названий стран, диаризация говорящих — а также официальный список участников, когда он доступен.",
+      "step4Title": "Анализ тем",
+      "step4Body": "Стенограмма автоматически анализируется для определения основных политических тем, обсуждавшихся на заседании, с использованием категорий, релевантных работе ООН (например, гуманитарные вопросы, международный мир и безопасность, права человека).",
+      "step5Title": "Сопоставление с официальными документами",
+      "step5Body": "При наличии официальных стенографических или кратких отчётов (документы PV/SR) система получает их и добавляет временные метки для синхронизации текста с видео. Помимо временных меток, обработка ИИ для этих документов не используется."
     },
     "models": {
-      "heading": "Transcription model per language",
-      "intro": "Different speech-to-text providers excel at different languages, so each track is routed to the model that performs best for it in our evaluation.",
-      "colLanguage": "Language track",
-      "colModel": "Transcription model",
-      "postProcessing": "Post-processing — speaker identification and topic classification — is performed by Azure OpenAI GPT-5.5 for all languages."
+      "heading": "Модель транскрибирования по языкам",
+      "intro": "Разные системы распознавания речи лучше работают с разными языками, поэтому каждый канал направляется к той модели, которая показывает наилучшие результаты по нашим оценкам.",
+      "colLanguage": "Языковой канал",
+      "colModel": "Модель транскрибирования",
+      "postProcessing": "Постобработка — идентификация выступающих и тематическая классификация — выполняется Azure OpenAI GPT-5.5 для всех языков."
     },
     "accuracy": {
-      "heading": "Accuracy and limitations",
-      "para1": "These transcripts are created using automatic speech recognition and are not official UN records.",
-      "para2": "They are a faster, unofficial reference that may be useful for monitoring and research, but should not be cited as authoritative. For the official record, please refer to the <odsLink>UN Official Document System</odsLink> (verbatim records, summary records, and resolutions).",
-      "issuesIntro": "Automatic transcription is much faster than human transcription but introduces errors a human reviewer would catch. Common issues include:",
-      "issue1": "Proper nouns — country names, delegate names, place names, and UN document symbols may be misheard or misspelt",
-      "issue2": "Technical terminology — legal or procedural phrases specific to UN practice may be transcribed incorrectly",
-      "issue3": "Accented speech — accuracy varies by speaker accent and microphone quality",
-      "issue4": "Overlapping speech — when multiple speakers talk simultaneously, attribution may be wrong"
+      "heading": "Точность и ограничения",
+      "para1": "Эти стенограммы создаются автоматическим распознаванием речи и не являются официальными документами ООН.",
+      "para2": "Они представляют собой более быстрый, неофициальный источник, полезный для мониторинга и исследований, но на них не следует ссылаться как на авторитетные. Официальные документы см. в <odsLink>Системе официальной документации ООН</odsLink> (стенографические отчёты, краткие отчёты и резолюции).",
+      "issuesIntro": "Автоматическое транскрибирование значительно быстрее человеческого, но допускает ошибки, которые человеческий редактор поймал бы. Типичные проблемы:",
+      "issue1": "Имена собственные — названия стран, имена делегатов, географические названия и условные обозначения документов ООН могут быть неверно распознаны или написаны",
+      "issue2": "Техническая терминология — правовые или процедурные формулировки, характерные для практики ООН, могут быть транскрибированы неверно",
+      "issue3": "Речь с акцентом — точность зависит от акцента говорящего и качества микрофона",
+      "issue4": "Перекрывающаяся речь — когда говорят одновременно несколько человек, приписывание реплик может быть ошибочным"
     },
     "sources": {
-      "heading": "Data sources",
+      "heading": "Источники данных",
       "webtvLabel": "UN Web TV",
-      "webtvBody": "— Meeting recordings and metadata, delivered via the Kaltura media platform (publicly accessible at webtv.un.org).",
-      "odsLabel": "UN Official Document System",
-      "odsBody": "— Official verbatim records (PV documents) retrieved from documents.un.org where available."
+      "webtvBody": "— Записи и метаданные заседаний, предоставляемые через медиаплатформу Kaltura (общедоступную на webtv.un.org).",
+      "odsLabel": "Система официальной документации ООН",
+      "odsBody": "— Официальные стенографические отчёты (документы PV), получаемые с documents.un.org, когда они доступны."
     },
     "status": {
-      "heading": "Status",
-      "body": "This tool is in <publicPreview>Public Preview</publicPreview>. Features, coverage, and accuracy are actively being improved. Feedback is welcome."
+      "heading": "Статус",
+      "body": "Этот инструмент находится в <publicPreview>публичной превью-версии</publicPreview>. Возможности, охват и точность активно совершенствуются. Будем рады вашим отзывам."
     },
     "experimental": {
-      "heading": "Experimental features",
-      "body": "Experimental features (proposition analysis, speaker directory) are available to selected UN-system accounts during the preview period. To request access, please contact the maintainers."
+      "heading": "Экспериментальные функции",
+      "body": "Экспериментальные функции (анализ предложений, каталог выступающих) доступны отдельным аккаунтам системы Организации Объединенных Наций в период превью. Для запроса доступа свяжитесь с разработчиками."
     }
   },
   "error": {
-    "title": "Something went wrong",
-    "scheduleHint": "The schedule could not be loaded. This is usually temporary — please try again.",
-    "tryAgain": "Try again",
-    "meetingNotFound": "Meeting not found",
-    "meetingNotFoundHint": "This meeting could not be found. It may have been removed or renamed."
+    "title": "Что-то пошло не так",
+    "scheduleHint": "Не удалось загрузить расписание. Обычно это временно — попробуйте ещё раз.",
+    "tryAgain": "Попробовать снова",
+    "meetingNotFound": "Заседание не найдено",
+    "meetingNotFoundHint": "Это заседание не удалось найти. Возможно, оно было удалено или переименовано."
   }
 }

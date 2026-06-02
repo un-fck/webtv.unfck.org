@@ -1,178 +1,178 @@
 {
   "metadata": {
-    "siteTitle": "UN Transcripts",
-    "siteDescription": "Browse UN Web TV videos with transcripts of all speeches",
-    "aboutTitle": "About — UN Transcripts",
-    "aboutDescription": "What UN Web TV Transcripts is, who it serves, how it works, and its accuracy and limitations.",
-    "loginTitle": "Sign in — UN Transcripts",
-    "verifyTitle": "Signing in — UN Transcripts",
-    "speakersTitle": "Speakers — UN Transcripts",
-    "speakersDescription": "Browse everyone who has spoken across transcribed UN meetings, by country, group, and organ.",
-    "subscriptionsTitle": "Subscriptions — UN Transcripts",
-    "subscriptionsDescription": "Manage your transcript email notifications."
+    "siteTitle": "محاضر الأمم المتحدة",
+    "siteDescription": "تصفح مقاطع فيديو UN Web TV مع المحاضر الحرفية لجميع الكلمات",
+    "aboutTitle": "حول الأداة — محاضر الأمم المتحدة",
+    "aboutDescription": "ما هي UN Web TV Transcripts، ومن يستفيد منها، وكيف تعمل، وما حدودها من حيث الدقة.",
+    "loginTitle": "تسجيل الدخول — محاضر الأمم المتحدة",
+    "verifyTitle": "جاري تسجيل الدخول — محاضر الأمم المتحدة",
+    "speakersTitle": "المتكلمون — محاضر الأمم المتحدة",
+    "speakersDescription": "تصفح كل من تحدث في الجلسات الموثقة في الأمم المتحدة، حسب البلد والمجموعة والجهاز.",
+    "subscriptionsTitle": "الاشتراكات — محاضر الأمم المتحدة",
+    "subscriptionsDescription": "إدارة إشعارات البريد الإلكتروني الخاصة بمحاضر الجلسات."
   },
   "header": {
-    "about": "About",
-    "speakers": "Speakers",
-    "subscriptions": "Subscriptions",
-    "signIn": "Sign in",
-    "signOut": "Sign out",
-    "signedInAs": "Signed in as",
-    "accountMenu": "Account menu",
-    "openMenu": "Open menu",
-    "language": "Language",
-    "timezone": "Timezone",
-    "logoAlt": "UN Transcripts — home"
+    "about": "حول الأداة",
+    "speakers": "المتكلمون",
+    "subscriptions": "الاشتراكات",
+    "signIn": "تسجيل الدخول",
+    "signOut": "تسجيل الخروج",
+    "signedInAs": "مسجل الدخول باسم",
+    "accountMenu": "قائمة الحساب",
+    "openMenu": "فتح القائمة",
+    "language": "اللغة",
+    "timezone": "المنطقة الزمنية",
+    "logoAlt": "محاضر الأمم المتحدة — الصفحة الرئيسية"
   },
   "home": {
-    "publicPreview": "Public Preview",
-    "headline": "Read what was said at the UN.",
-    "lead": "Catch up on UN debates in minutes. Skim transcripts, search by speaker, jump to the moment in the recording.",
-    "notice": "Automatically generated from UN Web TV recordings, not official UN records.",
-    "learnMore": "Learn more →",
-    "backToHomepage": "← Back to homepage"
+    "publicPreview": "إصدار تجريبي عام",
+    "headline": "اقرأ ما قيل في الأمم المتحدة.",
+    "lead": "تابع نقاشات الأمم المتحدة في دقائق. تصفح المحاضر، ابحث حسب المتكلم، وانتقل مباشرة إلى اللحظة المعنية في التسجيل.",
+    "notice": "مُولّدة آليًا من تسجيلات UN Web TV، وليست محاضر رسمية للأمم المتحدة.",
+    "learnMore": "اعرف المزيد ←",
+    "backToHomepage": "← العودة إلى الصفحة الرئيسية"
   },
   "login": {
-    "title": "Sign In",
-    "subtitle": "Enter your email address to receive a sign-in link.",
-    "emailLabel": "Email address",
+    "title": "تسجيل الدخول",
+    "subtitle": "أدخل عنوان بريدك الإلكتروني لتلقي رابط تسجيل الدخول.",
+    "emailLabel": "البريد الإلكتروني",
     "emailPlaceholder": "you@example.com",
-    "submit": "Send sign-in link",
-    "submitting": "Sending...",
-    "sentTitle": "Please check your email",
-    "sentBody": "We have sent a sign-in link to {email}",
-    "errorEmailRequired": "Email required",
-    "errorInvalidEmail": "Invalid email address",
-    "errorRecentToken": "A magic link was recently sent. Please check your email or wait a few minutes.",
-    "errorSendFailed": "Failed to send email. Please try again."
+    "submit": "إرسال رابط تسجيل الدخول",
+    "submitting": "جارٍ الإرسال…",
+    "sentTitle": "يُرجى التحقق من بريدك الإلكتروني",
+    "sentBody": "أرسلنا رابط تسجيل الدخول إلى {email}",
+    "errorEmailRequired": "البريد الإلكتروني مطلوب",
+    "errorInvalidEmail": "عنوان بريد إلكتروني غير صالح",
+    "errorRecentToken": "تم إرسال رابط تسجيل دخول مؤخرًا. يُرجى التحقق من بريدك أو الانتظار بضع دقائق.",
+    "errorSendFailed": "تعذّر إرسال البريد. يرجى المحاولة مرة أخرى."
   },
   "verify": {
-    "heading": "Complete sign-in",
-    "loading": "Loading…",
-    "signingIn": "Signing you in…",
-    "missingToken": "Missing sign-in token.",
-    "errorMissingToken": "Missing token",
-    "errorInvalidLink": "Invalid or expired link",
-    "backToSignIn": "Back to sign in"
+    "heading": "إكمال تسجيل الدخول",
+    "loading": "جارٍ التحميل…",
+    "signingIn": "جارٍ تسجيل الدخول…",
+    "missingToken": "رمز تسجيل الدخول غير موجود.",
+    "errorMissingToken": "الرمز غير موجود",
+    "errorInvalidLink": "الرابط غير صالح أو انتهت صلاحيته",
+    "backToSignIn": "العودة إلى تسجيل الدخول"
   },
   "pipeline": {
-    "transcribing": "Transcribing audio",
-    "identifyingSpeakers": "Identifying speakers",
-    "analyzingTopics": "Analyzing topics",
-    "scheduled": "Scheduled",
-    "retry": "Retry"
+    "transcribing": "جاري نسخ الصوت",
+    "identifyingSpeakers": "جاري تحديد المتكلمين",
+    "analyzingTopics": "جاري تحليل المواضيع",
+    "scheduled": "مجدول",
+    "retry": "إعادة المحاولة"
   },
   "schedule": {
-    "today": "Today",
-    "tomorrow": "Tomorrow",
-    "yesterday": "Yesterday",
-    "showFutureDates": "Show future dates",
-    "hideFutureDates": "Hide future dates",
-    "loadMore": "Load more",
-    "searchPlaceholder": "Search all meetings…",
-    "showOnlyTranscribed": "Show only transcribed meetings",
-    "date": "Date",
-    "noResults": "No meetings match these filters.",
-    "uncategorized": "Uncategorized",
+    "today": "اليوم",
+    "tomorrow": "غدًا",
+    "yesterday": "أمس",
+    "showFutureDates": "إظهار التواريخ القادمة",
+    "hideFutureDates": "إخفاء التواريخ القادمة",
+    "loadMore": "تحميل المزيد",
+    "searchPlaceholder": "البحث في جميع الجلسات…",
+    "showOnlyTranscribed": "إظهار الجلسات المُنسوخة فقط",
+    "date": "التاريخ",
+    "noResults": "لا توجد جلسات تطابق هذه المرشحات.",
+    "uncategorized": "غير مصنفة",
     "categories": {
-      "media": "Media",
-      "bodies": "Bodies",
-      "events": "Events"
+      "media": "وسائل الإعلام",
+      "bodies": "الأجهزة",
+      "events": "الفعاليات"
     },
-    "loading": "Loading…",
-    "results": "{count, plural, =0 {No results} one {# result} other {# results}}",
-    "meetings": "{count, plural, =0 {No meetings} one {# meeting} other {# meetings}}",
-    "relevance": "Relevance"
+    "loading": "جارٍ التحميل…",
+    "results": "{count, plural, =0 {لا توجد نتائج} one {نتيجة واحدة} two {نتيجتان} few {# نتائج} many {# نتيجة} other {# نتيجة}}",
+    "meetings": "{count, plural, =0 {لا توجد جلسات} one {جلسة واحدة} two {جلستان} few {# جلسات} many {# جلسة} other {# جلسة}}",
+    "relevance": "الصلة"
   },
   "speakers": {
-    "title": "Speakers",
-    "lead": "Everyone who has spoken across transcribed meetings, grouped by country, negotiating group, and UN organ. Experimental — speaker names are AI-extracted, and the same person or entity may appear in multiple variants.",
-    "signInPrompt": "Please <signInLink>sign in</signInLink> to browse speakers.",
-    "experimentalGated": "The speaker directory is an experimental feature. See the <aboutLink>About page</aboutLink> to request access.",
-    "backToAllSpeakers": "← All speakers"
+    "title": "المتكلمون",
+    "lead": "كل من تحدث في الجلسات الموثقة، مصنفون حسب البلد ومجموعة التفاوض وجهاز الأمم المتحدة. هذه ميزة تجريبية — تُستخرج أسماء المتكلمين بواسطة الذكاء الاصطناعي، وقد يظهر الشخص أو الكيان نفسه بعدة صيغ.",
+    "signInPrompt": "يرجى <signInLink>تسجيل الدخول</signInLink> لتصفح المتكلمين.",
+    "experimentalGated": "دليل المتكلمين ميزة تجريبية. يرجى الاطلاع على <aboutLink>صفحة «حول الأداة»</aboutLink> لطلب الوصول.",
+    "backToAllSpeakers": "← جميع المتكلمين"
   },
   "subscriptions": {
-    "title": "Subscriptions",
-    "lead": "Get an email when transcripts you care about are ready.",
-    "signInPrompt": "Please <signInLink>sign in</signInLink> to manage your subscriptions."
+    "title": "الاشتراكات",
+    "lead": "احصل على بريد إلكتروني عندما تكون المحاضر التي تهمك جاهزة.",
+    "signInPrompt": "يرجى <signInLink>تسجيل الدخول</signInLink> لإدارة اشتراكاتك."
   },
   "about": {
-    "pageTitle": "About",
-    "tagline": "Automatic transcripts for UN Web TV meetings.",
+    "pageTitle": "حول الأداة",
+    "tagline": "محاضر تلقائية لجلسات UN Web TV.",
     "whatIsThis": {
-      "heading": "What is this?",
-      "body": "UN Web TV Transcripts is a public preview tool that automatically generates searchable text transcripts from United Nations meeting recordings published on <webtvLink>UN Web TV</webtvLink>."
+      "heading": "ما هذه الأداة؟",
+      "body": "UN Web TV Transcripts هي أداة في مرحلة إصدار تجريبي عام تُنشئ تلقائيًا محاضر نصية قابلة للبحث من تسجيلات جلسات الأمم المتحدة المنشورة على <webtvLink>UN Web TV</webtvLink>."
     },
     "whoIsItFor": {
-      "heading": "Who is it for?",
-      "intro": "The tool is designed to help anyone who needs quick access to the spoken content of UN meetings, including:",
-      "item1": "Diplomats and delegation staff following proceedings across multiple organs",
-      "item2": "Researchers and academics studying UN debates and voting records",
-      "item3": "Journalists covering United Nations affairs",
-      "item4": "Civil society organisations monitoring policy discussions",
-      "item5": "UN Secretariat staff reviewing meeting records"
+      "heading": "لمن صُمّمت؟",
+      "intro": "صُمّمت الأداة لمساعدة كل من يحتاج إلى وصول سريع إلى المحتوى المنطوق لجلسات الأمم المتحدة، بمن في ذلك:",
+      "item1": "الدبلوماسيون وموظفو الوفود الذين يتابعون أعمال أجهزة متعددة",
+      "item2": "الباحثون والأكاديميون الذين يدرسون مناقشات الأمم المتحدة وسجلاتها التصويتية",
+      "item3": "الصحفيون الذين يغطون شؤون الأمم المتحدة",
+      "item4": "منظمات المجتمع المدني التي ترصد المناقشات السياسية",
+      "item5": "موظفو الأمانة العامة للأمم المتحدة الذين يستعرضون محاضر الجلسات"
     },
     "coverage": {
-      "heading": "What meetings are covered?",
-      "intro": "The tool covers public meetings recorded and published on UN Web TV, including:",
-      "item1": "Security Council (SC) — open meetings and briefings",
-      "item2": "General Assembly (GA) — plenary and main committee sessions",
-      "item3": "Human Rights Council (HRC)",
-      "item4": "Economic and Social Council (ECOSOC)",
-      "item5": "Other inter-governmental bodies as available on Web TV",
-      "closed": "Closed or confidential meetings are not recorded on Web TV and are therefore not covered."
+      "heading": "ما الجلسات التي تشملها؟",
+      "intro": "تشمل الأداة الجلسات العلنية المسجلة والمنشورة على UN Web TV، ومنها:",
+      "item1": "مجلس الأمن — الجلسات العلنية والإحاطات",
+      "item2": "الجمعية العامة — الجلسات العامة وجلسات اللجان الرئيسية",
+      "item3": "مجلس حقوق الإنسان",
+      "item4": "المجلس الاقتصادي والاجتماعي",
+      "item5": "أجهزة حكومية دولية أخرى متاحة على Web TV",
+      "closed": "لا تُسجَّل الجلسات المغلقة أو السرية على Web TV ولا تشملها الأداة."
     },
     "howItWorks": {
-      "heading": "How it works",
-      "step1Title": "Meeting schedule collection",
-      "step1Body": "The system monitors UN Web TV for newly published meeting recordings. Meeting metadata — title, date, UN organ, and document references — is extracted from the Web TV website and stored.",
-      "step2Title": "Audio transcription",
-      "step2Body": "We transcribe the existing UN audio channels — the original \"floor\" mix and each official UN interpretation channel — directly. No machine translation is applied. Each channel is transcribed by a speech-to-text model chosen for that language (see the table below).",
-      "step3Title": "Speaker identification",
-      "step3Body": "After transcription, a second AI model analyses the text and audio to assign names and affiliations to each speaker where possible. It uses contextual clues — such as the chair introducing delegates, country name mentions, and speaker diarization — together with the official list of participants when available.",
-      "step4Title": "Topic analysis",
-      "step4Body": "The transcript is automatically analysed to identify the main policy topics discussed, using categories relevant to UN proceedings (e.g. humanitarian affairs, international peace and security, human rights).",
-      "step5Title": "Official record alignment",
-      "step5Body": "Where official verbatim or summary records (PV/SR documents) exist, the system retrieves them and adds timestamps to align the text with the video. Besides timestamps, no AI processing is involved for these documents."
+      "heading": "كيف تعمل",
+      "step1Title": "جمع جدول الجلسات",
+      "step1Body": "يرصد النظام UN Web TV لاكتشاف تسجيلات الجلسات المنشورة حديثًا. تُستخرج البيانات الوصفية للجلسة — العنوان والتاريخ وجهاز الأمم المتحدة والمراجع الوثائقية — من موقع Web TV وتُحفظ.",
+      "step2Title": "نسخ الصوت",
+      "step2Body": "ننسخ القنوات الصوتية القائمة للأمم المتحدة مباشرةً — المزيج الأصلي «من القاعة» وكل قناة من قنوات الترجمة الفورية الرسمية للأمم المتحدة. لا يُطبَّق أي ترجمة آلية. تُنسخ كل قناة بنموذج تعرف على الكلام تم اختياره لتلك اللغة (انظر الجدول أدناه).",
+      "step3Title": "تحديد المتكلمين",
+      "step3Body": "بعد النسخ، يقوم نموذج ذكاء اصطناعي ثانٍ بتحليل النص والصوت لإسناد الأسماء والانتماءات إلى كل متكلم حيثما أمكن. يستخدم قرائن سياقية — كالرئيس الذي يقدم المندوبين، وذكر أسماء البلدان، والتعرف على المتكلمين — إلى جانب القائمة الرسمية للمشاركين عند توفرها.",
+      "step4Title": "تحليل المواضيع",
+      "step4Body": "يُحلَّل المحضر تلقائيًا لتحديد الموضوعات السياسية الرئيسية التي نوقشت، باستخدام فئات ذات صلة بأعمال الأمم المتحدة (مثل الشؤون الإنسانية، والسلم والأمن الدوليين، وحقوق الإنسان).",
+      "step5Title": "المواءمة مع المحاضر الرسمية",
+      "step5Body": "حيث توجد محاضر رسمية حرفية أو موجزة (وثائق PV/SR)، يستعيدها النظام ويضيف إليها طوابع زمنية لمواءمة النص مع الفيديو. وبخلاف الطوابع الزمنية، لا يتم أي معالجة بالذكاء الاصطناعي لهذه الوثائق."
     },
     "models": {
-      "heading": "Transcription model per language",
-      "intro": "Different speech-to-text providers excel at different languages, so each track is routed to the model that performs best for it in our evaluation.",
-      "colLanguage": "Language track",
-      "colModel": "Transcription model",
-      "postProcessing": "Post-processing — speaker identification and topic classification — is performed by Azure OpenAI GPT-5.5 for all languages."
+      "heading": "نموذج النسخ حسب اللغة",
+      "intro": "تتفوق مقدمات خدمات تعرف الكلام المختلفة في لغات مختلفة، لذلك تُوجَّه كل قناة إلى النموذج الذي يحقق أفضل أداء لها وفقًا لتقييمنا.",
+      "colLanguage": "قناة اللغة",
+      "colModel": "نموذج النسخ",
+      "postProcessing": "تُجرى المعالجة اللاحقة — تحديد المتكلمين وتصنيف المواضيع — بواسطة Azure OpenAI GPT-5.5 لجميع اللغات."
     },
     "accuracy": {
-      "heading": "Accuracy and limitations",
-      "para1": "These transcripts are created using automatic speech recognition and are not official UN records.",
-      "para2": "They are a faster, unofficial reference that may be useful for monitoring and research, but should not be cited as authoritative. For the official record, please refer to the <odsLink>UN Official Document System</odsLink> (verbatim records, summary records, and resolutions).",
-      "issuesIntro": "Automatic transcription is much faster than human transcription but introduces errors a human reviewer would catch. Common issues include:",
-      "issue1": "Proper nouns — country names, delegate names, place names, and UN document symbols may be misheard or misspelt",
-      "issue2": "Technical terminology — legal or procedural phrases specific to UN practice may be transcribed incorrectly",
-      "issue3": "Accented speech — accuracy varies by speaker accent and microphone quality",
-      "issue4": "Overlapping speech — when multiple speakers talk simultaneously, attribution may be wrong"
+      "heading": "الدقة والقيود",
+      "para1": "تُنشأ هذه المحاضر باستخدام التعرف التلقائي على الكلام وليست محاضر رسمية للأمم المتحدة.",
+      "para2": "إنها مرجع غير رسمي أسرع قد يكون مفيدًا للرصد والبحث، لكن لا ينبغي الاستشهاد بها كمصدر موثوق. للحصول على المحضر الرسمي، يُرجى الرجوع إلى <odsLink>نظام الوثائق الرسمية للأمم المتحدة</odsLink> (المحاضر الحرفية والمحاضر الموجزة والقرارات).",
+      "issuesIntro": "النسخ التلقائي أسرع بكثير من النسخ البشري، لكنه يدخل أخطاء قد يلتقطها المراجع البشري. تشمل المشكلات الشائعة:",
+      "issue1": "أسماء العلم — قد تُسمع أو تُكتب أسماء البلدان والمندوبين والأماكن ورموز وثائق الأمم المتحدة بشكل خاطئ",
+      "issue2": "المصطلحات التقنية — قد تُنسخ الصياغات القانونية أو الإجرائية الخاصة بممارسة الأمم المتحدة بشكل غير صحيح",
+      "issue3": "النطق بلكنات — تتفاوت الدقة بحسب لكنة المتكلم وجودة الميكروفون",
+      "issue4": "الكلام المتداخل — عند تحدث عدة أشخاص في وقت واحد، قد يكون الإسناد خاطئًا"
     },
     "sources": {
-      "heading": "Data sources",
+      "heading": "مصادر البيانات",
       "webtvLabel": "UN Web TV",
-      "webtvBody": "— Meeting recordings and metadata, delivered via the Kaltura media platform (publicly accessible at webtv.un.org).",
-      "odsLabel": "UN Official Document System",
-      "odsBody": "— Official verbatim records (PV documents) retrieved from documents.un.org where available."
+      "webtvBody": "— تسجيلات الجلسات وبياناتها الوصفية، مُقدَّمة عبر منصة وسائط Kaltura (متاحة للعموم على webtv.un.org).",
+      "odsLabel": "نظام الوثائق الرسمية للأمم المتحدة",
+      "odsBody": "— المحاضر الحرفية الرسمية (وثائق PV) المستقاة من documents.un.org حيثما توفرت."
     },
     "status": {
-      "heading": "Status",
-      "body": "This tool is in <publicPreview>Public Preview</publicPreview>. Features, coverage, and accuracy are actively being improved. Feedback is welcome."
+      "heading": "الحالة",
+      "body": "هذه الأداة في مرحلة <publicPreview>إصدار تجريبي عام</publicPreview>. يجري العمل بنشاط على تحسين الميزات والتغطية والدقة. الملاحظات مرحب بها."
     },
     "experimental": {
-      "heading": "Experimental features",
-      "body": "Experimental features (proposition analysis, speaker directory) are available to selected UN-system accounts during the preview period. To request access, please contact the maintainers."
+      "heading": "الميزات التجريبية",
+      "body": "الميزات التجريبية (تحليل المقترحات، ودليل المتكلمين) متاحة لحسابات مختارة في منظومة الأمم المتحدة خلال فترة المعاينة. لطلب الوصول، يرجى الاتصال بالقائمين على المشروع."
     }
   },
   "error": {
-    "title": "Something went wrong",
-    "scheduleHint": "The schedule could not be loaded. This is usually temporary — please try again.",
-    "tryAgain": "Try again",
-    "meetingNotFound": "Meeting not found",
-    "meetingNotFoundHint": "This meeting could not be found. It may have been removed or renamed."
+    "title": "حدث خطأ ما",
+    "scheduleHint": "تعذّر تحميل الجدول. هذه المشكلة عادةً مؤقتة — يرجى المحاولة مرة أخرى.",
+    "tryAgain": "أعد المحاولة",
+    "meetingNotFound": "لم يُعثر على الجلسة",
+    "meetingNotFoundHint": "تعذّر العثور على هذه الجلسة. ربما تكون قد حُذفت أو أُعيدت تسميتها."
   }
 }

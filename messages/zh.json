@@ -1,178 +1,178 @@
 {
   "metadata": {
-    "siteTitle": "UN Transcripts",
-    "siteDescription": "Browse UN Web TV videos with transcripts of all speeches",
-    "aboutTitle": "About — UN Transcripts",
-    "aboutDescription": "What UN Web TV Transcripts is, who it serves, how it works, and its accuracy and limitations.",
-    "loginTitle": "Sign in — UN Transcripts",
-    "verifyTitle": "Signing in — UN Transcripts",
-    "speakersTitle": "Speakers — UN Transcripts",
-    "speakersDescription": "Browse everyone who has spoken across transcribed UN meetings, by country, group, and organ.",
-    "subscriptionsTitle": "Subscriptions — UN Transcripts",
-    "subscriptionsDescription": "Manage your transcript email notifications."
+    "siteTitle": "联合国会议记录",
+    "siteDescription": "浏览联合国网络电视的视频及所有发言的文字记录",
+    "aboutTitle": "关于本工具 — 联合国会议记录",
+    "aboutDescription": "UN Web TV Transcripts 是什么、面向谁、如何运作,以及其准确性和局限性。",
+    "loginTitle": "登录 — 联合国会议记录",
+    "verifyTitle": "正在登录 — 联合国会议记录",
+    "speakersTitle": "发言者 — 联合国会议记录",
+    "speakersDescription": "按国家、集团和机构,浏览在已记录的联合国会议上发言过的所有人。",
+    "subscriptionsTitle": "订阅 — 联合国会议记录",
+    "subscriptionsDescription": "管理您的会议记录电子邮件通知。"
   },
   "header": {
-    "about": "About",
-    "speakers": "Speakers",
-    "subscriptions": "Subscriptions",
-    "signIn": "Sign in",
-    "signOut": "Sign out",
-    "signedInAs": "Signed in as",
-    "accountMenu": "Account menu",
-    "openMenu": "Open menu",
-    "language": "Language",
-    "timezone": "Timezone",
-    "logoAlt": "UN Transcripts — home"
+    "about": "关于",
+    "speakers": "发言者",
+    "subscriptions": "订阅",
+    "signIn": "登录",
+    "signOut": "退出登录",
+    "signedInAs": "已登录为",
+    "accountMenu": "账户菜单",
+    "openMenu": "打开菜单",
+    "language": "语言",
+    "timezone": "时区",
+    "logoAlt": "联合国会议记录 — 主页"
   },
   "home": {
-    "publicPreview": "Public Preview",
-    "headline": "Read what was said at the UN.",
-    "lead": "Catch up on UN debates in minutes. Skim transcripts, search by speaker, jump to the moment in the recording.",
-    "notice": "Automatically generated from UN Web TV recordings, not official UN records.",
-    "learnMore": "Learn more →",
-    "backToHomepage": "← Back to homepage"
+    "publicPreview": "公开预览版",
+    "headline": "了解联合国发生了什么。",
+    "lead": "几分钟内跟上联合国辩论。浏览文字记录,按发言者搜索,直接跳转到录像中的相应时刻。",
+    "notice": "由联合国网络电视录像自动生成,非联合国正式记录。",
+    "learnMore": "了解更多 →",
+    "backToHomepage": "← 返回首页"
   },
   "login": {
-    "title": "Sign In",
-    "subtitle": "Enter your email address to receive a sign-in link.",
-    "emailLabel": "Email address",
+    "title": "登录",
+    "subtitle": "请输入您的电子邮件地址以接收登录链接。",
+    "emailLabel": "电子邮件地址",
     "emailPlaceholder": "you@example.com",
-    "submit": "Send sign-in link",
-    "submitting": "Sending...",
-    "sentTitle": "Please check your email",
-    "sentBody": "We have sent a sign-in link to {email}",
-    "errorEmailRequired": "Email required",
-    "errorInvalidEmail": "Invalid email address",
-    "errorRecentToken": "A magic link was recently sent. Please check your email or wait a few minutes.",
-    "errorSendFailed": "Failed to send email. Please try again."
+    "submit": "发送登录链接",
+    "submitting": "发送中…",
+    "sentTitle": "请查看您的邮箱",
+    "sentBody": "我们已将登录链接发送至 {email}",
+    "errorEmailRequired": "需要电子邮件",
+    "errorInvalidEmail": "电子邮件地址无效",
+    "errorRecentToken": "最近已发送过登录链接。请检查邮箱或稍等几分钟。",
+    "errorSendFailed": "发送邮件失败。请再试一次。"
   },
   "verify": {
-    "heading": "Complete sign-in",
-    "loading": "Loading…",
-    "signingIn": "Signing you in…",
-    "missingToken": "Missing sign-in token.",
-    "errorMissingToken": "Missing token",
-    "errorInvalidLink": "Invalid or expired link",
-    "backToSignIn": "Back to sign in"
+    "heading": "完成登录",
+    "loading": "加载中…",
+    "signingIn": "正在登录…",
+    "missingToken": "缺少登录令牌。",
+    "errorMissingToken": "缺少令牌",
+    "errorInvalidLink": "链接无效或已过期",
+    "backToSignIn": "返回登录页"
   },
   "pipeline": {
-    "transcribing": "Transcribing audio",
-    "identifyingSpeakers": "Identifying speakers",
-    "analyzingTopics": "Analyzing topics",
-    "scheduled": "Scheduled",
-    "retry": "Retry"
+    "transcribing": "正在转录音频",
+    "identifyingSpeakers": "正在识别发言者",
+    "analyzingTopics": "正在分析主题",
+    "scheduled": "已排期",
+    "retry": "重试"
   },
   "schedule": {
-    "today": "Today",
-    "tomorrow": "Tomorrow",
-    "yesterday": "Yesterday",
-    "showFutureDates": "Show future dates",
-    "hideFutureDates": "Hide future dates",
-    "loadMore": "Load more",
-    "searchPlaceholder": "Search all meetings…",
-    "showOnlyTranscribed": "Show only transcribed meetings",
-    "date": "Date",
-    "noResults": "No meetings match these filters.",
-    "uncategorized": "Uncategorized",
+    "today": "今天",
+    "tomorrow": "明天",
+    "yesterday": "昨天",
+    "showFutureDates": "显示未来日期",
+    "hideFutureDates": "隐藏未来日期",
+    "loadMore": "加载更多",
+    "searchPlaceholder": "搜索所有会议…",
+    "showOnlyTranscribed": "仅显示已转录的会议",
+    "date": "日期",
+    "noResults": "没有会议符合这些筛选条件。",
+    "uncategorized": "未分类",
     "categories": {
-      "media": "Media",
-      "bodies": "Bodies",
-      "events": "Events"
+      "media": "媒体",
+      "bodies": "机构",
+      "events": "活动"
     },
-    "loading": "Loading…",
-    "results": "{count, plural, =0 {No results} one {# result} other {# results}}",
-    "meetings": "{count, plural, =0 {No meetings} one {# meeting} other {# meetings}}",
-    "relevance": "Relevance"
+    "loading": "加载中…",
+    "results": "{count, plural, =0 {无结果} other {# 条结果}}",
+    "meetings": "{count, plural, =0 {无会议} other {# 场会议}}",
+    "relevance": "相关性"
   },
   "speakers": {
-    "title": "Speakers",
-    "lead": "Everyone who has spoken across transcribed meetings, grouped by country, negotiating group, and UN organ. Experimental — speaker names are AI-extracted, and the same person or entity may appear in multiple variants.",
-    "signInPrompt": "Please <signInLink>sign in</signInLink> to browse speakers.",
-    "experimentalGated": "The speaker directory is an experimental feature. See the <aboutLink>About page</aboutLink> to request access.",
-    "backToAllSpeakers": "← All speakers"
+    "title": "发言者",
+    "lead": "所有在已转录会议上发言过的人,按国家、谈判集团和联合国机构分组。实验性 — 发言者姓名由人工智能提取,同一人或实体可能以多种形式出现。",
+    "signInPrompt": "请<signInLink>登录</signInLink>以浏览发言者。",
+    "experimentalGated": "发言者目录是实验性功能。请参阅<aboutLink>关于页面</aboutLink>以申请使用权限。",
+    "backToAllSpeakers": "← 所有发言者"
   },
   "subscriptions": {
-    "title": "Subscriptions",
-    "lead": "Get an email when transcripts you care about are ready.",
-    "signInPrompt": "Please <signInLink>sign in</signInLink> to manage your subscriptions."
+    "title": "订阅",
+    "lead": "当您关注的会议记录准备就绪时,即可收到电子邮件。",
+    "signInPrompt": "请<signInLink>登录</signInLink>以管理您的订阅。"
   },
   "about": {
-    "pageTitle": "About",
-    "tagline": "Automatic transcripts for UN Web TV meetings.",
+    "pageTitle": "关于",
+    "tagline": "联合国网络电视会议的自动文字记录。",
     "whatIsThis": {
-      "heading": "What is this?",
-      "body": "UN Web TV Transcripts is a public preview tool that automatically generates searchable text transcripts from United Nations meeting recordings published on <webtvLink>UN Web TV</webtvLink>."
+      "heading": "这是什么?",
+      "body": "UN Web TV Transcripts 是一个处于公开预览阶段的工具,可从发布在 <webtvLink>联合国网络电视</webtvLink> 上的联合国会议录像中自动生成可搜索的文字记录。"
     },
     "whoIsItFor": {
-      "heading": "Who is it for?",
-      "intro": "The tool is designed to help anyone who needs quick access to the spoken content of UN meetings, including:",
-      "item1": "Diplomats and delegation staff following proceedings across multiple organs",
-      "item2": "Researchers and academics studying UN debates and voting records",
-      "item3": "Journalists covering United Nations affairs",
-      "item4": "Civil society organisations monitoring policy discussions",
-      "item5": "UN Secretariat staff reviewing meeting records"
+      "heading": "面向谁?",
+      "intro": "本工具旨在帮助任何需要快速获取联合国会议口头内容的人,包括:",
+      "item1": "在多个机构间跟踪会议工作的外交官和代表团工作人员",
+      "item2": "研究联合国辩论和表决记录的研究人员和学者",
+      "item3": "报道联合国事务的记者",
+      "item4": "关注政策讨论的民间社会组织",
+      "item5": "审阅会议记录的联合国秘书处工作人员"
     },
     "coverage": {
-      "heading": "What meetings are covered?",
-      "intro": "The tool covers public meetings recorded and published on UN Web TV, including:",
-      "item1": "Security Council (SC) — open meetings and briefings",
-      "item2": "General Assembly (GA) — plenary and main committee sessions",
-      "item3": "Human Rights Council (HRC)",
-      "item4": "Economic and Social Council (ECOSOC)",
-      "item5": "Other inter-governmental bodies as available on Web TV",
-      "closed": "Closed or confidential meetings are not recorded on Web TV and are therefore not covered."
+      "heading": "涵盖哪些会议?",
+      "intro": "本工具涵盖在联合国网络电视上录制并发布的公开会议,包括:",
+      "item1": "安全理事会 — 公开会议和通报会",
+      "item2": "大会 — 全体会议和主要委员会会议",
+      "item3": "人权理事会",
+      "item4": "经济及社会理事会",
+      "item5": "网络电视上可获取的其他政府间机构",
+      "closed": "闭门或秘密会议不会在网络电视上录制,因此不在本工具的涵盖范围内。"
     },
     "howItWorks": {
-      "heading": "How it works",
-      "step1Title": "Meeting schedule collection",
-      "step1Body": "The system monitors UN Web TV for newly published meeting recordings. Meeting metadata — title, date, UN organ, and document references — is extracted from the Web TV website and stored.",
-      "step2Title": "Audio transcription",
-      "step2Body": "We transcribe the existing UN audio channels — the original \"floor\" mix and each official UN interpretation channel — directly. No machine translation is applied. Each channel is transcribed by a speech-to-text model chosen for that language (see the table below).",
-      "step3Title": "Speaker identification",
-      "step3Body": "After transcription, a second AI model analyses the text and audio to assign names and affiliations to each speaker where possible. It uses contextual clues — such as the chair introducing delegates, country name mentions, and speaker diarization — together with the official list of participants when available.",
-      "step4Title": "Topic analysis",
-      "step4Body": "The transcript is automatically analysed to identify the main policy topics discussed, using categories relevant to UN proceedings (e.g. humanitarian affairs, international peace and security, human rights).",
-      "step5Title": "Official record alignment",
-      "step5Body": "Where official verbatim or summary records (PV/SR documents) exist, the system retrieves them and adds timestamps to align the text with the video. Besides timestamps, no AI processing is involved for these documents."
+      "heading": "工作原理",
+      "step1Title": "收集会议日程",
+      "step1Body": "系统监测联合国网络电视上新发布的会议录像。会议元数据 — 标题、日期、联合国机构和相关文件参考 — 从网络电视网站提取并存储。",
+      "step2Title": "音频转录",
+      "step2Body": "我们直接转录现有的联合国音频频道 — 原始的「现场」声道和每一种联合国官方口译声道。不进行机器翻译。每个声道由针对该语言选定的语音识别模型进行转录(详见下表)。",
+      "step3Title": "发言者识别",
+      "step3Body": "转录完成后,第二个 AI 模型会分析文字和音频,在可能的情况下为每位发言者标注姓名和所属。它使用上下文线索 — 主席介绍代表、提及国家名称、说话人分离 — 并结合可获得的正式与会者名单。",
+      "step4Title": "主题分析",
+      "step4Body": "系统自动分析记录,识别讨论的主要政策主题,并使用与联合国工作相关的类别(例如人道主义事务、国际和平与安全、人权)。",
+      "step5Title": "对照官方记录",
+      "step5Body": "如果存在官方逐字记录或简要记录(PV/SR 文件),系统会获取它们并添加时间戳以将文本与视频对齐。除时间戳外,这些文件不进行任何 AI 处理。"
     },
     "models": {
-      "heading": "Transcription model per language",
-      "intro": "Different speech-to-text providers excel at different languages, so each track is routed to the model that performs best for it in our evaluation.",
-      "colLanguage": "Language track",
-      "colModel": "Transcription model",
-      "postProcessing": "Post-processing — speaker identification and topic classification — is performed by Azure OpenAI GPT-5.5 for all languages."
+      "heading": "各语言的转录模型",
+      "intro": "不同的语音识别提供商在不同语言上各有优势,因此每个声道都被路由到我们评测中表现最佳的模型。",
+      "colLanguage": "语言声道",
+      "colModel": "转录模型",
+      "postProcessing": "后处理 — 发言者识别和主题分类 — 对所有语言均由 Azure OpenAI GPT-5.5 完成。"
     },
     "accuracy": {
-      "heading": "Accuracy and limitations",
-      "para1": "These transcripts are created using automatic speech recognition and are not official UN records.",
-      "para2": "They are a faster, unofficial reference that may be useful for monitoring and research, but should not be cited as authoritative. For the official record, please refer to the <odsLink>UN Official Document System</odsLink> (verbatim records, summary records, and resolutions).",
-      "issuesIntro": "Automatic transcription is much faster than human transcription but introduces errors a human reviewer would catch. Common issues include:",
-      "issue1": "Proper nouns — country names, delegate names, place names, and UN document symbols may be misheard or misspelt",
-      "issue2": "Technical terminology — legal or procedural phrases specific to UN practice may be transcribed incorrectly",
-      "issue3": "Accented speech — accuracy varies by speaker accent and microphone quality",
-      "issue4": "Overlapping speech — when multiple speakers talk simultaneously, attribution may be wrong"
+      "heading": "准确性与局限",
+      "para1": "这些文字记录由自动语音识别生成,并非联合国正式记录。",
+      "para2": "它们是更快速的非官方参考,可用于跟踪和研究,但不应作为权威引用。如需正式记录,请参阅<odsLink>联合国正式文件系统</odsLink>(逐字记录、简要记录和决议)。",
+      "issuesIntro": "自动转录比人工转录快得多,但会产生人工审校能够发现的错误。常见问题包括:",
+      "issue1": "专有名词 — 国家名称、代表姓名、地名以及联合国文件编号可能被听错或拼错",
+      "issue2": "技术术语 — 联合国实践中的法律或程序用语可能被错误地转录",
+      "issue3": "有口音的发言 — 准确性因发言者口音和麦克风质量而异",
+      "issue4": "重叠发言 — 多人同时发言时,归属可能出错"
     },
     "sources": {
-      "heading": "Data sources",
-      "webtvLabel": "UN Web TV",
-      "webtvBody": "— Meeting recordings and metadata, delivered via the Kaltura media platform (publicly accessible at webtv.un.org).",
-      "odsLabel": "UN Official Document System",
-      "odsBody": "— Official verbatim records (PV documents) retrieved from documents.un.org where available."
+      "heading": "数据来源",
+      "webtvLabel": "联合国网络电视",
+      "webtvBody": "— 会议录像和元数据,通过 Kaltura 媒体平台提供(公开访问地址为 webtv.un.org)。",
+      "odsLabel": "联合国正式文件系统",
+      "odsBody": "— 从 documents.un.org 检索的正式逐字记录(PV 文件,凡可获取者)。"
     },
     "status": {
-      "heading": "Status",
-      "body": "This tool is in <publicPreview>Public Preview</publicPreview>. Features, coverage, and accuracy are actively being improved. Feedback is welcome."
+      "heading": "状态",
+      "body": "本工具处于<publicPreview>公开预览阶段</publicPreview>。功能、覆盖范围和准确性正在持续改进。欢迎反馈。"
     },
     "experimental": {
-      "heading": "Experimental features",
-      "body": "Experimental features (proposition analysis, speaker directory) are available to selected UN-system accounts during the preview period. To request access, please contact the maintainers."
+      "heading": "实验性功能",
+      "body": "在预览期间,实验性功能(主张分析、发言者目录)向选定的联合国系统账户开放。如需申请使用权限,请联系维护者。"
     }
   },
   "error": {
-    "title": "Something went wrong",
-    "scheduleHint": "The schedule could not be loaded. This is usually temporary — please try again.",
-    "tryAgain": "Try again",
-    "meetingNotFound": "Meeting not found",
-    "meetingNotFoundHint": "This meeting could not be found. It may have been removed or renamed."
+    "title": "出错了",
+    "scheduleHint": "无法加载日程。通常这是暂时问题 — 请稍后再试。",
+    "tryAgain": "重试",
+    "meetingNotFound": "未找到该会议",
+    "meetingNotFoundHint": "无法找到此会议。它可能已被删除或重命名。"
   }
 }
