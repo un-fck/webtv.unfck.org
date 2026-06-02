@@ -88,19 +88,17 @@ export interface RealignResult {
 /** Flatten the leading `n` word texts from a statement, whatever its shape. */
 function leadingText(s: Stmt, n: number): string {
   const out: string[] = [];
-  const push = (t?: string) => {
-    if (t) out.push(t);
-  };
   const fromWords = (ws?: Array<{ text: string }>) =>
-    ws?.forEach((w) => push(w.text));
+    ws?.forEach((w) => w.text && out.push(w.text));
   if (s.words?.length) fromWords(s.words);
   for (const p of s.paragraphs ?? []) {
     if (out.length >= n) break;
     if (p.words?.length) fromWords(p.words);
     else
       for (const sent of p.sentences ?? []) {
+        if (out.length >= n) break;
         if (sent.words?.length) fromWords(sent.words);
-        else push(...sent.text.split(/\s+/));
+        else for (const w of sent.text.split(/\s+/)) if (w) out.push(w);
       }
   }
   return out.slice(0, n).join(" ");
