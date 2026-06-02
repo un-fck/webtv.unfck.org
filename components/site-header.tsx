@@ -85,7 +85,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
         >
           <Image
             src="/images/un-emblem-colour.svg"
-            alt="United Nations"
+            alt={t("emblemAlt")}
             width={152}
             height={127}
             className="h-10 w-[47.9px] shrink-0 select-none"
@@ -106,10 +106,11 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
             draggable={false}
           />
           {/* Both words are real text so the baseline lines up perfectly;
-              same size, only the weight differs. */}
+              same size, only the weight differs. Brand-first wordmark
+              regardless of locale grammar — this is a logotype, not a sentence. */}
           <span className="text-[23.83px] leading-none tracking-tight text-foreground">
-            <span className="font-bold">United Nations</span>{" "}
-            <span className="font-light">Transcripts</span>
+            <span className="font-bold">{t("wordmarkBrand")}</span>{" "}
+            <span className="font-light">{t("wordmarkDescriptor")}</span>
           </span>
         </Link>
         <div className="ms-auto flex items-center gap-4">

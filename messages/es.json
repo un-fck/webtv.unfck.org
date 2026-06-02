@@ -22,7 +22,10 @@
     "openMenu": "Abrir menú",
     "language": "Idioma",
     "timezone": "Zona horaria",
-    "logoAlt": "Transcripciones de la ONU — inicio"
+    "logoAlt": "Transcripciones de la ONU — inicio",
+    "wordmarkBrand": "Naciones Unidas",
+    "wordmarkDescriptor": "Transcripciones",
+    "emblemAlt": "Naciones Unidas"
   },
   "home": {
     "publicPreview": "Vista previa pública",

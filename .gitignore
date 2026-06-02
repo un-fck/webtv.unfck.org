@@ -51,5 +51,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .playwright-mcp/
-ar-header-*.png
-page-*.png
+# Stray root-level screenshots written by playwright-mcp during dev.
+/*-header-*.png
+/page-*.png

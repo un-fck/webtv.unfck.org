@@ -1,15 +1,15 @@
 {
   "metadata": {
-    "siteTitle": "联合国会议记录",
-    "siteDescription": "浏览联合国网络电视的视频及所有发言的文字记录",
-    "aboutTitle": "关于本工具 — 联合国会议记录",
+    "siteTitle": "联合国转录",
+    "siteDescription": "浏览联合国网络电视的视频及所有发言的转录文本",
+    "aboutTitle": "关于本工具 — 联合国转录",
     "aboutDescription": "UN Web TV Transcripts 是什么、面向谁、如何运作,以及其准确性和局限性。",
-    "loginTitle": "登录 — 联合国会议记录",
-    "verifyTitle": "正在登录 — 联合国会议记录",
-    "speakersTitle": "发言者 — 联合国会议记录",
-    "speakersDescription": "按国家、集团和机构,浏览在已记录的联合国会议上发言过的所有人。",
-    "subscriptionsTitle": "订阅 — 联合国会议记录",
-    "subscriptionsDescription": "管理您的会议记录电子邮件通知。"
+    "loginTitle": "登录 — 联合国转录",
+    "verifyTitle": "正在登录 — 联合国转录",
+    "speakersTitle": "发言者 — 联合国转录",
+    "speakersDescription": "按国家、集团和机构,浏览在已转录的联合国会议上发言过的所有人。",
+    "subscriptionsTitle": "订阅 — 联合国转录",
+    "subscriptionsDescription": "管理您的转录电子邮件通知。"
   },
   "header": {
     "about": "关于",
@@ -22,12 +22,15 @@
     "openMenu": "打开菜单",
     "language": "语言",
     "timezone": "时区",
-    "logoAlt": "联合国会议记录 — 主页"
+    "logoAlt": "联合国转录 — 主页",
+    "wordmarkBrand": "联合国",
+    "wordmarkDescriptor": "转录",
+    "emblemAlt": "联合国"
   },
   "home": {
     "publicPreview": "公开预览版",
     "headline": "了解联合国发生了什么。",
-    "lead": "几分钟内跟上联合国辩论。浏览文字记录,按发言者搜索,直接跳转到录像中的相应时刻。",
+    "lead": "几分钟内跟上联合国辩论。浏览转录文本,按发言者搜索,直接跳转到录像中的相应时刻。",
     "notice": "由联合国网络电视录像自动生成,非联合国正式记录。",
     "learnMore": "了解更多 →",
     "backToHomepage": "← 返回首页"
@@ -93,15 +96,15 @@
   },
   "subscriptions": {
     "title": "订阅",
-    "lead": "当您关注的会议记录准备就绪时,即可收到电子邮件。",
+    "lead": "当您关注的转录准备就绪时,即可收到电子邮件。",
     "signInPrompt": "请<signInLink>登录</signInLink>以管理您的订阅。"
   },
   "about": {
     "pageTitle": "关于",
-    "tagline": "联合国网络电视会议的自动文字记录。",
+    "tagline": "联合国网络电视会议的自动转录。",
     "whatIsThis": {
       "heading": "这是什么?",
-      "body": "UN Web TV Transcripts 是一个处于公开预览阶段的工具,可从发布在 <webtvLink>联合国网络电视</webtvLink> 上的联合国会议录像中自动生成可搜索的文字记录。"
+      "body": "UN Web TV Transcripts 是一个处于公开预览阶段的工具,可从发布在 <webtvLink>联合国网络电视</webtvLink> 上的联合国会议录像中自动生成可搜索的转录文本。"
     },
     "whoIsItFor": {
       "heading": "面向谁?",
@@ -131,7 +134,7 @@
       "step3Title": "发言者识别",
       "step3Body": "转录完成后,第二个 AI 模型会分析文字和音频,在可能的情况下为每位发言者标注姓名和所属。它使用上下文线索 — 主席介绍代表、提及国家名称、说话人分离 — 并结合可获得的正式与会者名单。",
       "step4Title": "主题分析",
-      "step4Body": "系统自动分析记录,识别讨论的主要政策主题,并使用与联合国工作相关的类别(例如人道主义事务、国际和平与安全、人权)。",
+      "step4Body": "系统自动分析转录文本,识别讨论的主要政策主题,并使用与联合国工作相关的类别(例如人道主义事务、国际和平与安全、人权)。",
       "step5Title": "对照官方记录",
       "step5Body": "如果存在官方逐字记录或简要记录(PV/SR 文件),系统会获取它们并添加时间戳以将文本与视频对齐。除时间戳外,这些文件不进行任何 AI 处理。"
     },
@@ -144,7 +147,7 @@
     },
     "accuracy": {
       "heading": "准确性与局限",
-      "para1": "这些文字记录由自动语音识别生成,并非联合国正式记录。",
+      "para1": "这些转录由自动语音识别生成,并非联合国正式记录。",
       "para2": "它们是更快速的非官方参考,可用于跟踪和研究,但不应作为权威引用。如需正式记录,请参阅<odsLink>联合国正式文件系统</odsLink>(逐字记录、简要记录和决议)。",
       "issuesIntro": "自动转录比人工转录快得多,但会产生人工审校能够发现的错误。常见问题包括:",
       "issue1": "专有名词 — 国家名称、代表姓名、地名以及联合国文件编号可能被听错或拼错",

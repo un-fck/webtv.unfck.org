@@ -22,7 +22,10 @@
     "openMenu": "Open menu",
     "language": "Language",
     "timezone": "Timezone",
-    "logoAlt": "UN Transcripts — home"
+    "logoAlt": "UN Transcripts — home",
+    "wordmarkBrand": "United Nations",
+    "wordmarkDescriptor": "Transcripts",
+    "emblemAlt": "United Nations"
   },
   "home": {
     "publicPreview": "Public Preview",
