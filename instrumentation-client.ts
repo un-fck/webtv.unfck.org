@@ -6,7 +6,12 @@
 // and speaker names, which is sensitive in a UN context.
 import * as Sentry from "@sentry/nextjs";
 
-if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+// Skip Sentry in dev: keeps the dev bundle smaller and avoids the feedback
+// widget showing up locally. Prod behaviour is unchanged.
+if (
+  process.env.NODE_ENV === "production" &&
+  process.env.NEXT_PUBLIC_SENTRY_DSN
+) {
   Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ChevronRight } from "lucide-react";
 import type { EntityKind, EntitySummary } from "@/lib/speaker-index";
 import { slugify } from "@/lib/speaker-keys";

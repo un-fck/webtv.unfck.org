@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/site-header";
+import { Link } from "@/i18n/navigation";
 import { typography } from "@/lib/typography";
 import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
@@ -59,7 +60,7 @@ export default async function AboutPage() {
       <SiteHeader />
       <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
-          <a
+          <Link
             href="/"
             className={cn(
               typography.caption,
@@ -67,7 +68,7 @@ export default async function AboutPage() {
             )}
           >
             ← Back to homepage
-          </a>
+          </Link>
         </nav>
         <div className="max-w-2xl">
           <div className="mb-10">

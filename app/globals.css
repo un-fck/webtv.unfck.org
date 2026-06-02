@@ -179,3 +179,16 @@
 html {
   scrollbar-gutter: stable;
 }
+
+/* Language-specific font stacks. Each locale's layout loads only the fonts it
+   needs (Roboto for all, Noto Sans Arabic for ar, Noto Sans SC for zh) and
+   declares the matching --font-* variables. We pick the right primary font
+   per :lang() while keeping Roboto as a Latin-script fallback. */
+:lang(ar) {
+  font-family:
+    var(--font-arabic), var(--font-roboto), system-ui, sans-serif;
+}
+
+:lang(zh) {
+  font-family: var(--font-sc), var(--font-roboto), system-ui, sans-serif;
+}

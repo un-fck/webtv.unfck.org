@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SpeakerProfile } from "@/components/speaker-profile";
 import { getCurrentUser } from "@/lib/auth/service";

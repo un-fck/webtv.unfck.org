@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";

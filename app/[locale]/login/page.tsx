@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { LoginForm } from "@/components/login-form";
 import { getCurrentUser } from "@/lib/auth/service";
@@ -9,9 +9,14 @@ export const metadata = {
   title: "Sign in — UN Transcripts",
 };
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   const user = await getCurrentUser();
-  if (user) redirect("/");
+  if (user) redirect({ href: "/", locale });
 
   return (
     <main className="flex min-h-screen flex-col bg-background">

@@ -1,7 +1,7 @@
 "use client"; // Error boundaries must be Client Components
 
 import { useEffect } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { typography } from "@/lib/typography";
 
 export default function MeetingError({

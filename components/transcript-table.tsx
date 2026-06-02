@@ -1,6 +1,6 @@
 "use client";
 
-import type { ServerParams } from "@/app/page";
+import type { ServerParams } from "@/app/[locale]/page";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Video } from "@/lib/un-api";
 import { CalendarIcon, ChevronDown, Search, SearchX, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import {
   Fragment,
   useCallback,
@@ -899,13 +900,13 @@ export function VideoTable({
               pvAvailable={video.pvAvailable}
               pvSymbol={video.pvSymbol}
             />
-            <a
+            <Link
               href={`/${video.slug}`}
               onClick={(e) => e.stopPropagation()}
               className="underline-offset-2 hover:underline"
             >
               {video.cleanTitle}
-            </a>
+            </Link>
           </td>
         </tr>
       </Fragment>

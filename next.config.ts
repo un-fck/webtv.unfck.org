@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {};
 
@@ -9,13 +12,19 @@ const nextConfig: NextConfig = {};
 // SENTRY_ORG / SENTRY_PROJECT (set in Vercel env, leave unset locally).
 // Source-map upload is skipped automatically when the auth token isn't set,
 // so local builds and contributor PRs still succeed.
-export default withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  silent: !process.env.CI,
-  // Route Sentry events through a same-origin path so ad-blockers and
-  // privacy extensions don't drop them (they pattern-match on
-  // *.ingest.sentry.io, and some lists also block the default `/monitoring`).
-  // Using an app-specific path avoids those known patterns.
-  tunnelRoute: "/api/internal/observability",
-});
+//
+// Skipped in `next dev`: Sentry's bundler plugins + runtime instrumentation
+// retain module-graph state under Turbopack HMR, which OOMs the dev server
+// after ~25 min of idle polling. Prod builds (and `next start`) still wrap.
+export default process.env.NODE_ENV === "development"
+  ? withNextIntl(nextConfig)
+  : withSentryConfig(withNextIntl(nextConfig), {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      silent: !process.env.CI,
+      // Route Sentry events through a same-origin path so ad-blockers and
+      // privacy extensions don't drop them (they pattern-match on
+      // *.ingest.sentry.io, and some lists also block the default `/monitoring`).
+      // Using an app-specific path avoids those known patterns.
+      tunnelRoute: "/api/internal/observability",
+    });

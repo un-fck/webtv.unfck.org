@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { ProfileBubble } from "@/lib/speaker-index";
 import { VideoMoment } from "@/components/video-moment";
 import { typography } from "@/lib/typography";

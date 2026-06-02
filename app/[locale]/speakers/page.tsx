@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SpeakerOverview } from "@/components/speaker-overview";
 import { getCurrentUser } from "@/lib/auth/service";
@@ -23,7 +23,7 @@ export default async function SpeakersPage() {
       <SiteHeader />
       <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
-          <a
+          <Link
             href="/"
             className={cn(
               typography.caption,
@@ -31,7 +31,7 @@ export default async function SpeakersPage() {
             )}
           >
             ← Back to homepage
-          </a>
+          </Link>
         </nav>
         <div className="mb-10 max-w-2xl">
           <h1 className={cn(typography.pageTitle, "mb-3")}>Speakers</h1>

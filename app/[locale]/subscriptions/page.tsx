@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SubscriptionsManager } from "@/components/subscriptions-manager";
 import { getCurrentUser } from "@/lib/auth/service";
@@ -19,7 +19,7 @@ export default async function SubscriptionsPage() {
       <SiteHeader />
       <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
-          <a
+          <Link
             href="/"
             className={cn(
               typography.caption,
@@ -27,7 +27,7 @@ export default async function SubscriptionsPage() {
             )}
           >
             ← Back to homepage
-          </a>
+          </Link>
         </nav>
         <div className="max-w-2xl">
           <div className="mb-10">

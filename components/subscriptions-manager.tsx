@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Bell } from "lucide-react";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";

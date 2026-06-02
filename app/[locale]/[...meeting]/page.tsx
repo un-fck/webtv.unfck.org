@@ -6,7 +6,7 @@ import { extractKalturaId } from "@/lib/kaltura";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 import { getCurrentUser } from "@/lib/auth/service";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 export const dynamic = "force-dynamic";
 

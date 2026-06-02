@@ -1,20 +1,17 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { getVideoByAssetId } from "@/lib/db";
 import { meetingSlugFromVideo } from "@/lib/meeting-slug";
+import { redirect } from "@/i18n/navigation";
 
 export const dynamic = "force-dynamic";
-
-const UN_LANGS = new Set(["en", "ar", "zh", "es", "fr", "ru"]);
 
 export default async function AssetRedirect({
   params,
 }: {
-  params: Promise<{ lang: string; assetPath: string[] }>;
+  params: Promise<{ locale: string; assetPath: string[] }>;
 }) {
-  const { lang, assetPath } = await params;
-
-  if (!UN_LANGS.has(lang)) notFound();
+  const { locale, assetPath } = await params;
 
   const assetId = assetPath.join("/");
   const video = await getVideoByAssetId(assetId);
@@ -23,5 +20,5 @@ export default async function AssetRedirect({
   // Use the stored slug (saveVideo is the authority for uniqueness, incl.
   // -part-N disambiguation); fall back to recomputation only for legacy rows.
   const slug = video.slug ?? meetingSlugFromVideo(video);
-  redirect(`/${slug}`);
+  redirect({ href: `/${slug}`, locale });
 }

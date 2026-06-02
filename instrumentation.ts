@@ -5,6 +5,10 @@
 import * as Sentry from "@sentry/nextjs";
 
 export async function register() {
+  // Skip in dev: Sentry's Node instrumentation patches built-in modules and
+  // retains per-request span context, which compounds under Turbopack HMR and
+  // OOMs the dev server. Prod behaviour is unchanged.
+  if (process.env.NODE_ENV !== "production") return;
   if (!process.env.SENTRY_DSN && !process.env.NEXT_PUBLIC_SENTRY_DSN) return;
 
   const common = {
