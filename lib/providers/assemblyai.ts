@@ -69,6 +69,15 @@ function makeAssemblyai(
         start: u.start,
         end: u.end,
         text: u.text,
+        words: Array.isArray(u.words)
+          ? u.words.map((w: any) => ({
+              text: w.text,
+              start: w.start,
+              end: w.end,
+              confidence: w.confidence,
+              speaker: w.speaker,
+            }))
+          : undefined,
       }));
 
       const audioSeconds: number | undefined = result.audio_duration;

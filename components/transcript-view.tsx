@@ -6,6 +6,7 @@ import { getTopicColor } from "@/components/transcription-panel";
 import { formatTimecode } from "@/lib/transcript-formatting";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
+import { weaveSentenceParts } from "@/lib/weave-sentence-parts";
 
 interface Word {
   text: string;
@@ -36,33 +37,6 @@ interface SpeakerSegment {
   speaker: string;
   statementIndices: number[];
   timestamp: number;
-}
-
-type SentencePart = { text: string; word?: Word; wordIdx?: number };
-
-/**
- * Walk sent.text and sent.words[] together to produce the spans for rendering.
- * Each word becomes a clickable/karaoke-tracked part; everything between or
- * around words (spaces, punctuation, Chinese 。 etc.) becomes a plain part.
- * Sourcing the rendered text from sent.text means nothing visible is ever
- * dropped — a broken words[] just yields fewer interactive spans, which is
- * exactly the visible signal we want when a provider misbehaves.
- */
-function weaveSentenceParts(text: string, words?: Word[]): SentencePart[] {
-  if (!words || words.length === 0) return [{ text }];
-  const parts: SentencePart[] = [];
-  let cursor = 0;
-  for (let i = 0; i < words.length; i++) {
-    const w = words[i];
-    if (!w.text) continue;
-    const idx = text.indexOf(w.text, cursor);
-    if (idx === -1) continue; // word text not present in remaining sentence — skip its handler
-    if (idx > cursor) parts.push({ text: text.slice(cursor, idx) });
-    parts.push({ text: w.text, word: w, wordIdx: i });
-    cursor = idx + w.text.length;
-  }
-  if (cursor < text.length) parts.push({ text: text.slice(cursor) });
-  return parts;
 }
 
 function renderSpeakerInfo(
@@ -319,6 +293,13 @@ export function TranscriptView({
                                           display: "inline",
                                         }
                                       : {}),
+                                    // No per-word timestamps from the provider
+                                    // (Azure gpt-4o-transcribe-diarize emits
+                                    // segments per utterance; Gemini emits
+                                    // segments per sentence/clause). The
+                                    // segment IS the smallest honest timed
+                                    // unit, so underline the whole active
+                                    // sentence as the karaoke cue.
                                     ...(wholeIsClickable
                                       ? {
                                           textDecorationLine: isSentActive
