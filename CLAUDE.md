@@ -13,6 +13,45 @@ Don't assume, don't hide confusion, surface tradeoffs. Before implementing:
 
 (For trivial tasks, use judgment — this biases toward caution over speed.)
 
+## Every user-visible string change must update all six locale catalogs
+
+The app is internationalized via `next-intl` with message catalogs at
+`messages/{en,fr,es,ar,zh,ru}.json`. Whenever you add, edit, rename, or
+delete a string in `messages/en.json`, you MUST make the corresponding
+change in the other five catalogs in the same edit. The same rule applies
+when you introduce a new `t("…")` call site that requires a new key.
+
+Practical workflow:
+
+- **Adding a key**: add it to all six files. For non-English locales, write
+  the translation, don't leave the English value as a placeholder — the user
+  will not see the catalog drift back to English later.
+- **Editing an English string**: re-translate the other five. Don't assume
+  the existing non-English translation still maps to the new English wording.
+- **Renaming or deleting a key**: do it across all six files in the same
+  change. Stale keys in non-English catalogs are silent dead weight.
+- **Plurals**: every locale's catalog must include the plural categories its
+  language requires. Russian/Ukrainian/Polish need `one|few|many|other`,
+  Arabic needs `zero|one|two|few|many|other`, Chinese/Japanese collapse to
+  `other`. ICU MessageFormat syntax: `{count, plural, one {# item} other {# items}}`.
+- **UN-specific terminology**: prefer the UN's official translation when
+  there is one (Security Council = Conseil de sécurité = مجلس الأمن, etc.).
+  Check by scraping the matching locale on un.org or webtv.un.org if unsure.
+- **Brand strings stay English**: the wordmark brand ("United Nations"
+  in English) does get translated per-locale (in the `header.wordmarkBrand`
+  key); but service/product names ("UN Web TV", "Kaltura", "Google Gemini")
+  stay verbatim everywhere — don't transliterate or translate them.
+
+Keep keys hierarchical and grouped by surface (`header.about`,
+`schedule.today`, `about.howItWorks.step1Title`). Use ICU rich-text tags
+(`<signInLink>…</signInLink>`) for inline links rather than concatenating
+substrings.
+
+When you touch a category name (the values in `schedule.categoryNames`),
+remember those come from WebTV's per-locale schedule. The harvest script at
+`scripts/harvest-categories.ts` can re-extract them if the canonical list
+changes; re-run it before guessing.
+
 ## Never apply database changes yourself
 
 Do NOT run migrations or any write/DDL against a database (no `psql -f`, no
