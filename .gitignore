@@ -51,3 +51,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .playwright-mcp/
+ar-header-*.png
+page-*.png

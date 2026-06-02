@@ -79,7 +79,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
           href="/"
           aria-label={t("logoAlt")}
           className={cn(
-            "absolute top-1/2 right-[calc(100%-24.74px)] h-10 w-[47.9px] -translate-y-1/2 transition-opacity hover:opacity-75",
+            "absolute top-1/2 end-[calc(100%-24.74px)] h-10 w-[47.9px] -translate-y-1/2 transition-opacity hover:opacity-75",
             outboardOnly,
           )}
         >
@@ -112,7 +112,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
             <span className="font-light">Transcripts</span>
           </span>
         </Link>
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ms-auto flex items-center gap-4">
           {/* md+: inline nav. Below md it collapses into the hamburger so the
               right rail stays uncluttered when more items appear after sign-in
               (Speakers, Subscriptions, timezone picker). */}
