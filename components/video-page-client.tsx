@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { VideoPlayer } from "./video-player";
 import {
   TranscriptionPanel,
@@ -38,6 +38,7 @@ export function VideoPageClient({
   const { formatMeetingDate, formatMeetingTime } = useMeetingFormat();
   const t = useTranslations("transcript");
   const tVideo = useTranslations("video");
+  const uiLocale = useLocale();
   const [player, setPlayer] = useState<{
     currentTime: number;
     play: () => void;
@@ -63,19 +64,37 @@ export function VideoPageClient({
   );
   const [topicsOpen, setTopicsOpen] = useState(true);
   const [speakersOpen, setSpeakersOpen] = useState(true);
-  const [selectedLanguage, setSelectedLanguage] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("selectedLanguage") || "en";
-    }
-    return "en";
-  });
-
-  useEffect(() => {
-    localStorage.setItem("selectedLanguage", selectedLanguage);
-  }, [selectedLanguage]);
+  // Default to the user's UI locale — same language they chose for the site
+  // is the natural first guess for what they want to read/listen to. If that
+  // language isn't actually available for this meeting, the validation effect
+  // below falls back to floor (original audio) or the first available track.
+  // No localStorage: each new meeting starts from the UI-locale default and
+  // resets per-meeting picks.
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(uiLocale);
   const [availableLanguages, setAvailableLanguages] = useState<
     LanguageOption[]
   >([]);
+
+  // Once we know what's actually available for this meeting, validate that
+  // `selectedLanguage` is one of the available codes. If not, fall back:
+  //   UI locale → floor (original audio) → first available track.
+  // Only fires when availableLanguages updates and the selection is invalid,
+  // so a user's manual pick of an available language is never overridden.
+  useEffect(() => {
+    if (availableLanguages.length === 0) return;
+    const currentIsAvailable = availableLanguages.some(
+      (l) => l.code === selectedLanguage && l.available,
+    );
+    if (currentIsAvailable) return;
+    const floor = availableLanguages.find(
+      (l) => l.code === "floor" && l.available,
+    );
+    const firstAvailable = availableLanguages.find((l) => l.available);
+    const fallback = floor?.code ?? firstAvailable?.code;
+    if (fallback && fallback !== selectedLanguage) {
+      setSelectedLanguage(fallback);
+    }
+  }, [availableLanguages, selectedLanguage]);
 
   // Update available languages based on tracks the player actually has
   const handleAudioTracksReady = useCallback(
