@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect, useRef } from "react";
 
 interface AudioTrack {
@@ -9,6 +10,8 @@ interface AudioTrack {
   active: boolean;
 }
 
+type KalturaErrorEvent = { payload?: unknown; type?: string };
+
 interface KalturaPlayer {
   currentTime: number;
   play: () => void;
@@ -16,6 +19,38 @@ interface KalturaPlayer {
   destroy: () => void;
   getTracks: (type?: string) => AudioTrack[];
   selectTrack: (track: AudioTrack) => void;
+  addEventListener: (
+    type: string,
+    handler: (event: KalturaErrorEvent) => void,
+  ) => void;
+  removeEventListener: (
+    type: string,
+    handler: (event: KalturaErrorEvent) => void,
+  ) => void;
+}
+
+// The Kaltura SDK rejects promises and emits error events with plain objects
+// like { category, code, data, severity }. Sentry can't extract a message from
+// those and falls back to "Object captured as promise rejection with keys: ...".
+// Wrap them into a proper Error so the issue page shows the category/code.
+function reportKalturaError(source: string, payload: unknown) {
+  const p = (payload ?? {}) as {
+    category?: number;
+    code?: number;
+    severity?: number;
+    name?: string;
+    data?: unknown;
+  };
+  const label =
+    typeof p.name === "string" && p.name
+      ? p.name
+      : `category=${p.category ?? "?"} code=${p.code ?? "?"}`;
+  const err = new Error(`Kaltura player ${source}: ${label}`);
+  err.name = "KalturaPlayerError";
+  Sentry.captureException(err, {
+    tags: { component: "kaltura-player", source },
+    extra: { payload: p },
+  });
 }
 
 interface VideoPlayerProps {
@@ -88,6 +123,7 @@ export function VideoPlayer({
     // `checkPlayer` is tracked so the readiness poll is cleared on cleanup.
     let cancelled = false;
     let checkPlayer: ReturnType<typeof setInterval> | undefined;
+    let errorListener: ((event: KalturaErrorEvent) => void) | undefined;
 
     // Wait for window.KalturaPlayer (set by the SDK script), then init.
     const waitForPlayer = () => {
@@ -160,26 +196,41 @@ export function VideoPlayer({
         // loadMedia promise below hasn't resolved yet.
         playerRef.current = player;
 
-        player.loadMedia({ entryId: kalturaId }).then(() => {
-          if (cancelled) return;
-          onPlayerReady?.(player);
+        errorListener = (event) => {
+          reportKalturaError("error-event", event?.payload ?? event);
+        };
+        try {
+          player.addEventListener("error", errorListener);
+        } catch {
+          errorListener = undefined;
+        }
 
-          // Report audio tracks, retrying until the HLS manifest is parsed
-          const tryReportTracks = (retries = 5) => {
+        player
+          .loadMedia({ entryId: kalturaId })
+          .then(() => {
             if (cancelled) return;
-            try {
-              const tracks = player.getTracks("audio");
-              if (tracks.length > 0) {
-                onAudioTracksReady?.(tracks);
-              } else if (retries > 0) {
-                setTimeout(() => tryReportTracks(retries - 1), 1000);
+            onPlayerReady?.(player);
+
+            // Report audio tracks, retrying until the HLS manifest is parsed
+            const tryReportTracks = (retries = 5) => {
+              if (cancelled) return;
+              try {
+                const tracks = player.getTracks("audio");
+                if (tracks.length > 0) {
+                  onAudioTracksReady?.(tracks);
+                } else if (retries > 0) {
+                  setTimeout(() => tryReportTracks(retries - 1), 1000);
+                }
+              } catch {
+                // ignore
               }
-            } catch {
-              // ignore
-            }
-          };
-          tryReportTracks();
-        });
+            };
+            tryReportTracks();
+          })
+          .catch((err) => {
+            if (cancelled) return;
+            reportKalturaError("loadMedia", err);
+          });
       } catch (error) {
         console.error("Failed to initialize Kaltura player:", error);
       }
@@ -192,6 +243,14 @@ export function VideoPlayer({
         checkPlayer = undefined;
       }
       if (playerRef.current) {
+        if (errorListener) {
+          try {
+            playerRef.current.removeEventListener("error", errorListener);
+          } catch {
+            // ignore
+          }
+          errorListener = undefined;
+        }
         try {
           playerRef.current.destroy();
         } catch {
