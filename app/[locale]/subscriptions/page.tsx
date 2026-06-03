@@ -49,7 +49,7 @@ export default async function SubscriptionsPage() {
                 signInLink: (chunks) => (
                   <Link
                     href="/login"
-                    className="text-un-blue hover:underline"
+                    className="text-un-blue-text hover:underline"
                   >
                     {chunks}
                   </Link>

@@ -70,7 +70,7 @@ function EntityRow({
         </button>
         <Link
           href={profileHref(entity.slug)}
-          className="font-medium text-foreground hover:text-un-blue hover:underline"
+          className="font-medium text-foreground hover:text-un-blue-text hover:underline"
         >
           {entity.label}
         </Link>
@@ -93,7 +93,7 @@ function EntityRow({
                 href={profileHref(entity.slug, p.name)}
                 className={cn(
                   typography.body,
-                  "hover:text-un-blue hover:underline",
+                  "hover:text-un-blue-text hover:underline",
                 )}
               >
                 {p.name}

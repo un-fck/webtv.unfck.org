@@ -18,7 +18,7 @@ const KIND_KEY: Record<EntityKind, "kindCountry" | "kindGroup" | "kindOrg"> = {
 
 // Stable-ish avatar tint from the label, so each profile feels distinct.
 const AVATAR_TINTS = [
-  "bg-un-blue/15 text-un-blue",
+  "bg-un-blue/15 text-un-blue-text",
   "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
   "bg-purple-500/15 text-purple-700 dark:text-purple-300",
   "bg-amber-500/15 text-amber-700 dark:text-amber-300",

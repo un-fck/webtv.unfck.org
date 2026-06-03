@@ -36,17 +36,18 @@ interface RawParagraph {
   words: Array<{ text: string; start: number; end: number; speaker?: string }>;
 }
 
+// Official UN accent palette ("True Values" from un_brand_colour_palette.pdf).
+// Used here per the guide: accents are intended for "instances when large
+// amounts of information need to be differentiated by colour, such as in
+// charts, graphs or maps." Assignment is by index (no semantic mapping).
 export const TOPIC_COLOR_PALETTE = [
-  "#5b8dc9",
-  "#5eb87d",
-  "#9b7ac9",
-  "#e67c5a",
-  "#4db8d4",
-  "#d4a834",
-  "#7aad6f",
-  "#d46ba3",
-  "#5aa7d4",
-  "#c98d4d",
+  "#009EDB", // UN Blue
+  "#72BF44", // Green
+  "#FFC800", // Yellow
+  "#F58220", // Orange
+  "#ED1847", // Red
+  "#A05FB4", // Purple
+  "#AEA29A", // Gray
 ];
 
 export function getTopicColor(

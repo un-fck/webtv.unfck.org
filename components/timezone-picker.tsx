@@ -48,7 +48,7 @@ export function TimezonePicker() {
               >
                 <span>{opt.label}</span>
                 {opt.value === timezone && (
-                  <span className="ml-2 text-xs text-un-blue">●</span>
+                  <span className="ml-2 text-xs text-un-blue-text">●</span>
                 )}
               </button>
             </li>

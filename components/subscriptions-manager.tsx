@@ -209,7 +209,7 @@ export function SubscriptionsManager() {
                   {sub.slug ? (
                     <Link
                       href={`/${sub.slug}`}
-                      className={cn(typography.body, "hover:text-un-blue")}
+                      className={cn(typography.body, "hover:text-un-blue-text")}
                     >
                       {sub.title || sub.slug}
                     </Link>
@@ -222,7 +222,7 @@ export function SubscriptionsManager() {
                     className={cn(typography.caption, "text-muted-foreground")}
                   >
                     {sub.emailed_at ? (
-                      <span className="text-un-blue">
+                      <span className="text-un-blue-text">
                         {t("emailedAt", {
                           date: formatEmailedAt(sub.emailed_at),
                         })}

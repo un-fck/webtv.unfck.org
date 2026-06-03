@@ -72,7 +72,7 @@ export function SubscribeToggle({ kalturaId, language }: SubscribeToggleProps) {
         typography.label,
         "flex items-center gap-1.5 rounded-md border px-2.5 py-1 transition-colors disabled:opacity-50",
         subscribed
-          ? "border-un-blue/40 bg-un-blue/10 text-un-blue"
+          ? "border-un-blue/40 bg-un-blue/10 text-un-blue-text"
           : "border-border hover:bg-muted",
       )}
     >

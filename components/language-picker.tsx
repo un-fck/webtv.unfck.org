@@ -69,7 +69,7 @@ export function LanguagePicker() {
               >
                 <span>{LOCALE_LABELS[locale]}</span>
                 {locale === active && (
-                  <span className="ml-2 text-xs text-un-blue">●</span>
+                  <span className="ml-2 text-xs text-un-blue-text">●</span>
                 )}
               </button>
             </li>

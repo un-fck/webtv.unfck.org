@@ -40,7 +40,7 @@ function Step({
 }) {
   return (
     <div className="flex gap-5">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-un-blue/10 text-sm font-bold text-un-blue">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-un-blue/10 text-sm font-bold text-un-blue-text">
         {number}
       </div>
       <div className="pt-0.5">
@@ -117,7 +117,7 @@ export default async function AboutPage() {
                   webtvLink: (chunks) => (
                     <ExternalLink
                       href={webtvUrl("", locale)}
-                      className="text-un-blue underline underline-offset-4 hover:opacity-75"
+                      className="text-un-blue-text underline underline-offset-4 hover:opacity-75"
                     >
                       {chunks}
                     </ExternalLink>

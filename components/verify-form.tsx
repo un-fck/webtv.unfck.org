@@ -38,7 +38,7 @@ export function VerifyForm() {
         <p className="text-sm text-red-700">{message}</p>
         <Link
           href="/login"
-          className="mt-3 inline-block text-sm font-medium text-un-blue hover:underline"
+          className="mt-3 inline-block text-sm font-medium text-un-blue-text hover:underline"
         >
           {t("backToSignIn")}
         </Link>

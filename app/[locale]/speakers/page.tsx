@@ -47,7 +47,7 @@ export default async function SpeakersPage() {
           <p className={cn(typography.body, "text-muted-foreground")}>
             {t.rich("signInPrompt", {
               signInLink: (chunks) => (
-                <Link href="/login" className="text-un-blue hover:underline">
+                <Link href="/login" className="text-un-blue-text hover:underline">
                   {chunks}
                 </Link>
               ),
@@ -57,7 +57,7 @@ export default async function SpeakersPage() {
           <p className={cn(typography.body, "text-muted-foreground")}>
             {t.rich("experimentalGated", {
               aboutLink: (chunks) => (
-                <Link href="/about" className="text-un-blue hover:underline">
+                <Link href="/about" className="text-un-blue-text hover:underline">
                   {chunks}
                 </Link>
               ),

@@ -2,16 +2,12 @@
 @import "tw-animate-css";
 
 @theme {
-  /* Custom color palette */
+  /* UN brand palette (see un_brand_colour_palette.pdf) */
   --color-un-blue: #009edb;
-  --color-trout: #495057;
-  --color-shuttle-gray: #596b7d;
-  --color-camouflage-green: #7d8471;
-  --color-pale-oyster: #9b8b7a;
-  --color-smoky: #6c5b7b;
-  --color-un-red: #a0665c;
-  --color-faded-jade: #4a7c7e;
-  --color-un-gray: #d7d1ca;
+  /* Accessible UN Blue for text on white — the true-value #009EDB is ~2.6:1
+     on white (fails WCAG AA). Use this for text/icons on white backgrounds;
+     keep --color-un-blue for fills, borders, focus rings. */
+  --color-un-blue-text: #0077b8;
 }
 
 @custom-variant dark (&:is(.dark *));

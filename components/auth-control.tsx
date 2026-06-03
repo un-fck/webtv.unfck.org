@@ -54,7 +54,7 @@ export function AuthControl() {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label={t("accountMenu")}
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-un-blue/10 text-xs font-semibold text-un-blue transition-colors hover:bg-un-blue/20 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-un-blue/10 text-xs font-semibold text-un-blue-text transition-colors hover:bg-un-blue/20 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         {initialsFromEmail(email)}
       </PopoverTrigger>

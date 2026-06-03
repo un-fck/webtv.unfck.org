@@ -45,7 +45,7 @@ function ExpandableText({ text }: { text: string }) {
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="font-medium text-un-blue hover:underline"
+            className="font-medium text-un-blue-text hover:underline"
           >
             {expanded ? t("showLess") : t("showMore")}
           </button>
@@ -107,7 +107,7 @@ function StatementCard({ bubble }: { bubble: ProfileBubble }) {
         <span>{formatDate(bubble.date)}</span>
         <Link
           href={`/${bubble.meetingSlug}`}
-          className="hover:text-un-blue hover:underline"
+          className="hover:text-un-blue-text hover:underline"
         >
           {bubble.meetingTitle || t("viewTranscript")} →
         </Link>

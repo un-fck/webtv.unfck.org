@@ -331,7 +331,7 @@ function SearchInput({
     <div className={`group relative ${className ?? ""}`}>
       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
         <Search
-          className={`h-4 w-4 transition-colors ${highlighted ? "text-un-blue" : "text-slate-400 group-hover:text-un-blue"}`}
+          className={`h-4 w-4 transition-colors ${highlighted ? "text-un-blue-text" : "text-slate-400 group-hover:text-un-blue-text"}`}
           aria-hidden="true"
         />
       </div>
@@ -352,8 +352,8 @@ function SearchInput({
         aria-label={placeholder}
         className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
           highlighted
-            ? "border-un-blue bg-un-blue/5 text-un-blue placeholder-un-blue/50"
-            : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-un-blue hover:text-un-blue hover:placeholder-un-blue/70"
+            ? "border-un-blue bg-un-blue/5 text-un-blue-text placeholder-un-blue/50"
+            : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-un-blue hover:text-un-blue-text hover:placeholder-un-blue/70"
         }`}
       />
       {value && (
@@ -362,7 +362,7 @@ function SearchInput({
             e.preventDefault();
             onSubmit("");
           }}
-          className="absolute top-1/2 right-3 -translate-y-1/2 text-un-blue/50 hover:text-un-blue"
+          className="absolute top-1/2 right-3 -translate-y-1/2 text-un-blue-text/50 hover:text-un-blue-text"
           aria-label="Clear search"
         >
           <X className="h-4 w-4" />
@@ -986,7 +986,7 @@ export function VideoTable({
           </p>
           <button
             onClick={() => submitSearch("")}
-            className="text-sm text-un-blue underline-offset-4 hover:underline"
+            className="text-sm text-un-blue-text underline-offset-4 hover:underline"
           >
             Clear search
           </button>
@@ -998,7 +998,7 @@ export function VideoTable({
           </p>
           <button
             onClick={clearAllFilters}
-            className="text-sm text-un-blue underline-offset-4 hover:underline"
+            className="text-sm text-un-blue-text underline-offset-4 hover:underline"
           >
             Clear all filters
           </button>
