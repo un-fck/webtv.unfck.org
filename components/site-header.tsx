@@ -23,10 +23,12 @@ const navLinkClass = cn(
 // Items shared by the desktop bar and the mobile hamburger sheet so we don't
 // duplicate copy.
 //
-// Order: page-nav links first, then preference controls (language → timezone),
-// then auth (rendered separately, outside this fragment). Language is leftmost
-// of the preferences because it changes the whole UI; timezone only affects
-// displayed times.
+// Order: page-nav links first, then preference controls (timezone → language),
+// then auth (rendered separately, outside this fragment). Language is the
+// rightmost preference because it sits closest to the account avatar — both
+// belong to "this is your view of the site". The two preference pills share
+// a tighter cluster (gap-1) so they read as one paired control rather than
+// floating separately in the wider row.
 function HeaderNavItems() {
   const t = useTranslations("header");
   return (
@@ -35,8 +37,10 @@ function HeaderNavItems() {
       <Link href="/about" className={navLinkClass}>
         {t("about")}
       </Link>
-      <LanguagePicker />
-      <TimezonePicker />
+      <div className="flex items-center gap-1">
+        <TimezonePicker />
+        <LanguagePicker />
+      </div>
     </>
   );
 }
@@ -113,11 +117,15 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
             <span className="font-light">{t("wordmarkDescriptor")}</span>
           </span>
         </Link>
-        <div className="ms-auto flex items-center gap-4">
+        <div className="ms-auto flex items-center gap-3">
           {/* md+: inline nav. Below md it collapses into the hamburger so the
               right rail stays uncluttered when more items appear after sign-in
-              (Speakers, Subscriptions, timezone picker). */}
-          <div className="hidden items-center gap-4 md:flex">
+              (Speakers, Subscriptions, timezone picker).
+              gap-3 (12 px) instead of gap-4 (16 px): the language and timezone
+              pills carry internal horizontal padding, so the perceived gap
+              between two pills is gap + 2·pad. gap-3 keeps the pill-to-pill
+              spacing legible without the row feeling loose. */}
+          <div className="hidden items-center gap-3 md:flex">
             <HeaderNavItems />
           </div>
           <Popover>

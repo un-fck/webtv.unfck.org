@@ -101,6 +101,10 @@
     "lead": "Get an email when transcripts you care about are ready.",
     "signInPrompt": "Please <signInLink>sign in</signInLink> to manage your subscriptions."
   },
+  "footer": {
+    "notOfficial": "Not an official United Nations record.",
+    "unOrgLinkLabel": "Open un.org in this language"
+  },
   "about": {
     "pageTitle": "About",
     "tagline": "Automatic transcripts for UN Web TV meetings.",

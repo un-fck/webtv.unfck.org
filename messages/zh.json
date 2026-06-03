@@ -118,6 +118,10 @@
     "lead": "当您关注的转录准备就绪时,即可收到电子邮件。",
     "signInPrompt": "请<signInLink>登录</signInLink>以管理您的订阅。"
   },
+  "footer": {
+    "notOfficial": "非联合国正式记录。",
+    "unOrgLinkLabel": "以此语言打开 un.org"
+  },
   "about": {
     "pageTitle": "关于",
     "tagline": "联合国网络电视会议的自动转录。",

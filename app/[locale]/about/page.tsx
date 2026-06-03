@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { SiteHeader } from "@/components/site-header";
 import { ExternalLink } from "@/components/external-link";
 import { Link } from "@/i18n/navigation";
+import { alternatesFor } from "@/i18n/routing";
 import { webtvUrl } from "@/lib/un-links";
 import { typography } from "@/lib/typography";
 import { pageWidth } from "@/lib/layout";
@@ -15,11 +16,17 @@ import { getCurrentUser, isAllowedDomain } from "@/lib/auth/service";
 // section (UN-domain users only); must render dynamically per viewer.
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata() {
-  const t = await getTranslations("metadata");
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "metadata" });
   return {
     title: t("aboutTitle"),
     description: t("aboutDescription"),
+    alternates: alternatesFor(locale, "/about"),
   };
 }
 

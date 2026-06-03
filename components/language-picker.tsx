@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { Languages } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useTransition } from "react";
 import {
   Popover,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { headerPillClass } from "@/lib/header-pill";
 import { cn } from "@/lib/utils";
 
 // Native endonyms — each locale labelled in its own language. The list shows
@@ -45,12 +46,16 @@ export function LanguagePicker() {
     <Popover>
       <PopoverTrigger
         aria-label={t("language")}
-        className={cn(
-          "flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-          pending && "opacity-60",
-        )}
+        className={cn(headerPillClass, pending && "opacity-60")}
       >
-        <Languages className="h-4 w-4" />
+        {/* The trigger announces the active language *in that language* — so a
+            user who landed in the wrong locale recognises their own option
+            (e.g. someone wanting Arabic on an English page reads "English" and
+            knows to switch). The endonym + chevron together is enough to
+            convey "language switcher"; no icon is needed (un.org's own
+            convention). */}
+        <span lang={active}>{LOCALE_LABELS[active]}</span>
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
       </PopoverTrigger>
       <PopoverContent align="end" className="w-44 p-1">
         <ul className="flex flex-col">

@@ -1068,6 +1068,30 @@ const VISIBLE_VIDEO = `(
   )
 )`;
 
+/**
+ * Slim listing used by the sitemap — just enough to emit a `<url>` entry per
+ * video. Keeps the query off the full row scan so sitemap regeneration stays
+ * cheap as the archive grows.
+ */
+export async function getSitemapVideos(
+  daysBack: number = 365,
+): Promise<Array<{ slug: string; updated_at: Date }>> {
+  const result = await pool.query(
+    q(
+      `SELECT slug, updated_at FROM webtv.videos
+       WHERE last_seen >= CURRENT_DATE - ?::int
+         AND slug IS NOT NULL
+         AND ${VISIBLE_VIDEO}
+       ORDER BY date DESC`,
+      [daysBack],
+    ),
+  );
+  return result.rows.map((r) => ({
+    slug: r.slug as string,
+    updated_at: r.updated_at as Date,
+  }));
+}
+
 export async function getRecentVideos(
   daysBack: number = 365,
 ): Promise<VideoRecord[]> {

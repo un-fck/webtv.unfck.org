@@ -15,3 +15,23 @@ export type Locale = (typeof routing.locales)[number];
 
 // Locales that should render with right-to-left text direction.
 export const RTL_LOCALES = new Set<string>(["ar"]);
+
+/**
+ * Build a Next.js `alternates` object for a given locale-agnostic path so the
+ * route emits the full hreflang set required by the UN multilingualism web
+ * standards. `path` should NOT include a leading locale segment — pass `"/about"`,
+ * not `"/en/about"`. The current locale's URL becomes the canonical; every
+ * other locale gets a `<link rel="alternate" hreflang="...">`. `x-default`
+ * falls to English to match common SEO conventions on UN-system sites.
+ */
+export function alternatesFor(
+  locale: string,
+  path: string = "/",
+): { canonical: string; languages: Record<string, string> } {
+  const tail = path === "/" ? "" : path;
+  const languages: Record<string, string> = Object.fromEntries(
+    routing.locales.map((l) => [l, `/${l}${tail}`]),
+  );
+  languages["x-default"] = `/en${tail}`;
+  return { canonical: `/${locale}${tail}`, languages };
+}

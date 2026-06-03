@@ -118,6 +118,10 @@
     "lead": "احصل على بريد إلكتروني عندما تكون التفريغات التي تهمك جاهزة.",
     "signInPrompt": "يرجى <signInLink>تسجيل الدخول</signInLink> لإدارة اشتراكاتك."
   },
+  "footer": {
+    "notOfficial": "ليس محضراً رسمياً للأمم المتحدة.",
+    "unOrgLinkLabel": "فتح un.org بهذه اللغة"
+  },
   "about": {
     "pageTitle": "حول الأداة",
     "tagline": "تفريغات تلقائية لجلسات UN Web TV.",

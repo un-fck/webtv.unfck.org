@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Globe } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -10,7 +10,15 @@ import {
 } from "@/components/ui/popover";
 import { useTimezone } from "@/lib/hooks/use-timezone";
 import { getTimezoneOptions } from "@/lib/timezone";
+import { headerPillClass } from "@/lib/header-pill";
 import { cn } from "@/lib/utils";
+
+// Drop the "(EST)"-style parenthetical from a timezone label so the pill stays
+// tight. The full label (with abbreviation) remains in the popover, which has
+// room to spare.
+function shortenTzLabel(label: string): string {
+  return label.replace(/\s*\([^)]*\)\s*$/, "").trim();
+}
 
 export function TimezonePicker() {
   const { timezone, setTimezone } = useTimezone();
@@ -24,13 +32,16 @@ export function TimezonePicker() {
 
   if (!mounted || options.length <= 1) return null;
 
+  // The pill shows the currently active option's short label (just the city —
+  // e.g. "New York" or "Berlin"); the popover keeps the full "<City> (<abbr>)"
+  // form since it's the disambiguator when two cities share a name.
+  const active = options.find((o) => o.value === timezone) ?? options[0];
+
   return (
     <Popover>
-      <PopoverTrigger
-        aria-label={t("timezone")}
-        className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-      >
-        <Globe className="h-4 w-4" />
+      <PopoverTrigger aria-label={t("timezone")} className={headerPillClass}>
+        <span>{shortenTzLabel(active.label)}</span>
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-1">
         <ul className="flex flex-col">

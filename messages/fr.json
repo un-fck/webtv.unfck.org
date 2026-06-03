@@ -118,6 +118,10 @@
     "lead": "Recevez un courriel lorsque les transcriptions qui vous intéressent sont prêtes.",
     "signInPrompt": "Veuillez <signInLink>vous connecter</signInLink> pour gérer vos abonnements."
   },
+  "footer": {
+    "notOfficial": "Compte rendu non officiel de l'Organisation des Nations Unies.",
+    "unOrgLinkLabel": "Ouvrir un.org dans cette langue"
+  },
   "about": {
     "pageTitle": "À propos",
     "tagline": "Transcriptions automatiques des réunions d'UN Web TV.",

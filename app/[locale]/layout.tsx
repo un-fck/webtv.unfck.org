@@ -6,10 +6,12 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import "../globals.css";
 import { AnimatedCornerLogo } from "@/components/animated-corner-logo";
+import { SiteFooter } from "@/components/site-footer";
 import { SkipLink } from "@/components/skip-link";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { getBaseUrl } from "@/lib/get-base-url";
 import { TimezoneProvider } from "@/lib/hooks/use-timezone";
-import { routing, RTL_LOCALES } from "@/i18n/routing";
+import { alternatesFor, routing, RTL_LOCALES } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
 // Privacy-first analytics (Umami). Only loaded when the env var is set, so
@@ -53,9 +55,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata" });
+  const base = await getBaseUrl();
   return {
+    metadataBase: new URL(base),
     title: t("siteTitle"),
     description: t("siteDescription"),
+    // Layout-level alternates target the home page; per-route generateMetadata
+    // (e.g. /about, /[...meeting]) overrides these with the matching path.
+    alternates: alternatesFor(locale, "/"),
   };
 }
 
@@ -92,8 +99,17 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <TimezoneProvider>
             <TooltipProvider delayDuration={200}>
-              <SkipLink />
-              {children}
+              {/* Sticky-footer column. Without this, pages whose <main> is
+                  shorter than the viewport (loading.tsx, error.tsx — both
+                  use min-h-[60vh]) would render the footer mid-page. The
+                  min-h-screen + flex-col + footer's mt-auto pushes the
+                  footer to the viewport bottom on short pages while
+                  letting it sit naturally below content on tall pages. */}
+              <div className="flex min-h-screen flex-col">
+                <SkipLink />
+                {children}
+                <SiteFooter />
+              </div>
               <AnimatedCornerLogo />
             </TooltipProvider>
           </TimezoneProvider>

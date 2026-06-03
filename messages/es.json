@@ -118,6 +118,10 @@
     "lead": "Reciba un correo electrónico cuando estén listas las transcripciones que le interesan.",
     "signInPrompt": "Por favor <signInLink>inicie sesión</signInLink> para gestionar sus suscripciones."
   },
+  "footer": {
+    "notOfficial": "Acta no oficial de las Naciones Unidas.",
+    "unOrgLinkLabel": "Abrir un.org en este idioma"
+  },
   "about": {
     "pageTitle": "Acerca de",
     "tagline": "Transcripciones automáticas de las reuniones de UN Web TV.",

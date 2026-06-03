@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { alternatesFor } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
 import { SpeakerOverview } from "@/components/speaker-overview";
 import { getCurrentUser } from "@/lib/auth/service";
@@ -10,11 +11,17 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata() {
-  const t = await getTranslations("metadata");
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "metadata" });
   return {
     title: t("speakersTitle"),
     description: t("speakersDescription"),
+    alternates: alternatesFor(locale, "/speakers"),
   };
 }
 

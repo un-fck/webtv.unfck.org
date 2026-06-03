@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { alternatesFor } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
 import { SubscriptionsManager } from "@/components/subscriptions-manager";
 import { getCurrentUser } from "@/lib/auth/service";
@@ -7,11 +8,17 @@ import { typography } from "@/lib/typography";
 import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
-export async function generateMetadata() {
-  const t = await getTranslations("metadata");
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "metadata" });
   return {
     title: t("subscriptionsTitle"),
     description: t("subscriptionsDescription"),
+    alternates: alternatesFor(locale, "/subscriptions"),
   };
 }
 

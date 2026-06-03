@@ -9,6 +9,7 @@ import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 import { getCurrentUser } from "@/lib/auth/service";
 import { Link } from "@/i18n/navigation";
+import { alternatesFor } from "@/i18n/routing";
 import { ExternalLink } from "@/components/external-link";
 import { localizeWebtvAssetUrl } from "@/lib/un-links";
 
@@ -31,7 +32,12 @@ export async function generateMetadata({
 
   const title = record.clean_title || record.title;
   const t = await getTranslations({ locale, namespace: "metadata" });
-  return { title: `${title} — ${t("siteTitle")}` };
+  // Meeting slugs are already locale-agnostic (the path doesn't include the
+  // locale prefix), so each alternate just wraps the same slug per locale.
+  return {
+    title: `${title} — ${t("siteTitle")}`,
+    alternates: alternatesFor(locale, `/${slug}`),
+  };
 }
 
 export default async function MeetingPage({
