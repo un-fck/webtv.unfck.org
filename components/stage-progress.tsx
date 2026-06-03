@@ -44,7 +44,12 @@ export function StageProgress({
       : getStageIndex(currentStage);
 
   return (
-    <div className="mb-4 space-y-2">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="mb-4 space-y-2"
+    >
       {STAGE_KEYS.map((key, idx) => {
         const isDone = currentStage === "completed" || idx < currentIndex;
         const isActive =
@@ -82,7 +87,10 @@ export function StageProgress({
         );
       })}
       {currentStage === "error" && errorMessage && (
-        <div className="mt-3 flex items-center justify-between rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mt-3 flex items-center justify-between rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           <span>{errorMessage}</span>
           {onRetry && (
             <button

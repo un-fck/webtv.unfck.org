@@ -13,6 +13,7 @@ import { ChevronDown, ChevronRight, AudioLines } from "lucide-react";
 import type { PVDocument, PVTurn } from "@/lib/pv-parser";
 import { findReferences } from "@/lib/pv-reference-linking";
 import { TocItem, useTocActiveScroll } from "@/components/toc-item";
+import { ExternalLink } from "@/components/external-link";
 import { getPVDocumentUrl } from "@/lib/pv-documents";
 import { scrollElementIntoView } from "@/lib/scroll-into-view";
 import { useScrollToActive } from "@/lib/hooks/use-scroll-to-active";
@@ -59,16 +60,14 @@ function linkifyReferences(text: string): ReactNode[] {
   for (const m of filtered) {
     if (m.start > cursor) result.push(text.slice(cursor, m.start));
     result.push(
-      <a
+      <ExternalLink
         key={m.start}
         href={m.url}
-        target="_blank"
-        rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
         className="text-blue-600 underline decoration-blue-300 hover:decoration-blue-600 dark:text-blue-400 dark:decoration-blue-700 dark:hover:decoration-blue-400"
       >
         {m.label}
-      </a>,
+      </ExternalLink>,
     );
     cursor = m.end;
   }
@@ -339,14 +338,12 @@ export function PVPanel({
           )}
 
           <div className="pt-1">
-            <a
+            <ExternalLink
               href={getPVDocumentUrl(pvDoc.symbol, language)}
-              target="_blank"
-              rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
               {pvDoc.symbol} (PDF) →
-            </a>
+            </ExternalLink>
           </div>
         </div>
       )}

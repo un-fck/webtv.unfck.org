@@ -133,6 +133,17 @@
     @apply bg-background text-foreground;
   }
 
+  /* Baseline keyboard focus ring for any interactive element that hasn't
+     opted into a custom focus-visible style. Tailwind utilities applied per
+     component (e.g. focus-visible:ring-*) load later in the cascade and
+     override this without needing !important. The browser default outline is
+     also kept as a final fallback when this rule is reset by `outline-none`. */
+  :where(button, a, [role="button"], [role="menuitem"], [role="tab"], [tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
   /* Custom scrollbar styles */
   * {
     scrollbar-width: thin;
@@ -178,6 +189,21 @@
 
 html {
   scrollbar-gutter: stable;
+}
+
+/* WCAG 2.3.3 / 2.2.2: honour the OS-level reduced-motion preference.
+   Collapses CSS animations and transitions everywhere, and disables
+   smooth scrolling. JS-driven animations (e.g. karaoke underline, video
+   playback) are unaffected — playback is the user's explicit intent. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Language-specific font stacks. Each locale's layout loads only the fonts it

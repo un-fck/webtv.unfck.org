@@ -31,10 +31,14 @@ export function LoginForm() {
     <div className="flex flex-1 items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="rounded-2xl border border-border bg-white p-8 shadow-sm">
-          <h2 className={cn(typography.cardTitle, "mb-1")}>{t("title")}</h2>
+          <h1 className={cn(typography.cardTitle, "mb-1")}>{t("title")}</h1>
           <p className="mb-8 text-sm text-muted-foreground">{t("subtitle")}</p>
           {status === "sent" ? (
-            <div className="min-h-[105px] rounded-lg border border-green-200 bg-green-50 p-4">
+            <div
+              role="status"
+              aria-live="polite"
+              className="min-h-[105px] rounded-lg border border-green-200 bg-green-50 p-4"
+            >
               <p className="font-medium text-green-900">{t("sentTitle")}</p>
               <p className="mt-2 text-sm text-green-800">
                 {t("sentBody", { email })}
@@ -58,17 +62,24 @@ export function LoginForm() {
                   placeholder={t("emailPlaceholder")}
                   required
                   autoComplete="email"
+                  aria-invalid={status === "error" ? true : undefined}
+                  aria-describedby={status === "error" ? "email-error" : undefined}
                   className="w-full rounded-lg border border-border px-4 py-2.5 text-sm transition-all placeholder:text-muted-foreground focus:border-un-blue focus:ring-2 focus:ring-un-blue/20 focus:outline-none"
                 />
               </div>
               {status === "error" && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                <div
+                  id="email-error"
+                  role="alert"
+                  className="rounded-lg border border-red-200 bg-red-50 p-3"
+                >
                   <p className="text-sm text-red-700">{errorMsg}</p>
                 </div>
               )}
               <button
                 type="submit"
                 disabled={status === "loading"}
+                aria-busy={status === "loading"}
                 className="w-full rounded-lg bg-un-blue px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-un-blue/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {status === "loading" ? t("submitting") : t("submit")}

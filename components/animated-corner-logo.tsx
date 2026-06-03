@@ -24,6 +24,7 @@ const styles = `
 export function AnimatedCornerLogo() {
   const pathname = usePathname();
   const t = useTranslations("corner");
+  const tHeader = useTranslations("header");
 
   const [visible, setVisible] = useState(false);
   const [cornerClass, setCornerClass] = useState("corner-slide-hidden");
@@ -62,11 +63,11 @@ export function AnimatedCornerLogo() {
         target="_blank"
         rel="noopener noreferrer"
         className={`fixed bottom-0 left-0 z-30 hidden cursor-pointer transition-opacity [clip-path:polygon(0_0,0_100%,100%_100%)] hover:opacity-80 md:block ${cornerClass}`}
-        aria-label={t("un20Aria")}
+        aria-label={`${t("un20Aria")} (${tHeader("opensInNewTab")})`}
       >
         <Image
           src="/images/un-two-zero-corner.svg"
-          alt="UN 2.0 Corner Logo"
+          alt=""
           width={123}
           height={123}
           className="block"
@@ -74,7 +75,7 @@ export function AnimatedCornerLogo() {
         <div className="absolute inset-0 flex items-center justify-start pt-2 pl-3">
           <Image
             src="/images/un-two-zero-logo-quintets.svg"
-            alt="UN 2.0 Animation"
+            alt=""
             width={31}
             height={29}
             className={`block ${spriteClass}`}

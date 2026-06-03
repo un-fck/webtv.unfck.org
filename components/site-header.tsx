@@ -85,7 +85,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
         >
           <Image
             src="/images/un-emblem-colour.svg"
-            alt={t("emblemAlt")}
+            alt=""
             width={152}
             height={127}
             className="h-10 w-[47.9px] shrink-0 select-none"

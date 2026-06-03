@@ -21,7 +21,7 @@ export default async function LoginPage({
   if (user) redirect({ href: "/", locale });
 
   return (
-    <main className="flex min-h-screen flex-col bg-background">
+    <main id="main" tabIndex={-1} className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
       <LoginForm />
     </main>

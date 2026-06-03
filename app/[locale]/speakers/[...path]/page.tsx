@@ -29,7 +29,7 @@ export default async function SpeakerProfilePage({
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-background">
+      <main id="main" tabIndex={-1} className="min-h-screen bg-background">
         <SiteHeader />
         <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
           <p className={cn(typography.body, "py-8 text-muted-foreground")}>
@@ -48,7 +48,7 @@ export default async function SpeakerProfilePage({
 
   if (!user.experimentalAccess) {
     return (
-      <main className="min-h-screen bg-background">
+      <main id="main" tabIndex={-1} className="min-h-screen bg-background">
         <SiteHeader />
         <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
           <p className={cn(typography.body, "py-8 text-muted-foreground")}>
@@ -76,7 +76,7 @@ export default async function SpeakerProfilePage({
   const initialBubbles = await refsToBubbles(firstPage);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-background">
       <SiteHeader />
       <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">

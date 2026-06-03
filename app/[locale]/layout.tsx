@@ -6,6 +6,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import "../globals.css";
 import { AnimatedCornerLogo } from "@/components/animated-corner-logo";
+import { SkipLink } from "@/components/skip-link";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TimezoneProvider } from "@/lib/hooks/use-timezone";
 import { routing, RTL_LOCALES } from "@/i18n/routing";
@@ -91,6 +92,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <TimezoneProvider>
             <TooltipProvider delayDuration={200}>
+              <SkipLink />
               {children}
               <AnimatedCornerLogo />
             </TooltipProvider>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
@@ -16,6 +16,11 @@ import type { Stage } from "@/components/stage-progress";
 import { useLanguageDisplayName } from "@/lib/hooks/use-language-display-name";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { SubscribeToggle } from "@/components/subscribe-toggle";
 
 export type ViewMode = "transcript" | "analysis" | "pv";
@@ -69,36 +74,11 @@ export function TranscriptToolbar({
   onDownloadDocx,
   onDownloadExcel,
 }: TranscriptToolbarProps) {
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
-  const languageButtonRef = useRef<HTMLDivElement>(null);
-  const downloadButtonRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("transcript.toolbar");
   const displayName = useLanguageDisplayName();
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        downloadButtonRef.current &&
-        !downloadButtonRef.current.contains(event.target as Node)
-      ) {
-        setShowDownloadMenu(false);
-      }
-      if (
-        languageButtonRef.current &&
-        !languageButtonRef.current.contains(event.target as Node)
-      ) {
-        setShowLanguageMenu(false);
-      }
-    };
-
-    if (showDownloadMenu || showLanguageMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [showDownloadMenu, showLanguageMenu]);
 
   const selectedLangName = displayName(selectedLanguage);
 
@@ -133,91 +113,105 @@ export function TranscriptToolbar({
       <h2 className={typography.sectionTitle}>{t("transcript")}</h2>
 
       {availableLanguages.length > 0 && (
-        <div className="relative" ref={languageButtonRef}>
-          <button
-            onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+        <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
+          <PopoverTrigger
             className={cn(
               typography.label,
-              "flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 transition-colors hover:bg-muted/50",
+              "flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
             )}
           >
             <Globe className="h-3 w-3" />
             {selectedLangName}
             <ChevronDown className="h-3 w-3" />
-          </button>
-          {showLanguageMenu && (
-            <div className="absolute left-0 z-10 mt-1 w-52 overflow-hidden rounded-md border border-border bg-background shadow-md">
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            className="w-52 overflow-hidden p-0"
+          >
+            <ul role="menu" className="flex flex-col">
               {availableLanguages.map((lang) => (
-                <button
-                  key={lang.code}
-                  disabled={!lang.available}
-                  onClick={() => {
-                    if (lang.available) {
-                      onLanguageChange(lang.code);
-                      setShowLanguageMenu(false);
-                    }
-                  }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
-                    !lang.available
-                      ? "cursor-not-allowed text-muted-foreground/40"
-                      : lang.code === selectedLanguage
-                        ? "bg-muted/50 font-medium"
-                        : "hover:bg-muted"
-                  }`}
-                >
-                  <span className="flex-1">{displayName(lang.code)}</span>
-                  {!lang.available && (
-                    <span className="text-[10px] text-muted-foreground/40">
-                      {t("noAudio")}
-                    </span>
-                  )}
-                  {lang.code === selectedLanguage && (
-                    <Check className="h-3 w-3 text-primary" />
-                  )}
-                  {lang.available && lang.transcriptStatus === "completed" && (
-                    <span
-                      className="h-2 w-2 rounded-full bg-green-500"
-                      title={t("transcriptAvailable")}
-                    />
-                  )}
-                  {lang.available &&
-                    lang.transcriptStatus &&
-                    lang.transcriptStatus !== "completed" &&
-                    lang.transcriptStatus !== "error" && (
+                <li key={lang.code} role="none">
+                  <button
+                    role="menuitem"
+                    disabled={!lang.available}
+                    onClick={() => {
+                      if (lang.available) {
+                        onLanguageChange(lang.code);
+                        setLanguageOpen(false);
+                      }
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+                      !lang.available
+                        ? "cursor-not-allowed text-muted-foreground/40"
+                        : lang.code === selectedLanguage
+                          ? "bg-muted/50 font-medium"
+                          : "hover:bg-muted",
+                    )}
+                  >
+                    <span className="flex-1">{displayName(lang.code)}</span>
+                    {!lang.available && (
+                      <span className="text-[10px] text-muted-foreground/40">
+                        {t("noAudio")}
+                      </span>
+                    )}
+                    {lang.code === selectedLanguage && (
+                      <Check className="h-3 w-3 text-primary" />
+                    )}
+                    {lang.available && lang.transcriptStatus === "completed" && (
                       <span
-                        className="h-2 w-2 animate-pulse rounded-full bg-amber-500"
-                        title={t("inProgress")}
+                        className="h-2 w-2 rounded-full bg-green-500"
+                        title={t("transcriptAvailable")}
                       />
                     )}
-                </button>
+                    {lang.available &&
+                      lang.transcriptStatus &&
+                      lang.transcriptStatus !== "completed" &&
+                      lang.transcriptStatus !== "error" && (
+                        <span
+                          className="h-2 w-2 animate-pulse rounded-full bg-amber-500"
+                          title={t("inProgress")}
+                        />
+                      )}
+                  </button>
+                </li>
               ))}
-            </div>
-          )}
-        </div>
+            </ul>
+          </PopoverContent>
+        </Popover>
       )}
 
       {(pvSymbol || (hasSegments && (hasPropositions || hasTopics))) &&
         viewTabCount >= 2 && (
-          <div className="flex rounded-md border border-border bg-muted">
+          <div
+            role="tablist"
+            className="flex rounded-md border border-border bg-muted"
+          >
             <button
+              role="tab"
+              aria-selected={viewMode === "transcript"}
               onClick={() => onViewModeChange("transcript")}
-              className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
+              className={cn(
+                "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                 viewMode === "transcript"
                   ? "bg-background text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+                  : "text-muted-foreground hover:text-foreground",
+              )}
             >
               <FileText className="h-3 w-3" />
               {t("transcript")}
             </button>
             {isLoggedIn && (
               <button
+                role="tab"
+                aria-selected={viewMode === "analysis"}
                 onClick={() => onViewModeChange("analysis")}
-                className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
+                className={cn(
+                  "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                   viewMode === "analysis"
                     ? "bg-background text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                    : "text-muted-foreground hover:text-foreground",
+                )}
                 disabled={stage !== "completed" && !hasPropositions}
                 title={
                   stage !== "completed" && !hasPropositions
@@ -231,12 +225,15 @@ export function TranscriptToolbar({
             )}
             {pvSymbol && (
               <button
+                role="tab"
+                aria-selected={viewMode === "pv"}
                 onClick={() => onViewModeChange("pv")}
-                className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors ${
+                className={cn(
+                  "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                   viewMode === "pv"
                     ? "bg-background text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                    : "text-muted-foreground hover:text-foreground",
+                )}
               >
                 <BookOpen className="h-3 w-3" />
                 {pvSymbol?.includes("/SR.")
@@ -271,7 +268,7 @@ export function TranscriptToolbar({
               onClick={audioAvailable ? onTranscribe : onSchedule}
               className={cn(
                 typography.label,
-                "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
+                "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               )}
               title={
                 audioAvailable ? undefined : t("generateWhenAvailableTooltip")
@@ -286,7 +283,7 @@ export function TranscriptToolbar({
               href="/login"
               className={cn(
                 typography.label,
-                "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90",
+                "rounded-md bg-primary px-2.5 py-1 text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               )}
               title={t("signInRequiredTooltip")}
             >
@@ -306,60 +303,82 @@ export function TranscriptToolbar({
                 onClick={handleShare}
                 className={cn(
                   typography.label,
-                  "rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted",
+                  "rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                 )}
               >
                 {t("share")}
               </button>
+              {/* Toast: announce to AT via aria-live, visible toast above. */}
+              <div
+                role="status"
+                aria-live="polite"
+                className="sr-only"
+              >
+                {showCopied ? t("linkCopied") : ""}
+              </div>
               {showCopied && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs whitespace-nowrap text-background">
+                <div
+                  aria-hidden="true"
+                  className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs whitespace-nowrap text-background"
+                >
                   {t("linkCopied")}
                 </div>
               )}
             </div>
-            <div className="relative" ref={downloadButtonRef}>
-              <button
-                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+            <Popover open={downloadOpen} onOpenChange={setDownloadOpen}>
+              <PopoverTrigger
                 className={cn(
                   typography.label,
-                  "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted",
+                  "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                 )}
               >
                 {t("download")}
                 <ChevronDown className="h-3 w-3" />
-              </button>
-              {showDownloadMenu && (
-                <div className="absolute right-0 z-10 mt-1 w-44 overflow-hidden rounded-md border border-border bg-background shadow-md">
-                  <button
-                    onClick={() => {
-                      onDownloadDocx();
-                      setShowDownloadMenu(false);
-                    }}
-                    className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
-                  >
-                    {t("downloadDocx")}
-                  </button>
-                  <button
-                    onClick={() => {
-                      onDownloadExcel();
-                      setShowDownloadMenu(false);
-                    }}
-                    className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
-                  >
-                    {t("downloadExcel")}
-                  </button>
-                  <button
-                    onClick={() => {
-                      window.open(`/json/${videoSlug}`, "_blank");
-                      setShowDownloadMenu(false);
-                    }}
-                    className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
-                  >
-                    {t("downloadJson")}
-                  </button>
-                </div>
-              )}
-            </div>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                className="w-44 overflow-hidden p-0"
+              >
+                <ul role="menu" className="flex flex-col">
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        onDownloadDocx();
+                        setDownloadOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {t("downloadDocx")}
+                    </button>
+                  </li>
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        onDownloadExcel();
+                        setDownloadOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {t("downloadExcel")}
+                    </button>
+                  </li>
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        window.open(`/json/${videoSlug}`, "_blank");
+                        setDownloadOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {t("downloadJson")}
+                    </button>
+                  </li>
+                </ul>
+              </PopoverContent>
+            </Popover>
           </>
         )}
       </div>

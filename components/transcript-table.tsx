@@ -349,7 +349,8 @@ function SearchInput({
         spellCheck={false}
         autoCorrect="off"
         autoCapitalize="none"
-        className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none ${
+        aria-label={placeholder}
+        className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
           highlighted
             ? "border-un-blue bg-un-blue/5 text-un-blue placeholder-un-blue/50"
             : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-un-blue hover:text-un-blue hover:placeholder-un-blue/70"
@@ -882,9 +883,8 @@ export function VideoTable({
           </tr>
         )}
         <tr
-          onClick={() => router.push(`/${video.slug}`)}
           className={cn(
-            "cursor-pointer border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50",
+            "border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50",
             // Future/scheduled rows recede via the same muted-foreground tone
             // used by category headers and duration values — not opacity, which
             // produced a fourth grey shade out of sync with the rest.
@@ -924,7 +924,6 @@ export function VideoTable({
             />
             <Link
               href={`/${video.slug}`}
-              onClick={(e) => e.stopPropagation()}
               className="underline-offset-2 hover:underline"
             >
               {video.cleanTitle}
@@ -1051,7 +1050,13 @@ export function VideoTable({
       {/* Search results: count + sort (relevance vs date) */}
       {isSearchMode && (
         <div className="flex items-center justify-between gap-3">
-          <div className="text-sm text-muted-foreground">{searchStatus}</div>
+          <div
+            role="status"
+            aria-live="polite"
+            className="text-sm text-muted-foreground"
+          >
+            {searchStatus}
+          </div>
           <SegmentedToggle options={searchSortOptions} />
         </div>
       )}

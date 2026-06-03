@@ -152,9 +152,10 @@ export function SpeakerOverview({ entities }: { entities: EntitySummary[] }) {
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         placeholder={t("filterPlaceholder")}
+        aria-label={t("filterPlaceholder")}
         className={cn(
           typography.body,
-          "mb-8 w-full max-w-md rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-un-blue",
+          "mb-8 w-full max-w-md rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-un-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         )}
       />
 

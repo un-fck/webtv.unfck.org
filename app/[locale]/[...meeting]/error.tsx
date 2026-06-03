@@ -19,7 +19,7 @@ export default function MeetingError({
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-start justify-center gap-4 px-6">
+    <main id="main" tabIndex={-1} className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-start justify-center gap-4 px-6">
       <h1 className={typography.cardTitle}>{t("meetingNotFound")}</h1>
       <p className="text-muted-foreground">{t("meetingNotFoundHint")}</p>
       <div className="flex gap-3">

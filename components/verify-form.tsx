@@ -31,7 +31,10 @@ export function VerifyForm() {
 
   if (message) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
+      <div
+        role="alert"
+        className="rounded-lg border border-red-200 bg-red-50 p-4 text-center"
+      >
         <p className="text-sm text-red-700">{message}</p>
         <Link
           href="/login"
@@ -43,5 +46,13 @@ export function VerifyForm() {
     );
   }
 
-  return <p className="text-center text-muted-foreground">{t("signingIn")}</p>;
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      className="text-center text-muted-foreground"
+    >
+      {t("signingIn")}
+    </p>
+  );
 }

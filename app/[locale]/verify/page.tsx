@@ -13,13 +13,13 @@ export async function generateMetadata() {
 export default async function VerifyPage() {
   const t = await getTranslations("verify");
   return (
-    <main className="flex min-h-screen flex-col bg-background">
+    <main id="main" tabIndex={-1} className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
       <div className="flex flex-1 items-center justify-center px-4">
         <div className="w-full max-w-sm">
-          <h2 className="mb-6 text-xl font-semibold text-foreground">
+          <h1 className="mb-6 text-xl font-semibold text-foreground">
             {t("heading")}
-          </h2>
+          </h1>
           <Suspense
             fallback={<p className="text-muted-foreground">{t("loading")}</p>}
           >
