@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { getVideoBySlug } from "@/lib/db";
 import { getCachedTranscriptedEntries } from "@/lib/cached-db";
 import { notFound } from "next/navigation";
@@ -7,15 +9,37 @@ import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 import { getCurrentUser } from "@/lib/auth/service";
 import { Link } from "@/i18n/navigation";
+import { ExternalLink } from "@/components/external-link";
+import { localizeWebtvAssetUrl } from "@/lib/un-links";
 
 export const dynamic = "force-dynamic";
+
+// Surface the meeting title in the document <title> so each meeting page gets
+// its own tab/SERP label instead of inheriting the generic "UN Transcripts"
+// from the layout. The brand suffix is localized via the `siteTitle` key; the
+// meeting title itself stays in WebTV's source language (English) until a
+// translation pipeline is in place.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; meeting: string[] }>;
+}): Promise<Metadata> {
+  const { locale, meeting } = await params;
+  const slug = meeting.map(decodeURIComponent).join("/");
+  const record = await getVideoBySlug(slug);
+  if (!record) return {};
+
+  const title = record.clean_title || record.title;
+  const t = await getTranslations({ locale, namespace: "metadata" });
+  return { title: `${title} — ${t("siteTitle")}` };
+}
 
 export default async function MeetingPage({
   params,
 }: {
-  params: Promise<{ meeting: string[] }>;
+  params: Promise<{ locale: string; meeting: string[] }>;
 }) {
-  const { meeting } = await params;
+  const { locale, meeting } = await params;
   const slug = meeting.map(decodeURIComponent).join("/");
 
   // Validate that the slug matches a known pattern
@@ -34,7 +58,7 @@ export default async function MeetingPage({
 
   if (!kalturaId) {
     return (
-      <main className="min-h-screen bg-background px-4 sm:px-6">
+      <main id="main" tabIndex={-1} className="min-h-screen bg-background px-4 sm:px-6">
         <div className="mx-auto max-w-5xl py-8">
           <Link
             href="/"
@@ -47,14 +71,12 @@ export default async function MeetingPage({
             <p className="text-sm text-muted-foreground">
               Asset ID: {record.asset_id}
             </p>
-            <a
-              href={record.url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <ExternalLink
+              href={localizeWebtvAssetUrl(record.url, locale)}
               className="block text-sm text-primary hover:underline"
             >
               View on UN Web TV &rarr;
-            </a>
+            </ExternalLink>
           </div>
         </div>
       </main>
@@ -71,7 +93,7 @@ export default async function MeetingPage({
   const isLoggedIn = !!(await getCurrentUser());
 
   return (
-    <main className="min-h-screen bg-background">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-background">
       <VideoPageClient
         kalturaId={kalturaId}
         video={video}

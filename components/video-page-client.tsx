@@ -12,12 +12,14 @@ import {
 import { SpeakerToc, hasMeaningfulSpeakerInfo } from "./speaker-toc";
 import { PVSpeakerToc } from "./pv-panel";
 import { SiteHeader } from "./site-header";
+import { ExternalLink } from "./external-link";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
 import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { getPVDocumentUrl } from "@/lib/pv-documents";
 import { UN_LANGUAGES } from "@/lib/languages";
 import { getScheduleReturnUrl } from "@/lib/schedule-return";
+import { localizeWebtvAssetUrl } from "@/lib/un-links";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 import { widePageWidth } from "@/lib/layout";
@@ -388,23 +390,19 @@ export function VideoPageClient({
             </div>
 
             <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm">
-              <a
-                href={video.url}
-                target="_blank"
-                rel="noopener noreferrer"
+              <ExternalLink
+                href={localizeWebtvAssetUrl(video.url, uiLocale)}
                 className="text-primary hover:underline"
               >
                 UN Web TV →
-              </a>
+              </ExternalLink>
               {video.pvSymbol && video.pvAvailable && (
-                <a
+                <ExternalLink
                   href={getPVDocumentUrl(video.pvSymbol)}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
                   {video.pvSymbol} (PDF) →
-                </a>
+                </ExternalLink>
               )}
             </div>
 

@@ -37,10 +37,16 @@ Practical workflow:
 - **UN-specific terminology**: prefer the UN's official translation when
   there is one (Security Council = Conseil de sécurité = مجلس الأمن, etc.).
   Check by scraping the matching locale on un.org or webtv.un.org if unsure.
-- **Brand strings stay English**: the wordmark brand ("United Nations"
-  in English) does get translated per-locale (in the `header.wordmarkBrand`
-  key); but service/product names ("UN Web TV", "Kaltura", "Google Gemini")
-  stay verbatim everywhere — don't transliterate or translate them.
+- **Wordmark vs third-party product names**: the site's own wordmark is split
+  into `header.wordmarkBrand` ("United Nations") and `header.wordmarkDescriptor`
+  ("Transcripts"). Both halves are *translated per locale* (Naciones Unidas /
+  Transcripciones, Nations Unies / Transcriptions, الأمم المتحدة / تفريغات,
+  联合国 / 转录, Организация Объединённых Наций / Расшифровки) — the header
+  has to read in the active locale, and the UN's own multilingual branding
+  follows the same pattern. **Third-party** service/product names ("UN Web TV",
+  "Kaltura", "Google Gemini") stay verbatim everywhere — don't transliterate
+  or translate them. The distinction: copy we render as our own wordmark is
+  translatable; references to *other* products keep their canonical name.
 
 Keep keys hierarchical and grouped by surface (`header.about`,
 `schedule.today`, `about.howItWorks.step1Title`). Use ICU rich-text tags

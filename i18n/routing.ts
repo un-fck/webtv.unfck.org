@@ -1,9 +1,12 @@
 import { defineRouting } from "next-intl/routing";
 
-// The six official UN languages. The order here determines fallback order
-// for `Accept-Language` negotiation in next-intl's middleware.
+// The six official UN languages, in the canonical order prescribed by the
+// UN multilingualism web standards (Arabic, Chinese, English, French, Russian,
+// Spanish — i.e. the order of the endonyms عربي 中文 English Français Русский
+// Español). The order is what the language picker iterates, and it also sets
+// next-intl's fallback order for `Accept-Language` negotiation.
 export const routing = defineRouting({
-  locales: ["en", "fr", "es", "ar", "zh", "ru"],
+  locales: ["ar", "zh", "en", "fr", "ru", "es"],
   defaultLocale: "en",
   localePrefix: "always",
 });

@@ -1,6 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { SiteHeader } from "@/components/site-header";
+import { ExternalLink } from "@/components/external-link";
 import { Link } from "@/i18n/navigation";
+import { webtvUrl } from "@/lib/un-links";
 import { typography } from "@/lib/typography";
 import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
@@ -59,6 +61,7 @@ export default async function AboutPage() {
   const showExperimental = user ? await isAllowedDomain(user.email) : false;
   const t = await getTranslations("about");
   const tHome = await getTranslations("home");
+  const locale = await getLocale();
 
   const whoForItems: string[] = [
     t("whoIsItFor.item1"),
@@ -82,7 +85,7 @@ export default async function AboutPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-background">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-background">
       <SiteHeader />
       <div className={cn("mx-auto px-4 pb-12 sm:px-8", pageWidth)}>
         <nav className="py-3">
@@ -112,14 +115,12 @@ export default async function AboutPage() {
               <p className="text-foreground">
                 {t.rich("whatIsThis.body", {
                   webtvLink: (chunks) => (
-                    <a
-                      href="https://webtv.un.org"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <ExternalLink
+                      href={webtvUrl("", locale)}
                       className="text-un-blue underline underline-offset-4 hover:opacity-75"
                     >
                       {chunks}
-                    </a>
+                    </ExternalLink>
                   ),
                 })}
               </p>
@@ -216,14 +217,12 @@ export default async function AboutPage() {
                 <p>
                   {t.rich("accuracy.para2", {
                     odsLink: (chunks) => (
-                      <a
+                      <ExternalLink
                         href="https://documents.un.org"
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="underline underline-offset-2 hover:opacity-75"
                       >
                         {chunks}
-                      </a>
+                      </ExternalLink>
                     ),
                   })}
                 </p>
