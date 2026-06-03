@@ -11,7 +11,7 @@ export function HomeHero() {
   const t = useTranslations("home");
   return (
     <div className="max-w-2xl pt-4 pb-8">
-      <span className="mb-3 inline-block rounded bg-un-blue/10 px-2 py-1 text-[11px] leading-none font-bold tracking-wide text-un-blue-text uppercase">
+      <span className="mb-3 inline-block rounded bg-un-blue/10 px-2 py-1 text-[11px] leading-none font-bold tracking-wide text-un-blue uppercase">
         {t("publicPreview")}
       </span>
       <h1 className={cn(typography.pageTitle, "mb-3")}>{t("headline")}</h1>
@@ -20,7 +20,7 @@ export function HomeHero() {
       <p className={cn(typography.meta, "mt-1")}>
         <Link
           href="/about"
-          className="text-un-blue-text underline underline-offset-4 hover:opacity-75"
+          className="text-un-blue underline underline-offset-4 hover:opacity-75"
         >
           {t("learnMore")}
         </Link>
