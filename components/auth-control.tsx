@@ -41,7 +41,7 @@ export function AuthControl() {
 
   if (!email) {
     return (
-      <Button variant="outline" size="sm" asChild>
+      <Button variant="outline" size="sm" className="shadow-none" asChild>
         <Link href="/login">{t("signIn")}</Link>
       </Button>
     );
