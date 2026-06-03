@@ -240,7 +240,13 @@
       "analyzing": "Analyse en cours…",
       "noTranscriptYet": "Aucune transcription disponible pour l'instant",
       "noTranscriptHintPending": "Cette réunion n'est pas encore terminée. Utilisez <strong>Générer dès que disponible</strong> pour la mettre en file — la transcription sera générée automatiquement dès que l'enregistrement sera disponible.",
-      "noTranscriptHintFinished": "Générez une transcription IA pour suivre les débats avec identification des intervenants, marquage des sujets et analyse."
+      "noTranscriptHintFinished": "Générez une transcription IA pour suivre les débats avec identification des intervenants, marquage des sujets et analyse.",
+      "audioOutOfSyncTitle": "L'audio ne correspond plus à la transcription",
+      "audioOutOfSyncBody": "Cette transcription a été établie à partir d'une version antérieure de l'enregistrement de {originalDuration}, qui a depuis été réduite à {currentDuration}. Certains passages peuvent ne pas correspondre à la lecture.",
+      "audioOutOfSyncRequest": "Demander une nouvelle transcription",
+      "audioOutOfSyncStarting": "Démarrage…",
+      "audioOutOfSyncSignIn": "Connectez-vous pour demander une nouvelle transcription",
+      "audioOutOfSyncInProgress": "Une nouvelle transcription est en cours."
     },
     "highlightsOnly": "Faits saillants",
     "allContent": "Tout le contenu"

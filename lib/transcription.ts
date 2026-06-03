@@ -5,7 +5,6 @@ const plog = (...args: unknown[]) => console.log(`[${ts()}]`, ...args);
 const perr = (...args: unknown[]) => console.error(`[${ts()}]`, ...args);
 import {
   saveTranscript,
-  deleteTranscriptsForKalturaId,
   getTranscriptById,
   getActiveTranscriptByKalturaId,
   updateTranscriptionStatus,
@@ -464,10 +463,6 @@ export async function submitTranscription(
     kalturaId,
     kalturaLang,
   );
-
-  if (options.force) {
-    await deleteTranscriptsForKalturaId(kalturaId, lang);
-  }
 
   const provider = getSTTProvider(lang);
 

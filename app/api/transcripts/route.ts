@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getTranscriptByKalturaId,
+  getPendingTranscriptByKalturaId,
+  isTranscriptFlagged,
   scheduleTranscript,
 } from "@/lib/db";
 import { submitTranscription } from "@/lib/transcription";
@@ -44,6 +46,16 @@ async function respondWithCached(cached: Transcript) {
   const speakerMappings = await getSpeakerMapping(cached.transcript_id);
   // Propositions ("analysis") are private — only return them to signed-in users.
   const user = await getCurrentUser();
+  const flagged = isTranscriptFlagged(cached);
+  // Pending retranscribe id (if any): the in-progress row that will eventually
+  // replace this completed-flagged one. Only meaningful when flagged.
+  const pending =
+    flagged && cached.language_code
+      ? await getPendingTranscriptByKalturaId(
+          cached.kaltura_id,
+          cached.language_code,
+        )
+      : null;
   return NextResponse.json({
     statements: cached.content.statements,
     language: cached.language_code,
@@ -54,12 +66,18 @@ async function respondWithCached(cached: Transcript) {
     topics: cached.content.topics || {},
     propositions: user ? cached.content.propositions || [] : [],
     speakerMappings: speakerMappings || {},
+    flagged,
+    sourceDurationMs: cached.source_duration_ms,
+    alignedDurationMs: cached.aligned_duration_ms,
+    pendingRetranscribeId: pending?.transcript_id ?? null,
+    pendingRetranscribeStage: pending?.transcription_status ?? null,
   });
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { kalturaId, assetId, language, schedule } = await request.json();
+    const { kalturaId, assetId, language, schedule, retranscribe } =
+      await request.json();
 
     if (!kalturaId) {
       return apiError(400, "missing_parameter", "kalturaId is required");
@@ -109,11 +127,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ transcriptId, stage });
     }
 
+    // Retranscribe of a realignment-flagged transcript — soft-replace path.
+    // The cron flags transcripts whose audio WebTV cut in a way no single
+    // offset can fix; a fresh transcription on the current audio is the only
+    // recovery. We expose this only for flagged rows (server-side check) to
+    // keep general retranscribe-on-demand out of reach (cost/abuse). The new
+    // row is inserted alongside the old one (no delete) — the active-getter
+    // prefers completed, so viewers keep seeing the old content with a
+    // "fresh transcription in progress" banner until the new one finishes.
+    if (retranscribe) {
+      const existing = await getTranscriptByKalturaId(kalturaId, lang);
+      if (!existing || !isTranscriptFlagged(existing)) {
+        return apiError(
+          400,
+          "not_flagged",
+          "Retranscribe is only available for transcripts flagged by the realignment cron.",
+        );
+      }
+      const auth = await requireUser();
+      if (auth.response) return auth.response;
+      // If a retranscribe is already in flight for this video+language, reuse
+      // it — don't spawn a duplicate or charge the user a second time.
+      const pending = await getPendingTranscriptByKalturaId(kalturaId, lang);
+      if (pending) {
+        return NextResponse.json({
+          transcriptId: pending.transcript_id,
+          stage: pending.transcription_status,
+        });
+      }
+      const limited = await enforceTranscribeLimits(auth.user.id);
+      if (limited) return limited;
+      const { transcriptId, stage } = await submitTranscription(kalturaId, {
+        language: lang,
+        schedule: after,
+        createdBy: auth.user.id,
+        force: true,
+      });
+      return NextResponse.json({ transcriptId, stage });
+    }
+
     // Cache check by stable player ID — kaltura_id is the canonical pivot
     // (migration 015), so a single lookup finds any existing completed row.
-    // Re-transcription of an existing transcript is intentionally NOT exposed
-    // here (cost/abuse): bad transcripts are re-run only via the local
-    // `pnpm retranscribe` script.
+    // First-time POSTs for already-completed transcripts return the cached
+    // row. Retranscribe of a stale row is handled above; nothing else lets
+    // callers bypass this short-circuit (cost/abuse).
     {
       const cached = await getTranscriptByKalturaId(kalturaId, lang);
       if (cached && cached.transcription_status === "completed") {

@@ -20,6 +20,7 @@ import {
 } from "@/components/transcript-toolbar";
 import { TranscriptView } from "@/components/transcript-view";
 import { RawTranscriptView } from "@/components/raw-transcript-view";
+import { FlaggedTranscriptBanner } from "@/components/flagged-transcript-banner";
 
 export interface LanguageOption {
   code: string;
@@ -161,6 +162,27 @@ export function TranscriptionPanel({
   const [propositions, setPropositions] = useState<Proposition[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("transcript");
   const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
+  // Realignment-flagged state — set when the displayed transcript is a
+  // completed row whose audio was re-cut by WebTV in a way no single offset
+  // could fix. Drives the disclaimer banner above the transcript.
+  const [flagged, setFlagged] = useState(false);
+  const [sourceDurationMs, setSourceDurationMs] = useState<number | null>(null);
+  const [alignedDurationMs, setAlignedDurationMs] = useState<number | null>(
+    null,
+  );
+  // When a fresh transcription has been requested for this flagged row, the
+  // in-flight transcript id + its stage label drive the banner's "in progress"
+  // state. Polling for this id runs separately from the main display state so
+  // the old completed content stays visible until the new run finishes.
+  const [pendingRetranscribeId, setPendingRetranscribeId] = useState<
+    string | null
+  >(null);
+  const [pendingRetranscribeStage, setPendingRetranscribeStage] =
+    useState<Stage | null>(null);
+  const [retranscribeStarting, setRetranscribeStarting] = useState(false);
+  const [retranscribeError, setRetranscribeError] = useState<string | null>(
+    null,
+  );
   const t = useTranslations("transcript.panel");
   // Covers the POST round-trip (click → response) so the Generate button can
   // show instant feedback before the server resolves Kaltura and starts polling.
@@ -440,6 +462,117 @@ export function TranscriptionPanel({
     }
   };
 
+  // Background poll for a fresh retranscribe kicked off against a flagged
+  // row. Updates only the banner's stage label until the new transcript
+  // completes; then swaps the main display state to the new content and
+  // clears the flagged banner. Errors surface as `retranscribeError` without
+  // touching the existing transcript display.
+  const pollRetranscribeUntilDone = async (
+    tid: string,
+    signal: AbortSignal,
+  ): Promise<void> => {
+    let pollCount = 0;
+    const maxPolls = 200;
+    while (true) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      if (signal.aborted) return;
+      pollCount++;
+      let res: Response;
+      try {
+        res = await fetch(`/api/transcripts/${encodeURIComponent(tid)}`, {
+          signal,
+        });
+      } catch (err) {
+        if (signal.aborted) return;
+        throw err;
+      }
+      if (!res.ok) {
+        setRetranscribeError("Failed to poll fresh transcription");
+        setPendingRetranscribeId(null);
+        setPendingRetranscribeStage(null);
+        return;
+      }
+      const data = await res.json();
+      if (signal.aborted) return;
+      if (data.stage && data.stage !== "completed") {
+        setPendingRetranscribeStage(data.stage);
+      }
+      if (data.stage === "error") {
+        setRetranscribeError(data.error_message || "Fresh transcription failed");
+        setPendingRetranscribeId(null);
+        setPendingRetranscribeStage(null);
+        return;
+      }
+      if (data.stage === "completed" && data.statements?.length > 0) {
+        // Swap the displayed transcript to the freshly produced one and clear
+        // the flagged banner. (The new row was made from the current audio so
+        // its source_duration_ms matches; the cron won't re-flag it.)
+        setStatements(data.statements);
+        if (data.topics) setTopics(data.topics);
+        if (data.propositions) setPropositions(data.propositions);
+        if (data.speakerMappings) {
+          setSpeakerMappings(data.speakerMappings);
+          await loadCountryNames(data.speakerMappings);
+        }
+        setTranscriptId(tid);
+        setFlagged(false);
+        setSourceDurationMs(null);
+        setAlignedDurationMs(null);
+        setPendingRetranscribeId(null);
+        setPendingRetranscribeStage(null);
+        setRetranscribeError(null);
+        return;
+      }
+      if (pollCount >= maxPolls) {
+        setRetranscribeError("Fresh transcription timeout");
+        setPendingRetranscribeId(null);
+        setPendingRetranscribeStage(null);
+        return;
+      }
+    }
+  };
+
+  const handleRetranscribe = async () => {
+    if (retranscribeStarting || pendingRetranscribeId) return;
+    setRetranscribeStarting(true);
+    setRetranscribeError(null);
+    try {
+      const res = await fetch("/api/transcripts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kalturaId,
+          language: selectedLanguage,
+          retranscribe: true,
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error?.message ||
+            errorData.error ||
+            "Failed to start fresh transcription",
+        );
+      }
+      const data = await res.json();
+      if (data.transcriptId) {
+        setPendingRetranscribeId(data.transcriptId);
+        setPendingRetranscribeStage(data.stage || "transcribing");
+        const signal =
+          pollAbortRef.current?.signal ?? new AbortController().signal;
+        pollRetranscribeUntilDone(data.transcriptId, signal).catch(() => {
+          // handled inside
+        });
+      }
+    } catch (err) {
+      setRetranscribeError(
+        err instanceof Error ? err.message : "Failed to start fresh transcription",
+      );
+    } finally {
+      setRetranscribeStarting(false);
+    }
+  };
+
   const handleRetry = () => {
     if (transcriptId) {
       setStage("transcribing");
@@ -624,6 +757,13 @@ export function TranscriptionPanel({
     setErrorMessage(null);
     setStage("idle");
     setChecking(true);
+    setFlagged(false);
+    setSourceDurationMs(null);
+    setAlignedDurationMs(null);
+    setPendingRetranscribeId(null);
+    setPendingRetranscribeStage(null);
+    setRetranscribeStarting(false);
+    setRetranscribeError(null);
 
     const ctrl = new AbortController();
     pollAbortRef.current = ctrl;
@@ -654,6 +794,28 @@ export function TranscriptionPanel({
             // Run button (and the transcript itself stays visible).
             setAnalyzingPropositions(data.analysis_status === "analyzing");
             setStage("completed");
+            // Realignment-flagged state from the server (see lib/db.ts
+            // isTranscriptFlagged). If a fresh retranscribe is already in
+            // flight (any user kicked one off), surface that and start polling
+            // so this viewer sees stage progress and the new transcript swaps
+            // in automatically when it completes.
+            if (data.flagged) {
+              setFlagged(true);
+              setSourceDurationMs(data.sourceDurationMs ?? null);
+              setAlignedDurationMs(data.alignedDurationMs ?? null);
+              if (data.pendingRetranscribeId) {
+                setPendingRetranscribeId(data.pendingRetranscribeId);
+                setPendingRetranscribeStage(
+                  data.pendingRetranscribeStage ?? "transcribing",
+                );
+                pollRetranscribeUntilDone(
+                  data.pendingRetranscribeId,
+                  signal,
+                ).catch(() => {
+                  // pollRetranscribeUntilDone manages its own error state.
+                });
+              }
+            }
             onLanguagesRefresh?.();
           } else if (data.raw_paragraphs) {
             setRawParagraphs(data.raw_paragraphs);
@@ -804,6 +966,18 @@ export function TranscriptionPanel({
             </button>
           </div>
         )}
+
+      {flagged && viewMode !== "pv" && (
+        <FlaggedTranscriptBanner
+          sourceDurationMs={sourceDurationMs}
+          alignedDurationMs={alignedDurationMs}
+          isLoggedIn={isLoggedIn}
+          pendingStage={pendingRetranscribeStage}
+          starting={retranscribeStarting}
+          error={retranscribeError}
+          onRetranscribe={handleRetranscribe}
+        />
+      )}
 
       {viewMode === "pv" && pvSymbol && (
         <PVPanel

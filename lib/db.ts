@@ -151,6 +151,30 @@ export interface Transcript {
   updated_at: Date;
 }
 
+// Reduction threshold (ms) below which the realignment cron treats current
+// audio as "shrunk" vs. the length we last reconciled to. Kept in sync with
+// REDUCTION_TRIGGER_S in lib/realignment.ts. Exported so API responses can
+// derive `flagged` from the same threshold without importing realignment.
+const REALIGN_REDUCTION_TRIGGER_MS = 30_000;
+
+/**
+ * "Flagged" = completed transcript whose audio was shrunk by WebTV after
+ * transcription in a way the realignment cron couldn't resolve with a single
+ * front-shift (typically content removed mid- or end-of-video). The cron sets
+ * `aligned_duration_ms` to the current length and leaves `time_offset_ms` NULL
+ * to mark this state — see lib/realignment.ts:328-336.
+ */
+export function isTranscriptFlagged(t: Transcript): boolean {
+  return (
+    t.transcription_status === "completed" &&
+    t.time_offset_ms == null &&
+    t.aligned_duration_ms != null &&
+    t.source_duration_ms != null &&
+    t.aligned_duration_ms <
+      t.source_duration_ms - REALIGN_REDUCTION_TRIGGER_MS
+  );
+}
+
 export interface ProcessingUsageEventInsert {
   transcript_id: string;
   provider: ProcessingUsageProvider;
@@ -791,11 +815,40 @@ export async function getActiveTranscriptByKalturaId(
     conditions.push("language_code = ?");
     args.push(languageCode);
   }
+  // Prefer a completed row over any in-progress one. When a user triggers a
+  // soft-replace retranscribe (the realignment-flagged path), a new in-progress
+  // row is inserted alongside the old completed one — viewers should keep
+  // seeing the old completed content (with the flagged banner) until the new
+  // run finishes and becomes the latest completed row.
   const result = await executor.query(
     q(
       `SELECT * FROM webtv.transcripts WHERE ${conditions.join(" AND ")}
-       ORDER BY updated_at DESC LIMIT 1`,
+       ORDER BY (transcription_status = 'completed') DESC, updated_at DESC LIMIT 1`,
       args,
+    ),
+  );
+  if (result.rows.length === 0) return null;
+  return mapTranscriptRowForDisplay(result.rows[0]);
+}
+
+/**
+ * Returns the latest non-completed, non-error transcript row for the given
+ * video+language — i.e. one currently being (re)transcribed. Used by the
+ * retranscribe endpoint to avoid spawning a duplicate run when one is already
+ * in flight.
+ */
+export async function getPendingTranscriptByKalturaId(
+  kalturaId: string,
+  languageCode: string,
+): Promise<Transcript | null> {
+  await expireStuckTranscripts({ kalturaId });
+  const result = await pool.query(
+    q(
+      `SELECT * FROM webtv.transcripts
+        WHERE kaltura_id = ? AND language_code = ?
+          AND transcription_status NOT IN ('completed', 'error')
+        ORDER BY created_at DESC LIMIT 1`,
+      [kalturaId, languageCode],
     ),
   );
   if (result.rows.length === 0) return null;

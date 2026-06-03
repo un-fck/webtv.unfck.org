@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getActiveTranscriptByKalturaId } from "@/lib/db";
+import {
+  getActiveTranscriptByKalturaId,
+  getPendingTranscriptByKalturaId,
+  isTranscriptFlagged,
+} from "@/lib/db";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { apiError } from "@/lib/api-error";
 import { getCurrentUser } from "@/lib/auth/service";
@@ -35,6 +39,14 @@ export async function GET(request: NextRequest) {
       const speakerMappings = await getSpeakerMapping(cached.transcript_id);
       // Propositions ("analysis") are private — only return them to signed-in users.
       const user = await getCurrentUser();
+      const flagged = isTranscriptFlagged(cached);
+      const pending =
+        flagged && cached.language_code
+          ? await getPendingTranscriptByKalturaId(
+              cached.kaltura_id,
+              cached.language_code,
+            )
+          : null;
       return NextResponse.json({
         statements,
         language: cached.language_code,
@@ -45,6 +57,11 @@ export async function GET(request: NextRequest) {
         topics: cached.content.topics || {},
         propositions: user ? cached.content.propositions || [] : [],
         speakerMappings: speakerMappings || {},
+        flagged,
+        sourceDurationMs: cached.source_duration_ms,
+        alignedDurationMs: cached.aligned_duration_ms,
+        pendingRetranscribeId: pending?.transcript_id ?? null,
+        pendingRetranscribeStage: pending?.transcription_status ?? null,
       });
     }
 
