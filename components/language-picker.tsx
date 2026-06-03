@@ -58,6 +58,9 @@ export function LanguagePicker() {
         <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
       </PopoverTrigger>
       <PopoverContent align="end" className="w-44 p-1">
+        <p className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground">
+          {t("language")}
+        </p>
         <ul className="flex flex-col">
           {routing.locales.map((locale) => (
             <li key={locale}>

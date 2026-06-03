@@ -13,10 +13,12 @@ import { getTimezoneOptions } from "@/lib/timezone";
 import { headerPillClass } from "@/lib/header-pill";
 import { cn } from "@/lib/utils";
 
-// Drop the "(EST)"-style parenthetical from a timezone label so the pill stays
-// tight. The full label (with abbreviation) remains in the popover, which has
-// room to spare.
-function shortenTzLabel(label: string): string {
+// Drop the "(EDT)"-style parenthetical so the pill stays tight. The full
+// "<City> (<abbr>)" form remains in the popover, where the abbreviation
+// disambiguates between options. The popover's "Timezone" header carries the
+// semantic context, so the pill itself doesn't need the abbreviation to read
+// as a timezone (rather than a place filter).
+function tzPillLabel(label: string): string {
   return label.replace(/\s*\([^)]*\)\s*$/, "").trim();
 }
 
@@ -32,18 +34,21 @@ export function TimezonePicker() {
 
   if (!mounted || options.length <= 1) return null;
 
-  // The pill shows the currently active option's short label (just the city —
-  // e.g. "New York" or "Berlin"); the popover keeps the full "<City> (<abbr>)"
-  // form since it's the disambiguator when two cities share a name.
+  // Pill shows just the active city (e.g. "New York", "Berlin"); the popover
+  // keeps the full "<City> (<abbr>)" form for disambiguation, plus a
+  // "Timezone" header so the city name reads as a timezone choice.
   const active = options.find((o) => o.value === timezone) ?? options[0];
 
   return (
     <Popover>
       <PopoverTrigger aria-label={t("timezone")} className={headerPillClass}>
-        <span>{shortenTzLabel(active.label)}</span>
+        <span>{tzPillLabel(active.label)}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-1">
+        <p className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground">
+          {t("timezone")}
+        </p>
         <ul className="flex flex-col">
           {options.map((opt) => (
             <li key={opt.value}>
