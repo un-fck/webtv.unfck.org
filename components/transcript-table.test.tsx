@@ -68,7 +68,9 @@ const videos: Video[] = fixtures.slice(0, 6).map((fx) => ({
   pvAvailable: false,
   slug: fx.expected.pvSymbol ? "x" : `meeting/${fx.id}`,
   hasTranscript: false,
+  hasTranscriptInLocale: false,
   removed: false,
+  i18n: {},
 }));
 
 function renderTable() {
@@ -82,6 +84,7 @@ function renderTable() {
       <VideoTable
         videos={videos}
         totalCount={videos.length}
+        totalCountIncludingOther={videos.length}
         serverParams={{ page: 1, pageSize: 50 }}
         availableDates={[...new Set(videos.map((v) => v.date))]}
         filterOptions={{

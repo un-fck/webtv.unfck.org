@@ -954,6 +954,32 @@ export async function getAllTranscriptedEntries(): Promise<string[]> {
   return result.rows.map((row) => row.entry_id as string);
 }
 
+/**
+ * Like `getAllTranscriptedEntries` but scoped to a single language. Powers
+ * the two-tier T badge: a solid badge when an entry has a completed
+ * transcript in the active locale, a muted badge when it only has one in
+ * some other language.
+ *
+ * Pass through the raw locale string (`'ar'`, `'fr'`, etc.) — it matches
+ * `transcripts.language_code` directly.
+ */
+export async function getTranscriptedEntriesByLanguage(
+  language: string,
+): Promise<string[]> {
+  const result = await pool.query(
+    q(
+      `SELECT DISTINCT v.entry_id
+         FROM webtv.videos v
+         JOIN webtv.transcripts t ON v.kaltura_id = t.kaltura_id
+        WHERE t.transcription_status = 'completed'
+          AND t.language_code = ?
+          AND v.entry_id IS NOT NULL`,
+      [language],
+    ),
+  );
+  return result.rows.map((row) => row.entry_id as string);
+}
+
 export interface VideoRecord {
   asset_id: string;
   entry_id: string | null;
@@ -978,6 +1004,16 @@ export interface VideoRecord {
   last_seen: string;
   created_at: Date;
   updated_at: Date;
+  // Per-locale variants of title/clean_title/category (migration 019). English
+  // lives in the canonical columns above; this map covers ar/zh/fr/ru/es.
+  // Missing entries fall back to English at render time.
+  i18n: Record<string, VideoI18n>;
+}
+
+export interface VideoI18n {
+  title?: string;
+  clean_title?: string;
+  category?: string;
 }
 
 function mapVideoRow(row: Record<string, unknown>): VideoRecord {
@@ -1005,6 +1041,7 @@ function mapVideoRow(row: Record<string, unknown>): VideoRecord {
     last_seen: row.last_seen as string,
     created_at: row.created_at as Date,
     updated_at: row.updated_at as Date,
+    i18n: (row.i18n as Record<string, VideoI18n> | null) ?? {},
   };
 }
 
@@ -1060,8 +1097,8 @@ export async function saveVideo(
           `INSERT INTO webtv.videos (
              asset_id, entry_id, kaltura_id, title, clean_title, date, scheduled_time,
              duration, url, body, category, event_code, event_type,
-             session_number, part_number, pv_symbol, slug, last_seen
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             session_number, part_number, pv_symbol, slug, last_seen, i18n
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
            ON CONFLICT(asset_id) DO UPDATE SET
              entry_id = COALESCE(EXCLUDED.entry_id, videos.entry_id),
              kaltura_id = EXCLUDED.kaltura_id,
@@ -1078,6 +1115,9 @@ export async function saveVideo(
              pv_symbol = COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol),
              slug = videos.slug,
              last_seen = EXCLUDED.last_seen,
+             -- Merge per-locale variants: a later sync that only re-scrapes a
+             -- subset of locales must not blank the others. Newer keys win.
+             i18n = videos.i18n || EXCLUDED.i18n,
              updated_at = NOW()`,
           [
             video.asset_id,
@@ -1098,6 +1138,7 @@ export async function saveVideo(
             video.pv_symbol,
             slug,
             video.last_seen,
+            JSON.stringify(video.i18n ?? {}),
           ],
         ),
       );
@@ -1268,33 +1309,84 @@ function searchOrderBy(sort?: SearchSort): string | null {
   return `date ${dir}, scheduled_time ${dir}, asset_id ASC`;
 }
 
+export interface SearchVideosResult {
+  records: VideoRecord[];
+  // Count under the active filters (including the locale cut, if any). The
+  // caller still infers `hasMore` from `records.length` vs the requested
+  // `limit + 1`, but uses this for the "(N more)" CTA.
+  totalLocalized: number;
+  // Count under the same filters with the locale cut dropped. Equal to
+  // `totalLocalized` when the locale filter is a no-op.
+  totalAll: number;
+}
+
 export async function searchVideos(
   query: string,
-  limit = 50,
-  offset = 0,
-  sort?: SearchSort,
-): Promise<VideoRecord[]> {
+  options: {
+    limit?: number;
+    offset?: number;
+    sort?: SearchSort;
+    localeFilter?: LocaleFilter;
+  } = {},
+): Promise<SearchVideosResult> {
+  const { limit = 50, offset = 0, sort, localeFilter } = options;
   const words = query.trim().split(/\s+/);
   const allShort = words.every((w) => w.length < 3);
   const orderBy = searchOrderBy(sort);
+  const filterActive = localeFilterActive(localeFilter);
+  // `(i18n -> ?) IS NOT NULL` is the semantic equivalent of the JSONB
+  // existence operator `i18n ? ?`, but written so the `q()` helper's
+  // `?`-to-`$N` rewrite doesn't try to substitute the operator itself
+  // (PG would then see `i18n $1 $2` and reject the SQL).
+  const localeClause = filterActive ? " AND (i18n -> ?) IS NOT NULL" : "";
+  const localeArgs = filterActive ? [localeFilter!.locale] : [];
+
+  let records: VideoRecord[] = [];
+  let totalLocalized = 0;
+  let totalAll = 0;
+  let usedFts = false;
 
   if (!allShort) {
     // Primary: FTS with websearch_to_tsquery (handles non-adjacent keywords)
     try {
-      const ftsResult = await pool.query(
+      const dataPromise = pool.query(
         q(
           `SELECT *, ts_rank(fts_vec, websearch_to_tsquery('english', ?)) AS rank
            FROM webtv.videos
            WHERE fts_vec @@ websearch_to_tsquery('english', ?)
-             AND ${VISIBLE_VIDEO}
+             AND ${VISIBLE_VIDEO}${localeClause}
            ORDER BY ${orderBy ?? "rank DESC, date DESC, asset_id ASC"}
            LIMIT ? OFFSET ?`,
-          [query, query, limit, offset],
+          [query, query, ...localeArgs, limit, offset],
         ),
       );
-      if (ftsResult.rows.length > 0) {
-        return ftsResult.rows.map(mapVideoRow);
-      }
+      const countLocalizedPromise = pool.query(
+        q(
+          `SELECT COUNT(*) AS total FROM webtv.videos
+           WHERE fts_vec @@ websearch_to_tsquery('english', ?)
+             AND ${VISIBLE_VIDEO}${localeClause}`,
+          [query, ...localeArgs],
+        ),
+      );
+      const countAllPromise = filterActive
+        ? pool.query(
+            q(
+              `SELECT COUNT(*) AS total FROM webtv.videos
+               WHERE fts_vec @@ websearch_to_tsquery('english', ?)
+                 AND ${VISIBLE_VIDEO}`,
+              [query],
+            ),
+          )
+        : null;
+      const [data, countLocalized, countAll] = await Promise.all([
+        dataPromise,
+        countLocalizedPromise,
+        countAllPromise,
+      ]);
+      records = data.rows.map(mapVideoRow);
+      totalLocalized = Number(countLocalized.rows[0]?.total ?? 0);
+      totalAll = countAll ? Number(countAll.rows[0]?.total ?? 0) : totalLocalized;
+      usedFts = records.length > 0 || totalLocalized > 0;
     } catch (err) {
       // fts_vec column may not exist yet in dev — fall through to LIKE.
       // Warn so a broken FTS index doesn't silently degrade us to trigram-only.
@@ -1305,21 +1397,66 @@ export async function searchVideos(
     }
   }
 
+  if (usedFts) return { records, totalLocalized, totalAll };
+
   // Fallback: trigram-accelerated ILIKE (handles short tokens / partial typing)
   const pattern = `%${query}%`;
-  const result = await pool.query(
+  const dataPromise = pool.query(
     q(
       `SELECT * FROM webtv.videos WHERE (title ILIKE ? OR clean_title ILIKE ?)
-       AND ${VISIBLE_VIDEO}
+       AND ${VISIBLE_VIDEO}${localeClause}
        ORDER BY ${orderBy ?? "date DESC, scheduled_time DESC, asset_id ASC"}
        LIMIT ? OFFSET ?`,
-      [pattern, pattern, limit, offset],
+      [pattern, pattern, ...localeArgs, limit, offset],
     ),
   );
-  return result.rows.map(mapVideoRow);
+  const countLocalizedPromise = pool.query(
+    q(
+      `SELECT COUNT(*) AS total FROM webtv.videos
+       WHERE (title ILIKE ? OR clean_title ILIKE ?)
+         AND ${VISIBLE_VIDEO}${localeClause}`,
+      [pattern, pattern, ...localeArgs],
+    ),
+  );
+  const countAllPromise = filterActive
+    ? pool.query(
+        q(
+          `SELECT COUNT(*) AS total FROM webtv.videos
+           WHERE (title ILIKE ? OR clean_title ILIKE ?)
+             AND ${VISIBLE_VIDEO}`,
+          [pattern, pattern],
+        ),
+      )
+    : null;
+  const [data, countLocalized, countAll] = await Promise.all([
+    dataPromise,
+    countLocalizedPromise,
+    countAllPromise,
+  ]);
+  return {
+    records: data.rows.map(mapVideoRow),
+    totalLocalized: Number(countLocalized.rows[0]?.total ?? 0),
+    totalAll: countAll
+      ? Number(countAll.rows[0]?.total ?? 0)
+      : Number(countLocalized.rows[0]?.total ?? 0),
+  };
 }
 
 // ── Server-side pagination ────────────────────────────────────────────────────
+
+/**
+ * Per-locale visibility filter. When `includeOther` is false (the default
+ * client state) AND `locale` is non-English, only videos with a harvested
+ * `i18n[locale]` entry are returned. English is treated as always-available
+ * because every video has English canonical metadata.
+ *
+ * Callers also receive `totalIncludingOther` so the UI can render a
+ * "(N more in other languages)" CTA without a separate request.
+ */
+export interface LocaleFilter {
+  locale: string;
+  includeOther: boolean;
+}
 
 export interface VideosPageParams {
   daysBack?: number;
@@ -1333,11 +1470,25 @@ export interface VideosPageParams {
   page?: number;
   pageSize?: number;
   transcriptedEntryIds?: string[];
+  localeFilter?: LocaleFilter;
 }
 
 export interface VideosPage {
   records: VideoRecord[];
   total: number;
+  // Count under the same filters, but ignoring the per-locale visibility cut.
+  // Equal to `total` when the locale filter is a no-op (English, or
+  // `includeOther === true`).
+  totalIncludingOther: number;
+}
+
+/**
+ * Returns true when the locale filter actually narrows the result set:
+ * a non-English locale AND `includeOther` is false. The locale clause
+ * (`(i18n -> ?) IS NOT NULL`) is only added in that case.
+ */
+function localeFilterActive(f: LocaleFilter | undefined): boolean {
+  return !!f && !f.includeOther && f.locale !== "en";
 }
 
 export async function getVideosPage(
@@ -1355,8 +1506,12 @@ export async function getVideosPage(
     page = 1,
     pageSize = 50,
     transcriptedEntryIds,
+    localeFilter,
   } = params;
 
+  // Build the shared (non-locale) WHERE first. The locale clause is appended
+  // separately so we can run two count queries — with and without it — and
+  // surface the "(N more in other languages)" delta.
   const conditions: string[] = [
     "last_seen >= CURRENT_DATE - ?::int",
     VISIBLE_VIDEO,
@@ -1389,7 +1544,7 @@ export async function getVideosPage(
     if (docs.includes("transcript")) {
       if (transcriptedEntryIds) {
         if (transcriptedEntryIds.length === 0 && docs.length === 1) {
-          return { records: [], total: 0 };
+          return { records: [], total: 0, totalIncludingOther: 0 };
         }
         if (transcriptedEntryIds.length > 0) {
           docConditions.push(
@@ -1413,11 +1568,19 @@ export async function getVideosPage(
       docs.includes("transcript") &&
       (!transcriptedEntryIds || transcriptedEntryIds.length === 0)
     ) {
-      return { records: [], total: 0 };
+      return { records: [], total: 0, totalIncludingOther: 0 };
     }
   }
 
-  const where = conditions.join(" AND ");
+  // `whereAll` excludes the locale filter; `whereLocalized` includes it.
+  // `total` uses whereLocalized; `totalIncludingOther` uses whereAll.
+  const filterActive = localeFilterActive(localeFilter);
+  const whereAll = conditions.join(" AND ");
+  const localeConditions = filterActive
+    ? [...conditions, "(i18n -> ?) IS NOT NULL"]
+    : conditions;
+  const whereLocalized = localeConditions.join(" AND ");
+  const localizedArgs = filterActive ? [...args, localeFilter!.locale] : args;
 
   let orderBy: string;
   if (sortBy === "title") {
@@ -1433,24 +1596,47 @@ export async function getVideosPage(
   orderBy += ", asset_id ASC";
 
   const offsetVal = (page - 1) * pageSize;
-  const countArgs = [...args];
-  const dataArgs = [...args, pageSize, offsetVal];
+  const dataArgs = [...localizedArgs, pageSize, offsetVal];
 
-  const [countResult, dataResult] = await Promise.all([
+  // When the locale filter is a no-op, the two counts are identical — skip the
+  // extra query.
+  const queries: Promise<unknown>[] = [
     pool.query(
-      q(`SELECT COUNT(*) AS total FROM webtv.videos WHERE ${where}`, countArgs),
+      q(
+        `SELECT COUNT(*) AS total FROM webtv.videos WHERE ${whereLocalized}`,
+        localizedArgs,
+      ),
     ),
     pool.query(
       q(
-        `SELECT * FROM webtv.videos WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+        `SELECT * FROM webtv.videos WHERE ${whereLocalized} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
         dataArgs,
       ),
     ),
-  ]);
+  ];
+  if (filterActive) {
+    queries.push(
+      pool.query(
+        q(`SELECT COUNT(*) AS total FROM webtv.videos WHERE ${whereAll}`, args),
+      ),
+    );
+  }
+  const [countResult, dataResult, countAllResult] = (await Promise.all(
+    queries,
+  )) as Array<{ rows: { total: string }[] } | { rows: Record<string, unknown>[] }>;
 
-  const total = Number(countResult.rows[0]?.total ?? 0);
-  const records = dataResult.rows.map(mapVideoRow);
-  return { records, total };
+  const total = Number(
+    (countResult as { rows: { total: string }[] }).rows[0]?.total ?? 0,
+  );
+  const totalIncludingOther = filterActive
+    ? Number(
+        (countAllResult as { rows: { total: string }[] }).rows[0]?.total ?? 0,
+      )
+    : total;
+  const records = (
+    dataResult as { rows: Record<string, unknown>[] }
+  ).rows.map(mapVideoRow);
+  return { records, total, totalIncludingOther };
 }
 
 export async function getAvailableDates(

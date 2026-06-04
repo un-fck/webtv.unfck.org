@@ -94,7 +94,7 @@ export default async function MeetingPage({
   const hasTranscript =
     record.entry_id !== null && transcriptedEntries.includes(record.entry_id);
 
-  const video = recordToVideo(record, hasTranscript);
+  const video = recordToVideo(record, hasTranscript, locale);
   const metadata = await getVideoMetadata(record.asset_id);
   const isLoggedIn = !!(await getCurrentUser());
 

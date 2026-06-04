@@ -128,13 +128,19 @@ export function formatMeetingDate(
     timeZone: tz,
     year: "numeric",
   });
-  return date.toLocaleDateString(ctx.locale, {
+  const formatted = date.toLocaleDateString(ctx.locale, {
     timeZone: tz,
     weekday: options.shortWeekday ? "short" : "long",
     month: "short",
     day: "numeric",
     ...(dateYear !== currentYear ? { year: "numeric" } : {}),
   });
+  // Intl emits lowercase weekday names in French/Spanish/Italian by spec
+  // (`mardi 2 juin`), but in our day-section headings we want sentence case
+  // (`Mardi 2 juin`). `toLocaleUpperCase(locale)` is a no-op for scripts
+  // without case (Arabic, Chinese) and matches the user's "Aujourd'hui /
+  // Today / Hoy" translations which are already capitalized.
+  return formatted.charAt(0).toLocaleUpperCase(ctx.locale) + formatted.slice(1);
 }
 
 // True when the given date/timestamp falls strictly after "today" in the

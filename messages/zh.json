@@ -76,6 +76,14 @@
     "loadMore": "加载更多",
     "searchPlaceholder": "搜索所有会议…",
     "showOnlyTranscribed": "仅显示已转录的会议",
+    "includeOtherLangs": "包括其他语言的会议",
+    "includeOtherLangsCount": "{count, plural, other {另有 # 项}}",
+    "docTooltips": {
+      "transcript": "从音频录音自动生成的转录",
+      "transcriptOtherLang": "另一语言的转录可用 — 打开会议以切换。",
+      "pv": "联合国秘书处编写的会议正式逐字记录",
+      "sr": "联合国秘书处编写的会议正式简要记录"
+    },
     "date": "日期",
     "noResults": "没有会议符合这些筛选条件。",
     "uncategorized": "未分类",

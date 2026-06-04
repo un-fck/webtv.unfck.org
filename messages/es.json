@@ -76,6 +76,14 @@
     "loadMore": "Cargar más",
     "searchPlaceholder": "Buscar en todas las reuniones…",
     "showOnlyTranscribed": "Mostrar solo reuniones transcritas",
+    "includeOtherLangs": "Incluir reuniones en otros idiomas",
+    "includeOtherLangsCount": "{count, plural, one {# más} other {# más}}",
+    "docTooltips": {
+      "transcript": "Transcripción generada automáticamente a partir de la grabación de audio",
+      "transcriptOtherLang": "Transcripción disponible en otro idioma — abra la reunión para cambiar.",
+      "pv": "Acta literal oficial de la reunión, elaborada por la Secretaría de las Naciones Unidas",
+      "sr": "Acta resumida oficial de la reunión, elaborada por la Secretaría de las Naciones Unidas"
+    },
     "date": "Fecha",
     "noResults": "Ninguna reunión coincide con estos filtros.",
     "uncategorized": "Sin categoría",

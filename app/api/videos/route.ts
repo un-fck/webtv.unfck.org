@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getVideosPage, type VideosPageParams } from "@/lib/db";
-import { getCachedTranscriptedEntries } from "@/lib/cached-db";
+import {
+  getCachedTranscriptedEntries,
+  getCachedTranscriptedEntriesByLanguage,
+} from "@/lib/cached-db";
 import { recordToVideo } from "@/lib/un-api";
 
 // Chunk size for infinite-scroll loading of the browse (non-search) feed.
@@ -34,8 +37,18 @@ export async function GET(request: NextRequest) {
   const docs = multi(sp, "text")?.filter((d) =>
     ["transcript", "pv", "sr"].includes(d),
   );
+  // Client-supplied active UI locale (see app/api/search/route.ts).
+  const locale = sp.get("locale") ?? undefined;
+  // ?xlang=1 turns off the per-locale visibility filter (the "Include
+  // meetings in other languages" toggle on the home toolbar).
+  const includeOther = sp.get("xlang") === "1";
 
-  const transcriptedEntries = await getCachedTranscriptedEntries();
+  const [transcriptedEntries, transcriptedEntriesInLocale] = await Promise.all([
+    getCachedTranscriptedEntries(),
+    locale
+      ? getCachedTranscriptedEntriesByLanguage(locale)
+      : Promise.resolve([] as string[]),
+  ]);
 
   const params: VideosPageParams = {
     daysBack: DAYS_BACK,
@@ -50,21 +63,30 @@ export async function GET(request: NextRequest) {
     transcriptedEntryIds: docs?.includes("transcript")
       ? transcriptedEntries
       : undefined,
+    localeFilter: locale ? { locale, includeOther } : undefined,
   };
 
-  const { records, total } = await getVideosPage(params);
+  const { records, total, totalIncludingOther } = await getVideosPage(params);
 
   const transcriptedSet = new Set(transcriptedEntries);
+  const transcriptedInLocaleSet = new Set(transcriptedEntriesInLocale);
   const videos = records.map((record) =>
     recordToVideo(
       record,
       record.entry_id ? transcriptedSet.has(record.entry_id) : false,
+      locale,
+      record.entry_id ? transcriptedInLocaleSet.has(record.entry_id) : false,
     ),
   );
 
   const hasMore = offset + videos.length < total;
 
-  const response = NextResponse.json({ videos, total, hasMore });
+  const response = NextResponse.json({
+    videos,
+    total,
+    totalIncludingOther,
+    hasMore,
+  });
   response.headers.set(
     "Cache-Control",
     "s-maxage=30, stale-while-revalidate=60",

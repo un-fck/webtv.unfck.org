@@ -39,6 +39,11 @@ CREATE TABLE IF NOT EXISTS videos (
     last_seen DATE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- Per-locale variants of title/clean_title/category, harvested from the
+    -- ar/zh/fr/ru/es WebTV schedule pages alongside the English canonical
+    -- columns (migration 019). Shape: { [locale]: { title, clean_title,
+    -- category } }. Missing keys fall back to English at render time.
+    i18n JSONB NOT NULL DEFAULT '{}'::jsonb,
     -- Generated column for full-text search (auto-maintained by PG)
     fts_vec tsvector GENERATED ALWAYS AS (
         to_tsvector('english', COALESCE(clean_title, title))

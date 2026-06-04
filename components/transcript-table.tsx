@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Video } from "@/lib/un-api";
 import { CalendarIcon, ChevronDown, Search, SearchX, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
@@ -376,23 +376,35 @@ function SearchInput({
 // V (verbatim record), S (summary record). The full
 // name is in a hover tooltip. Letters distinguish the three types far more
 // legibly than icons would at this size.
+//
+// The T badge is two-tier: solid when a completed transcript exists in the
+// active UI locale, muted (border-only) when one exists only in some other
+// language. V and S stay single-tier — per-language PV availability would
+// require deeper changes to the check-pv cron (see plan, follow-up).
 function DocChips({
   hasTranscript,
+  hasTranscriptInLocale,
   pvAvailable,
   pvSymbol,
 }: {
   hasTranscript: boolean;
+  hasTranscriptInLocale: boolean;
   pvAvailable: boolean;
   pvSymbol: string | null;
 }) {
+  const tTooltip = useTranslations("schedule.docTooltips");
   if (!hasTranscript && !pvAvailable) return null;
   const isSR = pvSymbol?.includes("/SR.");
   const chips: { letter: string; label: string; className: string }[] = [];
   if (hasTranscript) {
     chips.push({
       letter: "T",
-      label: DOCS_TOOLTIPS.transcript,
-      className: "bg-primary/10 text-primary",
+      label: hasTranscriptInLocale
+        ? tTooltip("transcript")
+        : tTooltip("transcriptOtherLang"),
+      className: hasTranscriptInLocale
+        ? "bg-primary/10 text-primary"
+        : "border border-primary/40 text-primary/60",
     });
   }
   if (pvAvailable) {
@@ -400,12 +412,12 @@ function DocChips({
       isSR
         ? {
             letter: "S",
-            label: DOCS_TOOLTIPS.sr,
+            label: tTooltip("sr"),
             className: "bg-violet-500/10 text-violet-700",
           }
         : {
             letter: "V",
-            label: DOCS_TOOLTIPS.pv,
+            label: tTooltip("pv"),
             className: "bg-amber-500/10 text-amber-700",
           },
     );
@@ -463,15 +475,15 @@ function SegmentedToggle({
 // coarse All / With transcript toggle.
 const ALL_DOC_TYPES = ["transcript", "pv", "sr"];
 
-const DOCS_TOOLTIPS: Record<string, string> = {
-  transcript: "Automatically generated transcript from the audio recording",
-  pv: "Official word-for-word record of the meeting, produced by the UN Secretariat",
-  sr: "Official condensed record of the meeting, produced by the UN Secretariat",
-};
 
 interface VideoTableProps {
   videos: Video[];
   totalCount: number;
+  // Count under the same filters with the per-locale visibility cut dropped.
+  // When strict mode is on and the active locale is non-English, the delta
+  // (`totalCountIncludingOther - totalCount`) drives the "(N more in other
+  // languages)" CTA next to the toggle.
+  totalCountIncludingOther: number;
   serverParams: ServerParams;
   availableDates: string[];
   filterOptions: {
@@ -485,6 +497,7 @@ interface VideoTableProps {
 export function VideoTable({
   videos,
   totalCount,
+  totalCountIncludingOther,
   serverParams,
   availableDates,
   filterOptions,
@@ -493,6 +506,9 @@ export function VideoTable({
   const t = useT();
   const tCategory = useCategoryName();
   const searchParams = useSearchParams();
+  // Active UI locale; appended to /api/search and /api/videos so server-side
+  // record→video conversion returns localized titles/categories.
+  const locale = useLocale();
   const { formatMeetingDate, formatMeetingTime, isFutureDay } =
     useMeetingFormat();
 
@@ -506,6 +522,12 @@ export function VideoTable({
   const [hasMoreResults, setHasMoreResults] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  // Search totals refresh whenever the query (or filters affecting count)
+  // change. Server returns `total` (under the locale filter) and
+  // `totalIncludingOther` (with the locale cut dropped); both drive the
+  // "(N more)" CTA so it tracks the search query just like the row list does.
+  const [searchTotal, setSearchTotal] = useState(0);
+  const [searchTotalIncludingOther, setSearchTotalIncludingOther] = useState(0);
 
   // Browse-feed infinite scroll (non-search). Seeded with the server-rendered
   // first chunk; further chunks append via /api/videos. Re-seeded whenever a
@@ -543,6 +565,7 @@ export function VideoTable({
       next.category?.forEach((v) => sp.append("category", v));
       next.text?.forEach((v) => sp.append("text", v));
       if (next.q) sp.set("q", next.q);
+      if (next.includeOtherLangs) sp.set("xlang", "1");
 
       const href = sp.toString() ? `?${sp}` : "/";
       // Search updates use replace() so typing doesn't flood browser history.
@@ -590,29 +613,42 @@ export function VideoTable({
       setSearchResults(null);
       setSearchOffset(0);
       setHasMoreResults(false);
+      setSearchTotal(0);
+      setSearchTotalIncludingOther(0);
       return;
     }
 
     setIsSearching(true);
     setSearchOffset(0);
     const sortParam = serverParams.sort ? `&sort=${serverParams.sort}` : "";
-    fetch(`/api/search?q=${encodeURIComponent(serverParams.q)}${sortParam}`)
+    const xlangParam = serverParams.includeOtherLangs ? "&xlang=1" : "";
+    fetch(
+      `/api/search?q=${encodeURIComponent(serverParams.q)}${sortParam}&locale=${locale}${xlangParam}`,
+    )
       .then((res) => res.json())
       .then((data) => {
         setSearchResults(data.videos);
         setHasMoreResults(data.hasMore);
         setSearchOffset(data.videos.length);
+        setSearchTotal(data.total ?? 0);
+        setSearchTotalIncludingOther(data.totalIncludingOther ?? 0);
       })
       .catch(() => setSearchResults(null))
       .finally(() => setIsSearching(false));
-  }, [serverParams.q, serverParams.sort]);
+  }, [
+    serverParams.q,
+    serverParams.sort,
+    serverParams.includeOtherLangs,
+    locale,
+  ]);
 
   const loadMore = () => {
     if (!serverParams.q || isLoadingMore) return;
     setIsLoadingMore(true);
     const sortParam = serverParams.sort ? `&sort=${serverParams.sort}` : "";
+    const xlangParam = serverParams.includeOtherLangs ? "&xlang=1" : "";
     fetch(
-      `/api/search?q=${encodeURIComponent(serverParams.q)}&offset=${searchOffset}${sortParam}`,
+      `/api/search?q=${encodeURIComponent(serverParams.q)}&offset=${searchOffset}${sortParam}&locale=${locale}${xlangParam}`,
     )
       .then((res) => res.json())
       .then((data) => {
@@ -648,6 +684,8 @@ export function VideoTable({
     setBrowseLoading(true);
     const sp = new URLSearchParams();
     sp.set("offset", String(browseRows.length));
+    sp.set("locale", locale);
+    if (serverParams.includeOtherLangs) sp.set("xlang", "1");
     if (serverParams.sort) sp.set("sort", serverParams.sort);
     if (serverParams.date) sp.set("date", serverParams.date);
     serverParams.body?.forEach((v) => sp.append("body", v));
@@ -667,6 +705,7 @@ export function VideoTable({
     browseHasMore,
     browseRows.length,
     serverParams,
+    locale,
   ]);
 
   // Data: search results when searching, else the (growing) browse feed.
@@ -707,6 +746,24 @@ export function VideoTable({
   );
   const toggleWithTranscript = () =>
     updateParams({ text: withTranscript ? undefined : ALL_DOC_TYPES });
+
+  // The per-locale visibility cut only narrows non-English schedules — every
+  // video has English canonical metadata so `/en/` already sees everything.
+  // For English the toggle would just confuse, so we hide it entirely.
+  const localeFilterApplicable = locale !== "en";
+  const includeOtherLangs = serverParams.includeOtherLangs === true;
+  const toggleIncludeOtherLangs = () =>
+    updateParams({
+      includeOtherLangs: includeOtherLangs ? undefined : true,
+    });
+  // How many more meetings would appear if the user flipped the toggle. The
+  // server returns `total{,IncludingOther}` from the same WHERE chain with
+  // the locale cut dropped — see getVideosPage / searchVideos in lib/db.ts.
+  // In search mode the live values from /api/search win; otherwise the SSR
+  // payload's totals do.
+  const otherLangsCount = isSearchMode
+    ? Math.max(0, searchTotalIncludingOther - searchTotal)
+    : Math.max(0, totalCountIncludingOther - totalCount);
 
   // Search-result ordering: relevance (default, no sort param) vs newest-first.
   const searchSortOptions = [
@@ -919,6 +976,7 @@ export function VideoTable({
             )}
             <DocChips
               hasTranscript={video.hasTranscript}
+              hasTranscriptInLocale={video.hasTranscriptInLocale}
               pvAvailable={video.pvAvailable}
               pvSymbol={video.pvSymbol}
             />
@@ -1045,6 +1103,28 @@ export function VideoTable({
           />
           {t("showOnlyTranscribed")}
         </label>
+        {localeFilterApplicable && (
+          <label className="flex items-center gap-2 text-sm text-muted-foreground select-none cursor-pointer hover:text-foreground transition-colors">
+            <input
+              type="checkbox"
+              checked={includeOtherLangs}
+              onChange={toggleIncludeOtherLangs}
+              className="h-3.5 w-3.5 cursor-pointer accent-primary"
+            />
+            <span>
+              {t("includeOtherLangs")}
+              {/* Only show the count when strict mode is on AND there are
+                  hidden rows to surface — otherwise the parenthetical is
+                  noise. After toggling on we deliberately drop it so the user
+                  isn't told "(N more)" while N rows are already visible. */}
+              {!includeOtherLangs && otherLangsCount > 0 && (
+                <span className="ms-1.5 text-xs text-muted-foreground/80">
+                  ({t("includeOtherLangsCount", { count: otherLangsCount })})
+                </span>
+              )}
+            </span>
+          </label>
+        )}
       </div>
 
       {/* Search results: count + sort (relevance vs date) */}

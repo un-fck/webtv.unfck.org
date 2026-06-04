@@ -76,6 +76,14 @@
     "loadMore": "Load more",
     "searchPlaceholder": "Search all meetings…",
     "showOnlyTranscribed": "Show only transcribed meetings",
+    "includeOtherLangs": "Include meetings in other languages",
+    "includeOtherLangsCount": "{count, plural, one {# more} other {# more}}",
+    "docTooltips": {
+      "transcript": "Automatically generated transcript from the audio recording",
+      "transcriptOtherLang": "Transcript available in another language — open the meeting to switch.",
+      "pv": "Official word-for-word record of the meeting, produced by the UN Secretariat",
+      "sr": "Official condensed record of the meeting, produced by the UN Secretariat"
+    },
     "date": "Date",
     "noResults": "No meetings match these filters.",
     "uncategorized": "Uncategorized",

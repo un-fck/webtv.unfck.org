@@ -3,6 +3,7 @@ import { recordToVideo } from "@/lib/un-api";
 import { getVideosPage, type VideosPageParams } from "@/lib/db";
 import {
   getCachedTranscriptedEntries,
+  getCachedTranscriptedEntriesByLanguage,
   getCachedAvailableDates,
   getCachedFilterOptions,
 } from "@/lib/cached-db";
@@ -25,6 +26,10 @@ export interface ServerParams {
   category?: string[];
   text?: string[]; // "transcript" | "pv" | "sr"
   q?: string;
+  // "Include meetings in other languages" toggle, default off. When off and
+  // the active locale is non-English, the schedule hides meetings without a
+  // harvested i18n entry for that locale.
+  includeOtherLangs?: boolean;
 }
 
 function parseSearchParams(
@@ -63,6 +68,7 @@ function parseSearchParams(
     typeof raw.q === "string" && raw.q.trim().length >= 2
       ? raw.q.trim()
       : undefined;
+  const includeOtherLangs = raw.xlang === "1";
 
   return {
     page,
@@ -73,15 +79,18 @@ function parseSearchParams(
     category: category?.length ? category : undefined,
     text: text.length ? text : undefined,
     q,
+    includeOtherLangs,
   };
 }
 
 export default async function Home({
+  params: routeParams,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const raw = await searchParams;
+  const [{ locale }, raw] = await Promise.all([routeParams, searchParams]);
   const params = parseSearchParams(raw);
 
   // When search query is active, pass empty data — client handles via /api/search
@@ -96,6 +105,7 @@ export default async function Home({
         <VideoTable
           videos={[]}
           totalCount={0}
+          totalCountIncludingOther={0}
           serverParams={params}
           availableDates={availableDates}
           filterOptions={filterOptions}
@@ -110,8 +120,13 @@ export default async function Home({
     "asc" | "desc",
   ];
 
-  // Fetch transcript IDs (needed for hasTranscript filter AND for enriching video records)
-  const transcriptedEntries = await getCachedTranscriptedEntries();
+  // Fetch transcript IDs (needed for hasTranscript filter AND for enriching
+  // video records). We fetch both the union ("any language") and the
+  // active-locale subset so the two-tier T badge can render correctly.
+  const [transcriptedEntries, transcriptedEntriesInLocale] = await Promise.all([
+    getCachedTranscriptedEntries(),
+    getCachedTranscriptedEntriesByLanguage(locale),
+  ]);
 
   const pageParams: VideosPageParams = {
     daysBack: DAYS_BACK,
@@ -128,19 +143,31 @@ export default async function Home({
     transcriptedEntryIds: params.text?.includes("transcript")
       ? transcriptedEntries
       : undefined,
+    localeFilter: {
+      locale,
+      includeOther: params.includeOtherLangs === true,
+    },
   };
 
-  const [{ records, total }, availableDates, filterOptions] = await Promise.all(
-    [
-      getVideosPage(pageParams),
-      getCachedAvailableDates(DAYS_BACK),
-      getCachedFilterOptions(DAYS_BACK),
-    ],
-  );
+  const [
+    { records, total, totalIncludingOther },
+    availableDates,
+    filterOptions,
+  ] = await Promise.all([
+    getVideosPage(pageParams),
+    getCachedAvailableDates(DAYS_BACK),
+    getCachedFilterOptions(DAYS_BACK),
+  ]);
 
   const transcriptedSet = new Set(transcriptedEntries);
+  const transcriptedInLocaleSet = new Set(transcriptedEntriesInLocale);
   const videos = records.map((r) =>
-    recordToVideo(r, r.entry_id ? transcriptedSet.has(r.entry_id) : false),
+    recordToVideo(
+      r,
+      r.entry_id ? transcriptedSet.has(r.entry_id) : false,
+      locale,
+      r.entry_id ? transcriptedInLocaleSet.has(r.entry_id) : false,
+    ),
   );
 
   return (
@@ -148,6 +175,7 @@ export default async function Home({
       <VideoTable
         videos={videos}
         totalCount={total}
+        totalCountIncludingOther={totalIncludingOther}
         serverParams={params}
         availableDates={availableDates}
         filterOptions={filterOptions}
@@ -158,7 +186,7 @@ export default async function Home({
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-background">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-background">
       <SiteHeader />
       <div className={cn("mx-auto px-4 sm:px-8", pageWidth)}>
         <HomeHero />

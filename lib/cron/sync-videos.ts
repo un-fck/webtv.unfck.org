@@ -1,4 +1,4 @@
-import { fetchVideosForDate, formatDate, videoToRecord } from "@/lib/un-api";
+import { formatDate, scrapeVideosForDates, videoToRecord } from "@/lib/un-api";
 import { resolveEntryId } from "@/lib/kaltura-helpers";
 import {
   saveVideo,
@@ -44,11 +44,10 @@ export async function runSyncVideos(): Promise<SyncVideosResult> {
 
     console.log(`[sync-videos] Scraping dates: ${dates.join(", ")}`);
 
-    const results = await Promise.all(dates.map(fetchVideosForDate));
-    const videos = results.flat();
-    const uniqueVideos = Array.from(
-      new Map(videos.map((v) => [v.id, v])).values(),
-    );
+    // scrapeVideosForDates fans out across all six locales and returns a
+    // deduplicated Video[] keyed on asset_id, with the localized
+    // title/category pre-merged into each row's i18n map.
+    const uniqueVideos = await scrapeVideosForDates(dates);
 
     let synced = 0;
     let resolved = 0;

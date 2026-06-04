@@ -76,6 +76,14 @@
     "loadMore": "Charger plus",
     "searchPlaceholder": "Rechercher dans toutes les réunions…",
     "showOnlyTranscribed": "Afficher uniquement les réunions transcrites",
+    "includeOtherLangs": "Inclure les réunions dans d'autres langues",
+    "includeOtherLangsCount": "{count, plural, one {# de plus} other {# de plus}}",
+    "docTooltips": {
+      "transcript": "Transcription générée automatiquement à partir de l'enregistrement audio",
+      "transcriptOtherLang": "Transcription disponible dans une autre langue — ouvrez la réunion pour la modifier.",
+      "pv": "Compte rendu sténographique officiel de la réunion, établi par le Secrétariat de l'ONU",
+      "sr": "Compte rendu analytique officiel de la réunion, établi par le Secrétariat de l'ONU"
+    },
     "date": "Date",
     "noResults": "Aucune réunion ne correspond à ces filtres.",
     "uncategorized": "Sans catégorie",

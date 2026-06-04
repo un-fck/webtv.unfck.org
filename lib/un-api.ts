@@ -1,7 +1,13 @@
-import { getVideoByAssetId, saveVideo, type VideoRecord } from "./db";
+import { getVideoByAssetId, saveVideo, type VideoI18n, type VideoRecord } from "./db";
 import { parseMeetingSymbol } from "./pv-documents";
 import { meetingSlugFromVideo } from "./meeting-slug";
 import { extractKalturaId } from "./kaltura";
+
+// Locales whose schedule pages get scraped alongside English. Mirrors the
+// next-intl routing config (i18n/routing.ts) minus `en` — English values live
+// in the canonical Video fields. Keep these in sync if the locale set changes.
+export const SCHEDULE_LOCALES = ["en", "ar", "zh", "fr", "ru", "es"] as const;
+export type ScheduleLocale = (typeof SCHEDULE_LOCALES)[number];
 
 export interface Video {
   id: string;
@@ -21,8 +27,19 @@ export interface Video {
   pvSymbol: string | null;
   pvAvailable: boolean;
   slug: string;
+  // `hasTranscript` = at least one completed transcript exists in *any*
+  // language; `hasTranscriptInLocale` = one exists in the active UI locale
+  // specifically. The two-tier T badge renders solid when the second is true
+  // and muted when only the first is. When `recordToVideo` is called without
+  // a locale (the public /json API, scripts) `hasTranscriptInLocale` always
+  // mirrors `hasTranscript`.
   hasTranscript: boolean;
+  hasTranscriptInLocale: boolean;
   removed: boolean; // Kaltura entry deleted — source video no longer available
+  // Per-locale variants of title/cleanTitle/category harvested from the
+  // ar/zh/fr/ru/es WebTV schedule pages. Empty when the asset wasn't scraped
+  // for that locale; render-time helpers fall back to English.
+  i18n: Record<string, VideoI18n>;
 }
 
 function extractTextContent(html: string): string {
@@ -92,12 +109,28 @@ export function videoToRecord(
     pv_checked_at: null,
     slug: meetingSlugFromVideo({ pv_symbol, part_number, asset_id: video.id }),
     last_seen: new Date().toISOString().split("T")[0],
+    i18n: video.i18n ?? {},
   };
 }
 
+/**
+ * Pick the locale-appropriate variant of a video's text fields. English stays
+ * in the canonical columns; ar/zh/fr/ru/es entries (when present) override
+ * `title`, `cleanTitle`, and `category`. Anything not in the i18n map falls
+ * back to the English canonical value.
+ *
+ * `locale` is optional: callers without locale context (the public /json API,
+ * scripts) get the English canonical values unchanged.
+ *
+ * `hasTranscriptInLocale` is the strict per-language flag used by the
+ * two-tier T badge. When omitted (callers without locale context), it
+ * mirrors `hasTranscript` so the badge always renders solid.
+ */
 export function recordToVideo(
   record: VideoRecord,
   hasTranscript: boolean,
+  locale?: string,
+  hasTranscriptInLocale?: boolean,
 ): Video {
   // Convert duration from seconds to HH:MM:SS for status calculation
   const durationSeconds = record.duration || 0;
@@ -112,12 +145,18 @@ export function recordToVideo(
     : null;
   const status = calculateStatus(record.scheduled_time, durationHMS);
 
+  // English remains the canonical (and the FTS/search source); only the
+  // user-facing strings get swapped when a non-English locale has a harvested
+  // variant. `body`, `category` filtering, etc. stay keyed on English values.
+  const i18n = record.i18n ?? {};
+  const variant = locale && locale !== "en" ? i18n[locale] : undefined;
+
   return {
     id: record.asset_id,
     url: record.url,
-    title: record.title,
-    cleanTitle: record.clean_title || record.title,
-    category: record.category || "",
+    title: variant?.title || record.title,
+    cleanTitle: variant?.clean_title || record.clean_title || record.title,
+    category: variant?.category || record.category || "",
     duration: durationHMS,
     date: record.date,
     scheduledTime: scheduledTimeStr,
@@ -132,7 +171,9 @@ export function recordToVideo(
     pvAvailable: record.pv_available === true,
     slug: record.slug ?? meetingSlugFromVideo(record),
     hasTranscript,
+    hasTranscriptInLocale: hasTranscriptInLocale ?? hasTranscript,
     removed: record.removed_at !== null,
+    i18n,
   };
 }
 
@@ -257,12 +298,23 @@ export function extractMetadataFromTitle(title: string, category?: string) {
   return metadata;
 }
 
-export async function fetchVideosForDate(date: string): Promise<Video[]> {
+/**
+ * Fetch the WebTV schedule for a given date in a given locale. English is the
+ * authoritative pass (it populates the full Video record); ar/zh/fr/ru/es
+ * passes are merged in via `scrapeVideos` to fill the i18n map.
+ *
+ * The HTML structure is the same across locales — only the locale prefix in
+ * `/{locale}/asset/...` and the rendered category/title strings differ.
+ */
+export async function fetchVideosForDate(
+  date: string,
+  locale: ScheduleLocale = "en",
+): Promise<Video[]> {
   const today = formatDate(new Date());
   const yesterday = formatDate(new Date(Date.now() - 86400000));
   const revalidate = date >= today ? 300 : date === yesterday ? 3600 : 86400;
 
-  const response = await fetch(`https://webtv.un.org/en/schedule/${date}`, {
+  const response = await fetch(`https://webtv.un.org/${locale}/schedule/${date}`, {
     next: { revalidate },
   });
 
@@ -279,8 +331,10 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
     timezoneMap.set(nid, timestamp);
   }
 
-  const videoBlockPattern =
-    /<h6[^>]*class="text-primary"[^>]*>([^<]+)<\/h6>[\s\S]*?<h4[^>]*>[\s\S]*?href="\/en\/asset\/([^"]+)"[^>]*>[\s\S]*?<div class="field__item">([^<]+)<\/div>/g;
+  const videoBlockPattern = new RegExp(
+    `<h6[^>]*class="text-primary"[^>]*>([^<]+)<\\/h6>[\\s\\S]*?<h4[^>]*>[\\s\\S]*?href="\\/${locale}\\/asset\\/([^"]+)"[^>]*>[\\s\\S]*?<div class="field__item">([^<]+)<\\/div>`,
+    "g",
+  );
 
   for (const match of html.matchAll(videoBlockPattern)) {
     const [, category, assetId, title] = match;
@@ -300,7 +354,7 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
 
     // Extract duration
     const durationPattern = new RegExp(
-      `<span class="badge[^"]*">(\\d{2}:\\d{2}:\\d{2})<\\/span>[\\s\\S]{0,500}?href="\\/en\\/asset\\/${assetId.replace(/\//g, "\\/")}"`,
+      `<span class="badge[^"]*">(\\d{2}:\\d{2}:\\d{2})<\\/span>[\\s\\S]{0,500}?href="\\/${locale}\\/asset\\/${assetId.replace(/\//g, "\\/")}"`,
     );
     const durationMatch = html.match(durationPattern);
 
@@ -337,6 +391,10 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
     const partNumber = titleMetadata.partNumber;
     videos.push({
       id: assetId,
+      // The canonical Video.url stays on `/en/` regardless of which locale
+      // scrape produced this row; per-locale URL resolution happens at render
+      // time in `webtvUrlForLocale()`. This keeps DB rows identical no matter
+      // the harvest order.
       url: `https://webtv.un.org/en/asset/${assetId}`,
       title: rawTitle,
       cleanTitle: titleCleaned,
@@ -354,7 +412,9 @@ export async function fetchVideosForDate(date: string): Promise<Video[]> {
         asset_id: assetId,
       }),
       hasTranscript: false, // Will be updated later
+      hasTranscriptInLocale: false,
       removed: false, // Freshly scraped from the live schedule
+      i18n: {},
     });
   }
 
@@ -427,8 +487,66 @@ export async function getScheduleVideos(days: number = 365): Promise<Video[]> {
 }
 
 /**
- * Scrape UN Web TV for the given number of days and return Video[].
- * Used by CLI scripts (sync-videos, fetch-video-metadata) that need fresh data from the web.
+ * Scrape UN Web TV across all six locales for the given list of dates and
+ * return one merged Video[] keyed on asset_id.
+ *
+ * The English pass is authoritative for every non-text field (duration,
+ * scheduled time, status, body, etc.); each non-English pass contributes its
+ * `{ title, clean_title, category }` to the i18n map. Assets that only appear
+ * on a non-English schedule still produce a Video, with that locale's text
+ * duplicated into the canonical (English) slots until/unless an English
+ * entry shows up later.
+ */
+export async function scrapeVideosForDates(dates: string[]): Promise<Video[]> {
+  // (locale, date) pairs flattened — keeping the parallelism flat instead of
+  // nested keeps a slow locale from stalling the whole batch.
+  const tasks = SCHEDULE_LOCALES.flatMap((locale) =>
+    dates.map((date) => ({ locale, date })),
+  );
+  const passes = await Promise.all(
+    tasks.map(async ({ locale, date }) => ({
+      locale,
+      videos: await fetchVideosForDate(date, locale),
+    })),
+  );
+
+  // Merge by asset_id. English pass wins for canonical fields; every locale
+  // (including English) populates its slot in the i18n map.
+  const merged = new Map<string, Video>();
+  for (const { locale, videos } of passes) {
+    for (const v of videos) {
+      const existing = merged.get(v.id);
+      if (locale === "en") {
+        // English is authoritative — start from this row, preserving any
+        // non-English variants seen earlier.
+        const i18n = { ...(existing?.i18n ?? {}), ...v.i18n };
+        i18n.en = {
+          title: v.title,
+          clean_title: v.cleanTitle,
+          category: v.category,
+        };
+        merged.set(v.id, { ...v, i18n });
+      } else {
+        // Non-English pass: attach this locale's variant; keep whatever
+        // canonical fields we already had.
+        const base = existing ?? v;
+        const i18n = { ...(base.i18n ?? {}) };
+        i18n[locale] = {
+          title: v.title,
+          clean_title: v.cleanTitle,
+          category: v.category,
+        };
+        merged.set(v.id, { ...base, i18n });
+      }
+    }
+  }
+
+  return Array.from(merged.values());
+}
+
+/**
+ * Convenience wrapper around scrapeVideosForDates for CLI scripts
+ * (sync-videos, fetch-video-metadata) that want "tomorrow + last N days".
  */
 export async function scrapeVideos(days: number): Promise<Video[]> {
   const dates: string[] = [];
@@ -446,11 +564,7 @@ export async function scrapeVideos(days: number): Promise<Video[]> {
     dates.push(formatDate(date));
   }
 
-  const results = await Promise.all(dates.map(fetchVideosForDate));
-  const allVideos = results.flat();
-
-  // Remove duplicates by ID
-  return Array.from(new Map(allVideos.map((v) => [v.id, v])).values());
+  return scrapeVideosForDates(dates);
 }
 
 export interface VideoMetadata {
