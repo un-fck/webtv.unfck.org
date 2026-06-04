@@ -11,7 +11,14 @@ import { funAsr } from "./fun-asr";
 import { deepgram } from "./deepgram";
 import { mistral } from "./mistral";
 import { voxtralSmall } from "./voxtral-small";
-import { cohere } from "./cohere";
+// `cohere` is intentionally NOT statically imported here. cohere.ts uses
+// `path.join(os.tmpdir(), …)` and `child_process.execSync(ffmpeg)`, which
+// Vercel's Node File Tracer treats as a dynamic require — it then traces the
+// whole project as a transitive dependency of any route that imports the
+// registry (e.g. /api/pv/align → lib/transcription → providers/config →
+// registry). That blows up the deployment bundle. cohere isn't part of
+// STT_ROUTING so removing the eager import has no production impact; if
+// it needs to come back for eval, re-add it with a lazy `await import`.
 
 // Registry keyed by each provider's `name` (the stable {vendor}-{model} identifier),
 // so the key and the provider's own name can never drift apart.
@@ -31,7 +38,6 @@ const ALL: TranscriptionProvider[] = [
   googleChirp,
   groqWhisper,
   deepgram,
-  cohere,
 ];
 
 const providers: Record<string, TranscriptionProvider> = Object.fromEntries(

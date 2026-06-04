@@ -17,7 +17,7 @@ Run multiple times with different providers to compare side-by-side.
 
 Provider defaults to "gemini". Available providers: gemini, gemini-eval,
 assemblyai, azure-openai, elevenlabs, azure-speech, google-chirp,
-groq-whisper, alibaba, deepgram, mistral, cohere`;
+groq-whisper, alibaba, deepgram, mistral`;
 
 const [rawArg, providerName = "gemini"] = process.argv.slice(2);
 if (!rawArg) {
