@@ -10,12 +10,9 @@ const nextConfig: NextConfig = {
   // server.js`). Vercel ignores this and uses its own build pipeline.
   output: "standalone",
   // next-intl loads message catalogs at runtime via dynamic import — the
-  // standalone tracer doesn't always pick them up. Be explicit. `vercel.json`
-  // is read at boot by the in-process cron scheduler in instrumentation.ts
-  // (single source of truth for cron schedules); include it explicitly so
-  // standalone definitely copies it.
+  // standalone tracer doesn't always pick them up. Be explicit.
   outputFileTracingIncludes: {
-    "/**/*": ["messages/**/*", "i18n/**/*", "vercel.json"],
+    "/**/*": ["messages/**/*", "i18n/**/*"],
   },
 };
 

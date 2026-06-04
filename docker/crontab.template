@@ -1,0 +1,21 @@
+# Crontab for the Azure deployment. Materialised at container boot by
+# docker/entrypoint.sh — `envsubst '$CRON_SECRET' < this > /etc/cron.d/un-cron`.
+# Only `${CRON_SECRET}` is expanded; every other `$`-prefixed token
+# (none currently used) would also be expanded if present.
+#
+# Schedules MUST match the documentation in docs/azure-deployment.md. The
+# corresponding HTTP handlers live in app/api/cron/*/route.ts; each
+# authenticates `Authorization: Bearer ${CRON_SECRET}` and 401s otherwise.
+#
+# Format (5 fields + user + command):
+#   m  h  dom mon dow  user  command
+#
+# Output redirection isn't needed — cron inherits stdout from
+# docker/entrypoint.sh, which Docker captures as the container's stdout.
+
+*/5 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/process-scheduled
+*/15 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/sync-videos
+0 */6 * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/check-pv
+*/5 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/send-transcript-notifications
+0 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/realign
+*/15 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/sweep-stuck-pipelines

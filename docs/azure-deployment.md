@@ -2,23 +2,25 @@
 
 This guide is everything you need to do **once** on Azure + GitHub to get
 production running on Azure Container Apps, plus how each deploy works
-thereafter. Vercel stays as-is for preview branches — the in-process cron
-scheduler only fires when `ENABLE_INTERNAL_CRON=1`, which is set on Azure but
-not on Vercel, so previews don't double-fire cron jobs.
+thereafter. Vercel stays as-is for preview branches — it no longer fires
+crons (`vercel.json` has no `crons` entries), so previews can't double-fire.
 
 Resource group: `rg-transcripts` (East US 2).
 
 ## Architecture summary
 
 - One Container App, pinned to 1 replica (`minReplicas = maxReplicas = 1`).
-- Same Docker image runs both the web tier and the in-process cron scheduler.
-  Gated by `ENABLE_INTERNAL_CRON=1`.
-- Postgres advisory locks (`withJobLock` in `lib/db.ts`) wrap every cron run as
-  belt-and-suspenders for rolling-deploy overlap or any future scale-out.
-- `vercel.json` is the single source of truth for cron paths and schedules.
-  `instrumentation.ts` reads it at boot and looks each path up in a registry
-  of `runXxx()` functions. Adding a new cron is a 2-line change: one entry in
-  `vercel.json`, one entry in the registry.
+- Same Docker image runs both the web tier and a sidecar `cron` daemon.
+  The daemon's crontab is materialised at boot by `docker/entrypoint.sh`
+  (which `envsubst`s `${CRON_SECRET}` into `docker/crontab.template`),
+  then `exec node server.js` becomes PID 1. Each cron tick is one
+  `curl -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/…`
+  — the same HTTP route handlers Vercel used to fire externally.
+- `docker/crontab.template` is the single source of truth for cron paths
+  and schedules. Adding a cron is a 2-line change: one entry in the
+  template, one new `app/api/cron/<job>/route.ts` calling `runXxx()`.
+- Postgres advisory locks (`withJobLock` in `lib/db.ts`) wrap every cron run
+  as belt-and-suspenders for rolling-deploy overlap or any future scale-out.
 - Secrets live in Azure Key Vault; the Container App reads them via its
   system-assigned managed identity.
 - Deploys run from GitHub Actions on push to `main`, authenticating to Azure
@@ -175,7 +177,6 @@ APP_FQDN=$(az containerapp show --name $APP_NAME --resource-group $RG \
 
 az containerapp update --name $APP_NAME --resource-group $RG --set-env-vars \
   NODE_ENV=production \
-  ENABLE_INTERNAL_CRON=1 \
   AZURE_ENV=production \
   BASE_URL=https://$APP_FQDN \
   PG_POOL_MAX=10 \
@@ -228,8 +229,11 @@ And under `properties.template`, add:
 terminationGracePeriodSeconds: 60
 ```
 
-60s gives the SIGTERM handler in `instrumentation.ts` time to stop scheduled
-jobs and drain the pg pool. Apply:
+60s gives in-flight HTTP requests (the cron HTTP routes especially — a
+sync-videos tick can take 10s+) time to finish before SIGKILL. The cron
+daemon receives SIGTERM via Node (PID 1); its in-flight curl child either
+completes or gets cut by SIGKILL, which is fine — the next deploy's
+sweep-stuck-pipelines tick recovers anything left in `error`. Apply:
 
 ```bash
 az containerapp update --name $APP_NAME --resource-group $RG --yaml app.yaml
@@ -298,14 +302,11 @@ Edit if you picked different names in step 2.
 ## Part C — Vercel side (preview branches)
 
 No changes needed. The existing Vercel integration deploys every branch as a
-preview. Vercel cron only fires on production deployments — if you've cut
-over so Vercel's "Production Branch" is no longer `main`, the crons in
-`vercel.json` simply never trigger there. Optionally set the production
-branch to a name that never exists (e.g.
-`__never_deploy_production_on_vercel__`) to make it explicit.
-
-`ENABLE_INTERNAL_CRON` stays unset on Vercel → the in-process scheduler
-doesn't boot there either. Both sides safe.
+preview. `vercel.json` no longer contains `crons`, so Vercel doesn't fire
+any scheduled tasks regardless of which branch it considers "production."
+The cron HTTP routes still exist on every deploy and are
+`Bearer ${CRON_SECRET}`-authenticated — if you ever want previews to
+exercise a cron, hit the route manually with curl.
 
 ## Part D — First deploy
 
@@ -352,7 +353,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
   https://$APP_FQDN/api/cron/sync-videos
 ```
 
-Cron paths (mirrored from `vercel.json`):
+Cron paths (the schedules live in `docker/crontab.template`):
 
 - `/api/cron/process-scheduled` — every 5 min
 - `/api/cron/sync-videos` — every 15 min
@@ -373,8 +374,10 @@ this volume. Postgres + the AI APIs dominate the bill anyway.
 ## Part F — Post-deploy verification
 
 1. `https://<APP_FQDN>/api/health` returns `{"status":"ok"}`.
-2. After 5 min, logs should show `[cron:sync-videos]` or
-   `[cron:process-scheduled]` ticks.
+2. After 5 min, logs should show the curl output from the cron daemon —
+   one line per tick per route, typically including the HTTP status. The
+   route handlers themselves log structured `[cron:sync-videos]` etc. lines
+   inside `withJobLock`, which appear via Node's stdout.
 3. `psql "$DATABASE_URL"` then
    `SELECT * FROM pg_locks WHERE locktype = 'advisory' AND classid IN (1, 2);`
    should show active locks while a job runs.
@@ -391,13 +394,15 @@ this volume. Postgres + the AI APIs dominate the bill anyway.
 
 ## Adding a new cron job later
 
-1. Add an entry to `vercel.json` under `crons` with the path and schedule.
-2. Create `lib/cron/<job>.ts` exporting `runXxx()`. Wrap the body in
+1. Create `lib/cron/<job>.ts` exporting `runXxx()`. Wrap the body in
    `withJobLock("<job-name>", ...)` from `lib/db.ts`.
-3. Create `app/api/cron/<job>/route.ts` as a thin auth-gated wrapper calling
-   `runXxx()`.
-4. Add the new path → runner entry in the `registry` map in
-   `instrumentation.ts`.
+2. Create `app/api/cron/<job>/route.ts` as a thin auth-gated wrapper calling
+   `runXxx()` (mirror any of the existing `app/api/cron/*/route.ts` files —
+   they all share the same shape).
+3. Add a line to `docker/crontab.template`:
+   ```
+   <schedule> root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/<job>
+   ```
 
-That's it — both Vercel (HTTP cron) and Azure (in-process scheduler) pick it
-up on the next deploy.
+That's it — Azure picks up the new cron on next deploy. Vercel previews
+expose the HTTP route (auth-gated) but won't fire it automatically.
