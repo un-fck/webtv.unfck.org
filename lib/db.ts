@@ -551,6 +551,13 @@ async function withTransaction<T>(
   }
 }
 
+// Advisory-lock namespaces. The 2-arg pg_advisory_*_lock form takes a
+// (classid, objid) pair, partitioning the global lock keyspace by classid so
+// `withVideoLock` and `withJobLock` can't collide on hashtext values that
+// happen to coincide.
+const LOCK_NS_VIDEO = 1;
+const LOCK_NS_JOB = 2;
+
 // Serialize the "start transcription / schedule" critical section for one
 // video+language so two simultaneous clicks can't create duplicate rows.
 // The advisory lock is held only for `fn`'s transaction; `fn` runs on the
@@ -563,9 +570,51 @@ export async function withVideoLock<T>(
 ): Promise<T> {
   const key = `${kalturaId}:${language ?? ""}`;
   return withTransaction(async (client) => {
-    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [key]);
+    await client.query(
+      "SELECT pg_advisory_xact_lock($1, hashtext($2)::int)",
+      [LOCK_NS_VIDEO, key],
+    );
     return fn(client);
   });
+}
+
+/**
+ * Serialize a named cron job across replicas using a session-scope advisory
+ * lock. Returns `fn`'s result on success, or `null` if another replica already
+ * holds the lock (caller should treat that as "skipped, not an error").
+ *
+ * Uses pg_try_advisory_lock (non-blocking) so a contended run exits cleanly
+ * instead of piling up. Session-scope, not xact-scope, because the lock must
+ * survive any internal transactions `fn` runs. The `finally` MUST explicitly
+ * unlock before releasing the client back to the pool — session locks stick
+ * to the underlying connection otherwise.
+ */
+export async function withJobLock<T>(
+  jobName: string,
+  fn: () => Promise<T>,
+): Promise<T | null> {
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query<{ locked: boolean }>(
+      "SELECT pg_try_advisory_lock($1, hashtext($2)::int) AS locked",
+      [LOCK_NS_JOB, jobName],
+    );
+    if (!rows[0]?.locked) return null;
+    try {
+      return await fn();
+    } finally {
+      await client
+        .query("SELECT pg_advisory_unlock($1, hashtext($2)::int)", [
+          LOCK_NS_JOB,
+          jobName,
+        ])
+        .catch((err) => {
+          console.warn(`withJobLock(${jobName}): unlock failed`, err);
+        });
+    }
+  } finally {
+    client.release();
+  }
 }
 
 // FK ON DELETE CASCADE (migration 014) handles `speaker_mappings`,
@@ -794,6 +843,42 @@ async function expireStuckTranscripts(
       args,
     ),
   );
+}
+
+/**
+ * Unfiltered sweep that marks ANY in-process transcript whose `updated_at`
+ * is older than the stuck threshold as `error`. Run from a cron tick so
+ * SIGTERM-killed pipelines on Azure (or any host-level kill) eventually
+ * recover instead of staying visibly stuck. Returns the number of rows
+ * flipped on each axis so the cron run can log meaningful output.
+ */
+export async function sweepStuckTranscripts(): Promise<{
+  transcription: number;
+  analysis: number;
+}> {
+  const transcription = await pool.query(
+    `UPDATE webtv.transcripts
+        SET transcription_status = 'error',
+            error_message = COALESCE(NULLIF(error_message, ''),
+              'Pipeline stalled (no progress for >${STUCK_TRANSCRIPT_THRESHOLD}); auto-marked as error.'),
+            pipeline_lock = NULL,
+            updated_at = NOW()
+      WHERE transcription_status IN ('transcribing','identifying_speakers','analyzing_topics')
+        AND updated_at < NOW() - INTERVAL '${STUCK_TRANSCRIPT_THRESHOLD}'`,
+  );
+  const analysis = await pool.query(
+    `UPDATE webtv.transcripts
+        SET analysis_status = 'error',
+            error_message = COALESCE(NULLIF(error_message, ''),
+              'Analysis stalled (no progress for >${STUCK_TRANSCRIPT_THRESHOLD}); auto-marked as error.'),
+            updated_at = NOW()
+      WHERE analysis_status = 'analyzing'
+        AND updated_at < NOW() - INTERVAL '${STUCK_TRANSCRIPT_THRESHOLD}'`,
+  );
+  return {
+    transcription: transcription.rowCount ?? 0,
+    analysis: analysis.rowCount ?? 0,
+  };
 }
 
 // Latest non-error transcript for a player ID — completed, in-progress, or
@@ -1933,30 +2018,23 @@ export async function getFeedSubscribers(
   }));
 }
 
-// User IDs already emailed for a transcript (so we don't re-send).
-export async function getNotifiedUserIds(
-  transcriptId: string,
-): Promise<Set<string>> {
-  const result = await pool.query(
-    q(
-      `SELECT user_id FROM webtv.sent_transcript_notifications
-        WHERE transcript_id = ?`,
-      [transcriptId],
-    ),
-  );
-  return new Set(result.rows.map((row) => row.user_id as string));
-}
-
-// Record that (user, transcript) has been emailed. Idempotent.
-export async function markTranscriptNotified(
+// Atomically claim the right to send (user, transcript). Returns true if this
+// caller wrote the ledger row, false if another caller had already claimed it.
+// Claim BEFORE sending so two concurrent replicas can't both pass the check
+// and double-send. The trade: an SMTP failure after a successful claim leaves
+// the ledger row in place and the user never gets the email — acceptable
+// because (a) SMTP failures are logged + reported to Sentry, and (b) duplicate
+// emails are a worse user-visible failure than a rare missed notification.
+export async function claimTranscriptNotification(
   userId: string,
   transcriptId: string,
-): Promise<void> {
-  await pool.query(
+): Promise<boolean> {
+  const result = await pool.query(
     q(
       `INSERT INTO webtv.sent_transcript_notifications (user_id, transcript_id)
-       VALUES (?, ?) ON CONFLICT DO NOTHING`,
+       VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING user_id`,
       [userId, transcriptId],
     ),
   );
+  return (result.rowCount ?? 0) > 0;
 }

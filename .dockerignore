@@ -1,0 +1,42 @@
+# Keep the build context tight and ensure no secrets / dev cruft leak into
+# the image. Anything not listed here is fair game for `COPY . .`.
+
+# Build artifacts and dependency caches — rebuilt inside the image.
+node_modules
+.next
+.turbo
+coverage
+.pnpm-store
+
+# Secrets and local config — must never enter the image.
+.env
+.env.*
+gcloud_credentials.json
+*.pem
+*.key
+
+# Dev / admin tooling not used at runtime. Scripts and migrations are
+# operator tools run from your laptop (or a one-off `az containerapp exec`),
+# not by the running container.
+scripts
+sql
+analysis
+eval
+docs
+
+# Git / editor metadata.
+.git
+.gitignore
+.github
+.vscode
+.idea
+*.log
+.DS_Store
+
+# Test output and CI artifacts.
+test-results
+playwright-report
+
+# Local plan / memory files (in case any sneaked in).
+REVIEW.md
+CHANGELOG.md

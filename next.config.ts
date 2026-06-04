@@ -4,7 +4,20 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  // Standalone build collects only the server + its traced deps into
+  // `.next/standalone`, which is what the Azure container runs (`node
+  // server.js`). Vercel ignores this and uses its own build pipeline.
+  output: "standalone",
+  // next-intl loads message catalogs at runtime via dynamic import — the
+  // standalone tracer doesn't always pick them up. Be explicit. `vercel.json`
+  // is read at boot by the in-process cron scheduler in instrumentation.ts
+  // (single source of truth for cron schedules); include it explicitly so
+  // standalone definitely copies it.
+  outputFileTracingIncludes: {
+    "/**/*": ["messages/**/*", "i18n/**/*", "vercel.json"],
+  },
+};
 
 // Sentry build-time wrapping: uploads source maps so stack traces in the
 // dashboard show original TypeScript instead of compiled JS, and silences the
