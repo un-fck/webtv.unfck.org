@@ -1293,156 +1293,19 @@ export async function updateVideoEntryId(
   );
 }
 
+// ── Unified video query (browse + search) ────────────────────────────────────
+//
+// `queryVideos` is the single entry point for both schedule browsing and
+// free-text search. A query (`q`) is just another filter: when set, it adds an
+// FTS predicate (with trigram ILIKE fallback for short tokens / FTS errors)
+// and — when no explicit sort is given — drives relevance-based ordering via
+// `ts_rank`. All structural filters (date, body, category, docs, locale)
+// apply uniformly whether or not a query is present.
+
 export interface SearchSort {
   by: "date" | "title";
   dir: "asc" | "desc";
 }
-
-// Maps an explicit sort to a hardcoded ORDER BY clause (no user-input
-// interpolation). Returns null for relevance ordering (default).
-function searchOrderBy(sort?: SearchSort): string | null {
-  if (!sort) return null;
-  const dir = sort.dir === "asc" ? "ASC" : "DESC";
-  // asset_id tiebreaker keeps OFFSET pagination stable across requests.
-  if (sort.by === "title")
-    return `COALESCE(clean_title, title) ${dir}, asset_id ASC`;
-  return `date ${dir}, scheduled_time ${dir}, asset_id ASC`;
-}
-
-export interface SearchVideosResult {
-  records: VideoRecord[];
-  // Count under the active filters (including the locale cut, if any). The
-  // caller still infers `hasMore` from `records.length` vs the requested
-  // `limit + 1`, but uses this for the "(N more)" CTA.
-  totalLocalized: number;
-  // Count under the same filters with the locale cut dropped. Equal to
-  // `totalLocalized` when the locale filter is a no-op.
-  totalAll: number;
-}
-
-export async function searchVideos(
-  query: string,
-  options: {
-    limit?: number;
-    offset?: number;
-    sort?: SearchSort;
-    localeFilter?: LocaleFilter;
-  } = {},
-): Promise<SearchVideosResult> {
-  const { limit = 50, offset = 0, sort, localeFilter } = options;
-  const words = query.trim().split(/\s+/);
-  const allShort = words.every((w) => w.length < 3);
-  const orderBy = searchOrderBy(sort);
-  const filterActive = localeFilterActive(localeFilter);
-  // `(i18n -> ?) IS NOT NULL` is the semantic equivalent of the JSONB
-  // existence operator `i18n ? ?`, but written so the `q()` helper's
-  // `?`-to-`$N` rewrite doesn't try to substitute the operator itself
-  // (PG would then see `i18n $1 $2` and reject the SQL).
-  const localeClause = filterActive ? " AND (i18n -> ?) IS NOT NULL" : "";
-  const localeArgs = filterActive ? [localeFilter!.locale] : [];
-
-  let records: VideoRecord[] = [];
-  let totalLocalized = 0;
-  let totalAll = 0;
-  let usedFts = false;
-
-  if (!allShort) {
-    // Primary: FTS with websearch_to_tsquery (handles non-adjacent keywords)
-    try {
-      const dataPromise = pool.query(
-        q(
-          `SELECT *, ts_rank(fts_vec, websearch_to_tsquery('english', ?)) AS rank
-           FROM webtv.videos
-           WHERE fts_vec @@ websearch_to_tsquery('english', ?)
-             AND ${VISIBLE_VIDEO}${localeClause}
-           ORDER BY ${orderBy ?? "rank DESC, date DESC, asset_id ASC"}
-           LIMIT ? OFFSET ?`,
-          [query, query, ...localeArgs, limit, offset],
-        ),
-      );
-      const countLocalizedPromise = pool.query(
-        q(
-          `SELECT COUNT(*) AS total FROM webtv.videos
-           WHERE fts_vec @@ websearch_to_tsquery('english', ?)
-             AND ${VISIBLE_VIDEO}${localeClause}`,
-          [query, ...localeArgs],
-        ),
-      );
-      const countAllPromise = filterActive
-        ? pool.query(
-            q(
-              `SELECT COUNT(*) AS total FROM webtv.videos
-               WHERE fts_vec @@ websearch_to_tsquery('english', ?)
-                 AND ${VISIBLE_VIDEO}`,
-              [query],
-            ),
-          )
-        : null;
-      const [data, countLocalized, countAll] = await Promise.all([
-        dataPromise,
-        countLocalizedPromise,
-        countAllPromise,
-      ]);
-      records = data.rows.map(mapVideoRow);
-      totalLocalized = Number(countLocalized.rows[0]?.total ?? 0);
-      totalAll = countAll ? Number(countAll.rows[0]?.total ?? 0) : totalLocalized;
-      usedFts = records.length > 0 || totalLocalized > 0;
-    } catch (err) {
-      // fts_vec column may not exist yet in dev — fall through to LIKE.
-      // Warn so a broken FTS index doesn't silently degrade us to trigram-only.
-      console.warn(
-        "FTS query failed, falling back to trigram ILIKE:",
-        err instanceof Error ? err.message : err,
-      );
-    }
-  }
-
-  if (usedFts) return { records, totalLocalized, totalAll };
-
-  // Fallback: trigram-accelerated ILIKE (handles short tokens / partial typing)
-  const pattern = `%${query}%`;
-  const dataPromise = pool.query(
-    q(
-      `SELECT * FROM webtv.videos WHERE (title ILIKE ? OR clean_title ILIKE ?)
-       AND ${VISIBLE_VIDEO}${localeClause}
-       ORDER BY ${orderBy ?? "date DESC, scheduled_time DESC, asset_id ASC"}
-       LIMIT ? OFFSET ?`,
-      [pattern, pattern, ...localeArgs, limit, offset],
-    ),
-  );
-  const countLocalizedPromise = pool.query(
-    q(
-      `SELECT COUNT(*) AS total FROM webtv.videos
-       WHERE (title ILIKE ? OR clean_title ILIKE ?)
-         AND ${VISIBLE_VIDEO}${localeClause}`,
-      [pattern, pattern, ...localeArgs],
-    ),
-  );
-  const countAllPromise = filterActive
-    ? pool.query(
-        q(
-          `SELECT COUNT(*) AS total FROM webtv.videos
-           WHERE (title ILIKE ? OR clean_title ILIKE ?)
-             AND ${VISIBLE_VIDEO}`,
-          [pattern, pattern],
-        ),
-      )
-    : null;
-  const [data, countLocalized, countAll] = await Promise.all([
-    dataPromise,
-    countLocalizedPromise,
-    countAllPromise,
-  ]);
-  return {
-    records: data.rows.map(mapVideoRow),
-    totalLocalized: Number(countLocalized.rows[0]?.total ?? 0),
-    totalAll: countAll
-      ? Number(countAll.rows[0]?.total ?? 0)
-      : Number(countLocalized.rows[0]?.total ?? 0),
-  };
-}
-
-// ── Server-side pagination ────────────────────────────────────────────────────
 
 /**
  * Per-locale visibility filter. When `includeOther` is false (the default
@@ -1458,27 +1321,33 @@ export interface LocaleFilter {
   includeOther: boolean;
 }
 
-export interface VideosPageParams {
+export interface VideosQueryParams {
+  /** Free-text query. When set, adds an FTS predicate (with trigram ILIKE
+   *  fallback) and contributes a `rank` signal that becomes the default
+   *  ordering when `sort` is omitted. */
+  q?: string;
   daysBack?: number;
   date?: string;
   bodies?: string[];
   categories?: string[];
   status?: "past" | "scheduled";
   docs?: string[];
-  sortBy?: "date" | "title";
-  sortDir?: "asc" | "desc";
+  /** Explicit sort. When omitted, default is `rank DESC` for FTS-matched
+   *  queries and `date DESC` otherwise. */
+  sort?: SearchSort;
   page?: number;
   pageSize?: number;
   transcriptedEntryIds?: string[];
   localeFilter?: LocaleFilter;
 }
 
-export interface VideosPage {
+export interface VideosQueryResult {
   records: VideoRecord[];
+  /** Count under all active filters, including the per-locale visibility cut. */
   total: number;
-  // Count under the same filters, but ignoring the per-locale visibility cut.
-  // Equal to `total` when the locale filter is a no-op (English, or
-  // `includeOther === true`).
+  /** Count under all active filters, but ignoring the per-locale cut. Equal
+   *  to `total` when the locale filter is a no-op (English, or
+   *  `includeOther === true`). */
   totalIncludingOther: number;
 }
 
@@ -1491,46 +1360,135 @@ function localeFilterActive(f: LocaleFilter | undefined): boolean {
   return !!f && !f.includeOther && f.locale !== "en";
 }
 
-export async function getVideosPage(
-  params: VideosPageParams,
-): Promise<VideosPage> {
+// Explicit ORDER BY for a user-chosen sort. The `auto` (no-sort) ordering is
+// chosen by `queryVideos` based on whether the FTS path produced a rank.
+// `asset_id ASC` tiebreaker keeps OFFSET pagination stable across requests.
+function explicitOrderBy(sort: SearchSort): string {
+  const dir = sort.dir === "asc" ? "ASC" : "DESC";
+  if (sort.by === "title") {
+    return `COALESCE(clean_title, title) ${dir}, asset_id ASC`;
+  }
+  // Within a day, always earliest-first so meetings read chronologically as
+  // the day unfolds — independent of the day-level sort direction.
+  return `date ${dir}, scheduled_time ASC, asset_id ASC`;
+}
+
+// Runs the three-query pattern (data + localized count + optional all-locale
+// count) shared by every text/structural combination. The caller has already
+// assembled `conditions` (structural + optional text predicate); this helper
+// appends the locale clause when active and dispatches the SQL.
+async function runVideosQuery(args: {
+  selectExtra: string; // e.g. `, ts_rank(...) AS rank` — empty when not FTS
+  selectArgs: unknown[]; // bound args for selectExtra
+  conditions: string[];
+  conditionArgs: unknown[];
+  orderBy: string;
+  pageSize: number;
+  offset: number;
+  localeFilter?: LocaleFilter;
+}): Promise<VideosQueryResult> {
   const {
+    selectExtra,
+    selectArgs,
+    conditions,
+    conditionArgs,
+    orderBy,
+    pageSize,
+    offset,
+    localeFilter,
+  } = args;
+
+  const filterActive = localeFilterActive(localeFilter);
+  const whereAll = conditions.join(" AND ");
+  // `(i18n -> ?) IS NOT NULL` is the semantic equivalent of the JSONB
+  // existence operator `i18n ? ?`, but written so the `q()` helper's
+  // `?`-to-`$N` rewrite doesn't try to substitute the operator itself.
+  const whereLocalized = filterActive
+    ? `${whereAll} AND (i18n -> ?) IS NOT NULL`
+    : whereAll;
+  const localizedArgs = filterActive
+    ? [...conditionArgs, localeFilter!.locale]
+    : conditionArgs;
+
+  const dataPromise = pool.query(
+    q(
+      `SELECT *${selectExtra} FROM webtv.videos WHERE ${whereLocalized}
+       ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+      [...selectArgs, ...localizedArgs, pageSize, offset],
+    ),
+  );
+  const countLocalizedPromise = pool.query(
+    q(
+      `SELECT COUNT(*) AS total FROM webtv.videos WHERE ${whereLocalized}`,
+      localizedArgs,
+    ),
+  );
+  // Skip the extra count when the locale filter is a no-op.
+  const countAllPromise = filterActive
+    ? pool.query(
+        q(
+          `SELECT COUNT(*) AS total FROM webtv.videos WHERE ${whereAll}`,
+          conditionArgs,
+        ),
+      )
+    : null;
+  const [data, countLocalized, countAll] = await Promise.all([
+    dataPromise,
+    countLocalizedPromise,
+    countAllPromise,
+  ]);
+
+  const total = Number(
+    (countLocalized.rows[0] as { total?: string } | undefined)?.total ?? 0,
+  );
+  const totalIncludingOther = countAll
+    ? Number((countAll.rows[0] as { total?: string } | undefined)?.total ?? 0)
+    : total;
+  return {
+    records: data.rows.map(mapVideoRow),
+    total,
+    totalIncludingOther,
+  };
+}
+
+export async function queryVideos(
+  params: VideosQueryParams,
+): Promise<VideosQueryResult> {
+  const {
+    q: queryText,
     daysBack = 365,
     date,
     bodies,
     categories,
     status,
     docs,
-    sortBy = "date",
-    sortDir = "desc",
+    sort,
     page = 1,
     pageSize = 50,
     transcriptedEntryIds,
     localeFilter,
   } = params;
 
-  // Build the shared (non-locale) WHERE first. The locale clause is appended
-  // separately so we can run two count queries — with and without it — and
-  // surface the "(N more in other languages)" delta.
+  // Structural WHERE — shared across all text paths (none / FTS / ILIKE).
   const conditions: string[] = [
     "last_seen >= CURRENT_DATE - ?::int",
     VISIBLE_VIDEO,
   ];
-  const args: unknown[] = [daysBack];
+  const conditionArgs: unknown[] = [daysBack];
 
   if (date) {
     conditions.push("date = ?");
-    args.push(date);
+    conditionArgs.push(date);
   }
 
   if (bodies && bodies.length > 0) {
     conditions.push(`body IN (${bodies.map(() => "?").join(", ")})`);
-    args.push(...bodies);
+    conditionArgs.push(...bodies);
   }
 
   if (categories && categories.length > 0) {
     conditions.push(`category IN (${categories.map(() => "?").join(", ")})`);
-    args.push(...categories);
+    conditionArgs.push(...categories);
   }
 
   if (status === "past") {
@@ -1550,7 +1508,7 @@ export async function getVideosPage(
           docConditions.push(
             `entry_id IN (${transcriptedEntryIds.map(() => "?").join(", ")})`,
           );
-          args.push(...transcriptedEntryIds);
+          conditionArgs.push(...transcriptedEntryIds);
         }
       }
     }
@@ -1572,71 +1530,81 @@ export async function getVideosPage(
     }
   }
 
-  // `whereAll` excludes the locale filter; `whereLocalized` includes it.
-  // `total` uses whereLocalized; `totalIncludingOther` uses whereAll.
-  const filterActive = localeFilterActive(localeFilter);
-  const whereAll = conditions.join(" AND ");
-  const localeConditions = filterActive
-    ? [...conditions, "(i18n -> ?) IS NOT NULL"]
-    : conditions;
-  const whereLocalized = localeConditions.join(" AND ");
-  const localizedArgs = filterActive ? [...args, localeFilter!.locale] : args;
+  const offset = (page - 1) * pageSize;
+  const explicit = sort ? explicitOrderBy(sort) : null;
 
-  let orderBy: string;
-  if (sortBy === "title") {
-    orderBy = `clean_title ${sortDir === "asc" ? "ASC" : "DESC"}, date DESC`;
-  } else {
-    // Day ordering follows sortDir; within a day, always earliest-first so
-    // meetings read chronologically as the day unfolds.
-    orderBy = `date ${sortDir === "asc" ? "ASC" : "DESC"}, scheduled_time ASC`;
+  const trimmedQ = queryText?.trim() ?? "";
+  if (trimmedQ) {
+    const words = trimmedQ.split(/\s+/);
+    const allShort = words.every((w) => w.length < 3);
+
+    if (!allShort) {
+      // Primary text path: FTS with websearch_to_tsquery (non-adjacent
+      // keywords, English stemming). Adds the FTS predicate alongside the
+      // structural filters and contributes the `rank` column used for the
+      // default relevance ordering.
+      try {
+        const ftsResult = await runVideosQuery({
+          selectExtra:
+            ", ts_rank(fts_vec, websearch_to_tsquery('english', ?)) AS rank",
+          selectArgs: [trimmedQ],
+          conditions: [
+            ...conditions,
+            "fts_vec @@ websearch_to_tsquery('english', ?)",
+          ],
+          conditionArgs: [...conditionArgs, trimmedQ],
+          orderBy: explicit ?? "rank DESC, date DESC, asset_id ASC",
+          pageSize,
+          offset,
+          localeFilter,
+        });
+        // FTS surfaced something (rows OR a non-zero count under the locale
+        // filter) → trust it. Empty results fall through to ILIKE — which
+        // catches partial words / typos the FTS index has no token for.
+        if (ftsResult.records.length > 0 || ftsResult.total > 0) {
+          return ftsResult;
+        }
+      } catch (err) {
+        // fts_vec column may be missing in dev — warn so a broken index
+        // doesn't silently degrade us to trigram-only.
+        console.warn(
+          "FTS query failed, falling back to trigram ILIKE:",
+          err instanceof Error ? err.message : err,
+        );
+      }
+    }
+
+    // Fallback: trigram-accelerated ILIKE. Fires for all-short tokens, when
+    // FTS throws, or when FTS returned no matches. Applies the same
+    // structural filters; ranking isn't available so the default order falls
+    // back to date desc.
+    const pattern = `%${trimmedQ}%`;
+    return runVideosQuery({
+      selectExtra: "",
+      selectArgs: [],
+      conditions: [
+        ...conditions,
+        "(title ILIKE ? OR clean_title ILIKE ?)",
+      ],
+      conditionArgs: [...conditionArgs, pattern, pattern],
+      orderBy: explicit ?? "date DESC, scheduled_time ASC, asset_id ASC",
+      pageSize,
+      offset,
+      localeFilter,
+    });
   }
-  // Stable tiebreaker on the primary key so OFFSET pagination never repeats or
-  // skips rows that share the same date/scheduled_time (otherwise the same
-  // asset can appear on two infinite-scroll pages → duplicate React keys).
-  orderBy += ", asset_id ASC";
 
-  const offsetVal = (page - 1) * pageSize;
-  const dataArgs = [...localizedArgs, pageSize, offsetVal];
-
-  // When the locale filter is a no-op, the two counts are identical — skip the
-  // extra query.
-  const queries: Promise<unknown>[] = [
-    pool.query(
-      q(
-        `SELECT COUNT(*) AS total FROM webtv.videos WHERE ${whereLocalized}`,
-        localizedArgs,
-      ),
-    ),
-    pool.query(
-      q(
-        `SELECT * FROM webtv.videos WHERE ${whereLocalized} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
-        dataArgs,
-      ),
-    ),
-  ];
-  if (filterActive) {
-    queries.push(
-      pool.query(
-        q(`SELECT COUNT(*) AS total FROM webtv.videos WHERE ${whereAll}`, args),
-      ),
-    );
-  }
-  const [countResult, dataResult, countAllResult] = (await Promise.all(
-    queries,
-  )) as Array<{ rows: { total: string }[] } | { rows: Record<string, unknown>[] }>;
-
-  const total = Number(
-    (countResult as { rows: { total: string }[] }).rows[0]?.total ?? 0,
-  );
-  const totalIncludingOther = filterActive
-    ? Number(
-        (countAllResult as { rows: { total: string }[] }).rows[0]?.total ?? 0,
-      )
-    : total;
-  const records = (
-    dataResult as { rows: Record<string, unknown>[] }
-  ).rows.map(mapVideoRow);
-  return { records, total, totalIncludingOther };
+  // No text query — structural filters only.
+  return runVideosQuery({
+    selectExtra: "",
+    selectArgs: [],
+    conditions,
+    conditionArgs,
+    orderBy: explicit ?? "date DESC, scheduled_time ASC, asset_id ASC",
+    pageSize,
+    offset,
+    localeFilter,
+  });
 }
 
 export async function getAvailableDates(

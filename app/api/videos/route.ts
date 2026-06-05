@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getVideosPage, type VideosPageParams } from "@/lib/db";
+import { queryVideos, type VideosQueryParams } from "@/lib/db";
 import {
   getCachedTranscriptedEntries,
   getCachedTranscriptedEntriesByLanguage,
 } from "@/lib/cached-db";
 import { recordToVideo } from "@/lib/un-api";
 
-// Chunk size for infinite-scroll loading of the browse (non-search) feed.
-// Must match the initial chunk rendered server-side in app/page.tsx.
+// Chunk size for infinite-scroll loading of the feed. Must match the initial
+// chunk rendered server-side in app/page.tsx.
 const CHUNK = 50;
 const DAYS_BACK = 365;
 
@@ -18,18 +18,39 @@ function multi(sp: URLSearchParams, key: string): string[] | undefined {
   return vals.length ? vals : undefined;
 }
 
-// Browse feed as JSON, offset-paged — used to append rows on infinite scroll.
-// Mirrors the filter parsing and record enrichment in app/page.tsx.
+// Unified feed endpoint — handles both browse (no `q`) and search (`q` set)
+// with the same filter/sort surface. The DB layer (queryVideos) decides
+// whether the text query goes through FTS or the trigram ILIKE fallback.
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
 
   const offset = Math.max(0, parseInt(sp.get("offset") || "0", 10) || 0);
   const page = Math.floor(offset / CHUNK) + 1;
 
+  // Free-text query. Treated as another filter — when omitted, the request is
+  // pure browse; when set, ranking + the FTS/ILIKE predicate kick in.
+  const qRaw = sp.get("q")?.trim();
+  const q = qRaw && qRaw.length >= 2 ? qRaw : undefined;
+
+  // Sort: when `q` is set we default to relevance (undefined → rank DESC in
+  // queryVideos). When no `q`, default to date_desc so the browse feed has a
+  // deterministic order. An explicit sort param always wins.
   const sortRaw = sp.get("sort");
-  const [sortBy, sortDir] = (
-    sortRaw && SORT_VALUES.includes(sortRaw) ? sortRaw : "date_desc"
-  ).split("_") as ["date" | "title", "asc" | "desc"];
+  const sortKey =
+    sortRaw && SORT_VALUES.includes(sortRaw)
+      ? sortRaw
+      : q
+        ? null
+        : "date_desc";
+  const sort = sortKey
+    ? (() => {
+        const [by, dir] = sortKey.split("_") as [
+          "date" | "title",
+          "asc" | "desc",
+        ];
+        return { by, dir };
+      })()
+    : undefined;
 
   const dateRaw = sp.get("date");
   const date =
@@ -37,7 +58,8 @@ export async function GET(request: NextRequest) {
   const docs = multi(sp, "text")?.filter((d) =>
     ["transcript", "pv", "sr"].includes(d),
   );
-  // Client-supplied active UI locale (see app/api/search/route.ts).
+  // Client-supplied active UI locale (drives both per-locale visibility and
+  // the localized fields returned by recordToVideo).
   const locale = sp.get("locale") ?? undefined;
   // ?xlang=1 turns off the per-locale visibility filter (the "Include
   // meetings in other languages" toggle on the home toolbar).
@@ -50,14 +72,14 @@ export async function GET(request: NextRequest) {
       : Promise.resolve([] as string[]),
   ]);
 
-  const params: VideosPageParams = {
+  const params: VideosQueryParams = {
+    q,
     daysBack: DAYS_BACK,
     date,
     bodies: multi(sp, "body"),
     categories: multi(sp, "category"),
     docs: docs?.length ? docs : undefined,
-    sortBy,
-    sortDir,
+    sort,
     page,
     pageSize: CHUNK,
     transcriptedEntryIds: docs?.includes("transcript")
@@ -66,7 +88,7 @@ export async function GET(request: NextRequest) {
     localeFilter: locale ? { locale, includeOther } : undefined,
   };
 
-  const { records, total, totalIncludingOther } = await getVideosPage(params);
+  const { records, total, totalIncludingOther } = await queryVideos(params);
 
   const transcriptedSet = new Set(transcriptedEntries);
   const transcriptedInLocaleSet = new Set(transcriptedEntriesInLocale);
@@ -87,9 +109,14 @@ export async function GET(request: NextRequest) {
     totalIncludingOther,
     hasMore,
   });
+  // Search responses (with `q`) need a shorter TTL than the steady-state
+  // browse feed: the FTS index updates as new meetings come in and we don't
+  // want a stale cache hiding fresh hits.
   response.headers.set(
     "Cache-Control",
-    "s-maxage=30, stale-while-revalidate=60",
+    q
+      ? "s-maxage=30, stale-while-revalidate=60"
+      : "s-maxage=60, stale-while-revalidate=300",
   );
   return response;
 }

@@ -93,7 +93,8 @@
     "loading": "Loading…",
     "results": "{count, plural, =0 {No results} one {# result} other {# results}}",
     "meetings": "{count, plural, =0 {No meetings} one {# meeting} other {# meetings}}",
-    "relevance": "Relevance"
+    "relevance": "Relevance",
+    "sortBy": "Sort by"
   },
   "speakers": {
     "title": "Speakers",

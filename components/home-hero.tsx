@@ -12,7 +12,7 @@ export function HomeHero() {
   return (
     <div className="pt-6 pb-6">
       <h1 className={cn(typography.pageTitle, "mb-1.5")}>{t("headline")}</h1>
-      <p className={cn(typography.lead, "whitespace-nowrap")}>
+      <p className={typography.lead}>
         {t("lead")}{" "}
         <Link
           href="/about"

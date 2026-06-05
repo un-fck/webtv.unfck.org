@@ -347,7 +347,7 @@ function SearchInput({
     <div className={`group relative ${className ?? ""}`}>
       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
         <Search
-          className={`h-4 w-4 transition-colors ${highlighted ? "text-un-blue-text" : "text-slate-400 group-hover:text-un-blue-text"}`}
+          className={`h-4 w-4 transition-colors ${highlighted ? "text-primary" : "text-slate-400 group-hover:text-primary"}`}
           aria-hidden="true"
         />
       </div>
@@ -368,8 +368,8 @@ function SearchInput({
         aria-label={placeholder}
         className={`block h-10 w-full touch-manipulation rounded-lg border px-3 pl-9 text-sm transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
           highlighted
-            ? "border-un-blue bg-un-blue/5 text-un-blue-text placeholder-un-blue/50"
-            : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-un-blue hover:text-un-blue-text hover:placeholder-un-blue/70"
+            ? "border-primary/40 bg-primary/10 text-primary placeholder-primary/50"
+            : "border-slate-300 bg-white text-slate-400 placeholder-slate-400 hover:border-primary/40 hover:text-primary hover:placeholder-primary/70"
         }`}
       />
       {value && (
@@ -378,7 +378,7 @@ function SearchInput({
             e.preventDefault();
             onSubmit("");
           }}
-          className="absolute top-1/2 right-3 -translate-y-1/2 text-un-blue-text/50 hover:text-un-blue-text"
+          className="absolute top-1/2 right-3 -translate-y-1/2 text-primary/50 hover:text-primary"
           aria-label="Clear search"
         >
           <X className="h-4 w-4" />
@@ -463,17 +463,31 @@ function DocChips({
 
 // Binary/segmented toggle (e.g. Recent/Scheduled, All/Transcribed). Shared by
 // the desktop and mobile filter bars so both stay visually identical.
+//
+// `disabled` greys the toggle out and blocks interaction — used when another
+// filter (e.g. a specific date) makes this control redundant. We keep it
+// rendered rather than hidden so the user can still see what its value is and
+// recover by clearing the dominating filter.
 function SegmentedToggle({
   options,
+  disabled = false,
 }: {
   options: { label: string; active: boolean; onSelect: () => void }[];
+  disabled?: boolean;
 }) {
   return (
-    <div className="flex h-10 rounded-lg border border-slate-300 bg-white p-0.5 text-xs font-medium">
+    <div
+      aria-disabled={disabled || undefined}
+      className={cn(
+        "flex h-10 rounded-lg border border-slate-300 bg-white p-0.5 text-xs font-medium",
+        disabled && "pointer-events-none opacity-50",
+      )}
+    >
       {options.map(({ label, active, onSelect }) => (
         <button
           key={label}
           onClick={() => !active && onSelect()}
+          disabled={disabled}
           className={`rounded-md px-4 py-1.5 transition-all ${
             active
               ? "bg-primary text-white shadow-sm"
@@ -522,40 +536,27 @@ export function VideoTable({
   const t = useT();
   const tCategory = useCategoryName();
   const searchParams = useSearchParams();
-  // Active UI locale; appended to /api/search and /api/videos so server-side
+  // Active UI locale; appended to /api/videos so server-side
   // record→video conversion returns localized titles/categories.
   const locale = useLocale();
   const { formatMeetingDate, formatMeetingTime, isFutureDay } =
     useMeetingFormat();
 
-  // Search state (client-side, uses /api/search)
+  // Search input state — what the user has typed. Synced both ways with the
+  // `q` URL param (debounced typing → URL; back/forward → input).
   const [inputValue, setInputValue] = useState(serverParams.q || "");
-  const [searchResults, setSearchResults] = useState<Video[] | null>(
-    serverParams.q ? null : null, // will be populated by effect if q is set
-  );
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchOffset, setSearchOffset] = useState(0);
-  const [hasMoreResults, setHasMoreResults] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  // Search totals refresh whenever the query (or filters affecting count)
-  // change. Server returns `total` (under the locale filter) and
-  // `totalIncludingOther` (with the locale cut dropped); both drive the
-  // "(N more)" CTA so it tracks the search query just like the row list does.
-  const [searchTotal, setSearchTotal] = useState(0);
-  const [searchTotalIncludingOther, setSearchTotalIncludingOther] = useState(0);
 
-  // Browse-feed infinite scroll (non-search). Seeded with the server-rendered
-  // first chunk; further chunks append via /api/videos. Re-seeded whenever a
-  // fresh SSR payload arrives (filter/sort/status change → new `videos`).
-  const [browseRows, setBrowseRows] = useState<Video[]>(videos);
-  const [browseLoading, setBrowseLoading] = useState(false);
-  const [browseHasMore, setBrowseHasMore] = useState(
-    videos.length < totalCount,
-  );
+  // Result feed (browse + search are the same feed now). Seeded with the
+  // server-rendered first chunk; further chunks append via /api/videos.
+  // Re-seeded whenever a fresh SSR payload arrives (filter/q/sort change →
+  // new `videos` prop).
+  const [rows, setRows] = useState<Video[]>(videos);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(videos.length < totalCount);
   useEffect(() => {
-    setBrowseRows(videos);
-    setBrowseHasMore(videos.length < totalCount);
+    setRows(videos);
+    setHasMore(videos.length < totalCount);
   }, [videos, totalCount]);
 
   // URL-driven param updater
@@ -624,84 +625,32 @@ export function VideoTable({
     rememberScheduleUrl(`${window.location.pathname}${window.location.search}`);
   }, [searchParams]);
 
-  // Fetch search results when q param is set
-  useEffect(() => {
-    if (!serverParams.q) {
-      setSearchResults(null);
-      setSearchOffset(0);
-      setHasMoreResults(false);
-      setSearchTotal(0);
-      setSearchTotalIncludingOther(0);
-      return;
-    }
-
-    setIsSearching(true);
-    setSearchOffset(0);
-    const sortParam = serverParams.sort ? `&sort=${serverParams.sort}` : "";
-    const xlangParam = serverParams.includeOtherLangs ? "&xlang=1" : "";
-    fetch(
-      `/api/search?q=${encodeURIComponent(serverParams.q)}${sortParam}&locale=${locale}${xlangParam}`,
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setSearchResults(data.videos);
-        setHasMoreResults(data.hasMore);
-        setSearchOffset(data.videos.length);
-        setSearchTotal(data.total ?? 0);
-        setSearchTotalIncludingOther(data.totalIncludingOther ?? 0);
-      })
-      .catch(() => setSearchResults(null))
-      .finally(() => setIsSearching(false));
-  }, [
-    serverParams.q,
-    serverParams.sort,
-    serverParams.includeOtherLangs,
-    locale,
-  ]);
-
-  const loadMore = () => {
-    if (!serverParams.q || isLoadingMore) return;
-    setIsLoadingMore(true);
-    const sortParam = serverParams.sort ? `&sort=${serverParams.sort}` : "";
-    const xlangParam = serverParams.includeOtherLangs ? "&xlang=1" : "";
-    fetch(
-      `/api/search?q=${encodeURIComponent(serverParams.q)}&offset=${searchOffset}${sortParam}&locale=${locale}${xlangParam}`,
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setSearchResults((prev) => [...(prev ?? []), ...data.videos]);
-        setHasMoreResults(data.hasMore);
-        setSearchOffset((prev) => prev + data.videos.length);
-      })
-      .catch(() => {})
-      .finally(() => setIsLoadingMore(false));
-  };
-
   // Immediate flush (Enter / blur / clear) — bypasses the debounce. Uses
-  // replace() like the live-search path so search never floods history.
+  // replace() like the live-search path so typing doesn't flood history.
   const submitSearch = (value: string) => {
     const trimmed = value.trim();
     setInputValue(trimmed);
     if (trimmed === lastWrittenQuery.current) return;
     lastWrittenQuery.current = trimmed;
-    if (trimmed) {
-      updateParams({ q: trimmed, replace: true });
-    } else {
-      // Clear search — remove q param, go back to normal view
-      updateParams({ q: undefined, replace: true });
-      setSearchResults(null);
-    }
+    updateParams({ q: trimmed || undefined, replace: true });
   };
 
+  // Display hint only: drives the flat-vs-grouped layout and the
+  // relevance/date sort toggle. Doesn't gate the fetch path anymore — both
+  // browse and search go through /api/videos.
   const isSearchMode = !!serverParams.q;
 
-  // Append the next browse chunk from /api/videos using the current filters.
-  const loadMoreBrowse = useCallback(() => {
-    if (isSearchMode || browseLoading || !browseHasMore) return;
-    setBrowseLoading(true);
+  // Append the next chunk from /api/videos using the current filters and
+  // (if set) text query. The endpoint is the single feed entry point now;
+  // queryVideos in lib/db.ts decides whether to apply FTS or just structural
+  // predicates based on whether `q` is present.
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
     const sp = new URLSearchParams();
-    sp.set("offset", String(browseRows.length));
+    sp.set("offset", String(rows.length));
     sp.set("locale", locale);
+    if (serverParams.q) sp.set("q", serverParams.q);
     if (serverParams.includeOtherLangs) sp.set("xlang", "1");
     if (serverParams.sort) sp.set("sort", serverParams.sort);
     if (serverParams.date) sp.set("date", serverParams.date);
@@ -711,7 +660,7 @@ export function VideoTable({
     fetch(`/api/videos?${sp}`)
       .then((res) => res.json())
       .then((data) => {
-        setBrowseRows((prev) => [...prev, ...data.videos]);
+        setRows((prev) => [...prev, ...data.videos]);
         let nextHasMore = Boolean(data.hasMore);
         // Upcoming view only renders future rows, but the server pages
         // descend through the whole date window. Once a chunk has no future
@@ -726,36 +675,27 @@ export function VideoTable({
         ) {
           nextHasMore = false;
         }
-        setBrowseHasMore(nextHasMore);
+        setHasMore(nextHasMore);
       })
       .catch(() => {})
-      .finally(() => setBrowseLoading(false));
+      .finally(() => setLoadingMore(false));
   }, [
-    isSearchMode,
-    browseLoading,
-    browseHasMore,
-    browseRows.length,
+    loadingMore,
+    hasMore,
+    rows.length,
     serverParams,
     locale,
     isFutureDay,
   ]);
 
-  // Data: search results when searching, else the (growing) browse feed.
-  const tableData = isSearchMode ? (searchResults ?? []) : browseRows;
-
-  // Unified infinite-scroll controls for whichever mode is active.
-  const hasMore = isSearchMode ? hasMoreResults : browseHasMore;
-  const loadingMore = isSearchMode ? isLoadingMore : browseLoading;
-  const loadMoreCurrent = isSearchMode ? loadMore : loadMoreBrowse;
-
   // Auto-load the next chunk when the bottom sentinel nears the viewport. The
   // callback is held in a ref so the observer doesn't reattach every render;
-  // re-running on tableData.length re-fires if the sentinel is still in view
-  // after a short append (so the feed keeps filling until the viewport scrolls).
+  // re-running on rows.length re-fires if the sentinel is still in view after
+  // a short append (so the feed keeps filling until the viewport scrolls).
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const loadMoreRef = useRef(loadMoreCurrent);
+  const loadMoreRef = useRef(loadMore);
   useEffect(() => {
-    loadMoreRef.current = loadMoreCurrent;
+    loadMoreRef.current = loadMore;
   });
   useEffect(() => {
     if (!hasMore) return;
@@ -769,7 +709,7 @@ export function VideoTable({
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, isSearchMode, tableData.length]);
+  }, [hasMore, rows.length]);
 
   // Coarse "With transcript" filter: active when every doc type is selected
   // (any of transcript / PV / SR counts as a transcript). Drives the All vs
@@ -789,12 +729,12 @@ export function VideoTable({
     });
   // How many more meetings would appear if the user flipped the toggle. The
   // server returns `total{,IncludingOther}` from the same WHERE chain with
-  // the locale cut dropped — see getVideosPage / searchVideos in lib/db.ts.
-  // In search mode the live values from /api/search win; otherwise the SSR
-  // payload's totals do.
-  const otherLangsCount = isSearchMode
-    ? Math.max(0, searchTotalIncludingOther - searchTotal)
-    : Math.max(0, totalCountIncludingOther - totalCount);
+  // the locale cut dropped — see queryVideos in lib/db.ts. SSR delivers fresh
+  // counts on every filter/query change, so the same prop drives both modes.
+  const otherLangsCount = Math.max(
+    0,
+    totalCountIncludingOther - totalCount,
+  );
 
   // Search-result ordering: relevance (default, no sort param) vs newest-first.
   const searchSortOptions = [
@@ -810,14 +750,12 @@ export function VideoTable({
     },
   ];
 
-  const rows = tableData;
   const hasActiveFilters =
     !!serverParams.date ||
     (serverParams.body?.length ?? 0) > 0 ||
     (serverParams.category?.length ?? 0) > 0 ||
     (serverParams.text?.length ?? 0) > 0;
-  // Don't flash "no results" while a search request is still in flight.
-  const showEmptyState = rows.length === 0 && !isSearching;
+  const showEmptyState = rows.length === 0;
   // Day/category grouping only makes sense when rows are in date order;
   // relevance-sorted search results would fragment into 1-row groups.
   const groupByDate = !isSearchMode;
@@ -1061,12 +999,11 @@ export function VideoTable({
     </div>
   );
 
-  const searchStatus = isSearching
-    ? "Searching…"
-    : isSearchMode && searchResults !== null && searchResults.length > 0
-      ? hasMoreResults
-        ? `Showing ${searchResults.length.toLocaleString()} meetings`
-        : `${searchResults.length.toLocaleString()} meetings in total`
+  const searchStatus =
+    isSearchMode && rows.length > 0
+      ? hasMore
+        ? `Showing ${rows.length.toLocaleString()} meetings`
+        : `${totalCount.toLocaleString()} meetings in total`
       : null;
 
   const clearAllFilters = () =>
@@ -1133,22 +1070,21 @@ export function VideoTable({
             selectedDate={serverParams.date}
             onChange={(val) => updateParams({ date: val })}
           />
-          {!isSearchMode && (
-            <SegmentedToggle
-              options={[
-                {
-                  label: t("viewRecent"),
-                  active: view === "recent",
-                  onSelect: () => updateParams({ view: undefined }),
-                },
-                {
-                  label: t("viewUpcoming"),
-                  active: view === "upcoming",
-                  onSelect: () => updateParams({ view: "upcoming" }),
-                },
-              ]}
-            />
-          )}
+          <SegmentedToggle
+            disabled={isSearchMode || !!serverParams.date}
+            options={[
+              {
+                label: t("viewRecent"),
+                active: view === "recent",
+                onSelect: () => updateParams({ view: undefined }),
+              },
+              {
+                label: t("viewUpcoming"),
+                active: view === "upcoming",
+                onSelect: () => updateParams({ view: "upcoming" }),
+              },
+            ]}
+          />
           <SegmentedToggle
             options={[
               {
@@ -1206,7 +1142,12 @@ export function VideoTable({
           >
             {searchStatus}
           </div>
-          <SegmentedToggle options={searchSortOptions} />
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {t("sortBy")}
+            </span>
+            <SegmentedToggle options={searchSortOptions} />
+          </div>
         </div>
       )}
 
@@ -1217,7 +1158,12 @@ export function VideoTable({
             {emptyState}
           </div>
         ) : dayGroups ? (
-          view === "upcoming" ? (
+          // When a specific date is picked, the Recent/Upcoming toggle is
+          // disabled (rendered greyed-out above) and the past/future split is
+          // bypassed — the date is the only filter that should matter.
+          serverParams.date ? (
+            <div className="space-y-10">{dayGroups.map(renderDayGroup)}</div>
+          ) : view === "upcoming" ? (
             upcomingDayGroups.length > 0 ? (
               <div className="space-y-10">
                 {upcomingDayGroups.map(renderDayGroup)}
@@ -1247,7 +1193,7 @@ export function VideoTable({
       {hasMore && (
         <div ref={sentinelRef} className="flex justify-center pt-4">
           <button
-            onClick={() => loadMoreCurrent()}
+            onClick={() => loadMore()}
             disabled={loadingMore}
             className="rounded-full border border-border px-6 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -1255,10 +1201,10 @@ export function VideoTable({
           </button>
         </div>
       )}
-      {!hasMore && tableData.length > 0 && (
+      {!hasMore && rows.length > 0 && (
         <div className="pt-4 text-center text-sm text-muted-foreground">
           {isSearchMode
-            ? t("results", { count: tableData.length })
+            ? t("results", { count: rows.length })
             : t("meetings", { count: totalCount })}
         </div>
       )}

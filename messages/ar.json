@@ -110,7 +110,8 @@
     "loading": "جارٍ التحميل…",
     "results": "{count, plural, =0 {لا توجد نتائج} one {نتيجة واحدة} two {نتيجتان} few {# نتائج} many {# نتيجة} other {# نتيجة}}",
     "meetings": "{count, plural, =0 {لا توجد جلسات} one {جلسة واحدة} two {جلستان} few {# جلسات} many {# جلسة} other {# جلسة}}",
-    "relevance": "الصلة"
+    "relevance": "الصلة",
+    "sortBy": "ترتيب حسب"
   },
   "speakers": {
     "title": "المتكلمون",

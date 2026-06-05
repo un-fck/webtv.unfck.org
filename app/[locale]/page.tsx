@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { recordToVideo } from "@/lib/un-api";
-import { getVideosPage, type VideosPageParams } from "@/lib/db";
+import { queryVideos, type VideosQueryParams } from "@/lib/db";
 import {
   getCachedTranscriptedEntries,
   getCachedTranscriptedEntriesByLanguage,
@@ -99,32 +99,20 @@ export default async function Home({
   const [{ locale }, raw] = await Promise.all([routeParams, searchParams]);
   const params = parseSearchParams(raw);
 
-  // When search query is active, pass empty data — client handles via /api/search
-  if (params.q) {
-    const [availableDates, filterOptions] = await Promise.all([
-      getCachedAvailableDates(DAYS_BACK),
-      getCachedFilterOptions(DAYS_BACK),
-    ]);
-
-    return (
-      <PageShell>
-        <VideoTable
-          videos={[]}
-          totalCount={0}
-          totalCountIncludingOther={0}
-          serverParams={params}
-          availableDates={availableDates}
-          filterOptions={filterOptions}
-        />
-      </PageShell>
-    );
-  }
-
-  // Auto (unset) sort defaults to date desc in normal mode.
-  const [sortBy, sortDir] = (params.sort ?? "date_desc").split("_") as [
-    "date" | "title",
-    "asc" | "desc",
-  ];
+  // Sort: explicit param wins. Otherwise default to relevance (undefined →
+  // rank DESC inside queryVideos) when there's a free-text query, else
+  // date_desc for plain browsing.
+  const sort = (() => {
+    if (params.sort) {
+      const [by, dir] = params.sort.split("_") as [
+        "date" | "title",
+        "asc" | "desc",
+      ];
+      return { by, dir };
+    }
+    if (params.q) return undefined;
+    return { by: "date" as const, dir: "desc" as const };
+  })();
 
   // Fetch transcript IDs (needed for hasTranscript filter AND for enriching
   // video records). We fetch both the union ("any language") and the
@@ -134,14 +122,14 @@ export default async function Home({
     getCachedTranscriptedEntriesByLanguage(locale),
   ]);
 
-  const pageParams: VideosPageParams = {
+  const pageParams: VideosQueryParams = {
+    q: params.q,
     daysBack: DAYS_BACK,
     date: params.date,
     bodies: params.body,
     categories: params.category,
     docs: params.text,
-    sortBy,
-    sortDir,
+    sort,
     // Initial chunk only; further rows load client-side via /api/videos
     // (infinite scroll). Keep in sync with CHUNK in app/api/videos/route.ts.
     page: 1,
@@ -160,7 +148,7 @@ export default async function Home({
     availableDates,
     filterOptions,
   ] = await Promise.all([
-    getVideosPage(pageParams),
+    queryVideos(pageParams),
     getCachedAvailableDates(DAYS_BACK),
     getCachedFilterOptions(DAYS_BACK),
   ]);

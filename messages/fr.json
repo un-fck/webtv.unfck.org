@@ -110,7 +110,8 @@
     "loading": "Chargement…",
     "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
     "meetings": "{count, plural, =0 {Aucune réunion} one {# réunion} other {# réunions}}",
-    "relevance": "Pertinence"
+    "relevance": "Pertinence",
+    "sortBy": "Trier par"
   },
   "speakers": {
     "title": "Intervenants",

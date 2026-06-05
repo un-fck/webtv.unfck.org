@@ -110,7 +110,8 @@
     "loading": "Cargando…",
     "results": "{count, plural, =0 {Sin resultados} one {# resultado} other {# resultados}}",
     "meetings": "{count, plural, =0 {Sin reuniones} one {# reunión} other {# reuniones}}",
-    "relevance": "Relevancia"
+    "relevance": "Relevancia",
+    "sortBy": "Ordenar por"
   },
   "speakers": {
     "title": "Oradores",
