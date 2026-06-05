@@ -241,12 +241,25 @@ function CategoryFilterRows({
 }) {
   const t = useTranslations("schedule");
   const tCategory = useCategoryName();
+  // Optimistic mirror of `selected` so clicks update the pill UI immediately,
+  // before the URL-driven RSC round-trip lands a fresh `selected` prop. Without
+  // this, rapid clicks (especially deselecting one of several active pills)
+  // appear unresponsive — the handler closes over the stale prop and the visual
+  // state only catches up when the server responds. Synced from the prop via a
+  // value-based key so identity-only changes (`?? []`) don't clobber pending
+  // edits.
+  const [optimisticSelected, setOptimisticSelected] = useState(selected);
+  const selectedKey = [...selected].sort().join(" ");
+  useEffect(() => {
+    setOptimisticSelected(selected);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey]);
   const toggle = (value: string) => {
-    onChange(
-      selected.includes(value)
-        ? selected.filter((v) => v !== value)
-        : [...selected, value],
-    );
+    const next = optimisticSelected.includes(value)
+      ? optimisticSelected.filter((v) => v !== value)
+      : [...optimisticSelected, value];
+    setOptimisticSelected(next);
+    onChange(next);
   };
 
   const optionSet = new Set(options);
@@ -271,7 +284,7 @@ function CategoryFilterRows({
       key={opt}
       onClick={() => toggle(opt)}
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors ${
-        selected.includes(opt)
+        optimisticSelected.includes(opt)
           ? "bg-primary text-white"
           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
       }`}
@@ -281,7 +294,7 @@ function CategoryFilterRows({
         <span
           className={cn(
             "ml-1",
-            selected.includes(opt) ? "opacity-75" : "opacity-50",
+            optimisticSelected.includes(opt) ? "opacity-75" : "opacity-50",
           )}
         >
           {counts[opt]}
@@ -291,7 +304,7 @@ function CategoryFilterRows({
   );
 
   const overflowSelectedCount = overflowItems.filter((c) =>
-    selected.includes(c),
+    optimisticSelected.includes(c),
   ).length;
   const overflowActive = overflowSelectedCount > 0;
 
