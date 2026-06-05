@@ -356,7 +356,8 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 Cron paths (the schedules live in `docker/crontab.template`):
 
 - `/api/cron/process-scheduled` — every 5 min
-- `/api/cron/sync-videos` — every 15 min
+- `/api/cron/sync-videos` — every 15 min (near window: T-2…T+1)
+- `/api/cron/sync-videos?range=far` — every 6 h (T+2…T+7)
 - `/api/cron/check-pv` — every 6 h
 - `/api/cron/send-transcript-notifications` — every 5 min
 - `/api/cron/realign` — hourly

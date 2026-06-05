@@ -15,6 +15,7 @@
 
 */5 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/process-scheduled
 */15 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/sync-videos
+7 */6 * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" "http://127.0.0.1:3000/api/cron/sync-videos?range=far"
 0 */6 * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/check-pv
 */5 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/send-transcript-notifications
 0 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/realign

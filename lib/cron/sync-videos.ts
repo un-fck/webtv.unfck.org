@@ -11,6 +11,8 @@ import { matchFeeds } from "@/lib/feeds";
 import { backfillDurations } from "@/lib/duration-backfill";
 import { reapRemovedVideos } from "@/lib/removed-videos";
 
+export type SyncVideosRange = "near" | "far";
+
 export type SyncVideosResult =
   | { skipped: "lock_held" }
   | {
@@ -24,25 +26,44 @@ export type SyncVideosResult =
     };
 
 /**
- * Scrape tomorrow + the last 3 days of UN Web TV schedule, persist videos,
- * resolve Kaltura entry IDs, auto-schedule transcription for newly-seen videos
- * matching enabled feeds, then run duration-backfill and removed-video reaping
- * on the last 30 days.
+ * Scrape a slice of the UN Web TV schedule, persist videos, resolve Kaltura
+ * entry IDs, and auto-schedule transcription for newly-seen videos matching
+ * enabled feeds.
+ *
+ * Two-tier scrape:
+ * - "near" (default, every 15 min): tomorrow + today + the last 2 days. Also
+ *   runs duration-backfill and removed-video reaping over the last 30 days.
+ * - "far" (every 6 hours): T+2 through T+7. Picks up future meetings WebTV
+ *   publishes more than a day in advance, without burdening the 15-min loop.
+ *   No maintenance passes — those are range-independent and stay on "near".
+ *
+ * The two ranges hold distinct advisory locks (`sync-videos-near` /
+ * `sync-videos-far`) so they can overlap without skipping each other.
  */
-export async function runSyncVideos(): Promise<SyncVideosResult> {
-  const result = await withJobLock("sync-videos", async () => {
+export async function runSyncVideos(
+  range: SyncVideosRange = "near",
+): Promise<SyncVideosResult> {
+  const result = await withJobLock(`sync-videos-${range}`, async () => {
     const today = new Date();
     const dates: string[] = [];
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    dates.push(formatDate(tomorrow));
-    for (let i = 0; i < 3; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      dates.push(formatDate(date));
+    if (range === "near") {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      dates.push(formatDate(tomorrow));
+      for (let i = 0; i < 3; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        dates.push(formatDate(date));
+      }
+    } else {
+      for (let i = 2; i <= 7; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() + i);
+        dates.push(formatDate(date));
+      }
     }
 
-    console.log(`[sync-videos] Scraping dates: ${dates.join(", ")}`);
+    console.log(`[sync-videos:${range}] Scraping dates: ${dates.join(", ")}`);
 
     // scrapeVideosForDates fans out across all six locales and returns a
     // deduplicated Video[] keyed on asset_id, with the localized
@@ -73,39 +94,41 @@ export async function runSyncVideos(): Promise<SyncVideosResult> {
             await scheduleTranscript(video.id, record.kaltura_id, null, null);
             autoScheduled++;
             console.log(
-              `[sync-videos] Auto-scheduled ${video.id} for feeds: ${matched.join(", ")}`,
+              `[sync-videos:${range}] Auto-scheduled ${video.id} for feeds: ${matched.join(", ")}`,
             );
           }
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[sync-videos] Error syncing ${video.id}: ${msg}`);
+        console.error(`[sync-videos:${range}] Error syncing ${video.id}: ${msg}`);
         errors.push(`${video.id}: ${msg}`);
       }
     }
 
     let durationsBackfilled = 0;
-    try {
-      const r = await backfillDurations({ apply: true, lookbackDays: 30 });
-      durationsBackfilled = r.updated;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[sync-videos] Duration backfill failed: ${msg}`);
-    }
-
     let videosRemoved = 0;
     let videosRestored = 0;
-    try {
-      const r = await reapRemovedVideos({ apply: true, lookbackDays: 30 });
-      videosRemoved = r.removed;
-      videosRestored = r.restored;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[sync-videos] Removed-video reap failed: ${msg}`);
+    if (range === "near") {
+      try {
+        const r = await backfillDurations({ apply: true, lookbackDays: 30 });
+        durationsBackfilled = r.updated;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[sync-videos:${range}] Duration backfill failed: ${msg}`);
+      }
+
+      try {
+        const r = await reapRemovedVideos({ apply: true, lookbackDays: 30 });
+        videosRemoved = r.removed;
+        videosRestored = r.restored;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[sync-videos:${range}] Removed-video reap failed: ${msg}`);
+      }
     }
 
     console.log(
-      `[sync-videos] Done: ${synced} synced, ${resolved} new entry IDs resolved, ` +
+      `[sync-videos:${range}] Done: ${synced} synced, ${resolved} new entry IDs resolved, ` +
         `${autoScheduled} auto-scheduled, ${durationsBackfilled} durations backfilled, ` +
         `${videosRemoved} removed, ${videosRestored} restored, ${errors.length} errors`,
     );

@@ -187,7 +187,7 @@ For detailed architecture, see the `docs/` files above. Summary:
 
 UN Web TV has no public API — `lib/un-api.ts` scrapes HTML directly. See `docs/webtv-kaltura.md` for full details on scraping, the three-ID system, Kaltura redirect/entry resolution, audio flavors, and what gets stored.
 
-On page load, videos are fetched from PostgreSQL for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`, default 14 days), with cached helpers in `lib/cached-db.ts` (60s revalidate). All scraped videos are persisted via `scripts/sync-videos.ts` and the `/api/cron/sync-videos` cron (every 15 min).
+On page load, videos are fetched from PostgreSQL for a rolling window (configurable in `lib/config.ts` via `scheduleLookbackDays`, default 14 days), with cached helpers in `lib/cached-db.ts` (60s revalidate). All scraped videos are persisted via `scripts/sync-videos.ts` and the `/api/cron/sync-videos` cron — two-tier: the "near" sweep runs every 15 min over T-2…T+1; the "far" sweep (`?range=far`) runs every 6 h over T+2…T+7. Distinct advisory locks (`sync-videos-near` / `sync-videos-far`) let the two overlap.
 
 For search beyond the rolling window, the frontend calls `/api/search` which queries the database directly using the FTS index, with a trigram-accelerated ILIKE fallback when FTS errors.
 
@@ -252,7 +252,7 @@ Historically the schema avoided FK constraints and enforced referential integrit
 | `/json`                              | GET    | JSON API: all transcribed videos                                     |
 | `/json/[...meeting]`                 | GET    | JSON API: single video by meeting slug                               |
 
-Cron schedule (`vercel.json`): `process-scheduled` every 5 min, `sync-videos` every 15 min, `check-pv` every 6 hours.
+Cron schedule (`docker/crontab.template`): `process-scheduled` every 5 min, `sync-videos` (near) every 15 min, `sync-videos?range=far` every 6 hours, `check-pv` every 6 hours, `send-transcript-notifications` every 5 min, `realign` hourly, `sweep-stuck-pipelines` every 15 min.
 
 ### Frontend
 
