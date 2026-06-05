@@ -21,8 +21,10 @@ Resource group: `rg-transcripts` (East US 2).
   template, one new `app/api/cron/<job>/route.ts` calling `runXxx()`.
 - Postgres advisory locks (`withJobLock` in `lib/db.ts`) wrap every cron run
   as belt-and-suspenders for rolling-deploy overlap or any future scale-out.
-- Secrets live in Azure Key Vault; the Container App reads them via its
-  system-assigned managed identity.
+- Secrets are stored as Container App secrets and exposed to the container
+  as env vars via `secretref:`. (Key Vault is a valid alternative if you
+  want central rotation/auditing across multiple apps — not needed for a
+  single-app deploy.)
 - Deploys run from GitHub Actions on push to `main`, authenticating to Azure
   via federated OIDC (no long-lived service-principal secret in GitHub).
 
@@ -47,11 +49,10 @@ export LOCATION=eastus2
 export ACR_NAME=transcripts                # globally unique, alphanumeric, <50 chars
 export CAE_NAME=transcripts-env            # Container Apps environment
 export APP_NAME=transcripts                # the Container App itself
-export KV_NAME=transcripts-kv              # Key Vault (also globally unique)
 ```
 
-If `ACR_NAME` or `KV_NAME` are taken (both are global namespaces), append a
-suffix. These names must match the `env:` block in
+If `ACR_NAME` is taken (it's a global namespace), append a suffix. These
+names must match the `env:` block in
 `.github/workflows/deploy-azure.yml` — update the YAML if you change them.
 
 ### 3. Create the resource group + ACR
@@ -71,38 +72,28 @@ az containerapp env create \
   --location $LOCATION
 ```
 
-### 5. Create the Key Vault and store secrets
+### 5. Gather the secret values
 
-```bash
-az keyvault create --name $KV_NAME --resource-group $RG --location $LOCATION
+We'll write secrets directly into the Container App in step 8. Collect the
+values below; the env-var name on the right is what the app code reads.
 
-# Stuff each secret. Repeat for every one in the table below.
-az keyvault secret set --vault-name $KV_NAME --name DATABASE-URL --value "postgresql://..."
-az keyvault secret set --vault-name $KV_NAME --name AUTH-SECRET --value "$(openssl rand -hex 32)"
-az keyvault secret set --vault-name $KV_NAME --name CRON-SECRET --value "$(openssl rand -hex 32)"
-# ... and so on, see table
-```
-
-Required Key Vault secrets (names dash-cased — Key Vault disallows
-underscores):
-
-| Key Vault name              | App env var                | Value source                                                                    |
-| --------------------------- | -------------------------- | ------------------------------------------------------------------------------- |
-| `DATABASE-URL`              | `DATABASE_URL`             | Azure Postgres connection string                                                |
-| `AUTH-SECRET`               | `AUTH_SECRET`              | `openssl rand -hex 32`                                                          |
-| `CRON-SECRET`               | `CRON_SECRET`              | `openssl rand -hex 32`                                                          |
-| `GEMINI-API-KEY`            | `GEMINI_API_KEY`           | Google AI Studio                                                                |
-| `ASSEMBLYAI-API-KEY`        | `ASSEMBLYAI_API_KEY`       | AssemblyAI dashboard                                                            |
-| `DASHSCOPE-API-KEY`         | `DASHSCOPE_API_KEY`        | Alibaba Cloud                                                                   |
-| `AZURE-OPENAI-ENDPOINT`     | `AZURE_OPENAI_ENDPOINT`    | Azure OpenAI resource                                                           |
-| `AZURE-OPENAI-API-KEY`      | `AZURE_OPENAI_API_KEY`     | Azure OpenAI resource                                                           |
-| `AZURE-OPENAI-API-VERSION`  | `AZURE_OPENAI_API_VERSION` | from `.env.example`                                                             |
-| `SMTP-HOST`                 | `SMTP_HOST`                | e.g. `smtp.mailbox.org`                                                         |
-| `SMTP-PORT`                 | `SMTP_PORT`                | e.g. `587`                                                                      |
-| `SMTP-USER`                 | `SMTP_USER`                | mailbox account                                                                 |
-| `SMTP-PASS`                 | `SMTP_PASS`                | mailbox app password                                                            |
-| `SMTP-FROM`                 | `SMTP_FROM`                | the "from" address (or omit; falls back to `SMTP_USER`)                         |
-| `SENTRY-DSN`                | `SENTRY_DSN`               | Sentry project DSN                                                              |
+| App env var                | Value source                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------- |
+| `DATABASE_URL`             | Azure Postgres connection string                                                |
+| `AUTH_SECRET`              | `openssl rand -hex 32`                                                          |
+| `CRON_SECRET`              | `openssl rand -hex 32`                                                          |
+| `GEMINI_API_KEY`           | Google AI Studio                                                                |
+| `ASSEMBLYAI_API_KEY`       | AssemblyAI dashboard                                                            |
+| `DASHSCOPE_API_KEY`        | Alibaba Cloud                                                                   |
+| `AZURE_OPENAI_ENDPOINT`    | Azure OpenAI resource                                                           |
+| `AZURE_OPENAI_API_KEY`     | Azure OpenAI resource                                                           |
+| `AZURE_OPENAI_API_VERSION` | from `.env.example`                                                             |
+| `SMTP_HOST`                | e.g. `smtp.mailbox.org`                                                         |
+| `SMTP_PORT`                | e.g. `587`                                                                      |
+| `SMTP_USER`                | mailbox account                                                                 |
+| `SMTP_PASS`                | mailbox app password                                                            |
+| `SMTP_FROM`                | the "from" address (or omit; falls back to `SMTP_USER`)                         |
+| `SENTRY_DSN`               | Sentry project DSN                                                              |
 
 ### 6. Create the Container App (initial deploy)
 
@@ -126,7 +117,7 @@ az containerapp create \
 `--min-replicas 1 --max-replicas 1` pins the app to a single instance. The
 job-locks in `withJobLock` cover the brief rolling-deploy overlap window.
 
-### 7. Grant the app access to ACR + Key Vault
+### 7. Grant the app access to ACR
 
 ```bash
 # Get the system-assigned managed identity principal ID
@@ -137,38 +128,34 @@ PRINCIPAL_ID=$(az containerapp show --name $APP_NAME --resource-group $RG \
 ACR_ID=$(az acr show --name $ACR_NAME --query id -o tsv)
 az role assignment create --assignee $PRINCIPAL_ID --role AcrPull --scope $ACR_ID
 
-# Read from Key Vault
-KV_ID=$(az keyvault show --name $KV_NAME --query id -o tsv)
-az role assignment create --assignee $PRINCIPAL_ID \
-  --role "Key Vault Secrets User" --scope $KV_ID
-
 # Switch the Container App's registry to managed-identity pull
 az containerapp registry set \
   --name $APP_NAME --resource-group $RG \
   --server $ACR_NAME.azurecr.io --identity system
 ```
 
-### 8. Wire Key Vault secrets into the Container App + set env vars
+### 8. Set secrets + env vars on the Container App
+
+Write each secret value directly into the Container App's native secret store,
+then reference them from env vars via `secretref:`.
 
 ```bash
-KV_URL=https://$KV_NAME.vault.azure.net
-
 az containerapp secret set --name $APP_NAME --resource-group $RG --secrets \
-  database-url=keyvaultref:$KV_URL/secrets/DATABASE-URL,identityref:system \
-  auth-secret=keyvaultref:$KV_URL/secrets/AUTH-SECRET,identityref:system \
-  cron-secret=keyvaultref:$KV_URL/secrets/CRON-SECRET,identityref:system \
-  gemini-api-key=keyvaultref:$KV_URL/secrets/GEMINI-API-KEY,identityref:system \
-  assemblyai-api-key=keyvaultref:$KV_URL/secrets/ASSEMBLYAI-API-KEY,identityref:system \
-  dashscope-api-key=keyvaultref:$KV_URL/secrets/DASHSCOPE-API-KEY,identityref:system \
-  azure-openai-endpoint=keyvaultref:$KV_URL/secrets/AZURE-OPENAI-ENDPOINT,identityref:system \
-  azure-openai-api-key=keyvaultref:$KV_URL/secrets/AZURE-OPENAI-API-KEY,identityref:system \
-  azure-openai-api-version=keyvaultref:$KV_URL/secrets/AZURE-OPENAI-API-VERSION,identityref:system \
-  smtp-host=keyvaultref:$KV_URL/secrets/SMTP-HOST,identityref:system \
-  smtp-port=keyvaultref:$KV_URL/secrets/SMTP-PORT,identityref:system \
-  smtp-user=keyvaultref:$KV_URL/secrets/SMTP-USER,identityref:system \
-  smtp-pass=keyvaultref:$KV_URL/secrets/SMTP-PASS,identityref:system \
-  smtp-from=keyvaultref:$KV_URL/secrets/SMTP-FROM,identityref:system \
-  sentry-dsn=keyvaultref:$KV_URL/secrets/SENTRY-DSN,identityref:system
+  database-url="postgresql://..." \
+  auth-secret="$(openssl rand -hex 32)" \
+  cron-secret="$(openssl rand -hex 32)" \
+  gemini-api-key="..." \
+  assemblyai-api-key="..." \
+  dashscope-api-key="..." \
+  azure-openai-endpoint="https://....openai.azure.com" \
+  azure-openai-api-key="..." \
+  azure-openai-api-version="2025-03-01-preview" \
+  smtp-host="smtp.mailbox.org" \
+  smtp-port="587" \
+  smtp-user="..." \
+  smtp-pass="..." \
+  smtp-from="..." \
+  sentry-dsn="..."
 
 # Set env vars (plain + secret refs). BASE_URL is your canonical production URL —
 # substitute after you assign a domain or use the Container App's default FQDN.
@@ -347,8 +334,8 @@ az containerapp revision activate --name $APP_NAME --resource-group $RG \
 **Manually trigger a cron** (for testing or backfill):
 
 ```bash
-CRON_SECRET=$(az keyvault secret show --vault-name $KV_NAME \
-  --name CRON-SECRET --query value -o tsv)
+CRON_SECRET=$(az containerapp secret show --name $APP_NAME --resource-group $RG \
+  --secret-name cron-secret --query value -o tsv)
 curl -H "Authorization: Bearer $CRON_SECRET" \
   https://$APP_FQDN/api/cron/sync-videos
 ```
@@ -369,8 +356,8 @@ Postgres. They aren't deployed to Azure (intentionally — kept out of the
 image via `.dockerignore`).
 
 **Cost watch:** Container Apps idle-pinned at 1 replica with 1 vCPU / 2 GiB
-≈ ~$40–60/month. ACR Basic is ~$5/month. Key Vault is effectively free at
-this volume. Postgres + the AI APIs dominate the bill anyway.
+≈ ~$40–60/month. ACR Basic is ~$5/month. Postgres + the AI APIs dominate
+the bill anyway.
 
 ## Part F — Post-deploy verification
 
