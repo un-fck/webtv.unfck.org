@@ -652,6 +652,10 @@ export function VideoTable({
   // relevance/date sort toggle. Doesn't gate the fetch path anymore — both
   // browse and search go through /api/videos.
   const isSearchMode = !!serverParams.q;
+  // Search results can be relevance-sorted (dates jumbled → flat list) or
+  // explicitly date-sorted (dates cluster → reuse the day-grouped layout).
+  const isSearchDateSorted =
+    isSearchMode && !!serverParams.sort?.startsWith("date");
 
   // Append the next chunk from /api/videos using the current filters and
   // (if set) text query. The endpoint is the single feed entry point now;
@@ -771,7 +775,9 @@ export function VideoTable({
   const showEmptyState = rows.length === 0;
   // Day/category grouping only makes sense when rows are in date order;
   // relevance-sorted search results would fragment into 1-row groups.
-  const groupByDate = !isSearchMode;
+  // Date-sorted search (sort=date_*) keeps dates clustered, so reuse the
+  // same grouped layout as browse.
+  const groupByDate = !isSearchMode || isSearchDateSorted;
 
   // When grouping, reorder rows so that within each day they're bucketed by
   // category (categories in first-appearance order, time order kept inside each
@@ -888,7 +894,6 @@ export function VideoTable({
   // the data row. The day heading lives outside the table (one table per day).
   const renderMeetingRow = ({
     video,
-    dateLabel,
     category,
     showCategory,
   }: DisplayRow) => {
@@ -937,12 +942,6 @@ export function VideoTable({
             isScheduled && "text-muted-foreground",
           )}
         >
-          {/* Date (search mode only — grouped mode shows it as a heading) */}
-          {!groupByDate && (
-            <td className="px-4 py-2.5 align-top whitespace-nowrap text-muted-foreground">
-              {dateLabel}
-            </td>
-          )}
           {/* Time (always) + duration (≥sm only — too cramped on mobile) */}
           <td className="px-4 py-2.5 align-top">
             <div className="flex items-baseline justify-between gap-2 tabular-nums">
@@ -1011,6 +1010,73 @@ export function VideoTable({
       </div>
     </div>
   );
+
+  // Flat list row for relevance-sorted search (dates are jumbled so the
+  // day-grouped layout doesn't apply). On mobile the date/time/duration
+  // collapse into a single muted meta line above the title so the title
+  // recovers the full row width; on desktop they sit in aligned columns.
+  const renderSearchRow = ({ video, dateLabel }: DisplayRow) => {
+    const isScheduled = video.status === "scheduled";
+    const isLive = video.status === "live";
+    const time = video.scheduledTime;
+    const duration = formatDuration(video.duration);
+    const timeStr = time ? formatMeetingTime(time) : null;
+    return (
+      <li
+        key={video.slug}
+        className={cn(
+          "relative border-b border-gray-100 px-4 py-2.5 transition-colors last:border-0 hover:bg-gray-50",
+          isScheduled && "text-muted-foreground",
+        )}
+      >
+        {isLive && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                aria-label={t("liveTooltip")}
+                className="absolute left-1 top-4 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"
+              />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              {t("liveTooltip")}
+            </TooltipContent>
+          </Tooltip>
+        )}
+        <div className="sm:flex sm:items-baseline sm:gap-4">
+          <div className="text-sm text-muted-foreground sm:w-[132px] sm:shrink-0 sm:whitespace-nowrap">
+            <span>{dateLabel}</span>
+            <span className="sm:hidden">
+              {timeStr && <> · {timeStr}</>}
+            </span>
+          </div>
+          <div className="hidden sm:flex sm:w-[120px] sm:shrink-0 sm:items-baseline sm:justify-between sm:gap-2 sm:tabular-nums">
+            {timeStr ? (
+              <span>{timeStr}</span>
+            ) : (
+              <span className="text-muted-foreground/60">—</span>
+            )}
+            <span className="text-muted-foreground">
+              {duration ?? <span className="text-muted-foreground/60">—</span>}
+            </span>
+          </div>
+          <div className="mt-0.5 sm:mt-0 sm:flex-1">
+            <DocChips
+              hasTranscript={video.hasTranscript}
+              hasTranscriptInLocale={video.hasTranscriptInLocale}
+              pvAvailable={video.pvAvailable}
+              pvSymbol={video.pvSymbol}
+            />
+            <Link
+              href={`/${video.slug}`}
+              className="underline-offset-2 hover:underline"
+            >
+              {video.cleanTitle}
+            </Link>
+          </div>
+        </div>
+      </li>
+    );
+  };
 
   const searchStatus =
     isSearchMode && rows.length > 0
@@ -1173,8 +1239,9 @@ export function VideoTable({
         ) : dayGroups ? (
           // When a specific date is picked, the Recent/Upcoming toggle is
           // disabled (rendered greyed-out above) and the past/future split is
-          // bypassed — the date is the only filter that should matter.
-          serverParams.date ? (
+          // bypassed — the date is the only filter that should matter. Same
+          // for date-sorted search: the user picked the order explicitly.
+          serverParams.date || isSearchMode ? (
             <div className="space-y-10">{dayGroups.map(renderDayGroup)}</div>
           ) : view === "upcoming" ? (
             upcomingDayGroups.length > 0 ? (
@@ -1192,11 +1259,11 @@ export function VideoTable({
             </div>
           )
         ) : (
-          // Search mode: a single ungrouped table with a leading Date column.
-          <div className="-mx-4 overflow-hidden sm:mx-0 sm:rounded-lg sm:border sm:border-gray-200">
-            <table className="w-full text-sm">
-              <tbody>{displayRows.map(renderMeetingRow)}</tbody>
-            </table>
+          // Relevance-sorted search: ungrouped list. Mobile collapses
+          // date/time/duration into a meta line so the title gets the full
+          // width; desktop keeps aligned columns.
+          <div className="-mx-4 sm:mx-0 sm:overflow-hidden sm:rounded-lg sm:border sm:border-gray-200">
+            <ul className="text-sm">{displayRows.map(renderSearchRow)}</ul>
           </div>
         )}
       </div>
