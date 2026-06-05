@@ -40,6 +40,7 @@ export function VideoPageClient({
   const { formatMeetingDate, formatMeetingTime } = useMeetingFormat();
   const t = useTranslations("transcript");
   const tVideo = useTranslations("video");
+  const tCategory = useTranslations("schedule.categoryNames");
   const uiLocale = useLocale();
   const [player, setPlayer] = useState<{
     currentTime: number;
@@ -369,24 +370,34 @@ export function VideoPageClient({
                 "mt-1.5 flex flex-wrap items-center gap-x-2",
               )}
             >
-              {[
-                video.date &&
-                  formatMeetingDate(video.scheduledTime ?? video.date),
-                video.scheduledTime &&
-                  formatMeetingTime(video.scheduledTime),
-                video.body,
-                video.category,
-                video.duration,
-              ]
-                .filter(Boolean)
-                .map((item, i, arr) => (
-                  <span key={i} className="flex items-center gap-2">
-                    {item}
-                    {i < arr.length - 1 && (
-                      <span className="opacity-30">·</span>
+              {(() => {
+                const items = [
+                  video.date &&
+                    formatMeetingDate(video.scheduledTime ?? video.date),
+                  video.scheduledTime &&
+                    formatMeetingTime(video.scheduledTime),
+                  video.duration,
+                ].filter(Boolean);
+                return (
+                  <>
+                    {items.map((item, i) => (
+                      <span key={i} className="flex items-center gap-2">
+                        {item}
+                        {i < items.length - 1 && (
+                          <span className="opacity-30">·</span>
+                        )}
+                      </span>
+                    ))}
+                    {video.category && (
+                      <span className="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 whitespace-nowrap">
+                        {tCategory.has(video.category)
+                          ? tCategory(video.category)
+                          : video.category}
+                      </span>
                     )}
-                  </span>
-                ))}
+                  </>
+                );
+              })()}
             </div>
 
             <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm">
