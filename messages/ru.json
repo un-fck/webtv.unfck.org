@@ -262,7 +262,7 @@
       "audioOutOfSyncInProgress": "Новая расшифровка создаётся."
     },
     "highlightsOnly": "Только ключевое",
-    "allContent": "Весь текст"
+    "allContent": "Весь текст с ключевым"
   },
   "pv": {
     "loadingVerbatim": "Загрузка стенографического отчёта…",

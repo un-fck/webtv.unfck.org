@@ -262,7 +262,7 @@
       "audioOutOfSyncInProgress": "Une nouvelle transcription est en cours."
     },
     "highlightsOnly": "Faits saillants",
-    "allContent": "Tout le contenu"
+    "allContent": "Tout le contenu avec faits saillants"
   },
   "pv": {
     "loadingVerbatim": "Chargement du procès-verbal…",

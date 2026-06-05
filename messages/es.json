@@ -262,7 +262,7 @@
       "audioOutOfSyncInProgress": "Una nueva transcripción está en curso."
     },
     "highlightsOnly": "Solo destacados",
-    "allContent": "Todo el contenido"
+    "allContent": "Todo el contenido con destacados"
   },
   "pv": {
     "loadingVerbatim": "Cargando acta literal…",

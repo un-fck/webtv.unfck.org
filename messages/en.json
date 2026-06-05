@@ -245,7 +245,7 @@
       "audioOutOfSyncInProgress": "A fresh transcription is in progress."
     },
     "highlightsOnly": "Highlights only",
-    "allContent": "All content"
+    "allContent": "All content with highlights"
   },
   "video": {
     "removed": "This video has been removed from UN Web TV.",

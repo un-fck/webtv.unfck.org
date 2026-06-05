@@ -262,7 +262,7 @@
       "audioOutOfSyncInProgress": "正在生成新的转录。"
     },
     "highlightsOnly": "仅显示要点",
-    "allContent": "全部内容"
+    "allContent": "全部内容（含要点）"
   },
   "pv": {
     "loadingVerbatim": "正在加载逐字记录…",

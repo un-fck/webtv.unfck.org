@@ -51,11 +51,10 @@ export const TOPIC_COLOR_PALETTE = [
 ];
 
 export function getTopicColor(
-  topicKey: string,
-  allTopicKeys: string[],
+  _topicKey: string,
+  _allTopicKeys: string[],
 ): string {
-  const index = allTopicKeys.indexOf(topicKey);
-  return TOPIC_COLOR_PALETTE[index % TOPIC_COLOR_PALETTE.length];
+  return TOPIC_COLOR_PALETTE[0];
 }
 
 export interface TranscriptionPanelData {
