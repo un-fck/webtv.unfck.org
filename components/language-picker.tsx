@@ -25,7 +25,17 @@ const LOCALE_LABELS: Record<Locale, string> = {
   ru: "Русский",
 };
 
-export function LanguagePicker() {
+// Two-letter uppercase codes for the compact (mobile) trigger.
+const LOCALE_SHORT: Record<Locale, string> = {
+  en: "EN",
+  fr: "FR",
+  es: "ES",
+  ar: "AR",
+  zh: "ZH",
+  ru: "RU",
+};
+
+export function LanguagePicker({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const active = useLocale() as Locale;
@@ -54,8 +64,14 @@ export function LanguagePicker() {
             knows to switch). The endonym + chevron together is enough to
             convey "language switcher"; no icon is needed (un.org's own
             convention). */}
-        <span lang={active}>{LOCALE_LABELS[active]}</span>
-        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+        {compact ? (
+          <span>{LOCALE_SHORT[active]}</span>
+        ) : (
+          <>
+            <span lang={active}>{LOCALE_LABELS[active]}</span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+          </>
+        )}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-44 p-1">
         <p className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground">

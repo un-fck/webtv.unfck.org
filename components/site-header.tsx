@@ -20,16 +20,9 @@ const navLinkClass = cn(
   "transition-colors hover:text-foreground",
 );
 
-// Items shared by the desktop bar and the mobile hamburger sheet so we don't
-// duplicate copy.
-//
-// Order: page-nav links first, then preference controls (timezone → language),
-// then auth (rendered separately, outside this fragment). Language is the
-// rightmost preference because it sits closest to the account avatar — both
-// belong to "this is your view of the site". The two preference pills share
-// a tighter cluster (gap-1) so they read as one paired control rather than
-// floating separately in the wider row.
-function HeaderNavItems() {
+// Page-level nav links: About + the auth-gated Speakers/Subscriptions.
+// On mobile these collapse into the hamburger; on md+ they sit inline.
+function HeaderPageLinks() {
   const t = useTranslations("header");
   return (
     <>
@@ -37,11 +30,22 @@ function HeaderNavItems() {
       <Link href="/about" className={navLinkClass}>
         {t("about")}
       </Link>
-      <div className="flex items-center gap-1">
-        <TimezonePicker />
-        <LanguagePicker />
-      </div>
     </>
+  );
+}
+
+// Preference cluster (timezone → language). Stays visible on mobile in a
+// compact form (abbreviation + locale code, no chevron) rather than hiding
+// behind the hamburger — switching language is a common first action for
+// non-English visitors. Language is the rightmost preference because it sits
+// closest to the account avatar; both belong to "this is your view of the
+// site". gap-1 reads as one paired control rather than two floating pills.
+function HeaderPickers({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className="flex items-center gap-1">
+      <TimezonePicker compact={compact} />
+      <LanguagePicker compact={compact} />
+    </div>
   );
 }
 
@@ -123,15 +127,21 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
           </span>
         </Link>
         <div className="ms-auto flex items-center gap-3">
-          {/* md+: inline nav. Below md it collapses into the hamburger so the
-              right rail stays uncluttered when more items appear after sign-in
-              (Speakers, Subscriptions, timezone picker).
+          {/* md+: full inline nav (page links + full-width pickers).
+              Below md the page links collapse into the hamburger but the
+              pickers stay visible in a compact form — switching language is
+              a common first action for non-English visitors and shouldn't
+              hide behind a menu.
               gap-3 (12 px) instead of gap-4 (16 px): the language and timezone
               pills carry internal horizontal padding, so the perceived gap
               between two pills is gap + 2·pad. gap-3 keeps the pill-to-pill
               spacing legible without the row feeling loose. */}
           <div className="hidden items-center gap-3 md:flex">
-            <HeaderNavItems />
+            <HeaderPageLinks />
+            <HeaderPickers />
+          </div>
+          <div className="flex items-center md:hidden">
+            <HeaderPickers compact />
           </div>
           <Popover>
             <PopoverTrigger
@@ -144,7 +154,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
               align="end"
               className="flex w-48 flex-col gap-3 p-3"
             >
-              <HeaderNavItems />
+              <HeaderPageLinks />
             </PopoverContent>
           </Popover>
           <AuthControl />

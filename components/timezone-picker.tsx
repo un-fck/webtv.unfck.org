@@ -22,7 +22,15 @@ function tzPillLabel(label: string): string {
   return label.replace(/\s*\([^)]*\)\s*$/, "").trim();
 }
 
-export function TimezonePicker() {
+// Compact (mobile) variant: keep only the parenthetical abbreviation
+// ("EDT", "CET") since it's narrow and self-describing. Falls back to the
+// city name when no abbreviation is present.
+function tzCompactLabel(label: string): string {
+  const m = label.match(/\(([^)]+)\)\s*$/);
+  return m ? m[1] : label;
+}
+
+export function TimezonePicker({ compact = false }: { compact?: boolean }) {
   const { timezone, setTimezone } = useTimezone();
   // Options depend on the browser timezone, which differs between the SSR
   // environment and the client. Defer to a post-mount render to avoid a
@@ -42,8 +50,14 @@ export function TimezonePicker() {
   return (
     <Popover>
       <PopoverTrigger aria-label={t("timezone")} className={headerPillClass}>
-        <span>{tzPillLabel(active.label)}</span>
-        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+        {compact ? (
+          <span>{tzCompactLabel(active.label)}</span>
+        ) : (
+          <>
+            <span>{tzPillLabel(active.label)}</span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+          </>
+        )}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-1">
         <p className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground">
