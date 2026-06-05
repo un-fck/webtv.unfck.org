@@ -23,36 +23,47 @@ export type ProcessingUsageProvider =
   | "alibaba";
 export type ProcessingUsageStatus = "success" | "error";
 
-const REQUIRED_VARS = ["DATABASE_URL"] as const;
-
-REQUIRED_VARS.forEach((key) => {
-  if (!process.env[key]) {
-    throw new Error(`Missing required env var ${key}`);
+// Lazily construct the Pool so importing this module during `next build`'s
+// page-data collection (when DATABASE_URL isn't injected) doesn't throw.
+let _pool: Pool | undefined;
+function getPool(): Pool {
+  if (_pool) return _pool;
+  if (!process.env.DATABASE_URL) {
+    throw new Error(`Missing required env var DATABASE_URL`);
   }
-});
+  _pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    // Verify the server's TLS certificate (chain + hostname) against Node's
+    // built-in CA bundle. Azure Database for PostgreSQL presents certs chained to
+    // DigiCert roots that ship with Node, so no custom CA file is needed. The
+    // previous `rejectUnauthorized: false` encrypted the connection but trusted
+    // ANY certificate — i.e. no protection against a man-in-the-middle. Set
+    // PG_SSL_CA to a PEM path if a future Azure cert chain isn't in the bundle.
+    ssl: process.env.PG_SSL_CA
+      ? { ca: readFileSync(process.env.PG_SSL_CA, "utf8") }
+      : { rejectUnauthorized: true },
+    // Per-instance pool size. On Vercel many instances each hold their own pool,
+    // and PgBouncer (transaction mode) does the real fan-in to Postgres, so keep
+    // this small — a high number here just hogs PgBouncer client slots. Override
+    // with PG_POOL_MAX for long-running scripts that benefit from more.
+    max: Number(process.env.PG_POOL_MAX) || 2,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+  });
+  _pool.on("error", (err) => {
+    console.error("PostgreSQL pool error:", err);
+  });
+  return _pool;
+}
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL!,
-  // Verify the server's TLS certificate (chain + hostname) against Node's
-  // built-in CA bundle. Azure Database for PostgreSQL presents certs chained to
-  // DigiCert roots that ship with Node, so no custom CA file is needed. The
-  // previous `rejectUnauthorized: false` encrypted the connection but trusted
-  // ANY certificate — i.e. no protection against a man-in-the-middle. Set
-  // PG_SSL_CA to a PEM path if a future Azure cert chain isn't in the bundle.
-  ssl: process.env.PG_SSL_CA
-    ? { ca: readFileSync(process.env.PG_SSL_CA, "utf8") }
-    : { rejectUnauthorized: true },
-  // Per-instance pool size. On Vercel many instances each hold their own pool,
-  // and PgBouncer (transaction mode) does the real fan-in to Postgres, so keep
-  // this small — a high number here just hogs PgBouncer client slots. Override
-  // with PG_POOL_MAX for long-running scripts that benefit from more.
-  max: Number(process.env.PG_POOL_MAX) || 2,
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 5_000,
-});
-
-pool.on("error", (err) => {
-  console.error("PostgreSQL pool error:", err);
+// Proxy so existing `pool.query(...)` / `pool.connect()` / `pool.on(...)` call
+// sites work unchanged — the real Pool is only created on first property access.
+const pool = new Proxy({} as Pool, {
+  get(_target, prop, receiver) {
+    const real = getPool();
+    const value = Reflect.get(real, prop, receiver);
+    return typeof value === "function" ? value.bind(real) : value;
+  },
 });
 
 // Convert ?-style placeholders to $N for pg
