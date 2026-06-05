@@ -7,6 +7,8 @@ export async function GET(request: NextRequest) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return apiError(401, "unauthorized", "Unauthorized");
   }
-  const result = await runSyncVideos();
+  const range =
+    request.nextUrl.searchParams.get("range") === "far" ? "far" : "near";
+  const result = await runSyncVideos(range);
   return NextResponse.json(result);
 }

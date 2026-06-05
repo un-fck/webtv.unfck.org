@@ -27,13 +27,12 @@
     "logoAlt": "联合国转录 — 主页",
     "wordmarkBrand": "联合国",
     "wordmarkDescriptor": "转录",
-    "emblemAlt": "联合国"
+    "emblemAlt": "联合国",
+    "publicPreview": "公开预览版"
   },
   "home": {
-    "publicPreview": "公开预览版",
     "headline": "了解联合国发生了什么。",
-    "lead": "几分钟内跟上联合国辩论。浏览转录文本,按发言者搜索,直接跳转到录像中的相应时刻。",
-    "notice": "由联合国网络电视录像自动生成,非联合国正式记录。",
+    "lead": "了解动态。浏览转录、查找发言者、跳转到视频中的相应时刻。",
     "learnMore": "了解更多 →",
     "backToHomepage": "← 返回首页"
   },
@@ -71,11 +70,13 @@
     "today": "今天",
     "tomorrow": "明天",
     "yesterday": "昨天",
-    "showFutureDates": "显示未来日期",
-    "hideFutureDates": "隐藏未来日期",
+    "viewRecent": "最近",
+    "viewUpcoming": "即将举行",
+    "viewAll": "全部",
+    "viewTranscribed": "已转录",
+    "noUpcoming": "暂无即将举行的会议。",
     "loadMore": "加载更多",
     "searchPlaceholder": "搜索所有会议…",
-    "showOnlyTranscribed": "仅显示已转录的会议",
     "includeOtherLangs": "包括其他语言的会议",
     "includeOtherLangsCount": "{count, plural, other {另有 # 项}}",
     "docTooltips": {
@@ -84,14 +85,11 @@
       "pv": "联合国秘书处编写的会议正式逐字记录",
       "sr": "联合国秘书处编写的会议正式简要记录"
     },
+    "liveTooltip": "本场会议正在直播,或最近曾直播。",
     "date": "日期",
     "noResults": "没有会议符合这些筛选条件。",
     "uncategorized": "未分类",
-    "categories": {
-      "media": "媒体",
-      "bodies": "机构",
-      "events": "活动"
-    },
+    "moreCategories": "更多",
     "categoryNames": {
       "Press Conferences": "新闻发布会",
       "Media Stakeouts": "媒体候访",

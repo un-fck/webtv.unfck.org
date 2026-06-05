@@ -27,13 +27,12 @@
     "logoAlt": "Transcriptions de l'ONU — accueil",
     "wordmarkBrand": "Nations Unies",
     "wordmarkDescriptor": "Transcriptions",
-    "emblemAlt": "Nations Unies"
+    "emblemAlt": "Nations Unies",
+    "publicPreview": "Aperçu public"
   },
   "home": {
-    "publicPreview": "Aperçu public",
     "headline": "Lisez ce qui a été dit à l'ONU.",
-    "lead": "Suivez les débats de l'ONU en quelques minutes. Parcourez les transcriptions, recherchez par intervenant, accédez directement au moment voulu dans l'enregistrement.",
-    "notice": "Généré automatiquement à partir des enregistrements d'UN Web TV ; il ne s'agit pas de comptes rendus officiels de l'ONU.",
+    "lead": "Suivez l'actualité. Parcourez les transcriptions, trouvez les intervenants, accédez au moment voulu dans la vidéo.",
     "learnMore": "En savoir plus →",
     "backToHomepage": "← Retour à l'accueil"
   },
@@ -71,11 +70,13 @@
     "today": "Aujourd'hui",
     "tomorrow": "Demain",
     "yesterday": "Hier",
-    "showFutureDates": "Afficher les dates à venir",
-    "hideFutureDates": "Masquer les dates à venir",
+    "viewRecent": "Récentes",
+    "viewUpcoming": "À venir",
+    "viewAll": "Toutes",
+    "viewTranscribed": "Transcrites",
+    "noUpcoming": "Aucune réunion à venir programmée.",
     "loadMore": "Charger plus",
     "searchPlaceholder": "Rechercher dans toutes les réunions…",
-    "showOnlyTranscribed": "Afficher uniquement les réunions transcrites",
     "includeOtherLangs": "Inclure les réunions dans d'autres langues",
     "includeOtherLangsCount": "{count, plural, one {# de plus} other {# de plus}}",
     "docTooltips": {
@@ -84,14 +85,11 @@
       "pv": "Compte rendu sténographique officiel de la réunion, établi par le Secrétariat de l'ONU",
       "sr": "Compte rendu analytique officiel de la réunion, établi par le Secrétariat de l'ONU"
     },
+    "liveTooltip": "Cette réunion est en direct ou l'a été récemment.",
     "date": "Date",
     "noResults": "Aucune réunion ne correspond à ces filtres.",
     "uncategorized": "Sans catégorie",
-    "categories": {
-      "media": "Médias",
-      "bodies": "Organes",
-      "events": "Événements"
-    },
+    "moreCategories": "Plus",
     "categoryNames": {
       "Press Conferences": "Conférences de presse",
       "Media Stakeouts": "Rencontre avec les médias",

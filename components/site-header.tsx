@@ -113,8 +113,13 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
               same size, only the weight differs. Brand-first wordmark
               regardless of locale grammar — this is a logotype, not a sentence. */}
           <span className="text-[23.83px] leading-none tracking-tight text-foreground">
-            <span className="font-bold">{t("wordmarkBrand")}</span>{" "}
+            <span className="hidden font-bold md:inline">
+              {t("wordmarkBrand")}{" "}
+            </span>
             <span className="font-light">{t("wordmarkDescriptor")}</span>
+          </span>
+          <span className="hidden rounded-md bg-un-blue/10 px-2 py-1 text-xs leading-none font-semibold whitespace-nowrap text-un-blue md:inline-block">
+            {t("publicPreview")}
           </span>
         </Link>
         <div className="ms-auto flex items-center gap-3">

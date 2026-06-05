@@ -34,9 +34,8 @@ import { cn } from "@/lib/utils";
 // in display order. This also drives the day/category header ordering within
 // the schedule (CATEGORY_ORDER is the flattened form). Anything not listed
 // sorts after these (alphabetically); uncategorized ("") sorts last.
-const CATEGORY_GROUPS: { labelKey: "media" | "bodies" | "events"; items: string[] }[] = [
+const CATEGORY_GROUPS: { items: string[] }[] = [
   {
-    labelKey: "media",
     items: [
       "Press Conferences",
       "Media Stakeouts",
@@ -48,7 +47,6 @@ const CATEGORY_GROUPS: { labelKey: "media" | "bodies" | "events"; items: string[
     ],
   },
   {
-    labelKey: "bodies",
     items: [
       "General Assembly",
       "Security Council",
@@ -60,18 +58,26 @@ const CATEGORY_GROUPS: { labelKey: "media" | "bodies" | "events"; items: string[
     ],
   },
   {
-    labelKey: "events",
     items: [
       "Agencies, Funds & Programmes",
       "High-level Events",
+      "Meetings & Events",
       "Conferences",
       "Side Events",
-      "Meetings & Events",
     ],
   },
 ];
 const CATEGORY_ORDER: string[] = CATEGORY_GROUPS.flatMap((g) => g.items);
 const CATEGORY_RANK = new Map(CATEGORY_ORDER.map((c, i) => [c, i]));
+
+// Curated categories kept out of the inline filter row even when they meet
+// the count threshold — too generic to be useful as primary filters, but
+// still selectable via the "More" dropdown.
+const INLINE_FILTER_EXCLUDE = new Set<string>([
+  "Meetings & Events",
+  "Conferences",
+  "Side Events",
+]);
 
 // Sort categories by the hardcoded order; unknown categories go after the known
 // ones (alphabetically), and the empty/uncategorized bucket goes dead last.
@@ -218,10 +224,10 @@ function DateFilterPopover({
 }
 
 // Category filter rendered inline as a single wrapping bar of toggle pills.
-// Categories are bucketed into the semantic CATEGORY_GROUPS; each group is
-// prefixed by its inline label and separated from the next by a thin "·".
-// Wrapping happens naturally on narrow viewports — there are no row boundaries
-// to break the visual structure.
+// The inline row shows the curated CATEGORY_GROUPS items present at ≥100
+// meetings. Everything else (rare curated categories + any uncategorized
+// WebTV strings we haven't mapped) lives behind a "More" pill that opens a
+// popover with the same toggle UI, so no category becomes unreachable.
 function CategoryFilterRows({
   options,
   selected,
@@ -233,6 +239,8 @@ function CategoryFilterRows({
   onChange: (values: string[]) => void;
   counts?: Record<string, number>;
 }) {
+  const t = useTranslations("schedule");
+  const tCategory = useCategoryName();
   const toggle = (value: string) => {
     onChange(
       selected.includes(value)
@@ -241,25 +249,23 @@ function CategoryFilterRows({
     );
   };
 
-  const t = useTranslations("schedule.categories");
-  // Hide rarely-used categories (fewer than 10 meetings) to keep the bar tidy.
-  const present = new Set(options.filter((c) => (counts?.[c] ?? 0) >= 10));
-  const groups: { label: string | null; items: string[] }[] =
-    CATEGORY_GROUPS.map(({ labelKey, items }) => ({
-      label: t(labelKey),
-      items: items.filter((c) => present.has(c)),
-    })).filter((g) => g.items.length > 0);
-
-  // Any present category not in a defined group (incl. unknown future ones).
-  const grouped = new Set(CATEGORY_GROUPS.flatMap((g) => g.items));
-  const ungrouped = [...present]
-    .filter((c) => !grouped.has(c))
+  const optionSet = new Set(options);
+  // Inline: curated categories with ≥100 meetings, in CATEGORY_GROUPS order,
+  // minus any explicitly held back for the "More" dropdown.
+  const inlineItems = CATEGORY_GROUPS.flatMap((g) => g.items).filter(
+    (c) =>
+      optionSet.has(c) &&
+      (counts?.[c] ?? 0) >= 100 &&
+      !INLINE_FILTER_EXCLUDE.has(c),
+  );
+  const inlineSet = new Set(inlineItems);
+  // Overflow: everything else, sorted by count desc.
+  const overflowItems = options
+    .filter((c) => !inlineSet.has(c))
     .sort((a, b) => (counts?.[b] ?? 0) - (counts?.[a] ?? 0));
-  if (ungrouped.length > 0) groups.push({ label: null, items: ungrouped });
 
-  if (groups.length === 0) return null;
+  if (inlineItems.length === 0 && overflowItems.length === 0) return null;
 
-  const tCategory = useCategoryName();
   const pill = (opt: string) => (
     <button
       key={opt}
@@ -284,25 +290,35 @@ function CategoryFilterRows({
     </button>
   );
 
+  const overflowSelectedCount = overflowItems.filter((c) =>
+    selected.includes(c),
+  ).length;
+  const overflowActive = overflowSelectedCount > 0;
+
   return (
-    <div className="space-y-1.5">
-      {groups.map((g, i) => (
-        <div
-          key={g.label ?? `ungrouped-${i}`}
-          className="flex items-baseline gap-1"
-        >
-          {g.label && (
-            <span className="w-12 shrink-0 text-xs font-medium text-muted-foreground">
-              {g.label}
-            </span>
-          )}
-          {/* Pills wrap inside their own column so continuation lines start
-              under the first pill rather than back at the label. */}
-          <div className="flex flex-1 flex-wrap gap-1.5">
-            {g.items.map(pill)}
-          </div>
-        </div>
-      ))}
+    <div className="flex flex-wrap gap-1.5">
+      {inlineItems.map(pill)}
+      {overflowItems.length > 0 && (
+        <Popover>
+          <PopoverTrigger
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors ${
+              overflowActive
+                ? "bg-primary text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {t("moreCategories")}
+            {overflowActive && (
+              <span className="ml-1 opacity-75">{overflowSelectedCount}</span>
+            )}
+          </PopoverTrigger>
+          <PopoverContent align="start" className="max-h-80 w-80 overflow-auto p-3">
+            <div className="flex flex-wrap gap-1.5">
+              {overflowItems.map(pill)}
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }
@@ -566,6 +582,7 @@ export function VideoTable({
       next.text?.forEach((v) => sp.append("text", v));
       if (next.q) sp.set("q", next.q);
       if (next.includeOtherLangs) sp.set("xlang", "1");
+      if (next.view === "upcoming") sp.set("view", "upcoming");
 
       const href = sp.toString() ? `?${sp}` : "/";
       // Search updates use replace() so typing doesn't flood browser history.
@@ -695,7 +712,21 @@ export function VideoTable({
       .then((res) => res.json())
       .then((data) => {
         setBrowseRows((prev) => [...prev, ...data.videos]);
-        setBrowseHasMore(Boolean(data.hasMore));
+        let nextHasMore = Boolean(data.hasMore);
+        // Upcoming view only renders future rows, but the server pages
+        // descend through the whole date window. Once a chunk has no future
+        // rows we know the rest of the feed is all past — keep going and the
+        // bottom sentinel would refire on each invisible chunk in a loop.
+        if (
+          nextHasMore &&
+          serverParams.view === "upcoming" &&
+          !(data.videos as Video[]).some((v) =>
+            isFutureDay(v.scheduledTime ?? v.date),
+          )
+        ) {
+          nextHasMore = false;
+        }
+        setBrowseHasMore(nextHasMore);
       })
       .catch(() => {})
       .finally(() => setBrowseLoading(false));
@@ -706,6 +737,7 @@ export function VideoTable({
     browseRows.length,
     serverParams,
     locale,
+    isFutureDay,
   ]);
 
   // Data: search results when searching, else the (growing) browse feed.
@@ -739,13 +771,12 @@ export function VideoTable({
     return () => observer.disconnect();
   }, [hasMore, isSearchMode, tableData.length]);
 
-  // Coarse "With transcript" toggle: on when every doc type is selected (any
-  // of transcript / PV / SR counts as a transcript).
+  // Coarse "With transcript" filter: active when every doc type is selected
+  // (any of transcript / PV / SR counts as a transcript). Drives the All vs
+  // Transcribed segmented toggle.
   const withTranscript = ALL_DOC_TYPES.every((d) =>
     (serverParams.text ?? []).includes(d),
   );
-  const toggleWithTranscript = () =>
-    updateParams({ text: withTranscript ? undefined : ALL_DOC_TYPES });
 
   // The per-locale visibility cut only narrows non-English schedules — every
   // video has English canonical metadata so `/en/` already sees everything.
@@ -893,7 +924,14 @@ export function VideoTable({
 
   const futureDayGroups = (dayGroups ?? []).filter((g) => g.isFuture);
   const pastDayGroups = (dayGroups ?? []).filter((g) => !g.isFuture);
-  const [showFuture, setShowFuture] = useState(false);
+  // Server returns rows date-desc, so futureDayGroups is also descending —
+  // flip it for the upcoming view so the soonest day is at the top.
+  const upcomingDayGroups = useMemo(
+    () => [...futureDayGroups].reverse(),
+    [futureDayGroups],
+  );
+  const view: "recent" | "upcoming" =
+    serverParams.view === "upcoming" ? "upcoming" : "recent";
 
   // Renders one meeting's table rows: an optional category subheader followed by
   // the data row. The day heading lives outside the table (one table per day).
@@ -970,9 +1008,19 @@ export function VideoTable({
             </div>
           </td>
           {/* Title, prefixed with record badges */}
-          <td className="px-4 py-2.5 align-top">
+          <td className="relative px-4 py-2.5 align-top">
             {isLive && (
-              <span className="mr-1.5 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500 align-middle" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    aria-label={t("liveTooltip")}
+                    className="absolute left-1 top-4 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"
+                  />
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  {t("liveTooltip")}
+                </TooltipContent>
+              </Tooltip>
             )}
             <DocChips
               hasTranscript={video.hasTranscript}
@@ -1068,7 +1116,7 @@ export function VideoTable({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Unified filter toolbar — search and controls on one row when space allows */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -1078,12 +1126,42 @@ export function VideoTable({
             onSubmit={submitSearch}
             isFocused={isSearchFocused}
             setIsFocused={setIsSearchFocused}
-            className="w-full lg:w-1/2"
+            className="min-w-[240px] flex-1"
           />
           <DateFilterPopover
             availableDates={availableDates}
             selectedDate={serverParams.date}
             onChange={(val) => updateParams({ date: val })}
+          />
+          {!isSearchMode && (
+            <SegmentedToggle
+              options={[
+                {
+                  label: t("viewRecent"),
+                  active: view === "recent",
+                  onSelect: () => updateParams({ view: undefined }),
+                },
+                {
+                  label: t("viewUpcoming"),
+                  active: view === "upcoming",
+                  onSelect: () => updateParams({ view: "upcoming" }),
+                },
+              ]}
+            />
+          )}
+          <SegmentedToggle
+            options={[
+              {
+                label: t("viewAll"),
+                active: !withTranscript,
+                onSelect: () => updateParams({ text: undefined }),
+              },
+              {
+                label: t("viewTranscribed"),
+                active: withTranscript,
+                onSelect: () => updateParams({ text: ALL_DOC_TYPES }),
+              },
+            ]}
           />
         </div>
         <CategoryFilterRows
@@ -1094,15 +1172,6 @@ export function VideoTable({
           }
           counts={filterOptions.categoryCounts}
         />
-        <label className="flex items-center gap-2 text-sm text-muted-foreground select-none cursor-pointer hover:text-foreground transition-colors">
-          <input
-            type="checkbox"
-            checked={withTranscript}
-            onChange={toggleWithTranscript}
-            className="h-3.5 w-3.5 cursor-pointer accent-primary"
-          />
-          {t("showOnlyTranscribed")}
-        </label>
         {localeFilterApplicable && (
           <label className="flex items-center gap-2 text-sm text-muted-foreground select-none cursor-pointer hover:text-foreground transition-colors">
             <input
@@ -1148,31 +1217,21 @@ export function VideoTable({
             {emptyState}
           </div>
         ) : dayGroups ? (
-          <>
-            {futureDayGroups.length > 0 && (
-              <div className={cn(showFuture ? "mb-10 space-y-10" : "mb-4")}>
-                <button
-                  onClick={() => setShowFuture((v) => !v)}
-                  className={cn(
-                    "flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground",
-                    showFuture && "mb-3",
-                  )}
-                >
-                  <ChevronDown
-                    className={cn(
-                      "h-3.5 w-3.5 transition-transform",
-                      showFuture && "rotate-180",
-                    )}
-                  />
-                  {showFuture ? t("hideFutureDates") : t("showFutureDates")}
-                </button>
-                {showFuture && futureDayGroups.map(renderDayGroup)}
+          view === "upcoming" ? (
+            upcomingDayGroups.length > 0 ? (
+              <div className="space-y-10">
+                {upcomingDayGroups.map(renderDayGroup)}
               </div>
-            )}
+            ) : (
+              <div className="rounded-lg border border-gray-200 p-6 text-sm text-muted-foreground">
+                {t("noUpcoming")}
+              </div>
+            )
+          ) : (
             <div className="space-y-10">
               {pastDayGroups.map(renderDayGroup)}
             </div>
-          </>
+          )
         ) : (
           // Search mode: a single ungrouped table with a leading Date column.
           <div className="-mx-4 overflow-hidden sm:mx-0 sm:rounded-lg sm:border sm:border-gray-200">

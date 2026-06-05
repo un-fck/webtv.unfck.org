@@ -30,6 +30,10 @@ export interface ServerParams {
   // the active locale is non-English, the schedule hides meetings without a
   // harvested i18n entry for that locale.
   includeOtherLangs?: boolean;
+  // Schedule view mode: undefined / "recent" (default) shows today + past in
+  // descending order; "upcoming" shows strictly future days in ascending
+  // order. Ignored in search mode.
+  view?: "upcoming";
 }
 
 function parseSearchParams(
@@ -69,6 +73,7 @@ function parseSearchParams(
       ? raw.q.trim()
       : undefined;
   const includeOtherLangs = raw.xlang === "1";
+  const view = raw.view === "upcoming" ? "upcoming" : undefined;
 
   return {
     page,
@@ -80,6 +85,7 @@ function parseSearchParams(
     text: text.length ? text : undefined,
     q,
     includeOtherLangs,
+    view,
   };
 }
 
