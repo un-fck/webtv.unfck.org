@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runSweepStuckPipelines } from "@/lib/cron/sweep-stuck-pipelines";
+import { runLivenessSweep } from "@/lib/cron/liveness-sweep";
 import { apiError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
@@ -7,6 +7,6 @@ export async function GET(request: NextRequest) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return apiError(401, "unauthorized", "Unauthorized");
   }
-  const result = await runSweepStuckPipelines();
+  const result = await runLivenessSweep();
   return NextResponse.json(result);
 }

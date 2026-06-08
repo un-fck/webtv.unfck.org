@@ -8,14 +8,16 @@ import {
   getTranscriptById,
   getActiveTranscriptByKalturaId,
   updateTranscriptionStatus,
-  tryAcquirePipelineLock,
-  releasePipelineLock,
+  setRowOwnership,
+  releaseTranscript,
+  claimTranscript,
   withVideoLock,
   type TranscriptionStatus,
   type AnalysisStatus,
   type TranscriptContent,
   type RawParagraph,
 } from "./db";
+import { currentWorkerId } from "./worker-identity";
 import { identifySpeakers } from "./pipeline";
 import type { SpeakerMapping } from "./speakers";
 import {
@@ -190,45 +192,20 @@ export async function pollTranscription(
     };
   }
 
-  if (
-    transcript.transcription_status === "identifying_speakers" ||
-    transcript.transcription_status === "analyzing_topics"
-  ) {
-    // Try to restart stuck stages by re-acquiring a stale lock (use raw,
-    // unshifted paragraphs — these feed re-processing, not display).
-    const paragraphs = transcript.content.raw_paragraphs;
-    if (paragraphs && paragraphs.length > 0) {
-      const acquired = await tryAcquirePipelineLock(transcriptId);
-      if (acquired) {
-        plog(
-          `[Pipeline] Re-entering stuck stage ${transcript.transcription_status} for ${transcriptId}`,
-        );
-        runAnalysisPipeline(transcriptId, paragraphs, undefined).catch(
-          (err) => {
-            perr("[Pipeline] Re-entry error:", err);
-            updateTranscriptionStatus(
-              transcriptId,
-              "error",
-              err instanceof Error ? err.message : "Re-entry failed",
-            );
-            releasePipelineLock(transcriptId);
-          },
-        );
-      }
-    }
-
-    return {
-      stage: transcript.transcription_status,
-      analysis_status: transcript.analysis_status,
-      raw_paragraphs: content.raw_paragraphs,
-      statements: content.statements,
-      topics: content.topics,
-      propositions: content.propositions,
-    };
-  }
-
-  // Gemini transcripts run fully in-process — nothing to poll externally
-  return { stage: "transcribing" };
+  // In-flight stages (transcribing / identifying_speakers / analyzing_topics)
+  // or interrupted: return current state read-only. Recovery of interrupted
+  // rows is handled by the boot picker + cron liveness sweep + process-scheduled
+  // tick — not by polling side effects. (The previous opportunistic re-entry
+  // here meant a user opening the page was what resurrected a dead pipeline;
+  // see migration 020 / lib/cron/liveness-sweep.ts.)
+  return {
+    stage: transcript.transcription_status,
+    analysis_status: transcript.analysis_status,
+    raw_paragraphs: content.raw_paragraphs,
+    statements: content.statements,
+    topics: content.topics,
+    propositions: content.propositions,
+  };
 }
 
 // ---- Provider-agnostic transcription pipeline ----
@@ -310,25 +287,24 @@ async function runTranscriptionPipeline(
       await setSpeakerMapping(transcriptId, speakerMapping);
     }
 
-    const acquired = await tryAcquirePipelineLock(transcriptId);
-    if (acquired) {
-      // Pass speakerMapping as prebuiltMapping for rich providers;
-      // undefined for basic providers triggers full OpenAI speaker ID
-      runAnalysisPipeline(transcriptId, paragraphs, speakerMapping).catch(
-        (err) => {
-          perr("[Pipeline] Analysis error:", err);
-          updateTranscriptionStatus(
-            transcriptId,
-            "error",
-            err instanceof Error ? err.message : "Analysis failed",
-          );
-          releasePipelineLock(transcriptId);
-        },
-      );
-    }
+    // Continue into analysis on the same worker — we already own the row
+    // (worker_id was set at insert / picker claim time and saveTranscript
+    // above doesn't touch worker_id). The status CAS in claimTranscript
+    // ensures we hand off cleanly even if a concurrent stale claim somehow
+    // raced us (shouldn't happen in the new design, but cheap to keep).
+    runAnalysisPipeline(transcriptId, paragraphs, speakerMapping).catch(
+      (err) => {
+        perr("[Pipeline] Analysis error:", err);
+        releaseTranscript(
+          transcriptId,
+          "error",
+          err instanceof Error ? err.message : "Analysis failed",
+        );
+      },
+    );
   } catch (err) {
     perr("[Pipeline] Error:", err);
-    await updateTranscriptionStatus(
+    await releaseTranscript(
       transcriptId,
       "error",
       err instanceof Error ? err.message : "Transcription failed",
@@ -345,15 +321,13 @@ async function runAnalysisPipeline(
   try {
     await updateTranscriptionStatus(transcriptId, "identifying_speakers");
     await identifySpeakers(paragraphs, transcriptId, speakerMapping);
-    await updateTranscriptionStatus(transcriptId, "completed");
-    await releasePipelineLock(transcriptId);
+    await releaseTranscript(transcriptId, "completed");
   } catch (err) {
-    await updateTranscriptionStatus(
+    await releaseTranscript(
       transcriptId,
       "error",
       err instanceof Error ? err.message : "Analysis pipeline failed",
     );
-    await releasePipelineLock(transcriptId);
     throw err;
   }
 }
@@ -367,15 +341,20 @@ export type SpeakerIdentificationResult =
     }
   | {
       ok: false;
-      code: "not_found" | "missing_data" | "pipeline_locked";
+      code: "not_found" | "missing_data" | "claim_failed";
       message: string;
     };
 
 /**
- * Run speaker identification + the analysis pipeline for an existing transcript,
- * in-process. Called from `runTranscriptionPipeline` (and indirectly from the
- * `pollTranscription` stuck-stage recovery path) — no HTTP self-call, so it
- * works regardless of `NEXT_PUBLIC_BASE_URL` and avoids the extra round trip.
+ * Run speaker identification + the analysis pipeline for an existing
+ * transcript, in-process. Used by:
+ *   - the picker resuming an `interrupted` row that already has raw paragraphs
+ *   - the `pnpm reidentify` script
+ *
+ * Atomically claims the row (status CAS to `identifying_speakers` + sets
+ * `worker_id` + refreshes heartbeat). Returns `claim_failed` if another
+ * worker concurrently grabbed it — caller treats that as "not my row,
+ * skip" rather than as an error.
  */
 export async function runSpeakerIdentification(
   transcriptId: string,
@@ -394,20 +373,32 @@ export async function runSpeakerIdentification(
     };
   }
 
-  const acquired = await tryAcquirePipelineLock(transcriptId);
-  if (!acquired) {
+  // Claim from any state that has raw_paragraphs and is safe to resume:
+  // `interrupted` (picker resume), `identifying_speakers`/`analyzing_topics`
+  // (mid-stage recovery via reidentify), or `completed` (force re-run via
+  // reidentify script).
+  const claimed = await claimTranscript(
+    transcriptId,
+    [
+      "interrupted",
+      "identifying_speakers",
+      "analyzing_topics",
+      "completed",
+    ],
+    "identifying_speakers",
+    currentWorkerId(),
+  );
+  if (!claimed) {
     return {
       ok: false,
-      code: "pipeline_locked",
-      message: "Pipeline already running",
+      code: "claim_failed",
+      message: "Pipeline already running or row in unexpected state",
     };
   }
 
   try {
-    await updateTranscriptionStatus(transcriptId, "identifying_speakers");
     const mapping = await identifySpeakers(paragraphs, transcriptId, undefined);
-    await updateTranscriptionStatus(transcriptId, "completed");
-    await releasePipelineLock(transcriptId);
+    await releaseTranscript(transcriptId, "completed");
 
     const updated = await getTranscriptById(transcriptId);
     return {
@@ -417,12 +408,11 @@ export async function runSpeakerIdentification(
       topics: updated?.content.topics || {},
     };
   } catch (error) {
-    await updateTranscriptionStatus(
+    await releaseTranscript(
       transcriptId,
       "error",
       error instanceof Error ? error.message : "Pipeline failed",
     );
-    await releasePipelineLock(transcriptId);
     throw error;
   }
 }
@@ -501,6 +491,13 @@ export async function submitTranscription(
       client,
       options.createdBy ?? null,
     );
+    // Claim ownership in the same advisory-locked transaction so the row
+    // never sits in `transcribing` without a worker_id — closes the window
+    // where a SIGTERM right after insert would leave the row invisible to
+    // the SIGTERM handler (which only flips its own rows). For picker-resume
+    // (existingTranscriptId) the picker has already set worker_id; this
+    // call is idempotent (same workerId in-process).
+    await setRowOwnership(transcriptId, currentWorkerId(), client);
     return {
       transcriptId,
       stage: "transcribing" as TranscriptionStatus,
@@ -534,4 +531,78 @@ export async function submitTranscription(
     stage: result.stage,
     started: result.started,
   };
+}
+
+/**
+ * Headless proposition-analysis runner — same work as the POST analysis
+ * route, factored out so the picker can resume `analysis_status =
+ * 'interrupted'` rows without going through HTTP/auth. Claims the row
+ * atomically; on `claim_failed` the caller treats it as "another worker
+ * has it" and moves on.
+ */
+export async function runPropositionAnalysisJob(
+  transcriptId: string,
+): Promise<{ ok: boolean; code?: string; message?: string }> {
+  const {
+    claimAnalysis,
+    releaseAnalysis,
+    updateTranscriptContent,
+  } = await import("./db");
+  const { getSpeakerMapping } = await import("./speakers");
+  const { analyzePropositions } = await import("./pipeline");
+  const { AzureOpenAI } = await import("openai");
+
+  const transcript = await getTranscriptById(transcriptId);
+  if (!transcript) return { ok: false, code: "not_found" };
+
+  const paragraphs = transcript.content.raw_paragraphs;
+  if (!paragraphs || paragraphs.length === 0) {
+    return { ok: false, code: "missing_data" };
+  }
+
+  const speakerMapping = await getSpeakerMapping(transcriptId);
+  if (!speakerMapping || Object.keys(speakerMapping).length === 0) {
+    return { ok: false, code: "missing_speakers" };
+  }
+
+  const claimed = await claimAnalysis(
+    transcriptId,
+    ["interrupted"],
+    "analyzing",
+    currentWorkerId(),
+    { incrementRetry: true },
+  );
+  if (!claimed) return { ok: false, code: "claim_failed" };
+
+  try {
+    const client = new AzureOpenAI({
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+      endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+      apiVersion: process.env.AZURE_OPENAI_API_VERSION || "2024-12-01-preview",
+    });
+    const propositions = await analyzePropositions(
+      paragraphs,
+      speakerMapping,
+      client,
+      transcriptId,
+      transcript.language_code ?? undefined,
+    );
+    await updateTranscriptContent(transcriptId, {
+      ...transcript.content,
+      propositions,
+    });
+    await releaseAnalysis(transcriptId, "completed");
+    return { ok: true };
+  } catch (error) {
+    await releaseAnalysis(
+      transcriptId,
+      "error",
+      error instanceof Error ? error.message : "Analysis failed",
+    );
+    return {
+      ok: false,
+      code: "analysis_failed",
+      message: error instanceof Error ? error.message : "Analysis failed",
+    };
+  }
 }

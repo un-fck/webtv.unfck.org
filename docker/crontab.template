@@ -19,4 +19,4 @@
 0 */6 * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/check-pv
 */5 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/send-transcript-notifications
 0 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/realign
-*/15 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/sweep-stuck-pipelines
+*/15 * * * * root curl -fsSL -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/liveness-sweep

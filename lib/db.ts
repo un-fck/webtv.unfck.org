@@ -6,15 +6,36 @@ import { applyTimeOffset } from "./transcript-offset";
 
 // Transcript production lifecycle. Proposition analysis is a separate axis
 // (`AnalysisStatus`) and intentionally not part of this enum.
+// `interrupted` (migration 020) = worker died mid-flight (SIGTERM, OOM,
+// crash). Distinct from `error` (intrinsic failure) so the picker can
+// safely auto-retry interrupted rows while leaving genuine errors alone.
 export type TranscriptionStatus =
   | "scheduled"
   | "transcribing"
   | "identifying_speakers"
   | "analyzing_topics"
   | "completed"
-  | "error";
+  | "error"
+  | "interrupted";
 // On-demand proposition analysis, independent of transcript viewability.
-export type AnalysisStatus = "none" | "analyzing" | "completed" | "error";
+export type AnalysisStatus =
+  | "none"
+  | "analyzing"
+  | "completed"
+  | "error"
+  | "interrupted";
+
+// In-flight transcription states. SIGTERM handler / heartbeat sweep flip
+// these to `interrupted`; the picker's claim CAS transitions out of them.
+export const IN_FLIGHT_TRANSCRIPTION_STATUSES = [
+  "transcribing",
+  "identifying_speakers",
+  "analyzing_topics",
+] as const;
+
+// Max times the picker resumes an `interrupted` row before escalating to
+// `error`. `error` itself is never auto-retried, regardless of count.
+export const MAX_INTERRUPTED_RETRIES = 5;
 export type ProcessingUsageProvider =
   | "openai"
   | "gemini"
@@ -153,7 +174,13 @@ export interface Transcript {
   analysis_status: AnalysisStatus;
   language_code: string | null;
   content: TranscriptContent;
-  pipeline_lock: Date | null;
+  // Liveness signal refreshed by the owning worker (~60s tick). Stale
+  // heartbeats are flipped to `interrupted` by the liveness sweep.
+  heartbeat_at: Date | null;
+  // Identity of the process currently running this row, or NULL.
+  worker_id: string | null;
+  // Times the picker has resumed this row after an interruption.
+  retry_count: number;
   error_message: string | null;
   source_duration_ms: number | null;
   time_offset_ms: number | null;
@@ -266,7 +293,9 @@ function mapTranscriptRow(row: Record<string, unknown>): Transcript {
     analysis_status: (row.analysis_status as AnalysisStatus) ?? "none",
     language_code: row.language_code as string | null,
     content: row.content as TranscriptContent,
-    pipeline_lock: row.pipeline_lock as Date | null,
+    heartbeat_at: row.heartbeat_at as Date | null,
+    worker_id: (row.worker_id as string | null) ?? null,
+    retry_count: Number(row.retry_count ?? 0),
     error_message: row.error_message as string | null,
     source_duration_ms: (row.source_duration_ms as number | null) ?? null,
     time_offset_ms: (row.time_offset_ms as number | null) ?? null,
@@ -479,22 +508,41 @@ export async function scheduleTranscript(
   });
 }
 
-export interface ScheduledTranscript {
+export interface RunnableTranscript {
   transcript_id: string;
   entry_id: string;
   start_time: number | null;
   end_time: number | null;
   audio_url: string;
   language_code: string | null;
+  transcription_status: TranscriptionStatus;
+  retry_count: number;
+  has_raw_paragraphs: boolean;
   created_at: Date;
 }
 
-export async function getScheduledTranscripts(): Promise<
-  ScheduledTranscript[]
-> {
+/**
+ * Rows the picker should pick up: freshly `scheduled` (waiting for audio /
+ * first attempt) or `interrupted` (a prior worker died mid-flight) under the
+ * retry cap. Both classes are surfaced uniformly — the picker decides whether
+ * to (re)submit transcription from scratch or resume the analysis stage based
+ * on `has_raw_paragraphs`. FIFO by `created_at` keeps the oldest backlog
+ * draining first.
+ */
+export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
   const result = await pool.query(
-    `SELECT transcript_id, entry_id, start_time, end_time, audio_url, language_code, created_at
-     FROM webtv.transcripts WHERE transcription_status = 'scheduled' ORDER BY created_at ASC`,
+    q(
+      `SELECT transcript_id, entry_id, start_time, end_time, audio_url,
+              language_code, transcription_status, retry_count,
+              jsonb_array_length(COALESCE(content->'raw_paragraphs', '[]'::jsonb)) > 0
+                AS has_raw_paragraphs,
+              created_at
+         FROM webtv.transcripts
+        WHERE transcription_status = 'scheduled'
+           OR (transcription_status = 'interrupted' AND retry_count < ?)
+        ORDER BY created_at ASC`,
+      [MAX_INTERRUPTED_RETRIES],
+    ),
   );
   return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
@@ -503,45 +551,267 @@ export async function getScheduledTranscripts(): Promise<
     end_time: row.end_time as number | null,
     audio_url: row.audio_url as string,
     language_code: row.language_code as string | null,
+    transcription_status: row.transcription_status as TranscriptionStatus,
+    retry_count: Number(row.retry_count ?? 0),
+    has_raw_paragraphs: row.has_raw_paragraphs as boolean,
     created_at: row.created_at as Date,
   }));
 }
 
-export async function tryAcquirePipelineLock(
-  transcriptId: string,
-): Promise<boolean> {
+/**
+ * Transcripts whose `analysis_status` was `interrupted` (on-demand
+ * proposition analysis killed mid-flight). The picker resumes them on the
+ * analysis axis only — the transcript itself remains `completed`.
+ */
+export interface RunnableAnalysis {
+  transcript_id: string;
+  retry_count: number;
+}
+
+export async function getRunnableAnalyses(): Promise<RunnableAnalysis[]> {
   const result = await pool.query(
     q(
-      `UPDATE webtv.transcripts SET pipeline_lock = NOW(), updated_at = NOW()
-       WHERE transcript_id = ? AND (pipeline_lock IS NULL OR pipeline_lock < NOW() - INTERVAL '30 minutes')`,
-      [transcriptId],
+      `SELECT transcript_id, retry_count
+         FROM webtv.transcripts
+        WHERE analysis_status = 'interrupted' AND retry_count < ?
+        ORDER BY updated_at ASC`,
+      [MAX_INTERRUPTED_RETRIES],
+    ),
+  );
+  return result.rows.map((row) => ({
+    transcript_id: row.transcript_id as string,
+    retry_count: Number(row.retry_count ?? 0),
+  }));
+}
+
+/**
+ * Atomic status-CAS claim. Transitions a row from one of `fromStatuses` to
+ * `toStatus`, stamping `worker_id` and refreshing `heartbeat_at`. Optionally
+ * increments `retry_count` (used when resuming an interrupted row). Returns
+ * true if this caller actually claimed the row, false if some other process
+ * already moved it (idempotent under double-fire).
+ */
+export async function claimTranscript(
+  transcriptId: string,
+  fromStatuses: readonly TranscriptionStatus[],
+  toStatus: TranscriptionStatus,
+  workerId: string,
+  options: { incrementRetry?: boolean } = {},
+): Promise<boolean> {
+  const placeholders = fromStatuses.map(() => "?").join(", ");
+  const retryClause = options.incrementRetry
+    ? ", retry_count = retry_count + 1"
+    : "";
+  const result = await pool.query(
+    q(
+      `UPDATE webtv.transcripts
+          SET transcription_status = ?,
+              worker_id = ?,
+              heartbeat_at = NOW(),
+              error_message = NULL,
+              updated_at = NOW()
+              ${retryClause}
+        WHERE transcript_id = ?
+          AND transcription_status IN (${placeholders})`,
+      [toStatus, workerId, transcriptId, ...fromStatuses],
     ),
   );
   return (result.rowCount ?? 0) > 0;
 }
 
-export async function releasePipelineLock(transcriptId: string): Promise<void> {
+/**
+ * Claim a row on the `analysis_status` axis. Same semantics as
+ * `claimTranscript` but for on-demand proposition analysis. Does not touch
+ * `transcription_status` (the transcript stays `completed` and viewable).
+ */
+export async function claimAnalysis(
+  transcriptId: string,
+  fromStatuses: readonly AnalysisStatus[],
+  toStatus: AnalysisStatus,
+  workerId: string,
+  options: { incrementRetry?: boolean } = {},
+): Promise<boolean> {
+  const placeholders = fromStatuses.map(() => "?").join(", ");
+  const retryClause = options.incrementRetry
+    ? ", retry_count = retry_count + 1"
+    : "";
+  const result = await pool.query(
+    q(
+      `UPDATE webtv.transcripts
+          SET analysis_status = ?,
+              worker_id = ?,
+              heartbeat_at = NOW(),
+              updated_at = NOW()
+              ${retryClause}
+        WHERE transcript_id = ?
+          AND analysis_status IN (${placeholders})`,
+      [toStatus, workerId, transcriptId, ...fromStatuses],
+    ),
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+/**
+ * Release ownership of a row after it has reached a terminal-for-this-worker
+ * state (`completed`, `error`, or `interrupted`). Clears `worker_id` and
+ * `heartbeat_at` so the liveness sweep / picker treat it correctly. Does not
+ * change status — caller updates status in its own transition.
+ */
+export async function clearWorkerOwnership(
+  transcriptId: string,
+): Promise<void> {
   await pool.query(
     q(
-      "UPDATE webtv.transcripts SET pipeline_lock = NULL, updated_at = NOW() WHERE transcript_id = ?",
+      "UPDATE webtv.transcripts SET worker_id = NULL, heartbeat_at = NULL WHERE transcript_id = ?",
       [transcriptId],
     ),
   );
 }
 
 /**
- * Refresh the pipeline lock timestamp — a heartbeat. Long-running stages call
- * this at their boundaries so a job that is still making progress keeps its
- * lock fresh and isn't re-entered concurrently by a poll when it legitimately
- * runs past the 30-minute stale window. Only updates a lock we still hold.
+ * Mark a row as owned by this worker (sets `worker_id` and refreshes
+ * `heartbeat_at`) without conditioning on status. Used right after
+ * `saveTranscript` inserts a new row, inside the same advisory-locked
+ * transaction, so the row never sits in an in-flight status without an
+ * owner. For status-conditional claims (e.g. `scheduled` → `transcribing`),
+ * use `claimTranscript` instead.
  */
-export async function touchPipelineLock(transcriptId: string): Promise<void> {
+export async function setRowOwnership(
+  transcriptId: string,
+  workerId: string,
+  executor: Pick<Pool, "query"> = pool,
+): Promise<void> {
+  await executor.query(
+    q(
+      "UPDATE webtv.transcripts SET worker_id = ?, heartbeat_at = NOW() WHERE transcript_id = ?",
+      [workerId, transcriptId],
+    ),
+  );
+}
+
+/**
+ * Set a terminal `transcription_status` (completed | error | interrupted)
+ * AND clear worker ownership in a single statement. Used at every pipeline
+ * exit so we never leave a row marked terminal with a stale `worker_id`.
+ */
+export async function releaseTranscript(
+  transcriptId: string,
+  status: Extract<TranscriptionStatus, "completed" | "error" | "interrupted">,
+  errorMessage?: string,
+): Promise<void> {
   await pool.query(
     q(
-      "UPDATE webtv.transcripts SET pipeline_lock = NOW() WHERE transcript_id = ? AND pipeline_lock IS NOT NULL",
+      `UPDATE webtv.transcripts
+          SET transcription_status = ?,
+              error_message = ?,
+              worker_id = NULL,
+              heartbeat_at = NULL,
+              updated_at = NOW()
+        WHERE transcript_id = ?`,
+      [status, errorMessage ?? null, transcriptId],
+    ),
+  );
+}
+
+/** Analogue of `releaseTranscript` for the proposition-analysis axis. */
+export async function releaseAnalysis(
+  transcriptId: string,
+  status: Extract<AnalysisStatus, "completed" | "error" | "interrupted">,
+  errorMessage?: string,
+): Promise<void> {
+  await pool.query(
+    q(
+      `UPDATE webtv.transcripts
+          SET analysis_status = ?,
+              error_message = ?,
+              worker_id = NULL,
+              heartbeat_at = NULL,
+              updated_at = NOW()
+        WHERE transcript_id = ?`,
+      [status, errorMessage ?? null, transcriptId],
+    ),
+  );
+}
+
+/**
+ * Refresh the heartbeat on a single row. Long-running stages call this
+ * mid-stage (e.g. inside the resegmentation loop) so the liveness sweep
+ * doesn't treat a slow-but-alive job as dead. No-op if the row no longer
+ * has a worker (e.g. status was already flipped to terminal).
+ */
+export async function touchHeartbeat(transcriptId: string): Promise<void> {
+  await pool.query(
+    q(
+      "UPDATE webtv.transcripts SET heartbeat_at = NOW() WHERE transcript_id = ? AND worker_id IS NOT NULL",
       [transcriptId],
     ),
   );
+}
+
+/**
+ * Refresh the heartbeat for every row this worker currently owns. Called by
+ * the per-process tick (~60s). Single statement, single round-trip — uses
+ * the partial index on `worker_id` so the scan is cheap even as the table
+ * grows. Returns the number of rows refreshed (0 if this worker holds none).
+ */
+export async function heartbeatOwnRows(workerId: string): Promise<number> {
+  const result = await pool.query(
+    q(
+      `UPDATE webtv.transcripts
+          SET heartbeat_at = NOW()
+        WHERE worker_id = ?
+          AND (
+            transcription_status IN ('transcribing','identifying_speakers','analyzing_topics')
+            OR analysis_status = 'analyzing'
+          )`,
+      [workerId],
+    ),
+  );
+  return result.rowCount ?? 0;
+}
+
+/**
+ * SIGTERM-time cleanup. Flips every in-flight row owned by this worker to
+ * `interrupted` on whichever status axis is active, then clears ownership.
+ * Single statement per axis — must complete fast so the orchestrator's
+ * shutdown grace period (Azure default 30s) doesn't expire mid-update.
+ * Returns the count flipped per axis for logging.
+ */
+export async function markOwnRowsInterrupted(
+  workerId: string,
+): Promise<{ transcription: number; analysis: number }> {
+  const transcription = await pool.query(
+    q(
+      `UPDATE webtv.transcripts
+          SET transcription_status = 'interrupted',
+              worker_id = NULL,
+              heartbeat_at = NULL,
+              error_message = COALESCE(NULLIF(error_message, ''),
+                'Interrupted (worker SIGTERM)'),
+              updated_at = NOW()
+        WHERE worker_id = ?
+          AND transcription_status IN ('transcribing','identifying_speakers','analyzing_topics')`,
+      [workerId],
+    ),
+  );
+  const analysis = await pool.query(
+    q(
+      `UPDATE webtv.transcripts
+          SET analysis_status = 'interrupted',
+              worker_id = NULL,
+              heartbeat_at = NULL,
+              error_message = COALESCE(NULLIF(error_message, ''),
+                'Analysis interrupted (worker SIGTERM)'),
+              updated_at = NOW()
+        WHERE worker_id = ?
+          AND analysis_status = 'analyzing'`,
+      [workerId],
+    ),
+  );
+  return {
+    transcription: transcription.rowCount ?? 0,
+    analysis: analysis.rowCount ?? 0,
+  };
 }
 
 /** Run `fn` inside a single BEGIN/COMMIT on one pooled client. */
@@ -796,95 +1066,49 @@ export async function getTranscriptByKalturaId(
   return mapTranscriptRowForDisplay(result.rows[0]);
 }
 
-// A row in `transcribing | identifying_speakers | analyzing_topics` whose
-// `updated_at` hasn't moved in this long is treated as abandoned (the serverless
-// process died without flipping the row to `error`). Chosen well above the
-// longest realistic single-stage runtime (a ~6h meeting at ~1× through STT)
-// so we never kill a job that's actually progressing.
-const STUCK_TRANSCRIPT_THRESHOLD = "2 hours";
-
-// Marks any in-process transcripts matching the filter as `error` if their
-// `updated_at` is older than STUCK_TRANSCRIPT_THRESHOLD. Runs inline before
-// active-transcript reads so the UI never displays a permanently stuck row.
-// Also clears stale `analysis_status = 'analyzing'` runs on the same axis.
-async function expireStuckTranscripts(
-  filter: { kalturaId?: string; entryId?: string; transcriptId?: string },
-  executor: Pick<Pool, "query"> = pool,
-): Promise<void> {
-  const conds: string[] = [];
-  const args: unknown[] = [];
-  if (filter.kalturaId) {
-    conds.push("kaltura_id = ?");
-    args.push(filter.kalturaId);
-  }
-  if (filter.entryId) {
-    conds.push("entry_id = ?");
-    args.push(filter.entryId);
-  }
-  if (filter.transcriptId) {
-    conds.push("transcript_id = ?");
-    args.push(filter.transcriptId);
-  }
-  if (conds.length === 0) return;
-  const scope = conds.join(" AND ");
-  await executor.query(
-    q(
-      `UPDATE webtv.transcripts
-          SET transcription_status = 'error',
-              error_message = COALESCE(NULLIF(error_message, ''),
-                'Pipeline stalled (no progress for >${STUCK_TRANSCRIPT_THRESHOLD}); auto-marked as error.'),
-              pipeline_lock = NULL,
-              updated_at = NOW()
-        WHERE ${scope}
-          AND transcription_status IN ('transcribing','identifying_speakers','analyzing_topics')
-          AND updated_at < NOW() - INTERVAL '${STUCK_TRANSCRIPT_THRESHOLD}'`,
-      args,
-    ),
-  );
-  await executor.query(
-    q(
-      `UPDATE webtv.transcripts
-          SET analysis_status = 'error',
-              error_message = COALESCE(NULLIF(error_message, ''),
-                'Analysis stalled (no progress for >${STUCK_TRANSCRIPT_THRESHOLD}); auto-marked as error.'),
-              updated_at = NOW()
-        WHERE ${scope}
-          AND analysis_status = 'analyzing'
-          AND updated_at < NOW() - INTERVAL '${STUCK_TRANSCRIPT_THRESHOLD}'`,
-      args,
-    ),
-  );
-}
+// Heartbeat staleness threshold. Owning workers tick at ~60s; 5 min is 5×
+// that, generous enough to ride out a GC pause or short DB blip without
+// false positives, tight enough that a dead worker's rows are recovered
+// within one Azure deploy cycle (the deploy redeploys-then-sweeps within
+// a few minutes). Hard kills that bypass the SIGTERM handler are the only
+// path that gets here in the new design — graceful shutdowns flip rows
+// themselves via markOwnRowsInterrupted.
+const HEARTBEAT_STALE_THRESHOLD = "5 minutes";
 
 /**
- * Unfiltered sweep that marks ANY in-process transcript whose `updated_at`
- * is older than the stuck threshold as `error`. Run from a cron tick so
- * SIGTERM-killed pipelines on Azure (or any host-level kill) eventually
- * recover instead of staying visibly stuck. Returns the number of rows
- * flipped on each axis so the cron run can log meaningful output.
+ * Liveness sweep — flips any in-flight row whose heartbeat is stale to
+ * `interrupted`, on both status axes. Backstop for hard kills (OOM,
+ * SIGKILL after grace-period overrun, network partition before the
+ * SIGTERM UPDATE committed). The picker then resumes them.
+ *
+ * Flips to `interrupted` (not `error`) so the picker auto-retries — these
+ * are extrinsic failures, the job itself isn't broken.
  */
-export async function sweepStuckTranscripts(): Promise<{
+export async function sweepStaleHeartbeats(): Promise<{
   transcription: number;
   analysis: number;
 }> {
   const transcription = await pool.query(
     `UPDATE webtv.transcripts
-        SET transcription_status = 'error',
+        SET transcription_status = 'interrupted',
+            worker_id = NULL,
+            heartbeat_at = NULL,
             error_message = COALESCE(NULLIF(error_message, ''),
-              'Pipeline stalled (no progress for >${STUCK_TRANSCRIPT_THRESHOLD}); auto-marked as error.'),
-            pipeline_lock = NULL,
+              'Interrupted (heartbeat stale >${HEARTBEAT_STALE_THRESHOLD})'),
             updated_at = NOW()
       WHERE transcription_status IN ('transcribing','identifying_speakers','analyzing_topics')
-        AND updated_at < NOW() - INTERVAL '${STUCK_TRANSCRIPT_THRESHOLD}'`,
+        AND (heartbeat_at IS NULL OR heartbeat_at < NOW() - INTERVAL '${HEARTBEAT_STALE_THRESHOLD}')`,
   );
   const analysis = await pool.query(
     `UPDATE webtv.transcripts
-        SET analysis_status = 'error',
+        SET analysis_status = 'interrupted',
+            worker_id = NULL,
+            heartbeat_at = NULL,
             error_message = COALESCE(NULLIF(error_message, ''),
-              'Analysis stalled (no progress for >${STUCK_TRANSCRIPT_THRESHOLD}); auto-marked as error.'),
+              'Analysis interrupted (heartbeat stale >${HEARTBEAT_STALE_THRESHOLD})'),
             updated_at = NOW()
       WHERE analysis_status = 'analyzing'
-        AND updated_at < NOW() - INTERVAL '${STUCK_TRANSCRIPT_THRESHOLD}'`,
+        AND (heartbeat_at IS NULL OR heartbeat_at < NOW() - INTERVAL '${HEARTBEAT_STALE_THRESHOLD}')`,
   );
   return {
     transcription: transcription.rowCount ?? 0,
@@ -892,16 +1116,16 @@ export async function sweepStuckTranscripts(): Promise<{
   };
 }
 
-// Latest non-error transcript for a player ID — completed, in-progress, or
-// scheduled. Powers the viewability path: a transcript is shown whenever its
-// content exists, and in-progress/scheduled rows are surfaced to all viewers
-// (with their stage) so others don't start a duplicate.
+// Latest non-error transcript for a player ID — completed, in-progress,
+// scheduled, or interrupted (the picker will resume the latter). Powers the
+// viewability path: a transcript is shown whenever its content exists, and
+// in-progress/scheduled rows are surfaced to all viewers (with their stage)
+// so others don't start a duplicate.
 export async function getActiveTranscriptByKalturaId(
   kalturaId: string,
   languageCode?: string,
   executor: Pick<Pool, "query"> = pool,
 ): Promise<Transcript | null> {
-  await expireStuckTranscripts({ kalturaId }, executor);
   const conditions: string[] = [
     "kaltura_id = ?",
     "transcription_status <> 'error'",
@@ -937,7 +1161,11 @@ export async function getPendingTranscriptByKalturaId(
   kalturaId: string,
   languageCode: string,
 ): Promise<Transcript | null> {
-  await expireStuckTranscripts({ kalturaId });
+  // Returns any row that the picker will keep working on:
+  //   - `scheduled` (waiting for audio / first attempt)
+  //   - `transcribing | identifying_speakers | analyzing_topics` (in flight)
+  //   - `interrupted` (will be auto-resumed by the picker)
+  // Excluding `completed | error` matches "do not spawn a duplicate run."
   const result = await pool.query(
     q(
       `SELECT * FROM webtv.transcripts

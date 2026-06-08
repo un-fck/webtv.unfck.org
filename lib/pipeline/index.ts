@@ -7,7 +7,7 @@ import {
   getTranscriptById,
   updateTranscriptContent,
   updateTranscriptionStatus,
-  touchPipelineLock,
+  touchHeartbeat,
 } from "@/lib/db";
 import {
   trackOpenAIChatCompletion,
@@ -288,14 +288,16 @@ ${transcriptParts.join("\n\n")}`,
       const CONTEXT_SIZE = 3; // Number of paragraphs before and after
 
       // Resegmentation is the longest stage on big debates. Refresh the
-      // pipeline lock at most every 30s as paragraphs complete so a job still
-      // making progress keeps its lock fresh and isn't re-entered concurrently.
+      // heartbeat at most every 30s as paragraphs complete so the liveness
+      // sweep doesn't treat a slow-but-alive job as dead. (The per-worker
+      // tick already does this every 60s; this is an extra in-stage refresh
+      // that costs almost nothing.)
       let lastHeartbeat = Date.now();
       const heartbeat = async () => {
         if (!transcriptId) return;
         if (Date.now() - lastHeartbeat < 30_000) return;
         lastHeartbeat = Date.now();
-        await touchPipelineLock(transcriptId).catch(() => {});
+        await touchHeartbeat(transcriptId).catch(() => {});
       };
 
       const resegmented = await mapWithConcurrency(
@@ -511,7 +513,7 @@ ${transcriptParts.join("\n\n")}`,
   if (statementsWithSentences.length > 0 && transcriptId) {
     // --- Stage: Analyzing topics ---
     await updateTranscriptionStatus(transcriptId, "analyzing_topics");
-    await touchPipelineLock(transcriptId); // heartbeat: keep the lock fresh
+    await touchHeartbeat(transcriptId); // keep this worker's liveness signal fresh
     console.log(`  → Analyzing topics...`);
 
     try {

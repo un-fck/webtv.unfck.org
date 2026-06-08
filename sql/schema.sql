@@ -105,16 +105,30 @@ CREATE TABLE IF NOT EXISTS transcripts (
     -- Two status axes (migration 003). Splitting them lets on-demand
     -- proposition analysis run without flipping the transcript off "completed"
     -- (which would hide it from viewers keyed off transcription_status).
+    -- 'interrupted' (migration 020): worker died mid-flight (SIGTERM, OOM,
+    -- crash). Distinct from `error` (intrinsic failure) so the picker can
+    -- safely auto-retry interrupted rows while leaving genuine errors alone.
     transcription_status TEXT NOT NULL
       CHECK (transcription_status IN (
         'scheduled', 'transcribing', 'identifying_speakers',
-        'analyzing_topics', 'completed', 'error'
+        'analyzing_topics', 'completed', 'error', 'interrupted'
       )),
     analysis_status TEXT NOT NULL DEFAULT 'none'
-      CHECK (analysis_status IN ('none', 'analyzing', 'completed', 'error')),
+      CHECK (analysis_status IN ('none', 'analyzing', 'completed', 'error', 'interrupted')),
     language_code TEXT NOT NULL,
     content JSONB NOT NULL DEFAULT '{}',
-    pipeline_lock TIMESTAMPTZ,
+    -- Liveness heartbeat (migration 020, renamed from pipeline_lock). Owning
+    -- worker refreshes ~every 60s; the liveness sweep flips rows whose
+    -- heartbeat is stale (>5min) to `interrupted`.
+    heartbeat_at TIMESTAMPTZ,
+    -- Identity of the process currently running this row (migration 020).
+    -- Lets the SIGTERM handler scope its "flip my own rows to interrupted"
+    -- UPDATE without affecting sibling replicas. NULL when no worker holds it.
+    worker_id TEXT,
+    -- Times the picker has resumed this row after an interruption (migration
+    -- 020). Picker caps at 5 before escalating to `error`. `error` itself is
+    -- never auto-retried regardless of this counter.
+    retry_count INT NOT NULL DEFAULT 0,
     error_message TEXT,
     -- Audio length we transcribed, frozen at transcription time (migration 008).
     -- Baseline for detecting WebTV re-cuts; videos.duration is overwritten on sync.
@@ -140,6 +154,9 @@ CREATE INDEX IF NOT EXISTS idx_transcripts_kaltura_lang ON transcripts(kaltura_i
 CREATE INDEX IF NOT EXISTS idx_transcripts_status_entry ON transcripts(transcription_status, entry_id);
 CREATE INDEX IF NOT EXISTS idx_transcripts_status_kaltura ON transcripts(transcription_status, kaltura_id);
 CREATE INDEX IF NOT EXISTS transcripts_created_by_idx ON transcripts(created_by);
+-- Partial index for per-worker scans: SIGTERM-time cleanup and the
+-- periodic heartbeat tick (migration 020).
+CREATE INDEX IF NOT EXISTS idx_transcripts_worker_id ON transcripts(worker_id) WHERE worker_id IS NOT NULL;
 -- ── speaker_mappings ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS speaker_mappings (
     transcript_id TEXT PRIMARY KEY REFERENCES transcripts(transcript_id) ON DELETE CASCADE,

@@ -4,11 +4,11 @@ import { analyzePropositions } from "@/lib/pipeline";
 import {
   getTranscriptById,
   updateTranscriptContent,
-  updateAnalysisStatus,
-  tryAcquirePipelineLock,
-  releasePipelineLock,
+  claimAnalysis,
+  releaseAnalysis,
 } from "@/lib/db";
 import { getSpeakerMapping } from "@/lib/speakers";
+import { currentWorkerId } from "@/lib/worker-identity";
 import { apiError } from "@/lib/api-error";
 import { requireExperimental } from "@/lib/auth/require-experimental";
 
@@ -46,16 +46,21 @@ export async function POST(
       );
     }
 
-    const acquired = await tryAcquirePipelineLock(transcriptId);
-    if (!acquired) {
-      return apiError(409, "pipeline_locked", "Pipeline already running");
+    // Atomic status CAS on the analysis axis: claim from `none | completed |
+    // error | interrupted` (any non-running state) and transition to
+    // `analyzing` while stamping worker_id + heartbeat_at. A concurrent
+    // request that races us gets rowCount=0 and returns 409.
+    const claimed = await claimAnalysis(
+      transcriptId,
+      ["none", "completed", "error", "interrupted"],
+      "analyzing",
+      currentWorkerId(),
+    );
+    if (!claimed) {
+      return apiError(409, "analysis_in_progress", "Analysis already running");
     }
 
     try {
-      // Analysis runs on its own status axis — the transcript stays
-      // 'completed' and visible to everyone while propositions compute.
-      await updateAnalysisStatus(transcriptId, "analyzing");
-
       const client = new AzureOpenAI({
         apiKey: process.env.AZURE_OPENAI_API_KEY,
         endpoint: process.env.AZURE_OPENAI_ENDPOINT,
@@ -76,17 +81,15 @@ export async function POST(
         propositions,
       });
 
-      await updateAnalysisStatus(transcriptId, "completed");
-      await releasePipelineLock(transcriptId);
+      await releaseAnalysis(transcriptId, "completed");
 
       return NextResponse.json({ propositions });
     } catch (error) {
-      await updateAnalysisStatus(
+      await releaseAnalysis(
         transcriptId,
         "error",
         error instanceof Error ? error.message : "Analysis failed",
       );
-      await releasePipelineLock(transcriptId);
       throw error;
     }
   } catch (error) {

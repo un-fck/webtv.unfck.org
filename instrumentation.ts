@@ -13,6 +13,15 @@
 import * as Sentry from "@sentry/nextjs";
 
 export async function register() {
+  // Worker init: SIGTERM handler, heartbeat tick, boot picker. Production-
+  // only (gated internally) so dev hot-reload doesn't cycle rows through
+  // `interrupted` on every file save. Edge runtime is also gated out
+  // inside initWorker so this import stays inert on Edge.
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { initWorker } = await import("@/lib/server-init");
+    initWorker();
+  }
+
   // Skip in dev: Sentry's Node instrumentation patches built-in modules and
   // retains per-request span context, which compounds under Turbopack HMR and
   // OOMs the dev server. Prod behaviour is unchanged.
