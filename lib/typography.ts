@@ -7,7 +7,7 @@
 // site-header.tsx, and the shadcn button's own cva sizing in components/ui/button.tsx.
 export const typography = {
   // Standalone page hero titles (about, methodology)
-  pageTitle: "text-3xl font-bold tracking-tight text-foreground",
+  pageTitle: "text-4xl font-bold tracking-tight text-foreground",
   // Standalone card titles (error pages, login)
   cardTitle: "text-2xl font-semibold text-foreground",
   // Primary content title + peer section headings (video title, "Transcript",
