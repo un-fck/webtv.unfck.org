@@ -701,14 +701,10 @@ export function VideoTable({
     updateParams({ q: trimmed || undefined, replace: true });
   };
 
-  // Display hint only: drives the flat-vs-grouped layout and the
-  // relevance/date sort toggle. Doesn't gate the fetch path anymore — both
-  // browse and search go through /api/videos.
+  // Display hint only: drives the search-mode result count text. Doesn't
+  // gate the fetch path — both browse and search go through /api/videos and
+  // both render in the same date-grouped layout.
   const isSearchMode = !!serverParams.q;
-  // Search results can be relevance-sorted (dates jumbled → flat list) or
-  // explicitly date-sorted (dates cluster → reuse the day-grouped layout).
-  const isSearchDateSorted =
-    isSearchMode && !!serverParams.sort?.startsWith("date");
 
   // Append the next chunk from /api/videos using the current filters and
   // (if set) text query. The endpoint is the single feed entry point now;
@@ -806,37 +802,18 @@ export function VideoTable({
     totalCountIncludingOther - totalCount,
   );
 
-  // Search-result ordering: relevance (default, no sort param) vs newest-first.
-  const searchSortOptions = [
-    {
-      label: t("relevance"),
-      active: !serverParams.sort,
-      onSelect: () => updateParams({ sort: undefined }),
-    },
-    {
-      label: t("date"),
-      active: !!serverParams.sort?.startsWith("date"),
-      onSelect: () => updateParams({ sort: "date_desc" }),
-    },
-  ];
-
   const hasActiveFilters =
     !!serverParams.date ||
     (serverParams.body?.length ?? 0) > 0 ||
     (serverParams.category?.length ?? 0) > 0 ||
     (serverParams.text?.length ?? 0) > 0;
   const showEmptyState = rows.length === 0;
-  // Day/category grouping only makes sense when rows are in date order;
-  // relevance-sorted search results would fragment into 1-row groups.
-  // Date-sorted search (sort=date_*) keeps dates clustered, so reuse the
-  // same grouped layout as browse.
-  const groupByDate = !isSearchMode || isSearchDateSorted;
 
   // Rows keep the server's order (date DESC, scheduled_time ASC within a day),
-  // which is the time-based sort users expect. `showDay` marks the first row of
-  // a day so the parent can split the feed into per-day tables. Categories are
-  // no longer used to re-bucket rows — they render as a per-row pill in the
-  // rightmost column, with the filter pills as the primary affordance.
+  // which is the time-based sort users expect — both browse and search land
+  // here. `showDay` marks the first row of a day so the parent can split the
+  // feed into per-day tables. Categories are no longer used to re-bucket rows —
+  // they render as a per-row pill in the rightmost column.
   const displayRows = useMemo<
     {
       video: Video;
@@ -845,35 +822,25 @@ export function VideoTable({
       showDay: boolean;
     }[]
   >(() => {
-    const labelOf = (v: Video) =>
-      formatMeetingDate(v.scheduledTime ?? v.date, {
-        shortWeekday: !groupByDate,
-      });
-
-    const ordered = rows.map((video) => ({
-      video,
-      dateLabel: labelOf(video),
-      category: video.category ?? "",
-    }));
-
-    if (!groupByDate) {
-      return ordered.map((r) => ({ ...r, showDay: false }));
-    }
-
     let prevDay: string | null = null;
-    return ordered.map((r) => {
-      const showDay = r.dateLabel !== prevDay;
-      prevDay = r.dateLabel;
-      return { ...r, showDay };
+    return rows.map((video) => {
+      const dateLabel = formatMeetingDate(video.scheduledTime ?? video.date);
+      const showDay = dateLabel !== prevDay;
+      prevDay = dateLabel;
+      return {
+        video,
+        dateLabel,
+        category: video.category ?? "",
+        showDay,
+      };
     });
-  }, [rows, groupByDate, formatMeetingDate]);
+  }, [rows, formatMeetingDate]);
 
-  // Split the rows into per-day groups (one rendered table each) when grouping.
   type DisplayRow = (typeof displayRows)[number];
+  // Split the rows into per-day groups (one rendered table each).
   const dayGroups = useMemo<
-    { day: string; rows: DisplayRow[]; isFuture: boolean }[] | null
+    { day: string; rows: DisplayRow[]; isFuture: boolean }[]
   >(() => {
-    if (!groupByDate) return null;
     const groups: { day: string; rows: DisplayRow[]; isFuture: boolean }[] = [];
     for (const r of displayRows) {
       if (r.showDay || groups.length === 0) {
@@ -887,10 +854,10 @@ export function VideoTable({
       groups[groups.length - 1].rows.push(r);
     }
     return groups;
-  }, [displayRows, groupByDate, isFutureDay]);
+  }, [displayRows, isFutureDay]);
 
-  const futureDayGroups = (dayGroups ?? []).filter((g) => g.isFuture);
-  const pastDayGroups = (dayGroups ?? []).filter((g) => !g.isFuture);
+  const futureDayGroups = dayGroups.filter((g) => g.isFuture);
+  const pastDayGroups = dayGroups.filter((g) => !g.isFuture);
   // Server returns rows date-desc, so futureDayGroups is also descending —
   // flip it for the upcoming view so the soonest day is at the top.
   const upcomingDayGroups = useMemo(
@@ -1008,86 +975,6 @@ export function VideoTable({
       </div>
     </div>
   );
-
-  // Flat list row for relevance-sorted search (dates are jumbled so the
-  // day-grouped layout doesn't apply). On mobile the date/time/duration
-  // collapse into a single muted meta line above the title so the title
-  // recovers the full row width; on desktop they sit in aligned columns.
-  const renderSearchRow = ({ video, dateLabel, category }: DisplayRow) => {
-    const isScheduled = video.status === "scheduled";
-    const isLive = video.status === "live";
-    const time = video.scheduledTime;
-    const duration = formatDuration(video.duration);
-    const timeStr = time ? formatMeetingTime(time) : null;
-    const activeCategory =
-      (serverParams.category ?? []).length === 1 &&
-      serverParams.category![0] === category;
-    return (
-      <li
-        key={video.slug}
-        className="border-b border-gray-100 py-2.5 pl-4 pr-2.5 transition-colors last:border-0 hover:bg-gray-50"
-      >
-        <div className="sm:flex sm:items-baseline sm:gap-4">
-          <div className="text-sm text-muted-foreground sm:w-[132px] sm:shrink-0 sm:whitespace-nowrap">
-            <span>{dateLabel}</span>
-            <span className="sm:hidden">
-              {timeStr && <> · {timeStr}</>}
-            </span>
-          </div>
-          {/* Duration display is currently hidden; leaving the markup in
-              place so it can be re-enabled by uncommenting. */}
-          <div className="hidden sm:flex sm:w-[120px] sm:shrink-0 sm:items-baseline sm:justify-between sm:gap-2 sm:tabular-nums">
-            {timeStr ? (
-              <span>{timeStr}</span>
-            ) : (
-              <span className="text-muted-foreground/60">—</span>
-            )}
-            {/*
-            <span className="text-muted-foreground">
-              {duration ?? <span className="text-muted-foreground/60">—</span>}
-            </span>
-            */}
-          </div>
-          {/* Status indicators: live dot + T / V / S badges, left-aligned in
-              their own slot so they no longer overlap the title. */}
-          <div className="flex items-center empty:mt-0 sm:w-[44px] sm:shrink-0 sm:justify-center">
-            <StatusIndicators
-              isLive={isLive}
-              isScheduled={isScheduled}
-              hasTranscript={video.hasTranscript}
-              hasTranscriptInLocale={video.hasTranscriptInLocale}
-              pvAvailable={video.pvAvailable}
-              pvSymbol={video.pvSymbol}
-              liveTooltip={t("liveTooltip")}
-              scheduledTooltip={t("scheduledTooltip")}
-            />
-          </div>
-          <div className="mt-0.5 sm:mt-0 sm:flex-1">
-            <Link
-              href={`/${video.slug}`}
-              className="underline-offset-2 hover:underline"
-            >
-              {video.cleanTitle}
-            </Link>
-          </div>
-          {category && (
-            <div className="mt-1 sm:mt-0 sm:shrink-0">
-              <CategoryPill
-                category={category}
-                label={tCategory(category)}
-                active={activeCategory}
-                onClick={() =>
-                  updateParams({
-                    category: activeCategory ? undefined : [category],
-                  })
-                }
-              />
-            </div>
-          )}
-        </div>
-      </li>
-    );
-  };
 
   const searchStatus =
     isSearchMode && rows.length > 0
@@ -1222,22 +1109,14 @@ export function VideoTable({
         )}
       </div>
 
-      {/* Search results: count + sort (relevance vs date) */}
+      {/* Search results: count text only — sort is always date-desc. */}
       {isSearchMode && (
-        <div className="flex items-center justify-between gap-3">
-          <div
-            role="status"
-            aria-live="polite"
-            className="text-sm text-muted-foreground"
-          >
-            {searchStatus}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {t("sortBy")}
-            </span>
-            <SegmentedToggle options={searchSortOptions} />
-          </div>
+        <div
+          role="status"
+          aria-live="polite"
+          className="text-sm text-muted-foreground"
+        >
+          {searchStatus}
         </div>
       )}
 
@@ -1247,34 +1126,26 @@ export function VideoTable({
           <div className="overflow-hidden rounded-lg border border-gray-200">
             {emptyState}
           </div>
-        ) : dayGroups ? (
-          // When a specific date is picked, the Recent/Upcoming toggle is
-          // disabled (rendered greyed-out above) and the past/future split is
-          // bypassed — the date is the only filter that should matter. Same
-          // for date-sorted search: the user picked the order explicitly.
-          serverParams.date || isSearchMode ? (
-            <div className="space-y-10">{dayGroups.map(renderDayGroup)}</div>
-          ) : view === "upcoming" ? (
-            upcomingDayGroups.length > 0 ? (
-              <div className="space-y-10">
-                {upcomingDayGroups.map(renderDayGroup)}
-              </div>
-            ) : (
-              <div className="rounded-lg border border-gray-200 p-6 text-sm text-muted-foreground">
-                {t("noUpcoming")}
-              </div>
-            )
-          ) : (
+        ) : // When a specific date is picked, the Recent/Upcoming toggle is
+        // disabled (rendered greyed-out above) and the past/future split is
+        // bypassed — the date is the only filter that should matter. Same
+        // for search: results are date-sorted and the user wants to see
+        // every match.
+        serverParams.date || isSearchMode ? (
+          <div className="space-y-10">{dayGroups.map(renderDayGroup)}</div>
+        ) : view === "upcoming" ? (
+          upcomingDayGroups.length > 0 ? (
             <div className="space-y-10">
-              {pastDayGroups.map(renderDayGroup)}
+              {upcomingDayGroups.map(renderDayGroup)}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-gray-200 p-6 text-sm text-muted-foreground">
+              {t("noUpcoming")}
             </div>
           )
         ) : (
-          // Relevance-sorted search: ungrouped list. Mobile collapses
-          // date/time/duration into a meta line so the title gets the full
-          // width; desktop keeps aligned columns.
-          <div className="-mx-4 sm:mx-0 sm:overflow-hidden sm:rounded-lg sm:border sm:border-gray-200">
-            <ul className="text-sm">{displayRows.map(renderSearchRow)}</ul>
+          <div className="space-y-10">
+            {pastDayGroups.map(renderDayGroup)}
           </div>
         )}
       </div>

@@ -32,25 +32,15 @@ export async function GET(request: NextRequest) {
   const qRaw = sp.get("q")?.trim();
   const q = qRaw && qRaw.length >= 2 ? qRaw : undefined;
 
-  // Sort: when `q` is set we default to relevance (undefined → rank DESC in
-  // queryVideos). When no `q`, default to date_desc so the browse feed has a
-  // deterministic order. An explicit sort param always wins.
+  // Sort: default to date_desc for both browse and search so results are
+  // always in deterministic time order. An explicit sort param in the
+  // allowlist wins; anything else (including legacy `?sort=relevance`) falls
+  // back to the default.
   const sortRaw = sp.get("sort");
   const sortKey =
-    sortRaw && SORT_VALUES.includes(sortRaw)
-      ? sortRaw
-      : q
-        ? null
-        : "date_desc";
-  const sort = sortKey
-    ? (() => {
-        const [by, dir] = sortKey.split("_") as [
-          "date" | "title",
-          "asc" | "desc",
-        ];
-        return { by, dir };
-      })()
-    : undefined;
+    sortRaw && SORT_VALUES.includes(sortRaw) ? sortRaw : "date_desc";
+  const [by, dir] = sortKey.split("_") as ["date" | "title", "asc" | "desc"];
+  const sort = { by, dir };
 
   const dateRaw = sp.get("date");
   const date =

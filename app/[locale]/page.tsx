@@ -20,7 +20,7 @@ const DAYS_BACK = 365;
 export interface ServerParams {
   page: number;
   pageSize: number;
-  sort?: string; // undefined = auto (date desc in normal mode, relevance in search)
+  sort?: string; // undefined = default date desc (browse and search both)
   date?: string;
   body?: string[];
   category?: string[];
@@ -47,7 +47,7 @@ function parseSearchParams(
     String(raw.sort ?? ""),
   )
     ? String(raw.sort)
-    : undefined; // auto: date desc in normal mode, relevance in search mode
+    : undefined; // auto: date desc (default for browse and search)
   const date =
     typeof raw.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.date)
       ? raw.date

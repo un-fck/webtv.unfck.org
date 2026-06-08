@@ -1308,10 +1308,11 @@ export async function updateVideoEntryId(
 //
 // `queryVideos` is the single entry point for both schedule browsing and
 // free-text search. A query (`q`) is just another filter: when set, it adds an
-// FTS predicate (with trigram ILIKE fallback for short tokens / FTS errors)
-// and — when no explicit sort is given — drives relevance-based ordering via
-// `ts_rank`. All structural filters (date, body, category, docs, locale)
-// apply uniformly whether or not a query is present.
+// FTS predicate (with trigram ILIKE fallback for short tokens / FTS errors).
+// Ordering is always date-based — there is no rank/relevance mode — so search
+// and browse render in the same time-sorted layout. All structural filters
+// (date, body, category, docs, locale) apply uniformly whether or not a query
+// is present.
 
 export interface SearchSort {
   by: "date" | "title";
@@ -1334,8 +1335,7 @@ export interface LocaleFilter {
 
 export interface VideosQueryParams {
   /** Free-text query. When set, adds an FTS predicate (with trigram ILIKE
-   *  fallback) and contributes a `rank` signal that becomes the default
-   *  ordering when `sort` is omitted. */
+   *  fallback). Does not change ordering — results are always date-sorted. */
   q?: string;
   daysBack?: number;
   date?: string;
@@ -1343,8 +1343,8 @@ export interface VideosQueryParams {
   categories?: string[];
   status?: "past" | "scheduled";
   docs?: string[];
-  /** Explicit sort. When omitted, default is `rank DESC` for FTS-matched
-   *  queries and `date DESC` otherwise. */
+  /** Explicit sort. When omitted, default is `date DESC` for both browse
+   *  and search. */
   sort?: SearchSort;
   page?: number;
   pageSize?: number;
@@ -1372,7 +1372,7 @@ function localeFilterActive(f: LocaleFilter | undefined): boolean {
 }
 
 // Explicit ORDER BY for a user-chosen sort. The `auto` (no-sort) ordering is
-// chosen by `queryVideos` based on whether the FTS path produced a rank.
+// always date DESC (see the `orderBy` defaults in `queryVideos`).
 // `asset_id ASC` tiebreaker keeps OFFSET pagination stable across requests.
 function explicitOrderBy(sort: SearchSort): string {
   const dir = sort.dir === "asc" ? "ASC" : "DESC";
@@ -1389,8 +1389,6 @@ function explicitOrderBy(sort: SearchSort): string {
 // assembled `conditions` (structural + optional text predicate); this helper
 // appends the locale clause when active and dispatches the SQL.
 async function runVideosQuery(args: {
-  selectExtra: string; // e.g. `, ts_rank(...) AS rank` — empty when not FTS
-  selectArgs: unknown[]; // bound args for selectExtra
   conditions: string[];
   conditionArgs: unknown[];
   orderBy: string;
@@ -1399,8 +1397,6 @@ async function runVideosQuery(args: {
   localeFilter?: LocaleFilter;
 }): Promise<VideosQueryResult> {
   const {
-    selectExtra,
-    selectArgs,
     conditions,
     conditionArgs,
     orderBy,
@@ -1423,9 +1419,9 @@ async function runVideosQuery(args: {
 
   const dataPromise = pool.query(
     q(
-      `SELECT *${selectExtra} FROM webtv.videos WHERE ${whereLocalized}
+      `SELECT * FROM webtv.videos WHERE ${whereLocalized}
        ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
-      [...selectArgs, ...localizedArgs, pageSize, offset],
+      [...localizedArgs, pageSize, offset],
     ),
   );
   const countLocalizedPromise = pool.query(
@@ -1552,19 +1548,16 @@ export async function queryVideos(
     if (!allShort) {
       // Primary text path: FTS with websearch_to_tsquery (non-adjacent
       // keywords, English stemming). Adds the FTS predicate alongside the
-      // structural filters and contributes the `rank` column used for the
-      // default relevance ordering.
+      // structural filters. No ranking — results are date-ordered like the
+      // browse feed.
       try {
         const ftsResult = await runVideosQuery({
-          selectExtra:
-            ", ts_rank(fts_vec, websearch_to_tsquery('english', ?)) AS rank",
-          selectArgs: [trimmedQ],
           conditions: [
             ...conditions,
             "fts_vec @@ websearch_to_tsquery('english', ?)",
           ],
           conditionArgs: [...conditionArgs, trimmedQ],
-          orderBy: explicit ?? "rank DESC, date DESC, asset_id ASC",
+          orderBy: explicit ?? "date DESC, scheduled_time ASC, asset_id ASC",
           pageSize,
           offset,
           localeFilter,
@@ -1591,8 +1584,6 @@ export async function queryVideos(
     // back to date desc.
     const pattern = `%${trimmedQ}%`;
     return runVideosQuery({
-      selectExtra: "",
-      selectArgs: [],
       conditions: [
         ...conditions,
         "(title ILIKE ? OR clean_title ILIKE ?)",
@@ -1607,8 +1598,6 @@ export async function queryVideos(
 
   // No text query — structural filters only.
   return runVideosQuery({
-    selectExtra: "",
-    selectArgs: [],
     conditions,
     conditionArgs,
     orderBy: explicit ?? "date DESC, scheduled_time ASC, asset_id ASC",

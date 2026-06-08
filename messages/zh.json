@@ -110,9 +110,7 @@
     },
     "loading": "加载中…",
     "results": "{count, plural, =0 {无结果} other {# 条结果}}",
-    "meetings": "{count, plural, =0 {无会议} other {# 场会议}}",
-    "relevance": "相关性",
-    "sortBy": "排序方式"
+    "meetings": "{count, plural, =0 {无会议} other {# 场会议}}"
   },
   "speakers": {
     "title": "发言者",
