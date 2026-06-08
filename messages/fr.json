@@ -159,7 +159,7 @@
       "step1Title": "Collecte du calendrier des réunions",
       "step1Body": "Le système surveille UN Web TV pour repérer les nouveaux enregistrements de réunions publiés. Les métadonnées de chaque réunion — titre, date, organe de l'ONU et références documentaires — sont extraites du site Web TV et stockées.",
       "step2Title": "Transcription audio",
-      "step2Body": "Nous transcrivons directement les canaux audio existants de l'ONU — le mélange « parquet » original et chaque canal d'interprétation officielle de l'ONU. Aucune traduction automatique n'est appliquée. Chaque canal est transcrit par un modèle de reconnaissance vocale choisi pour cette langue (voir le tableau ci-dessous).",
+      "step2Body": "Nous transcrivons directement les canaux audio existants de l'ONU — le mélange « parquet » original et chaque canal d'interprétation officielle de l'ONU. Aucune traduction automatique n'est appliquée. Chaque canal est transcrit par un modèle de reconnaissance vocale choisi pour cette langue.",
       "step3Title": "Identification des intervenants",
       "step3Body": "Après la transcription, un second modèle d'IA analyse le texte et l'audio pour attribuer noms et appartenances aux intervenants lorsque cela est possible. Il s'appuie sur des indices contextuels — la présidence donnant la parole, les mentions de noms de pays et la diarisation des locuteurs — ainsi que sur la liste officielle des participants lorsqu'elle est disponible.",
       "step4Title": "Analyse des sujets",

@@ -159,7 +159,7 @@
       "step1Title": "Recopilación del calendario de reuniones",
       "step1Body": "El sistema supervisa UN Web TV para detectar las grabaciones de nuevas reuniones publicadas. Los metadatos de cada reunión —título, fecha, órgano de la ONU y referencias documentales— se extraen del sitio Web TV y se almacenan.",
       "step2Title": "Transcripción del audio",
-      "step2Body": "Transcribimos directamente los canales de audio existentes de la ONU: la mezcla original del «pleno» y cada canal de interpretación oficial. No se aplica traducción automática. Cada canal es transcrito por un modelo de reconocimiento de voz elegido para ese idioma (véase el cuadro siguiente).",
+      "step2Body": "Transcribimos directamente los canales de audio existentes de la ONU: la mezcla original del «pleno» y cada canal de interpretación oficial. No se aplica traducción automática. Cada canal es transcrito por un modelo de reconocimiento de voz elegido para ese idioma.",
       "step3Title": "Identificación de oradores",
       "step3Body": "Tras la transcripción, un segundo modelo de IA analiza el texto y el audio para asignar nombres y afiliaciones a cada orador siempre que sea posible. Utiliza indicios contextuales —la presidencia presentando a los delegados, las menciones de nombres de países y la diarización de hablantes— junto con la lista oficial de participantes cuando está disponible.",
       "step4Title": "Análisis temático",

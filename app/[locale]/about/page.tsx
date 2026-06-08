@@ -7,9 +7,9 @@ import { webtvUrl } from "@/lib/un-links";
 import { typography } from "@/lib/typography";
 import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
-import { STT_ROUTING } from "@/lib/providers/config";
-import { getProvider } from "@/lib/providers/registry";
-import { UN_LANGUAGES, getLanguageDisplayName } from "@/lib/languages";
+// import { STT_ROUTING } from "@/lib/providers/config";
+// import { getProvider } from "@/lib/providers/registry";
+// import { UN_LANGUAGES, getLanguageDisplayName } from "@/lib/languages";
 import { getCurrentUser, isAllowedDomain } from "@/lib/auth/service";
 
 // Reads the current user to decide whether to render the experimental-features
@@ -31,10 +31,10 @@ export async function generateMetadata({
 }
 
 /** Per-language transcription-model rows, derived from config. */
-const STT_ROWS = UN_LANGUAGES.map(({ code }) => ({
-  language: getLanguageDisplayName(code),
-  provider: getProvider(STT_ROUTING[code] ?? STT_ROUTING.floor).label,
-}));
+// const STT_ROWS = UN_LANGUAGES.map(({ code }) => ({
+//   language: getLanguageDisplayName(code),
+//   provider: getProvider(STT_ROUTING[code] ?? STT_ROUTING.floor).label,
+// }));
 
 function Step({
   number,
@@ -181,7 +181,7 @@ export default async function AboutPage() {
               </div>
             </section>
 
-            <section>
+            {/* <section>
               <h2 className={cn(typography.sectionTitle, "mb-3")}>
                 {t("models.heading")}
               </h2>
@@ -213,7 +213,7 @@ export default async function AboutPage() {
               <p className="mt-4 text-foreground">
                 {t("models.postProcessing")}
               </p>
-            </section>
+            </section> */}
 
             <section>
               <h2 className={cn(typography.sectionTitle, "mb-3")}>

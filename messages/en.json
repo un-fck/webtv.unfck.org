@@ -142,7 +142,7 @@
       "step1Title": "Meeting schedule collection",
       "step1Body": "The system monitors UN Web TV for newly published meeting recordings. Meeting metadata — title, date, UN organ, and document references — is extracted from the Web TV website and stored.",
       "step2Title": "Audio transcription",
-      "step2Body": "We transcribe the existing UN audio channels — the original \"floor\" mix and each official UN interpretation channel — directly. No machine translation is applied. Each channel is transcribed by a speech-to-text model chosen for that language (see the table below).",
+      "step2Body": "We transcribe the existing UN audio channels — the original \"floor\" mix and each official UN interpretation channel — directly. No machine translation is applied. Each channel is transcribed by a speech-to-text model chosen for that language.",
       "step3Title": "Speaker identification",
       "step3Body": "After transcription, a second AI model analyses the text and audio to assign names and affiliations to each speaker where possible. It uses contextual clues — such as the chair introducing delegates, country name mentions, and speaker diarization — together with the official list of participants when available.",
       "step4Title": "Topic analysis",
