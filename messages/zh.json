@@ -86,6 +86,7 @@
       "sr": "联合国秘书处编写的会议正式简要记录"
     },
     "liveTooltip": "本场会议正在直播,或最近曾直播。",
+    "scheduledTooltip": "本场会议尚未开始。",
     "date": "日期",
     "noResults": "没有会议符合这些筛选条件。",
     "uncategorized": "未分类",

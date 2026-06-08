@@ -13,12 +13,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Video } from "@/lib/un-api";
-import { CalendarIcon, ChevronDown, Search, SearchX, X } from "lucide-react";
+import { CalendarIcon, ChevronDown, Clock, Search, SearchX, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
-  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -27,13 +26,14 @@ import {
 } from "react";
 import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { rememberScheduleUrl } from "@/lib/schedule-return";
-import { typography } from "@/lib/typography";
+import {
+  CATEGORY_DOT_CLASS,
+  getCategoryColor,
+} from "@/lib/category-colors";
 import { cn } from "@/lib/utils";
 
 // Semantic grouping for the category filter rows. Each inner array is one row,
-// in display order. This also drives the day/category header ordering within
-// the schedule (CATEGORY_ORDER is the flattened form). Anything not listed
-// sorts after these (alphabetically); uncategorized ("") sorts last.
+// in display order. Anything not listed appears in the "More" overflow popover.
 const CATEGORY_GROUPS: { items: string[] }[] = [
   {
     items: [
@@ -67,8 +67,6 @@ const CATEGORY_GROUPS: { items: string[] }[] = [
     ],
   },
 ];
-const CATEGORY_ORDER: string[] = CATEGORY_GROUPS.flatMap((g) => g.items);
-const CATEGORY_RANK = new Map(CATEGORY_ORDER.map((c, i) => [c, i]));
 
 // Curated categories kept out of the inline filter row even when they meet
 // the count threshold — too generic to be useful as primary filters, but
@@ -78,18 +76,6 @@ const INLINE_FILTER_EXCLUDE = new Set<string>([
   "Conferences",
   "Side Events",
 ]);
-
-// Sort categories by the hardcoded order; unknown categories go after the known
-// ones (alphabetically), and the empty/uncategorized bucket goes dead last.
-function compareCategories(a: string, b: string): number {
-  if (a === b) return 0;
-  if (a === "") return 1;
-  if (b === "") return -1;
-  const ra = CATEGORY_RANK.get(a) ?? Number.POSITIVE_INFINITY;
-  const rb = CATEGORY_RANK.get(b) ?? Number.POSITIVE_INFINITY;
-  if (ra !== rb) return ra - rb;
-  return a.localeCompare(b);
-}
 
 // Format an "HH:MM:SS" duration: decimal hours over an hour ("3.5h", "2h"),
 // minutes under an hour ("44min").
@@ -123,6 +109,47 @@ const toolbarTriggerClass = (active: boolean) =>
 
 function useT() {
   return useTranslations("schedule");
+}
+
+// Shared category pill used in both the filter row and the per-row category
+// column. The colored dot is the same color in both places, so a selected
+// filter pill visually matches the dots on the rows it kept.
+function CategoryPill({
+  category,
+  label,
+  active,
+  onClick,
+  count,
+}: {
+  category: string;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  count?: number;
+}) {
+  const dot = CATEGORY_DOT_CLASS[getCategoryColor(category)];
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors",
+        active
+          ? "bg-primary text-white"
+          : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn("h-1.5 w-1.5 rounded-full", dot)}
+      />
+      {label}
+      {count !== undefined && (
+        <span className={cn("ml-0.5", active ? "opacity-75" : "opacity-50")}>
+          {count}
+        </span>
+      )}
+    </button>
+  );
 }
 
 // Categories come from WebTV as raw strings (English, because our scraper
@@ -280,27 +307,14 @@ function CategoryFilterRows({
   if (inlineItems.length === 0 && overflowItems.length === 0) return null;
 
   const pill = (opt: string) => (
-    <button
+    <CategoryPill
       key={opt}
+      category={opt}
+      label={tCategory(opt)}
+      active={optimisticSelected.includes(opt)}
       onClick={() => toggle(opt)}
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors ${
-        optimisticSelected.includes(opt)
-          ? "bg-primary text-white"
-          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-      }`}
-    >
-      {tCategory(opt)}
-      {counts?.[opt] !== undefined && (
-        <span
-          className={cn(
-            "ml-1",
-            optimisticSelected.includes(opt) ? "opacity-75" : "opacity-50",
-          )}
-        >
-          {counts[opt]}
-        </span>
-      )}
-    </button>
+      count={counts?.[opt]}
+    />
   );
 
   const overflowSelectedCount = overflowItems.filter((c) =>
@@ -412,21 +426,25 @@ function SearchInput({
 // require deeper changes to the check-pv cron (see plan, follow-up).
 function StatusIndicators({
   isLive,
+  isScheduled,
   hasTranscript,
   hasTranscriptInLocale,
   pvAvailable,
   pvSymbol,
   liveTooltip,
+  scheduledTooltip,
 }: {
   isLive: boolean;
+  isScheduled: boolean;
   hasTranscript: boolean;
   hasTranscriptInLocale: boolean;
   pvAvailable: boolean;
   pvSymbol: string | null;
   liveTooltip: string;
+  scheduledTooltip: string;
 }) {
   const tTooltip = useTranslations("schedule.docTooltips");
-  if (!isLive && !hasTranscript && !pvAvailable) return null;
+  if (!isLive && !isScheduled && !hasTranscript && !pvAvailable) return null;
   const isSR = pvSymbol?.includes("/SR.");
   const chips: { letter: string; label: string; className: string }[] = [];
   if (hasTranscript) {
@@ -467,6 +485,21 @@ function StatusIndicators({
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">
             {liveTooltip}
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {isScheduled && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              aria-label={scheduledTooltip}
+              className="inline-flex h-4 w-4 items-center justify-center text-muted-foreground"
+            >
+              <Clock className="h-3.5 w-3.5" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            {scheduledTooltip}
           </TooltipContent>
         </Tooltip>
       )}
@@ -796,18 +829,17 @@ export function VideoTable({
   // same grouped layout as browse.
   const groupByDate = !isSearchMode || isSearchDateSorted;
 
-  // When grouping, reorder rows so that within each day they're bucketed by
-  // category (categories in first-appearance order, time order kept inside each
-  // bucket; day order preserved from the server's date sort). Each row carries
-  // precomputed day/category labels and whether it starts a new day/category
-  // group, so rendering stays a pure map (no render-time mutation).
+  // Rows keep the server's order (date DESC, scheduled_time ASC within a day),
+  // which is the time-based sort users expect. `showDay` marks the first row of
+  // a day so the parent can split the feed into per-day tables. Categories are
+  // no longer used to re-bucket rows — they render as a per-row pill in the
+  // rightmost column, with the filter pills as the primary affordance.
   const displayRows = useMemo<
     {
       video: Video;
       dateLabel: string;
       category: string;
       showDay: boolean;
-      showCategory: boolean;
     }[]
   >(() => {
     const labelOf = (v: Video) =>
@@ -815,7 +847,6 @@ export function VideoTable({
         shortWeekday: !groupByDate,
       });
 
-    // In search mode rows stay as-is and no group headers are emitted.
     const ordered = rows.map((video) => ({
       video,
       dateLabel: labelOf(video),
@@ -823,56 +854,15 @@ export function VideoTable({
     }));
 
     if (!groupByDate) {
-      return ordered.map((r) => ({
-        ...r,
-        showDay: false,
-        showCategory: false,
-      }));
+      return ordered.map((r) => ({ ...r, showDay: false }));
     }
 
-    const dayOrder: string[] = [];
-    const byDay = new Map<string, typeof ordered>();
-    for (const r of ordered) {
-      if (!byDay.has(r.dateLabel)) {
-        byDay.set(r.dateLabel, []);
-        dayOrder.push(r.dateLabel);
-      }
-      byDay.get(r.dateLabel)!.push(r);
-    }
-
-    const out: {
-      video: Video;
-      dateLabel: string;
-      category: string;
-      showDay: boolean;
-      showCategory: boolean;
-    }[] = [];
-    for (const day of dayOrder) {
-      const catOrder: string[] = [];
-      const byCat = new Map<string, typeof ordered>();
-      for (const r of byDay.get(day)!) {
-        if (!byCat.has(r.category)) {
-          byCat.set(r.category, []);
-          catOrder.push(r.category);
-        }
-        byCat.get(r.category)!.push(r);
-      }
-      catOrder.sort(compareCategories);
-      let firstOfDay = true;
-      for (const cat of catOrder) {
-        let firstOfCat = true;
-        for (const r of byCat.get(cat)!) {
-          out.push({
-            ...r,
-            showDay: firstOfDay,
-            showCategory: firstOfDay || firstOfCat,
-          });
-          firstOfDay = false;
-          firstOfCat = false;
-        }
-      }
-    }
-    return out;
+    let prevDay: string | null = null;
+    return ordered.map((r) => {
+      const showDay = r.dateLabel !== prevDay;
+      prevDay = r.dateLabel;
+      return { ...r, showDay };
+    });
   }, [rows, groupByDate, formatMeetingDate]);
 
   // Split the rows into per-day groups (one rendered table each) when grouping.
@@ -907,13 +897,10 @@ export function VideoTable({
   const view: "recent" | "upcoming" =
     serverParams.view === "upcoming" ? "upcoming" : "recent";
 
-  // Renders one meeting's table rows: an optional category subheader followed by
-  // the data row. The day heading lives outside the table (one table per day).
-  const renderMeetingRow = ({
-    video,
-    category,
-    showCategory,
-  }: DisplayRow) => {
+  // Renders one meeting row. Categories no longer drive grouping; instead they
+  // appear as a pill in the rightmost column. The day heading lives outside
+  // the table (one table per day).
+  const renderMeetingRow = ({ video, category }: DisplayRow) => {
     const isScheduled = video.status === "scheduled";
     const isLive = video.status === "live";
     const time = video.scheduledTime;
@@ -923,85 +910,73 @@ export function VideoTable({
       serverParams.category![0] === category;
 
     return (
-      <Fragment key={video.slug}>
-        {showCategory && (
-          <tr className="bg-gray-50">
-            <td colSpan={3} className="px-4 py-1.5">
-              {category ? (
-                <button
-                  onClick={() =>
-                    updateParams({
-                      category: activeCategory ? undefined : [category],
-                    })
-                  }
-                  className={cn(
-                    typography.tableHeader,
-                    "transition-colors hover:text-foreground",
-                    activeCategory && "text-primary",
-                  )}
-                >
-                  {tCategory(category)}
-                </button>
-              ) : (
-                <span className={typography.tableHeader}>
-                  {t("uncategorized")}
-                </span>
-              )}
-            </td>
-          </tr>
-        )}
-        <tr
-          className={cn(
-            "border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50",
-            // Future/scheduled rows recede via the same muted-foreground tone
-            // used by category headers and duration values — not opacity, which
-            // produced a fourth grey shade out of sync with the rest.
-            isScheduled && "text-muted-foreground",
-          )}
-        >
-          {/* Time (always) + duration (≥sm only — too cramped on mobile).
-              Duration display is currently hidden; leaving the markup in
-              place so it can be re-enabled by uncommenting. */}
-          <td className="px-4 py-2.5 align-top">
-            <div className="flex items-baseline justify-between gap-2 tabular-nums">
-              {time ? (
-                <span>{formatMeetingTime(time)}</span>
-              ) : (
+      <tr
+        key={video.slug}
+        className="border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50"
+      >
+        {/* Time (always) + duration (≥sm only — too cramped on mobile).
+            Duration display is currently hidden; leaving the markup in
+            place so it can be re-enabled by uncommenting. */}
+        <td className="px-4 py-2.5 align-top">
+          <div className="flex items-baseline justify-between gap-2 tabular-nums">
+            {time ? (
+              <span>{formatMeetingTime(time)}</span>
+            ) : (
+              <span className="text-muted-foreground/60">—</span>
+            )}
+            {/*
+            <span className="hidden text-muted-foreground sm:inline">
+              {duration ?? (
                 <span className="text-muted-foreground/60">—</span>
               )}
-              {/*
-              <span className="hidden text-muted-foreground sm:inline">
-                {duration ?? (
-                  <span className="text-muted-foreground/60">—</span>
-                )}
-              </span>
-              */}
-            </div>
-          </td>
-          {/* Status indicators: live dot + T / V / S badges. Centered so the
-              single-badge case is balanced; the 2-badge case fills the column
-              and sits flush against the title cell. */}
-          <td className="px-0 py-2.5 text-center align-top">
-            <StatusIndicators
-              isLive={isLive}
-              hasTranscript={video.hasTranscript}
-              hasTranscriptInLocale={video.hasTranscriptInLocale}
-              pvAvailable={video.pvAvailable}
-              pvSymbol={video.pvSymbol}
-              liveTooltip={t("liveTooltip")}
+            </span>
+            */}
+          </div>
+        </td>
+        {/* Status indicators: live dot + T / V / S badges. Centered so the
+            single-badge case is balanced; the 2-badge case fills the column
+            and sits flush against the title cell. */}
+        <td className="px-0 py-2.5 text-center align-top">
+          <StatusIndicators
+            isLive={isLive}
+            isScheduled={isScheduled}
+            hasTranscript={video.hasTranscript}
+            hasTranscriptInLocale={video.hasTranscriptInLocale}
+            pvAvailable={video.pvAvailable}
+            pvSymbol={video.pvSymbol}
+            liveTooltip={t("liveTooltip")}
+            scheduledTooltip={t("scheduledTooltip")}
+          />
+        </td>
+        {/* Title */}
+        <td className="px-4 py-2.5 align-top">
+          <Link
+            href={`/${video.slug}`}
+            className="underline-offset-2 hover:underline"
+          >
+            {video.cleanTitle}
+          </Link>
+        </td>
+        {/* Category pill: clicking toggles the matching filter. Hidden on
+            mobile where the row is already tight. Right padding matches the
+            top padding (10px) so the visible gap around a column-filling pill
+            is uniform; left padding stays at 16px to align with the title
+            cell. */}
+        <td className="hidden py-2.5 pl-4 pr-2.5 align-top sm:table-cell">
+          {category ? (
+            <CategoryPill
+              category={category}
+              active={activeCategory}
+              onClick={() =>
+                updateParams({
+                  category: activeCategory ? undefined : [category],
+                })
+              }
+              label={tCategory(category)}
             />
-          </td>
-          {/* Title */}
-          <td className="px-4 py-2.5 align-top">
-            <Link
-              href={`/${video.slug}`}
-              className="underline-offset-2 hover:underline"
-            >
-              {video.cleanTitle}
-            </Link>
-          </td>
-        </tr>
-      </Fragment>
+          ) : null}
+        </td>
+      </tr>
     );
   };
 
@@ -1020,6 +995,10 @@ export function VideoTable({
             <col className="w-[56px] sm:w-[64px]" />
             <col className="w-[44px]" />
             <col />
+            {/* Category column: desktop only. Sized so the longest pill
+                ("Agencies, Funds & Programmes") clears the right cell padding
+                with the same 10px visible gap as the top. */}
+            <col className="hidden sm:table-column sm:w-[240px]" />
           </colgroup>
           <tbody>{group.rows.map(renderMeetingRow)}</tbody>
         </table>
@@ -1031,19 +1010,19 @@ export function VideoTable({
   // day-grouped layout doesn't apply). On mobile the date/time/duration
   // collapse into a single muted meta line above the title so the title
   // recovers the full row width; on desktop they sit in aligned columns.
-  const renderSearchRow = ({ video, dateLabel }: DisplayRow) => {
+  const renderSearchRow = ({ video, dateLabel, category }: DisplayRow) => {
     const isScheduled = video.status === "scheduled";
     const isLive = video.status === "live";
     const time = video.scheduledTime;
     const duration = formatDuration(video.duration);
     const timeStr = time ? formatMeetingTime(time) : null;
+    const activeCategory =
+      (serverParams.category ?? []).length === 1 &&
+      serverParams.category![0] === category;
     return (
       <li
         key={video.slug}
-        className={cn(
-          "border-b border-gray-100 px-4 py-2.5 transition-colors last:border-0 hover:bg-gray-50",
-          isScheduled && "text-muted-foreground",
-        )}
+        className="border-b border-gray-100 py-2.5 pl-4 pr-2.5 transition-colors last:border-0 hover:bg-gray-50"
       >
         <div className="sm:flex sm:items-baseline sm:gap-4">
           <div className="text-sm text-muted-foreground sm:w-[132px] sm:shrink-0 sm:whitespace-nowrap">
@@ -1071,11 +1050,13 @@ export function VideoTable({
           <div className="flex items-center empty:mt-0 sm:w-[44px] sm:shrink-0 sm:justify-center">
             <StatusIndicators
               isLive={isLive}
+              isScheduled={isScheduled}
               hasTranscript={video.hasTranscript}
               hasTranscriptInLocale={video.hasTranscriptInLocale}
               pvAvailable={video.pvAvailable}
               pvSymbol={video.pvSymbol}
               liveTooltip={t("liveTooltip")}
+              scheduledTooltip={t("scheduledTooltip")}
             />
           </div>
           <div className="mt-0.5 sm:mt-0 sm:flex-1">
@@ -1086,6 +1067,20 @@ export function VideoTable({
               {video.cleanTitle}
             </Link>
           </div>
+          {category && (
+            <div className="mt-1 sm:mt-0 sm:shrink-0">
+              <CategoryPill
+                category={category}
+                label={tCategory(category)}
+                active={activeCategory}
+                onClick={() =>
+                  updateParams({
+                    category: activeCategory ? undefined : [category],
+                  })
+                }
+              />
+            </div>
+          )}
         </div>
       </li>
     );

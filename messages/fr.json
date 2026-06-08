@@ -86,6 +86,7 @@
       "sr": "Compte rendu analytique officiel de la réunion, établi par le Secrétariat de l'ONU"
     },
     "liveTooltip": "Cette réunion est en direct ou l'a été récemment.",
+    "scheduledTooltip": "Cette réunion n'a pas encore commencé.",
     "date": "Date",
     "noResults": "Aucune réunion ne correspond à ces filtres.",
     "uncategorized": "Sans catégorie",

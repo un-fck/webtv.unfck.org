@@ -86,6 +86,7 @@
       "sr": "Official condensed record of the meeting, produced by the UN Secretariat"
     },
     "liveTooltip": "This meeting is live or has recently been live.",
+    "scheduledTooltip": "This meeting has not started yet.",
     "date": "Date",
     "noResults": "No meetings match these filters.",
     "uncategorized": "Uncategorized",

@@ -86,6 +86,7 @@
       "sr": "Acta resumida oficial de la reunión, elaborada por la Secretaría de las Naciones Unidas"
     },
     "liveTooltip": "Esta reunión está en directo o lo ha estado recientemente.",
+    "scheduledTooltip": "Esta reunión aún no ha comenzado.",
     "date": "Fecha",
     "noResults": "Ninguna reunión coincide con estos filtros.",
     "uncategorized": "Sin categoría",

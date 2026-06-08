@@ -2,12 +2,24 @@
 @import "tw-animate-css";
 
 @theme {
-  /* UN brand palette (see un_brand_colour_palette.pdf) */
+  /* UN brand palette (see un_brand_colour_palette.pdf).
+     "True values" are the brand's display hues — fine for fills, borders,
+     dots; use the matching `-text` token for any colored text on white so
+     the result clears WCAG AA. */
   --color-un-blue: #009edb;
-  /* Accessible UN Blue for text on white — the true-value #009EDB is ~2.6:1
-     on white (fails WCAG AA). Use this for text/icons on white backgrounds;
-     keep --color-un-blue for fills, borders, focus rings. */
   --color-un-blue-text: #0077b8;
+  --color-un-green: #72bf44;
+  --color-un-green-text: #27833a;
+  --color-un-yellow: #ffc800;
+  --color-un-yellow-text: #b16d03;
+  --color-un-orange: #f58220;
+  --color-un-orange-text: #cf3f0b;
+  --color-un-red: #ed1847;
+  --color-un-red-text: #ab1d37;
+  --color-un-purple: #a05fb4;
+  --color-un-purple-text: #733d96;
+  --color-un-gray: #aea29a;
+  --color-un-gray-text: #7c7067;
 }
 
 @custom-variant dark (&:is(.dark *));
