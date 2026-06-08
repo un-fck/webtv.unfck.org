@@ -112,8 +112,9 @@ function useT() {
 }
 
 // Shared category pill used in both the filter row and the per-row category
-// column. The colored dot is the same color in both places, so a selected
-// filter pill visually matches the dots on the rows it kept.
+// column. The colored dot — when present — sits to the right of the label so
+// text stays left-aligned across all pills, including the long-tail categories
+// that render without a dot (see `getCategoryColor`).
 function CategoryPill({
   category,
   label,
@@ -127,7 +128,7 @@ function CategoryPill({
   onClick: () => void;
   count?: number;
 }) {
-  const dot = CATEGORY_DOT_CLASS[getCategoryColor(category)];
+  const color = getCategoryColor(category);
   return (
     <button
       onClick={onClick}
@@ -138,11 +139,13 @@ function CategoryPill({
           : "bg-gray-100 text-gray-700 hover:bg-gray-200",
       )}
     >
-      <span
-        aria-hidden
-        className={cn("h-1.5 w-1.5 rounded-full", dot)}
-      />
       {label}
+      {color && (
+        <span
+          aria-hidden
+          className={cn("h-1.5 w-1.5 rounded-full", CATEGORY_DOT_CLASS[color])}
+        />
+      )}
       {count !== undefined && (
         <span className={cn("ml-0.5", active ? "opacity-75" : "opacity-50")}>
           {count}

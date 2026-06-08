@@ -13,41 +13,42 @@ export type CategoryColor =
   | "purple"
   | "gray";
 
-// Categories not listed here render with the neutral "gray" color.
+// Only categories that appear as primary filter pills (visible in the inline
+// filter row, not buried under the "More" dropdown) get a brand color. The
+// long tail renders without a dot so the colored signal stays meaningful
+// rather than degenerating into "every row has a colored dot." Pills without
+// a color still render their text left-aligned — the dot sits to the right of
+// the text, so its absence is purely subtractive.
+//
+// Colors follow the canonical UN System organisational chart:
+//   green = General Assembly + its subsidiary organs
+//   orange = Security Council
+//   blue = ECOSOC
+//   yellow = Secretariat (incl. DGC press operations)
+//   gray = Specialized Agencies / Related Organizations
+//   purple = International Court of Justice
+// Two adjustments preserve filter-row distinguishability:
+//   - HRC → purple (canonically GA-green, but reusing chart-purple breaks the
+//     GA cluster and visually ties HRC to its rights/court semantics).
+//   - Agencies, Funds & Programmes → gray (canonically GA-green for the
+//     Funds & Programmes, but the category mixes those with chart-gray
+//     Specialized Agencies, so gray is the lowest common denominator).
 const CATEGORY_COLOR: Record<string, CategoryColor> = {
-  // Principal organs — one accent each
-  "General Assembly": "blue",
-  "Security Council": "red",
-  "Economic and Social Council": "green",
+  "General Assembly": "green",
+  "Security Council": "orange",
+  "Economic and Social Council": "blue",
   "Human Rights Council": "purple",
-  "Human Rights Treaty Bodies": "purple",
-  "International Court of Justice": "gray",
-  "Trusteeship Council": "gray",
-
-  // Press / media family
-  "Press Conferences": "orange",
-  "Media Stakeouts": "orange",
-  Media: "orange",
-
-  // Conferences & event scaffolding — yellow ties them together loosely
-  Conferences: "yellow",
-  "High-level Events": "yellow",
-  "Side Events": "yellow",
-
-  // Operational/agency family — green, shared with ECOSOC's development frame
-  "Agencies, Funds & Programmes": "green",
-  "Goals Lounge": "green",
-  "SDG Studio": "green",
-
-  // Catch-all bucket
-  "Meetings & Events": "gray",
-  Concerts: "gray",
-  Features: "gray",
+  "Human Rights Treaty Bodies": "gray",
+  "Press Conferences": "yellow",
+  "Media Stakeouts": "yellow",
+  "Agencies, Funds & Programmes": "gray",
 };
 
-export function getCategoryColor(category: string | null | undefined): CategoryColor {
-  if (!category) return "gray";
-  return CATEGORY_COLOR[category] ?? "gray";
+export function getCategoryColor(
+  category: string | null | undefined,
+): CategoryColor | null {
+  if (!category) return null;
+  return CATEGORY_COLOR[category] ?? null;
 }
 
 // Tailwind class names per color. Two surfaces:
