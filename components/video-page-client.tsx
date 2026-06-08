@@ -452,6 +452,24 @@ export function VideoPageClient({
           {/* RIGHT — sticky sidebar */}
           <div className="hidden lg:block lg:flex-[2]">
             <div className="lg:sticky lg:top-4 lg:flex lg:max-h-[calc(100vh-2rem)] lg:flex-col">
+              {/* Mini-player title — shown only when docked.
+                  Wrapped in a div: a bare h2 here would be a direct flex
+                  child of the sticky container, and flex blockifies the
+                  `display: -webkit-box` that line-clamp-2 needs to
+                  `display: flow-root`, collapsing the title to ~5px. */}
+              {isVideoDocked && (
+                <div className="shrink-0">
+                  <h2
+                    className={cn(
+                      typography.speakerLabel,
+                      "mb-1.5 line-clamp-2 leading-snug",
+                    )}
+                  >
+                    {video.cleanTitle}
+                  </h2>
+                </div>
+              )}
+
               {/* Landing zone: video docks here when scrolled past */}
               <div
                 ref={landingZoneRef}
