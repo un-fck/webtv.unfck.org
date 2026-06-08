@@ -978,9 +978,10 @@ export function VideoTable({
               */}
             </div>
           </td>
-          {/* Status indicators: live dot + T / V / S badges, left-aligned in
-              their own column so they no longer overlap the title. */}
-          <td className="px-2 py-2.5 align-top">
+          {/* Status indicators: live dot + T / V / S badges. Centered so the
+              single-badge case is balanced; the 2-badge case fills the column
+              and sits flush against the title cell. */}
+          <td className="px-0 py-2.5 text-center align-top">
             <StatusIndicators
               isLive={isLive}
               hasTranscript={video.hasTranscript}
@@ -1016,8 +1017,8 @@ export function VideoTable({
       <div className="-mx-4 overflow-hidden sm:mx-0 sm:rounded-lg sm:border sm:border-gray-200">
         <table className="w-full table-fixed text-sm">
           <colgroup>
-            <col className="w-[64px] sm:w-[88px]" />
-            <col className="w-[52px] sm:w-[60px]" />
+            <col className="w-[56px] sm:w-[64px]" />
+            <col className="w-[44px]" />
             <col />
           </colgroup>
           <tbody>{group.rows.map(renderMeetingRow)}</tbody>
@@ -1067,7 +1068,7 @@ export function VideoTable({
           </div>
           {/* Status indicators: live dot + T / V / S badges, left-aligned in
               their own slot so they no longer overlap the title. */}
-          <div className="flex items-center empty:mt-0 sm:w-[60px] sm:shrink-0">
+          <div className="flex items-center empty:mt-0 sm:w-[44px] sm:shrink-0 sm:justify-center">
             <StatusIndicators
               isLive={isLive}
               hasTranscript={video.hasTranscript}
