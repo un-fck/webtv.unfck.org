@@ -236,7 +236,7 @@
       "analyzing": "Analyzing…",
       "noTranscriptYet": "No transcript available yet",
       "noTranscriptHintPending": "This meeting hasn't finished yet. Use <strong>Generate when available</strong> to queue it — the transcript will be generated automatically once the recording is available.",
-      "noTranscriptHintFinished": "Generate an AI transcript to read along with speaker identification, topic tagging, and analysis.",
+      "noTranscriptHintFinished": "Generate an automatic transcript to read along with speaker identification and topic tagging.",
       "audioOutOfSyncTitle": "Audio no longer matches transcript",
       "audioOutOfSyncBody": "This transcript was made from an earlier {originalDuration} version of the audio that has since been shortened to {currentDuration}. Some parts may not match playback.",
       "audioOutOfSyncRequest": "Request a fresh transcription",

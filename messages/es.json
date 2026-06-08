@@ -253,7 +253,7 @@
       "analyzing": "Analizando…",
       "noTranscriptYet": "Aún no hay transcripción disponible",
       "noTranscriptHintPending": "Esta reunión aún no ha terminado. Use <strong>Generar cuando esté disponible</strong> para ponerla en cola — la transcripción se generará automáticamente cuando la grabación esté disponible.",
-      "noTranscriptHintFinished": "Genere una transcripción de IA para seguir la reunión con identificación de oradores, etiquetado temático y análisis.",
+      "noTranscriptHintFinished": "Genere una transcripción automática para seguir la reunión con identificación de oradores y etiquetado temático.",
       "audioOutOfSyncTitle": "El audio ya no coincide con la transcripción",
       "audioOutOfSyncBody": "Esta transcripción se elaboró a partir de una versión anterior de la grabación de {originalDuration}, que desde entonces se ha reducido a {currentDuration}. Es posible que algunas partes no coincidan con la reproducción.",
       "audioOutOfSyncRequest": "Solicitar una nueva transcripción",
