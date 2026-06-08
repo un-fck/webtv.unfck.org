@@ -410,19 +410,23 @@ function SearchInput({
 // active UI locale, muted (border-only) when one exists only in some other
 // language. V and S stay single-tier — per-language PV availability would
 // require deeper changes to the check-pv cron (see plan, follow-up).
-function DocChips({
+function StatusIndicators({
+  isLive,
   hasTranscript,
   hasTranscriptInLocale,
   pvAvailable,
   pvSymbol,
+  liveTooltip,
 }: {
+  isLive: boolean;
   hasTranscript: boolean;
   hasTranscriptInLocale: boolean;
   pvAvailable: boolean;
   pvSymbol: string | null;
+  liveTooltip: string;
 }) {
   const tTooltip = useTranslations("schedule.docTooltips");
-  if (!hasTranscript && !pvAvailable) return null;
+  if (!isLive && !hasTranscript && !pvAvailable) return null;
   const isSR = pvSymbol?.includes("/SR.");
   const chips: { letter: string; label: string; className: string }[] = [];
   if (hasTranscript) {
@@ -452,7 +456,20 @@ function DocChips({
     );
   }
   return (
-    <span className="mr-1.5 inline-flex gap-1 align-middle">
+    <span className="inline-flex items-center gap-1 align-middle">
+      {isLive && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              aria-label={liveTooltip}
+              className="inline-block h-3 w-3 animate-pulse rounded-full bg-red-500"
+            />
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            {liveTooltip}
+          </TooltipContent>
+        </Tooltip>
+      )}
       {chips.map((chip) => (
         <Tooltip key={chip.letter}>
           <TooltipTrigger asChild>
@@ -909,7 +926,7 @@ export function VideoTable({
       <Fragment key={video.slug}>
         {showCategory && (
           <tr className="bg-gray-50">
-            <td colSpan={2} className="px-4 py-1.5">
+            <td colSpan={3} className="px-4 py-1.5">
               {category ? (
                 <button
                   onClick={() =>
@@ -942,7 +959,9 @@ export function VideoTable({
             isScheduled && "text-muted-foreground",
           )}
         >
-          {/* Time (always) + duration (≥sm only — too cramped on mobile) */}
+          {/* Time (always) + duration (≥sm only — too cramped on mobile).
+              Duration display is currently hidden; leaving the markup in
+              place so it can be re-enabled by uncommenting. */}
           <td className="px-4 py-2.5 align-top">
             <div className="flex items-baseline justify-between gap-2 tabular-nums">
               {time ? (
@@ -950,34 +969,29 @@ export function VideoTable({
               ) : (
                 <span className="text-muted-foreground/60">—</span>
               )}
+              {/*
               <span className="hidden text-muted-foreground sm:inline">
                 {duration ?? (
                   <span className="text-muted-foreground/60">—</span>
                 )}
               </span>
+              */}
             </div>
           </td>
-          {/* Title, prefixed with record badges */}
-          <td className="relative px-4 py-2.5 align-top">
-            {isLive && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    aria-label={t("liveTooltip")}
-                    className="absolute left-1 top-4 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"
-                  />
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
-                  {t("liveTooltip")}
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <DocChips
+          {/* Status indicators: live dot + T / V / S badges, left-aligned in
+              their own column so they no longer overlap the title. */}
+          <td className="px-2 py-2.5 align-top">
+            <StatusIndicators
+              isLive={isLive}
               hasTranscript={video.hasTranscript}
               hasTranscriptInLocale={video.hasTranscriptInLocale}
               pvAvailable={video.pvAvailable}
               pvSymbol={video.pvSymbol}
+              liveTooltip={t("liveTooltip")}
             />
+          </td>
+          {/* Title */}
+          <td className="px-4 py-2.5 align-top">
             <Link
               href={`/${video.slug}`}
               className="underline-offset-2 hover:underline"
@@ -1002,7 +1016,8 @@ export function VideoTable({
       <div className="-mx-4 overflow-hidden sm:mx-0 sm:rounded-lg sm:border sm:border-gray-200">
         <table className="w-full table-fixed text-sm">
           <colgroup>
-            <col className="w-[72px] sm:w-[132px]" />
+            <col className="w-[64px] sm:w-[88px]" />
+            <col className="w-[52px] sm:w-[60px]" />
             <col />
           </colgroup>
           <tbody>{group.rows.map(renderMeetingRow)}</tbody>
@@ -1025,23 +1040,10 @@ export function VideoTable({
       <li
         key={video.slug}
         className={cn(
-          "relative border-b border-gray-100 px-4 py-2.5 transition-colors last:border-0 hover:bg-gray-50",
+          "border-b border-gray-100 px-4 py-2.5 transition-colors last:border-0 hover:bg-gray-50",
           isScheduled && "text-muted-foreground",
         )}
       >
-        {isLive && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                aria-label={t("liveTooltip")}
-                className="absolute left-1 top-4 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"
-              />
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">
-              {t("liveTooltip")}
-            </TooltipContent>
-          </Tooltip>
-        )}
         <div className="sm:flex sm:items-baseline sm:gap-4">
           <div className="text-sm text-muted-foreground sm:w-[132px] sm:shrink-0 sm:whitespace-nowrap">
             <span>{dateLabel}</span>
@@ -1049,23 +1051,33 @@ export function VideoTable({
               {timeStr && <> · {timeStr}</>}
             </span>
           </div>
+          {/* Duration display is currently hidden; leaving the markup in
+              place so it can be re-enabled by uncommenting. */}
           <div className="hidden sm:flex sm:w-[120px] sm:shrink-0 sm:items-baseline sm:justify-between sm:gap-2 sm:tabular-nums">
             {timeStr ? (
               <span>{timeStr}</span>
             ) : (
               <span className="text-muted-foreground/60">—</span>
             )}
+            {/*
             <span className="text-muted-foreground">
               {duration ?? <span className="text-muted-foreground/60">—</span>}
             </span>
+            */}
           </div>
-          <div className="mt-0.5 sm:mt-0 sm:flex-1">
-            <DocChips
+          {/* Status indicators: live dot + T / V / S badges, left-aligned in
+              their own slot so they no longer overlap the title. */}
+          <div className="flex items-center empty:mt-0 sm:w-[60px] sm:shrink-0">
+            <StatusIndicators
+              isLive={isLive}
               hasTranscript={video.hasTranscript}
               hasTranscriptInLocale={video.hasTranscriptInLocale}
               pvAvailable={video.pvAvailable}
               pvSymbol={video.pvSymbol}
+              liveTooltip={t("liveTooltip")}
             />
+          </div>
+          <div className="mt-0.5 sm:mt-0 sm:flex-1">
             <Link
               href={`/${video.slug}`}
               className="underline-offset-2 hover:underline"
