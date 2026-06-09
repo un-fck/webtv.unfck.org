@@ -13,6 +13,7 @@ import { SpeakerToc, hasMeaningfulSpeakerInfo } from "./speaker-toc";
 import { PVSpeakerToc } from "./pv-panel";
 import { SiteHeader } from "./site-header";
 import { ExternalLink } from "./external-link";
+import { CategoryPill } from "./category-pill";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
 import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
@@ -389,10 +390,16 @@ export function VideoPageClient({
                       </span>
                     ))}
                     {video.category && (
-                      <span className="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 whitespace-nowrap">
-                        {tCategory.has(video.category)
-                          ? tCategory(video.category)
-                          : video.category}
+                      <span className="ml-1">
+                        <CategoryPill
+                          category={video.category}
+                          label={
+                            tCategory.has(video.category)
+                              ? tCategory(video.category)
+                              : video.category
+                          }
+                          href={`/?category=${encodeURIComponent(video.category)}`}
+                        />
                       </span>
                     )}
                   </>
