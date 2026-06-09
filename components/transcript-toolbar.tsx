@@ -117,11 +117,10 @@ export function TranscriptToolbar({
   const viewTabCount = 1 + (isLoggedIn ? 1 : 0) + (pvSymbol ? 1 : 0);
 
   return (
-    <div className="mb-3">
-      <h2 className={cn(typography.sectionTitle, "mb-2")}>{t("transcript")}</h2>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-      {availableLanguages.length > 0 && (
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className={typography.sectionTitle}>{t("transcript")}</h2>
+        {availableLanguages.length > 0 && (
         <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
           <PopoverTrigger
             className={cn(
@@ -431,7 +430,6 @@ export function TranscriptToolbar({
             </Popover>
           </>
         )}
-        </div>
       </div>
     </div>
   );
