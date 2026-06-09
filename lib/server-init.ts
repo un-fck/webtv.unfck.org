@@ -66,11 +66,9 @@ export function initWorker(): void {
     // give up — the liveness sweep is our backstop.
     const cleanup = markOwnRowsInterrupted(workerId)
       .then(({ transcription, analysis }) => {
-        if (transcription > 0 || analysis > 0) {
-          console.log(
-            `[server-init] interrupted ${transcription} transcription + ${analysis} analysis rows`,
-          );
-        }
+        console.log(
+          `[server-init] cleanup: flipped ${transcription} transcription + ${analysis} analysis rows owned by ${workerId} to interrupted`,
+        );
       })
       .catch((err) => {
         console.error("[server-init] cleanup UPDATE failed:", err);
@@ -84,10 +82,11 @@ export function initWorker(): void {
       }, SIGTERM_CLEANUP_TIMEOUT_MS),
     );
 
+    // Call process.exit ourselves once cleanup is done (or timed out) so
+    // Next's parallel SIGINT handler can't exit the process before our
+    // UPDATE commits. Exit code 0 on graceful shutdown.
     Promise.race([cleanup, timeout]).finally(() => {
-      // Don't call process.exit — let Next's own shutdown handler finish
-      // draining the HTTP server. The orchestrator will SIGKILL us if we
-      // exceed the grace period anyway, but a clean exit is preferable.
+      process.exit(0);
     });
   };
 
