@@ -32,7 +32,7 @@
   },
   "home": {
     "headline": "了解联合国发生了什么。",
-    "lead": "了解动态。浏览转录、查找发言者、跳转到视频中的相应时刻。",
+    "lead": "浏览会议转录、查找发言者、跳转到视频中的相应时刻。",
     "learnMore": "了解更多 →",
     "backToHomepage": "← 返回首页"
   },
@@ -269,6 +269,7 @@
   "pv": {
     "loadingVerbatim": "正在加载逐字记录…",
     "loadingSummary": "正在加载简要记录…",
+    "loadFailed": "无法加载此文件。<odsLink>在联合国正式文件系统中打开 PDF</odsLink>。",
     "aligning": "正在对齐…",
     "alignWithAudio": "与音频对齐",
     "aligned": "✓ 已对齐",

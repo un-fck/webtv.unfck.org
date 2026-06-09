@@ -32,7 +32,7 @@
   },
   "home": {
     "headline": "Lea lo que se dijo en la ONU.",
-    "lead": "Póngase al día con los eventos. Recorra las transcripciones, encuentre oradores, vaya al momento en el vídeo.",
+    "lead": "Recorra las transcripciones de las reuniones, encuentre oradores, vaya al momento en el vídeo.",
     "learnMore": "Más información →",
     "backToHomepage": "← Volver al inicio"
   },
@@ -269,6 +269,7 @@
   "pv": {
     "loadingVerbatim": "Cargando acta literal…",
     "loadingSummary": "Cargando acta resumida…",
+    "loadFailed": "No se pudo cargar este documento. <odsLink>Abrir el PDF en el Sistema de Archivo de Documentos de la ONU</odsLink>.",
     "aligning": "Alineando…",
     "alignWithAudio": "Alinear con el audio",
     "aligned": "✓ Alineado",

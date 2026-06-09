@@ -32,7 +32,7 @@
   },
   "home": {
     "headline": "Read what was said at the UN.",
-    "lead": "Catch up on events. Skim transcripts, find speakers, jump to the moment in the video.",
+    "lead": "Skim meeting transcripts, find speakers, jump to the moment in the video.",
     "learnMore": "Learn more →",
     "backToHomepage": "← Back to homepage"
   },
@@ -258,6 +258,7 @@
   "pv": {
     "loadingVerbatim": "Loading Verbatim Record…",
     "loadingSummary": "Loading Summary Record…",
+    "loadFailed": "Couldn't load this document. <odsLink>Try opening the PDF on the UN Official Document System</odsLink>.",
     "aligning": "Aligning…",
     "alignWithAudio": "Align with audio",
     "aligned": "✓ Aligned",

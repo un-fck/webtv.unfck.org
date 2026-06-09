@@ -105,7 +105,11 @@ export function PVPanel({
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `Failed to load PV (${res.status})`);
+          const msg =
+            (typeof data.error === "object" && data.error?.message) ||
+            (typeof data.error === "string" && data.error) ||
+            `Failed to load PV (${res.status})`;
+          throw new Error(msg);
         }
         return res.json();
       })
@@ -213,7 +217,11 @@ export function PVPanel({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Alignment failed (${res.status})`);
+        const msg =
+          (typeof data.error === "object" && data.error?.message) ||
+          (typeof data.error === "string" && data.error) ||
+          `Alignment failed (${res.status})`;
+        throw new Error(msg);
       }
 
       const aligned = await res.json();
@@ -238,8 +246,20 @@ export function PVPanel({
 
   if (error) {
     return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
-        {error}
+      <div className="space-y-2 py-8 text-center text-sm text-muted-foreground">
+        <p>
+          {t.rich("loadFailed", {
+            odsLink: (chunks) => (
+              <ExternalLink
+                href={getPVDocumentUrl(pvSymbol, language)}
+                className="underline underline-offset-2 hover:opacity-75"
+              >
+                {chunks}
+              </ExternalLink>
+            ),
+          })}
+        </p>
+        <p className="text-xs opacity-70">{error}</p>
       </div>
     );
   }

@@ -32,7 +32,7 @@
   },
   "home": {
     "headline": "Lisez ce qui a été dit à l'ONU.",
-    "lead": "Suivez l'actualité. Parcourez les transcriptions, trouvez les intervenants, accédez au moment voulu dans la vidéo.",
+    "lead": "Parcourez les transcriptions de réunions, trouvez les intervenants, accédez au moment voulu dans la vidéo.",
     "learnMore": "En savoir plus →",
     "backToHomepage": "← Retour à l'accueil"
   },
@@ -269,6 +269,7 @@
   "pv": {
     "loadingVerbatim": "Chargement du procès-verbal…",
     "loadingSummary": "Chargement du compte rendu analytique…",
+    "loadFailed": "Impossible de charger ce document. <odsLink>Ouvrir le PDF sur le Système de diffusion électronique des documents de l'ONU</odsLink>.",
     "aligning": "Alignement en cours…",
     "alignWithAudio": "Aligner avec l'audio",
     "aligned": "✓ Aligné",
