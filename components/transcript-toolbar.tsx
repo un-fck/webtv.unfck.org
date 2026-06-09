@@ -10,6 +10,8 @@ import {
   BarChart3,
   Globe,
   BookOpen,
+  Share2,
+  Download,
 } from "lucide-react";
 import type { LanguageOption } from "@/components/transcription-panel";
 import type { Stage } from "@/components/stage-progress";
@@ -48,6 +50,9 @@ interface TranscriptToolbarProps {
   onShare: () => void;
   onDownloadDocx: () => void;
   onDownloadExcel: () => void;
+  onDownloadTxt: () => void;
+  onDownloadSrt: () => void;
+  onDownloadVtt: () => void;
 }
 
 export function TranscriptToolbar({
@@ -73,6 +78,9 @@ export function TranscriptToolbar({
   onShare,
   onDownloadDocx,
   onDownloadExcel,
+  onDownloadTxt,
+  onDownloadSrt,
+  onDownloadVtt,
 }: TranscriptToolbarProps) {
   const [languageOpen, setLanguageOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
@@ -109,9 +117,10 @@ export function TranscriptToolbar({
   const viewTabCount = 1 + (isLoggedIn ? 1 : 0) + (pvSymbol ? 1 : 0);
 
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-      <h2 className={typography.sectionTitle}>{t("transcript")}</h2>
-
+    <div className="mb-3">
+      <h2 className={cn(typography.sectionTitle, "mb-2")}>{t("transcript")}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
       {availableLanguages.length > 0 && (
         <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
           <PopoverTrigger
@@ -244,7 +253,8 @@ export function TranscriptToolbar({
           </div>
         )}
 
-      <div className="ml-auto flex gap-2">
+        </div>
+        <div className="flex items-center gap-2">
         {starting && (
           <button
             disabled
@@ -301,12 +311,14 @@ export function TranscriptToolbar({
             <div className="relative">
               <button
                 onClick={handleShare}
+                aria-label={t("share")}
                 className={cn(
                   typography.label,
-                  "rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                 )}
               >
-                {t("share")}
+                <Share2 className="h-3.5 w-3.5 sm:hidden" />
+                <span className="hidden sm:inline">{t("share")}</span>
               </button>
               {/* Toast: announce to AT via aria-live, visible toast above. */}
               <div
@@ -327,12 +339,14 @@ export function TranscriptToolbar({
             </div>
             <Popover open={downloadOpen} onOpenChange={setDownloadOpen}>
               <PopoverTrigger
+                aria-label={t("download")}
                 className={cn(
                   typography.label,
                   "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                 )}
               >
-                {t("download")}
+                <Download className="h-3.5 w-3.5 sm:hidden" />
+                <span className="hidden sm:inline">{t("download")}</span>
                 <ChevronDown className="h-3 w-3" />
               </PopoverTrigger>
               <PopoverContent
@@ -356,12 +370,48 @@ export function TranscriptToolbar({
                     <button
                       role="menuitem"
                       onClick={() => {
+                        onDownloadTxt();
+                        setDownloadOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {t("downloadTxt")}
+                    </button>
+                  </li>
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
                         onDownloadExcel();
                         setDownloadOpen(false);
                       }}
                       className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
                     >
                       {t("downloadExcel")}
+                    </button>
+                  </li>
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        onDownloadSrt();
+                        setDownloadOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {t("downloadSrt")}
+                    </button>
+                  </li>
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        onDownloadVtt();
+                        setDownloadOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {t("downloadVtt")}
                     </button>
                   </li>
                   <li role="none">
@@ -381,6 +431,7 @@ export function TranscriptToolbar({
             </Popover>
           </>
         )}
+        </div>
       </div>
     </div>
   );
