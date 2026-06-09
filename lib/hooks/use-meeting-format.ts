@@ -8,6 +8,7 @@ import {
   formatMeetingDateTime as formatMeetingDateTimeCore,
   formatMeetingTime as formatMeetingTimeCore,
   isFutureDay as isFutureDayCore,
+  meetingIsoDay as meetingIsoDayCore,
 } from "@/lib/timezone";
 
 /**
@@ -44,6 +45,8 @@ export function useMeetingFormat() {
         formatMeetingDateTimeCore(scheduledTime, date, ctx),
       isFutureDay: (dateOrTimestamp: string) =>
         isFutureDayCore(dateOrTimestamp, { timezone }),
+      meetingIsoDay: (dateOrTimestamp: string) =>
+        meetingIsoDayCore(dateOrTimestamp, { timezone }),
     };
   }, [timezone, locale, t]);
 }

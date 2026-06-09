@@ -220,7 +220,7 @@ export function TranscriptionPanel({
     stage !== "error";
 
   const formatTime = formatTimecode;
-  const { meetingIsoDay } = useMeetingFormat();
+  const { meetingIsoDay, formatMeetingTime } = useMeetingFormat();
 
   const getSpeakerText = (statementIndex: number | undefined): string =>
     formatSpeakerText(statementIndex, speakerMappings, countryNames);
@@ -228,15 +228,21 @@ export function TranscriptionPanel({
   // Build a download filename whose date prefix matches what the page header
   // shows: derived from `scheduledTime` (a full UTC-ish ISO) interpreted in
   // the user's selected timezone, falling back to the WebTV schedule date
-  // string when a meeting has no scheduled time. Also tags the active
-  // language track so en/fr/etc. don't collide when both are downloaded.
+  // string when a meeting has no scheduled time. The slug keeps Unicode
+  // letters/digits (so French/Arabic/Chinese titles survive) and collapses
+  // every other run into a single underscore. Adds HH-MM when known, and
+  // tags the active language track so en/fr/etc. don't collide.
   const baseFileName = () => {
     const dateSource = video.scheduledTime ?? video.date;
     const datePart = meetingIsoDay(dateSource);
+    const timePart = video.scheduledTime
+      ? `_${formatMeetingTime(video.scheduledTime).replace(":", "-")}`
+      : "";
     const titlePart = video.cleanTitle
       .slice(0, 50)
-      .replace(/[^a-z0-9]/gi, "_");
-    return `${datePart}_${titlePart}_${selectedLanguage}`;
+      .replace(/[^\p{L}\p{N}]+/gu, "_")
+      .replace(/^_+|_+$/g, "");
+    return `${datePart}${timePart}_${titlePart}_${selectedLanguage}`;
   };
 
   const seekToTimestamp = (timestamp: number) => {
@@ -669,7 +675,7 @@ export function TranscriptionPanel({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, "_")}.rtf`;
+    a.download = `${baseFileName()}.rtf`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -756,13 +762,10 @@ export function TranscriptionPanel({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, "_")}.xlsx`;
+    a.download = `${baseFileName()}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
   };
-
-  const baseFileName = () =>
-    `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, "_")}`;
 
   const triggerDownload = (
     text: string,

@@ -50,6 +50,27 @@ export function resolveTimezone(value: string): string {
   return value === BROWSER_TIMEZONE ? getBrowserTimezone() : value;
 }
 
+// `YYYY-MM-DD` for `dateOrTimestamp` rendered in the given timezone. Used both
+// by display formatters (for "Today / Tomorrow / Yesterday" day-equality
+// checks) and for filename prefixes — so a meeting whose `scheduled_time`
+// straddles UTC midnight still renders on the same calendar day everywhere.
+export function meetingIsoDay(
+  dateOrTimestamp: string,
+  ctx: { timezone: string },
+): string {
+  const tz = resolveTimezone(ctx.timezone);
+  const date =
+    dateOrTimestamp.length > 10
+      ? parseUNTimestamp(dateOrTimestamp)
+      : new Date(dateOrTimestamp + "T12:00:00Z");
+  return date.toLocaleDateString("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
 // ── Localized formatting ────────────────────────────────────────────────
 //
 // The functions below take an explicit locale + relative-day strings so they
