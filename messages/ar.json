@@ -235,8 +235,11 @@
       "share": "مشاركة",
       "linkCopied": "تم نسخ الرابط إلى الحافظة!",
       "download": "تنزيل",
-      "downloadDocx": "مستند نصي",
-      "downloadExcel": "جدول Excel",
+      "downloadDocx": "مستند Word ‏(.rtf)",
+      "downloadTxt": "نص عادي ‏(.txt)",
+      "downloadExcel": "جدول بيانات ‏(.xlsx)",
+      "downloadSrt": "ترجمات ‏(.srt)",
+      "downloadVtt": "ترجمات ويب ‏(.vtt)",
       "downloadJson": "واجهة JSON"
     },
     "view": {

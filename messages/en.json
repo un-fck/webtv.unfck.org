@@ -218,8 +218,11 @@
       "share": "Share",
       "linkCopied": "Link copied to clipboard!",
       "download": "Download",
-      "downloadDocx": "Text Document",
-      "downloadExcel": "Excel Table",
+      "downloadDocx": "Word document (.rtf)",
+      "downloadTxt": "Plain text (.txt)",
+      "downloadExcel": "Spreadsheet (.xlsx)",
+      "downloadSrt": "Subtitles (.srt)",
+      "downloadVtt": "Captions (.vtt)",
       "downloadJson": "JSON API"
     },
     "view": {

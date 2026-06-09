@@ -235,8 +235,11 @@
       "share": "Partager",
       "linkCopied": "Lien copié dans le presse-papiers !",
       "download": "Télécharger",
-      "downloadDocx": "Document texte",
-      "downloadExcel": "Tableau Excel",
+      "downloadDocx": "Document Word (.rtf)",
+      "downloadTxt": "Texte brut (.txt)",
+      "downloadExcel": "Tableur (.xlsx)",
+      "downloadSrt": "Sous-titres (.srt)",
+      "downloadVtt": "Sous-titres web (.vtt)",
       "downloadJson": "API JSON"
     },
     "view": {

@@ -235,8 +235,11 @@
       "share": "分享",
       "linkCopied": "链接已复制到剪贴板!",
       "download": "下载",
-      "downloadDocx": "文本文档",
-      "downloadExcel": "Excel 表格",
+      "downloadDocx": "Word 文档 (.rtf)",
+      "downloadTxt": "纯文本 (.txt)",
+      "downloadExcel": "电子表格 (.xlsx)",
+      "downloadSrt": "字幕 (.srt)",
+      "downloadVtt": "网页字幕 (.vtt)",
       "downloadJson": "JSON API"
     },
     "view": {

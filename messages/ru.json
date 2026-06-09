@@ -235,8 +235,11 @@
       "share": "Поделиться",
       "linkCopied": "Ссылка скопирована в буфер обмена!",
       "download": "Скачать",
-      "downloadDocx": "Текстовый документ",
-      "downloadExcel": "Таблица Excel",
+      "downloadDocx": "Документ Word (.rtf)",
+      "downloadTxt": "Обычный текст (.txt)",
+      "downloadExcel": "Таблица (.xlsx)",
+      "downloadSrt": "Субтитры (.srt)",
+      "downloadVtt": "Веб-субтитры (.vtt)",
       "downloadJson": "JSON API"
     },
     "view": {

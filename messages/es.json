@@ -235,8 +235,11 @@
       "share": "Compartir",
       "linkCopied": "¡Enlace copiado al portapapeles!",
       "download": "Descargar",
-      "downloadDocx": "Documento de texto",
-      "downloadExcel": "Tabla Excel",
+      "downloadDocx": "Documento de Word (.rtf)",
+      "downloadTxt": "Texto sin formato (.txt)",
+      "downloadExcel": "Hoja de cálculo (.xlsx)",
+      "downloadSrt": "Subtítulos (.srt)",
+      "downloadVtt": "Subtítulos web (.vtt)",
       "downloadJson": "API JSON"
     },
     "view": {

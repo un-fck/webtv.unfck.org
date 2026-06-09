@@ -13,6 +13,7 @@ import type { Proposition } from "@/lib/pipeline";
 import { StageProgress, type Stage } from "@/components/stage-progress";
 import { AnalysisView } from "@/components/analysis-view";
 import { usePlaybackTracking } from "@/lib/hooks/use-playback-tracking";
+import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { formatTimecode, formatSpeakerText } from "@/lib/transcript-formatting";
 import {
   TranscriptToolbar,
@@ -219,9 +220,24 @@ export function TranscriptionPanel({
     stage !== "error";
 
   const formatTime = formatTimecode;
+  const { meetingIsoDay } = useMeetingFormat();
 
   const getSpeakerText = (statementIndex: number | undefined): string =>
     formatSpeakerText(statementIndex, speakerMappings, countryNames);
+
+  // Build a download filename whose date prefix matches what the page header
+  // shows: derived from `scheduledTime` (a full UTC-ish ISO) interpreted in
+  // the user's selected timezone, falling back to the WebTV schedule date
+  // string when a meeting has no scheduled time. Also tags the active
+  // language track so en/fr/etc. don't collide when both are downloaded.
+  const baseFileName = () => {
+    const dateSource = video.scheduledTime ?? video.date;
+    const datePart = meetingIsoDay(dateSource);
+    const titlePart = video.cleanTitle
+      .slice(0, 50)
+      .replace(/[^a-z0-9]/gi, "_");
+    return `${datePart}_${titlePart}_${selectedLanguage}`;
+  };
 
   const seekToTimestamp = (timestamp: number) => {
     if (!player) return;
@@ -745,6 +761,112 @@ export function TranscriptionPanel({
     URL.revokeObjectURL(url);
   };
 
+  const baseFileName = () =>
+    `${video.date}_${video.cleanTitle.slice(0, 50).replace(/[^a-z0-9]/gi, "_")}`;
+
+  const triggerDownload = (
+    text: string,
+    extension: string,
+    mimeType: string,
+  ) => {
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${baseFileName()}.${extension}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadTxt = () => {
+    if (!segments || !statements) return;
+    const lines: string[] = [];
+    segments.forEach((segment) => {
+      const firstStmtIndex = segment.statementIndices[0] ?? 0;
+      const speaker = getSpeakerText(firstStmtIndex);
+      const timestamp =
+        segment.timestamp !== null ? ` [${formatTime(segment.timestamp)}]` : "";
+      lines.push(`${speaker}${timestamp}:`);
+      lines.push("");
+      segment.statementIndices.forEach((stmtIdx) => {
+        const stmt = statements[stmtIdx];
+        if (!stmt) return;
+        stmt.paragraphs.forEach((para) => {
+          lines.push(para.sentences.map((s) => s.text).join(" "));
+          lines.push("");
+        });
+      });
+      lines.push("");
+    });
+    triggerDownload(lines.join("\n"), "txt", "text/plain;charset=utf-8");
+  };
+
+  // Format milliseconds as `HH:MM:SS,mmm` (SRT) or `HH:MM:SS.mmm` (VTT).
+  const formatCueTime = (ms: number, separator: "," | ".") => {
+    const safe = Math.max(0, Math.round(ms));
+    const h = Math.floor(safe / 3600000);
+    const m = Math.floor((safe % 3600000) / 60000);
+    const s = Math.floor((safe % 60000) / 1000);
+    const milli = safe % 1000;
+    const pad = (n: number, w = 2) => n.toString().padStart(w, "0");
+    return `${pad(h)}:${pad(m)}:${pad(s)}${separator}${pad(milli, 3)}`;
+  };
+
+  type CaptionCue = { start: number; end: number; text: string };
+
+  const buildCaptionCues = (): CaptionCue[] => {
+    if (!segments || !statements) return [];
+    const cues: CaptionCue[] = [];
+    segments.forEach((segment) => {
+      const speaker = getSpeakerText(segment.statementIndices[0] ?? 0);
+      let isFirstSentenceOfSegment = true;
+      segment.statementIndices.forEach((stmtIdx) => {
+        const stmt = statements[stmtIdx];
+        if (!stmt) return;
+        stmt.paragraphs.forEach((para) => {
+          para.sentences.forEach((sent) => {
+            if (!sent.text.trim()) return;
+            if (sent.end <= sent.start) return;
+            const prefix = isFirstSentenceOfSegment ? `${speaker}: ` : "";
+            cues.push({
+              start: sent.start,
+              end: sent.end,
+              text: `${prefix}${sent.text.trim()}`,
+            });
+            isFirstSentenceOfSegment = false;
+          });
+        });
+      });
+    });
+    return cues;
+  };
+
+  const downloadSrt = () => {
+    const cues = buildCaptionCues();
+    if (cues.length === 0) return;
+    const body = cues
+      .map(
+        (cue, i) =>
+          `${i + 1}\n${formatCueTime(cue.start, ",")} --> ${formatCueTime(cue.end, ",")}\n${cue.text}\n`,
+      )
+      .join("\n");
+    triggerDownload(body, "srt", "application/x-subrip;charset=utf-8");
+  };
+
+  const downloadVtt = () => {
+    const cues = buildCaptionCues();
+    if (cues.length === 0) return;
+    const body =
+      "WEBVTT\n\n" +
+      cues
+        .map(
+          (cue) =>
+            `${formatCueTime(cue.start, ".")} --> ${formatCueTime(cue.end, ".")}\n${cue.text}\n`,
+        )
+        .join("\n");
+    triggerDownload(body, "vtt", "text/vtt;charset=utf-8");
+  };
+
   // Check cache on mount and language change
   useEffect(() => {
     setSegments(null);
@@ -902,6 +1024,9 @@ export function TranscriptionPanel({
         onShare={handleShare}
         onDownloadDocx={downloadDocx}
         onDownloadExcel={downloadExcel}
+        onDownloadTxt={downloadTxt}
+        onDownloadSrt={downloadSrt}
+        onDownloadVtt={downloadVtt}
       />
 
       {checking && stage === "idle" && (
