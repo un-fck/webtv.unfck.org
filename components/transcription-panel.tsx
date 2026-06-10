@@ -14,7 +14,11 @@ import { StageProgress, type Stage } from "@/components/stage-progress";
 import { AnalysisView } from "@/components/analysis-view";
 import { usePlaybackTracking } from "@/lib/hooks/use-playback-tracking";
 import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
-import { formatTimecode, formatSpeakerText } from "@/lib/transcript-formatting";
+import {
+  formatTimecode,
+  formatSpeakerText,
+  formatTranscriptAsPlainText,
+} from "@/lib/transcript-formatting";
 import {
   TranscriptToolbar,
   type ViewMode,
@@ -220,7 +224,8 @@ export function TranscriptionPanel({
     stage !== "error";
 
   const formatTime = formatTimecode;
-  const { meetingIsoDay, formatMeetingTime } = useMeetingFormat();
+  const { meetingIsoDay, formatMeetingDate, formatMeetingTime } =
+    useMeetingFormat();
 
   const getSpeakerText = (statementIndex: number | undefined): string =>
     formatSpeakerText(statementIndex, speakerMappings, countryNames);
@@ -781,27 +786,53 @@ export function TranscriptionPanel({
     URL.revokeObjectURL(url);
   };
 
+  const buildPlainTextBody = (): string | null => {
+    if (!segments || !statements) return null;
+    return formatTranscriptAsPlainText(
+      segments,
+      statements,
+      (idx) => getSpeakerText(idx),
+      formatTime,
+    );
+  };
+
   const downloadTxt = () => {
-    if (!segments || !statements) return;
-    const lines: string[] = [];
-    segments.forEach((segment) => {
-      const firstStmtIndex = segment.statementIndices[0] ?? 0;
-      const speaker = getSpeakerText(firstStmtIndex);
-      const timestamp =
-        segment.timestamp !== null ? ` [${formatTime(segment.timestamp)}]` : "";
-      lines.push(`${speaker}${timestamp}:`);
-      lines.push("");
-      segment.statementIndices.forEach((stmtIdx) => {
-        const stmt = statements[stmtIdx];
-        if (!stmt) return;
-        stmt.paragraphs.forEach((para) => {
-          lines.push(para.sentences.map((s) => s.text).join(" "));
-          lines.push("");
-        });
-      });
-      lines.push("");
-    });
-    triggerDownload(lines.join("\n"), "txt", "text/plain;charset=utf-8");
+    const body = buildPlainTextBody();
+    if (body === null) return;
+    triggerDownload(body, "txt", "text/plain;charset=utf-8");
+  };
+
+  // Returns true on a successful clipboard write so the toolbar can decide
+  // whether to flash its "Copied to clipboard" toast.
+  const copyToClipboard = async (): Promise<boolean> => {
+    const body = buildPlainTextBody();
+    if (body === null) return false;
+    const pageUrl = window.location.href;
+    const jsonUrl = `${window.location.origin}/json/${video.slug}`;
+    // Date + time use the same formatters as the page header so the clipboard
+    // matches what the user sees on screen (locale + timezone aware).
+    const dateDisplay = formatMeetingDate(video.scheduledTime ?? video.date);
+    const timeDisplay = video.scheduledTime
+      ? formatMeetingTime(video.scheduledTime)
+      : null;
+    const whenLine = timeDisplay
+      ? `Date: ${dateDisplay}, ${timeDisplay}`
+      : `Date: ${dateDisplay}`;
+    const header = [
+      video.cleanTitle,
+      whenLine,
+      `Language: ${selectedLanguage}`,
+      `Transcript: ${pageUrl}`,
+      `JSON API: ${jsonUrl}`,
+    ].join("\n");
+    const text = `${header}\n\n---\n\n${body}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (err) {
+      console.error("Failed to copy transcript to clipboard:", err);
+      return false;
+    }
   };
 
   // Format milliseconds as `HH:MM:SS,mmm` (SRT) or `HH:MM:SS.mmm` (VTT).
@@ -1030,6 +1061,7 @@ export function TranscriptionPanel({
         onDownloadTxt={downloadTxt}
         onDownloadSrt={downloadSrt}
         onDownloadVtt={downloadVtt}
+        onCopyToClipboard={copyToClipboard}
       />
 
       {checking && stage === "idle" && (

@@ -24,6 +24,51 @@ export function formatTimecodeMs(ms: number | null | undefined): string {
   return formatTimecode(ms / 1000);
 }
 
+// Minimal structural shapes for the plain-text transcript serializer below —
+// declared locally so this helper stays decoupled from the panel's richer
+// internal types.
+export interface PlainTextSegment {
+  statementIndices: number[];
+  timestamp: number | null;
+}
+
+export interface PlainTextStatement {
+  paragraphs: Array<{ sentences: Array<{ text: string }> }>;
+}
+
+/**
+ * Speaker-segmented plain-text body for a transcript: one block per speaker
+ * turn, with a `Speaker [M:SS]:` header, blank line, then each paragraph on
+ * its own line separated by blank lines. Used by the `.txt` download and the
+ * "Copy to clipboard" action.
+ */
+export function formatTranscriptAsPlainText(
+  segments: PlainTextSegment[],
+  statements: PlainTextStatement[],
+  getSpeakerText: (statementIndex: number) => string,
+  formatTime: (seconds: number) => string,
+): string {
+  const lines: string[] = [];
+  segments.forEach((segment) => {
+    const firstStmtIndex = segment.statementIndices[0] ?? 0;
+    const speaker = getSpeakerText(firstStmtIndex);
+    const timestamp =
+      segment.timestamp !== null ? ` [${formatTime(segment.timestamp)}]` : "";
+    lines.push(`${speaker}${timestamp}:`);
+    lines.push("");
+    segment.statementIndices.forEach((stmtIdx) => {
+      const stmt = statements[stmtIdx];
+      if (!stmt) return;
+      stmt.paragraphs.forEach((para) => {
+        lines.push(para.sentences.map((s) => s.text).join(" "));
+        lines.push("");
+      });
+    });
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+
 /**
  * Build a human-readable speaker label from the resolved speaker mapping,
  * expanding ISO country codes via `countryNames` when available. Falls back to

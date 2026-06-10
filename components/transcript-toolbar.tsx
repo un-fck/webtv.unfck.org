@@ -53,6 +53,7 @@ interface TranscriptToolbarProps {
   onDownloadTxt: () => void;
   onDownloadSrt: () => void;
   onDownloadVtt: () => void;
+  onCopyToClipboard: () => Promise<boolean>;
 }
 
 export function TranscriptToolbar({
@@ -81,19 +82,35 @@ export function TranscriptToolbar({
   onDownloadTxt,
   onDownloadSrt,
   onDownloadVtt,
+  onCopyToClipboard,
 }: TranscriptToolbarProps) {
   const [languageOpen, setLanguageOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
-  const [showCopied, setShowCopied] = useState(false);
+  // null when no toast is showing; "link" after Share copies the page URL;
+  // "transcript" after the "Copy to clipboard" menu item copies the full text.
+  // Two states + one shared 4s dismiss keeps the toast slot single while
+  // letting each action surface its own label.
+  const [copyToast, setCopyToast] = useState<"link" | "transcript" | null>(
+    null,
+  );
   const t = useTranslations("transcript.toolbar");
   const displayName = useLanguageDisplayName();
 
   const selectedLangName = displayName(selectedLanguage);
 
+  const flashToast = (kind: "link" | "transcript") => {
+    setCopyToast(kind);
+    setTimeout(() => setCopyToast(null), 4000);
+  };
+
   const handleShare = async () => {
     await onShare();
-    setShowCopied(true);
-    setTimeout(() => setShowCopied(false), 4000);
+    flashToast("link");
+  };
+
+  const handleCopyToClipboard = async () => {
+    const ok = await onCopyToClipboard();
+    if (ok) flashToast("transcript");
   };
 
   // No recording yet → can only queue ("generate when available"); otherwise
@@ -319,20 +336,28 @@ export function TranscriptToolbar({
                 <Share2 className="h-3.5 w-3.5 sm:hidden" />
                 <span className="hidden sm:inline">{t("share")}</span>
               </button>
-              {/* Toast: announce to AT via aria-live, visible toast above. */}
+              {/* Toast: announce to AT via aria-live, visible toast above.
+                  Same slot for both Share ("link") and Copy ("transcript") —
+                  they never fire simultaneously. */}
               <div
                 role="status"
                 aria-live="polite"
                 className="sr-only"
               >
-                {showCopied ? t("linkCopied") : ""}
+                {copyToast === "link"
+                  ? t("linkCopied")
+                  : copyToast === "transcript"
+                    ? t("copiedToClipboard")
+                    : ""}
               </div>
-              {showCopied && (
+              {copyToast !== null && (
                 <div
                   aria-hidden="true"
                   className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs whitespace-nowrap text-background"
                 >
-                  {t("linkCopied")}
+                  {copyToast === "link"
+                    ? t("linkCopied")
+                    : t("copiedToClipboard")}
                 </div>
               )}
             </div>
@@ -353,6 +378,18 @@ export function TranscriptToolbar({
                 className="w-44 overflow-hidden p-0"
               >
                 <ul role="menu" className="flex flex-col">
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        handleCopyToClipboard();
+                        setDownloadOpen(false);
+                      }}
+                      className="w-full border-b border-border px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {t("copyToClipboard")}
+                    </button>
+                  </li>
                   <li role="none">
                     <button
                       role="menuitem"
