@@ -6,6 +6,7 @@ import { LanguagePicker } from "@/components/language-picker";
 import { TimezonePicker } from "@/components/timezone-picker";
 import { AuthControl } from "@/components/auth-control";
 import { AuthNavLinks } from "@/components/auth-nav-links";
+import { MobileAuthSection } from "@/components/mobile-auth-section";
 import {
   Popover,
   PopoverContent,
@@ -113,17 +114,22 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
             className={cn("h-10 w-[47.9px] shrink-0 select-none", inlineOnly)}
             draggable={false}
           />
-          {/* Both words are real text so the baseline lines up perfectly;
-              same size, only the weight differs. Brand-first wordmark
-              regardless of locale grammar — this is a logotype, not a sentence. */}
-          <span className="text-[23.83px] leading-none tracking-tight text-foreground">
-            <span className="hidden font-bold md:inline">
-              {t("wordmarkBrand")}{" "}
+          {/* Mobile: wordmark + "Public Preview" badge stack vertically so the
+              title can shrink and the badge stays visible without competing for
+              row width with the pickers/menu. md+: original inline layout. */}
+          <span className="flex flex-col items-start gap-1 md:flex-row md:items-center md:gap-2.5">
+            {/* Both words are real text so the baseline lines up perfectly;
+                same size, only the weight differs. Brand-first wordmark
+                regardless of locale grammar — this is a logotype, not a sentence. */}
+            <span className="text-lg leading-none tracking-tight text-foreground md:text-[23.83px]">
+              <span className="hidden font-bold md:inline">
+                {t("wordmarkBrand")}{" "}
+              </span>
+              <span className="font-light">{t("wordmarkDescriptor")}</span>
             </span>
-            <span className="font-light">{t("wordmarkDescriptor")}</span>
-          </span>
-          <span className="hidden rounded-md bg-un-blue/10 px-2 py-1 text-xs leading-none font-semibold whitespace-nowrap text-un-blue md:inline-block">
-            {t("publicPreview")}
+            <span className="rounded-md bg-un-blue/10 px-1.5 py-0.5 text-[10px] leading-none font-semibold whitespace-nowrap text-un-blue md:px-2 md:py-1 md:text-xs">
+              {t("publicPreview")}
+            </span>
           </span>
         </Link>
         <div className="ms-auto flex items-center gap-3">
@@ -152,12 +158,15 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
             </PopoverTrigger>
             <PopoverContent
               align="end"
-              className="flex w-48 flex-col gap-3 p-3"
+              className="flex w-56 flex-col gap-3 p-3"
             >
               <HeaderPageLinks />
+              <MobileAuthSection />
             </PopoverContent>
           </Popover>
-          <AuthControl />
+          <div className="hidden md:flex">
+            <AuthControl />
+          </div>
         </div>
       </div>
     </header>
