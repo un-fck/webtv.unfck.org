@@ -15,8 +15,13 @@ import {
   runPropositionAnalysisJob,
 } from "@/lib/transcription";
 import { currentWorkerId } from "@/lib/worker-identity";
+import { bcp47ToKalturaName } from "@/lib/languages";
 
 const ts = () => new Date().toTimeString().slice(0, 8);
+
+// How long after a video's scheduled start a `scheduled` booking may keep
+// waiting for audio before it is abandoned as "recording never materialized".
+const SCHEDULED_AGE_OUT_MS = 48 * 60 * 60 * 1000;
 
 // Detaching strategy for the long-running per-row work. From a cron HTTP
 // handler we pass Next's `after()` so the work outlives the response on
@@ -82,7 +87,30 @@ export async function runProcessScheduled(
 
     for (const item of scheduled) {
       try {
-        const kalturaId = item.entry_id;
+        const kalturaId = item.kaltura_id;
+
+        if (item.transcription_status === "scheduled" && item.scheduled_time) {
+          const startMs = item.scheduled_time.getTime();
+          // The meeting hasn't started yet — the Kaltura entry is only a
+          // pre-created live placeholder, so don't burn a probe on it.
+          if (startMs > Date.now()) {
+            pending++;
+            continue;
+          }
+          // Measured audio-ready time is <2 h after meeting end even for
+          // 4 h meetings (see docs/webtv-kaltura.md). A booking still not
+          // runnable 48 h after the video's start means the recording never
+          // materialized (meeting cancelled/removed) — stop probing forever.
+          if (Date.now() - startMs > SCHEDULED_AGE_OUT_MS) {
+            await releaseTranscript(
+              item.transcript_id,
+              "error",
+              "Recording did not become available within 48 hours of the scheduled meeting time",
+            );
+            abandoned++;
+            continue;
+          }
+        }
 
         if (item.transcription_status === "interrupted") {
           // Hard cap reached — escalate to `error` so it stops appearing
@@ -133,7 +161,15 @@ export async function runProcessScheduled(
           // content and run the full pipeline.
         }
 
-        const { isLiveStream } = await getKalturaAudioUrl(kalturaId);
+        // Readiness gate, in the row's own language: throws "no flavors"
+        // (classified as pending below) while the audio is still converting
+        // after the live→VOD flip. Runs BEFORE the claim below so a
+        // not-ready tick doesn't burn an interrupted-row retry or churn
+        // claim/release on the row.
+        const { isLiveStream } = await getKalturaAudioUrl(
+          kalturaId,
+          bcp47ToKalturaName(item.language_code || "en"),
+        );
         if (isLiveStream) {
           pending++;
           continue;

@@ -27,7 +27,13 @@ import {
 import { bcp47ToKalturaName } from "./languages";
 import type { GeminiTranscriptionOptions } from "./gemini-transcription";
 import { setSpeakerMapping } from "./speakers";
-import { KALTURA_PARTNER_ID, KALTURA_WIDGET_ID } from "./kaltura";
+import {
+  KALTURA_PARTNER_ID,
+  KALTURA_WIDGET_ID,
+  audioFlavorsForLanguage,
+  pickReadyAudioFlavor,
+} from "./kaltura";
+import { isTransientPipelineError } from "./pipeline-errors";
 import { getSTTProvider } from "./providers/config";
 import { toRawParagraphs } from "./providers/convert";
 import { applyTimeOffset } from "./transcript-offset";
@@ -103,19 +109,23 @@ export async function getKalturaAudioUrl(
   const { entryId, flavors, isLiveStream } =
     await fetchKalturaFlavors(kalturaId);
 
-  const candidates = flavors.filter(
-    (f: { language?: string; tags?: string }) =>
-      f.language?.toLowerCase() === language.toLowerCase() &&
-      f.tags?.includes("audio_only"),
-  );
-  const preferredFlavor =
-    candidates.find(
-      (f: { status?: number; isDefault?: boolean }) =>
-        f.status === 2 && f.isDefault,
-    ) ||
-    candidates.find((f: { status?: number }) => f.status === 2) ||
-    candidates[0];
-  const flavorParamId = preferredFlavor?.flavorParamsId || 100;
+  const candidates = audioFlavorsForLanguage(flavors, language);
+  const readyFlavor = pickReadyAudioFlavor(candidates);
+
+  // Flavors are time-varying: right after the live→VOD flip the entry exists
+  // but its audio-only flavors are still converting (status != 2), and a
+  // playManifest URL for a non-ready flavor 404s at the provider. Refuse to
+  // hand out a doomed URL — the "no flavors" wording is load-bearing: the
+  // process-scheduled picker classifies it as audio-not-ready and leaves the
+  // row scheduled for the next tick. (Live entries are exempt so the picker
+  // still sees `isLiveStream` and skips them on its own.)
+  if (!isLiveStream && !readyFlavor) {
+    throw new Error(
+      `Audio for entry ${entryId} has no flavors ready for language "${language}" (still converting or unavailable)`,
+    );
+  }
+  const flavorParamId =
+    readyFlavor?.flavorParamsId ?? candidates[0]?.flavorParamsId ?? 100;
 
   return {
     entryId,
@@ -294,19 +304,17 @@ async function runTranscriptionPipeline(
     // raced us (shouldn't happen in the new design, but cheap to keep).
     runAnalysisPipeline(transcriptId, paragraphs, speakerMapping).catch(
       (err) => {
+        // runAnalysisPipeline's own catch has already released the row
+        // (error or interrupted) — releasing again here would overwrite an
+        // `interrupted` (retryable) status with a terminal `error`.
         perr("[Pipeline] Analysis error:", err);
-        releaseTranscript(
-          transcriptId,
-          "error",
-          err instanceof Error ? err.message : "Analysis failed",
-        );
       },
     );
   } catch (err) {
     perr("[Pipeline] Error:", err);
     await releaseTranscript(
       transcriptId,
-      "error",
+      isTransientPipelineError(err) ? "interrupted" : "error",
       err instanceof Error ? err.message : "Transcription failed",
     );
     throw err;
@@ -325,7 +333,7 @@ async function runAnalysisPipeline(
   } catch (err) {
     await releaseTranscript(
       transcriptId,
-      "error",
+      isTransientPipelineError(err) ? "interrupted" : "error",
       err instanceof Error ? err.message : "Analysis pipeline failed",
     );
     throw err;
@@ -410,7 +418,7 @@ export async function runSpeakerIdentification(
   } catch (error) {
     await releaseTranscript(
       transcriptId,
-      "error",
+      isTransientPipelineError(error) ? "interrupted" : "error",
       error instanceof Error ? error.message : "Pipeline failed",
     );
     throw error;

@@ -510,7 +510,11 @@ export async function scheduleTranscript(
 
 export interface RunnableTranscript {
   transcript_id: string;
-  entry_id: string;
+  // Canonical pivot for Kaltura lookups and the videos join. Deliberately
+  // NOT entry_id: passing entry_id back into submitTranscription would
+  // overwrite the row's kaltura_id with a post-redirect entry id and break
+  // the videos FK/join (see the three-ID rules in CLAUDE.md).
+  kaltura_id: string;
   start_time: number | null;
   end_time: number | null;
   audio_url: string;
@@ -519,6 +523,10 @@ export interface RunnableTranscript {
   retry_count: number;
   has_raw_paragraphs: boolean;
   created_at: Date;
+  // The video's scheduled start (null for videos without one). Lets the
+  // picker skip Kaltura probes for meetings that haven't started and age out
+  // bookings whose recording never materialized.
+  scheduled_time: Date | null;
 }
 
 /**
@@ -532,21 +540,23 @@ export interface RunnableTranscript {
 export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
   const result = await pool.query(
     q(
-      `SELECT transcript_id, entry_id, start_time, end_time, audio_url,
-              language_code, transcription_status, retry_count,
-              jsonb_array_length(COALESCE(content->'raw_paragraphs', '[]'::jsonb)) > 0
+      `SELECT t.transcript_id, t.kaltura_id, t.start_time, t.end_time, t.audio_url,
+              t.language_code, t.transcription_status, t.retry_count,
+              jsonb_array_length(COALESCE(t.content->'raw_paragraphs', '[]'::jsonb)) > 0
                 AS has_raw_paragraphs,
-              created_at
-         FROM webtv.transcripts
-        WHERE transcription_status = 'scheduled'
-           OR (transcription_status = 'interrupted' AND retry_count < ?)
-        ORDER BY created_at ASC`,
+              t.created_at,
+              v.scheduled_time
+         FROM webtv.transcripts t
+         JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
+        WHERE t.transcription_status = 'scheduled'
+           OR (t.transcription_status = 'interrupted' AND t.retry_count < ?)
+        ORDER BY t.created_at ASC`,
       [MAX_INTERRUPTED_RETRIES],
     ),
   );
   return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
-    entry_id: row.entry_id as string,
+    kaltura_id: row.kaltura_id as string,
     start_time: row.start_time as number | null,
     end_time: row.end_time as number | null,
     audio_url: row.audio_url as string,
@@ -555,6 +565,7 @@ export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
     retry_count: Number(row.retry_count ?? 0),
     has_raw_paragraphs: row.has_raw_paragraphs as boolean,
     created_at: row.created_at as Date,
+    scheduled_time: row.scheduled_time as Date | null,
   }));
 }
 

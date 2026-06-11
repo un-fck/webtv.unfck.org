@@ -49,3 +49,41 @@ export function extractKalturaId(assetId: string): string | null {
 
   return null;
 }
+
+/** Subset of Kaltura's flavorAsset fields that flavor selection relies on. */
+export interface KalturaFlavor {
+  flavorParamsId?: number;
+  language?: string;
+  tags?: string;
+  status?: number;
+  isDefault?: boolean;
+}
+
+/** Audio-only flavors matching a Kaltura language name (case-insensitive). */
+export function audioFlavorsForLanguage(
+  flavors: KalturaFlavor[],
+  language: string,
+): KalturaFlavor[] {
+  return flavors.filter(
+    (f) =>
+      f.language?.toLowerCase() === language.toLowerCase() &&
+      f.tags?.includes("audio_only"),
+  );
+}
+
+/**
+ * The flavor whose file is actually downloadable: status 2 = READY. After the
+ * live→VOD flip Kaltura assembles each track's file asynchronously (typically
+ * 15-60 min for UN meetings); until then flavors are missing or non-ready and
+ * their download URLs 404. Prefers the entry's default flavor among ready
+ * ones. Returns undefined when nothing is ready — callers must treat that as
+ * "audio not available yet", not fall back to a non-ready flavor.
+ */
+export function pickReadyAudioFlavor(
+  candidates: KalturaFlavor[],
+): KalturaFlavor | undefined {
+  return (
+    candidates.find((f) => f.status === 2 && f.isDefault) ||
+    candidates.find((f) => f.status === 2)
+  );
+}
