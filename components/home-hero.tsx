@@ -10,8 +10,8 @@ import { cn } from "@/lib/utils";
 export function HomeHero() {
   const t = useTranslations("home");
   return (
-    <div className="pt-6 pb-6">
-      <h1 className={cn(typography.pageTitle, "mb-1.5")}>{t("headline")}</h1>
+    <div className="pt-8 pb-6">
+      <h1 className={cn(typography.pageTitle, "mb-2")}>{t("headline")}</h1>
       <p className={typography.lead}>
         {t("lead")}{" "}
         <Link
