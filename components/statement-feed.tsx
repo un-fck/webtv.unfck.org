@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { ProfileBubble } from "@/lib/speaker-index";
 import { VideoMoment } from "@/components/video-moment";
@@ -25,9 +25,7 @@ function ExpandableText({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
   const t = useTranslations("statementFeed");
   if (!text) {
-    return (
-      <span className="text-muted-foreground italic">{t("noText")}</span>
-    );
+    return <span className="text-muted-foreground italic">{t("noText")}</span>;
   }
   const sentences = text.split(/(?<=[.!?])\s+/);
   const truncated = sentences.length > PREVIEW_SENTENCES;
@@ -135,6 +133,7 @@ export function StatementFeed({
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("statementFeed");
+  const locale = useLocale();
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -143,6 +142,7 @@ export function StatementFeed({
       const params = new URLSearchParams({
         slug,
         offset: String(offset),
+        locale,
       });
       if (person) params.set("person", person);
       const res = await fetch(`/api/speakers/statements?${params.toString()}`);
@@ -163,7 +163,7 @@ export function StatementFeed({
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, slug, person, offset]);
+  }, [loading, hasMore, slug, person, offset, locale]);
 
   useEffect(() => {
     const el = sentinelRef.current;

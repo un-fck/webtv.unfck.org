@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { alternatesFor } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
@@ -54,7 +54,10 @@ export default async function SpeakersPage() {
           <p className={cn(typography.body, "text-muted-foreground")}>
             {t.rich("signInPrompt", {
               signInLink: (chunks) => (
-                <Link href="/login" className="text-un-blue-text hover:underline">
+                <Link
+                  href="/login"
+                  className="text-un-blue-text hover:underline"
+                >
                   {chunks}
                 </Link>
               ),
@@ -64,14 +67,19 @@ export default async function SpeakersPage() {
           <p className={cn(typography.body, "text-muted-foreground")}>
             {t.rich("experimentalGated", {
               aboutLink: (chunks) => (
-                <Link href="/about" className="text-un-blue-text hover:underline">
+                <Link
+                  href="/about"
+                  className="text-un-blue-text hover:underline"
+                >
                   {chunks}
                 </Link>
               ),
             })}
           </p>
         ) : (
-          <SpeakerOverview entities={await getEntitySummaries()} />
+          <SpeakerOverview
+            entities={await getEntitySummaries(await getLocale())}
+          />
         )}
       </div>
     </main>

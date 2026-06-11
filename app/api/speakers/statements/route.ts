@@ -30,11 +30,15 @@ export async function GET(request: NextRequest) {
     ),
   );
 
+  // Only affects display names (country affiliations); unknown values fall
+  // back to English inside getCountryName.
+  const locale = searchParams.get("locale") ?? "en";
+
   const profile = await getEntityProfileBySlug(slug, person ?? null);
   if (!profile) return apiError(404, "not_found", "Unknown speaker");
 
   const slice = profile.refs.slice(offset, offset + limit);
-  const bubbles = await refsToBubbles(slice);
+  const bubbles = await refsToBubbles(slice, locale);
 
   return NextResponse.json({
     bubbles,

@@ -82,12 +82,10 @@ export async function GET(
       }
     });
 
-    await Promise.all(
-      Array.from(iso3Codes).map(async (code) => {
-        const name = await getCountryName(code);
-        if (name) countryNames.set(code, name);
-      }),
-    );
+    for (const code of iso3Codes) {
+      const name = getCountryName(code);
+      if (name) countryNames.set(code, name);
+    }
 
     const topics = transcript.content.topics || {};
 

@@ -58,6 +58,15 @@ remember those come from WebTV's per-locale schedule. The harvest script at
 `scripts/harvest-categories.ts` can re-extract them if the canonical list
 changes; re-run it before guessing.
 
+**Country names** are not in the message catalogs: `lib/country-lookup.ts`
+resolves ISO alpha-3 codes to official UN country names in all six languages
+from the vendored snapshot `lib/data/country-names.json` (UNSD M49 standard —
+"Russian Federation", not CLDR's "Russia"). Re-harvest with
+`tsx scripts/harvest-country-names.ts` if the M49 list changes; never
+hand-edit the JSON. The speaker directory builds its index (and entity slugs)
+from the **English** names so URLs stay locale-stable; localization happens
+at display time via the entity's ISO code.
+
 ## Never apply database changes yourself
 
 Do NOT run migrations or any write/DDL against a database (no `psql -f`, no

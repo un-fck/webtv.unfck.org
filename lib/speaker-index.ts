@@ -112,9 +112,12 @@ function addRef(node: EntityNode, ref: SpeakerRef) {
   node.statementCount += 1;
 }
 
-async function resolveCountryNames(
+// Always English: entity slugs are derived from these labels (slugify below),
+// so they must not vary with the viewer's locale. Localized display names are
+// resolved from the entity `code` at render time.
+function resolveCountryNames(
   rows: SpeakerMappingWithMeta[],
-): Promise<Map<string, string>> {
+): Map<string, string> {
   const codes = new Set<string>();
   for (const row of rows) {
     for (const info of Object.values(row.mapping)) {
@@ -125,7 +128,7 @@ async function resolveCountryNames(
   }
   const names = new Map<string, string>();
   for (const code of codes) {
-    const name = await getCountryName(code);
+    const name = getCountryName(code);
     if (name) names.set(code, name);
   }
   return names;
@@ -167,7 +170,7 @@ async function cachedRows(): Promise<CachedRows> {
 
 async function buildSpeakerIndexFromRows(): Promise<SpeakerIndex> {
   const { rows, durations } = await cachedRows();
-  const countryNames = await resolveCountryNames(rows);
+  const countryNames = resolveCountryNames(rows);
   const index: SpeakerIndex = { entities: new Map() };
 
   for (const row of rows) {
@@ -362,15 +365,32 @@ function summarizePeople(entity: MergedEntity): PersonSummary[] {
   return people.sort((a, b) => b.statementCount - a.statementCount);
 }
 
+/**
+ * Display label for an entity in the viewer's locale. Country labels resolve
+ * through the ISO code; orgs/groups keep their AI-extracted label as-is.
+ * Slugs always stay derived from the English label — never localize those.
+ */
+function localizedLabel(
+  entity: { kind: EntityKind; label: string; code: string | null },
+  locale: string,
+): string {
+  if (entity.kind === "country" && entity.code) {
+    return getCountryName(entity.code, locale) ?? entity.label;
+  }
+  return entity.label;
+}
+
 /** Lightweight, serializable summaries for the overview page. */
-export async function getEntitySummaries(): Promise<EntitySummary[]> {
+export async function getEntitySummaries(
+  locale: string = "en",
+): Promise<EntitySummary[]> {
   const merged = await buildMergedEntities();
   const out: EntitySummary[] = [];
   for (const entity of merged.values()) {
     out.push({
       slug: entity.slug,
       kind: entity.kind,
-      label: entity.label,
+      label: localizedLabel(entity, locale),
       code: entity.code,
       statementCount: entity.statementCount,
       meetingCount: entity.meetings.size,
@@ -398,6 +418,7 @@ export interface EntityProfile {
 export async function getEntityProfileBySlug(
   entitySlug: string,
   personSlug?: string | null,
+  locale: string = "en",
 ): Promise<EntityProfile | null> {
   const merged = await buildMergedEntities();
   const entity = merged.get(entitySlug);
@@ -425,7 +446,7 @@ export async function getEntityProfileBySlug(
   return {
     slug: entity.slug,
     kind: entity.kind,
-    label: entity.label,
+    label: localizedLabel(entity, locale),
     code: entity.code,
     personName,
     refs,
@@ -462,6 +483,7 @@ export interface ProfileBubble {
  */
 export async function refsToBubbles(
   refs: SpeakerRef[],
+  locale: string = "en",
 ): Promise<ProfileBubble[]> {
   if (refs.length === 0) return [];
 
@@ -480,7 +502,7 @@ export async function refsToBubbles(
         (a): a is string => !!a && a.length === 3 && a === a.toUpperCase(),
       ),
   )) {
-    const name = await getCountryName(code);
+    const name = getCountryName(code, locale);
     if (name) countryNames.set(code, name);
   }
 

@@ -1,45 +1,25 @@
-let countryCache: Map<string, string> | null = null;
+import countryNames from "@/lib/data/country-names.json";
 
-export async function getCountryName(iso3Code: string): Promise<string | null> {
-  if (!countryCache) {
-    await loadCountryData();
-  }
+/**
+ * Official UN country names (UNSD M49 standard) keyed by ISO alpha-3 code,
+ * in all six official UN languages. Vendored snapshot — re-harvest with
+ * `tsx scripts/harvest-country-names.ts` when the M49 list changes.
+ */
+const COUNTRY_NAMES = countryNames as Record<
+  string,
+  Record<string, string | undefined>
+>;
 
-  return countryCache?.get(iso3Code.toUpperCase()) || null;
-}
-
-async function loadCountryData() {
-  try {
-    const response = await fetch(
-      "https://raw.githubusercontent.com/UN-CRAFd/crafd-reference-datasets/refs/heads/main/data/output/full_country_list_with_stats.csv",
-    );
-    const csvText = await response.text();
-
-    countryCache = new Map();
-
-    // Parse CSV (skip header row)
-    const lines = csvText.trim().split("\n").slice(1);
-
-    for (const line of lines) {
-      // Simple CSV parsing (handles quoted fields)
-      const match = line.match(/^([^,]+),/);
-      if (!match) continue;
-
-      const country = match[1].trim();
-
-      // Extract ISO alpha-3 code (10th column, index 9)
-      const columns = line.split(",");
-      if (columns.length >= 10) {
-        const iso3 = columns[9].trim();
-        if (iso3 && iso3 !== "iso_alpha3_code") {
-          countryCache.set(iso3, country);
-        }
-      }
-    }
-
-    console.log(`Loaded ${countryCache.size} country mappings`);
-  } catch (error) {
-    console.error("Failed to load country data:", error);
-    countryCache = new Map(); // Empty map to prevent repeated failures
-  }
+/**
+ * Resolve an ISO alpha-3 code to the official UN country name in the given
+ * locale (defaults to English). Returns null for unknown codes — M49 covers
+ * all UN member and observer states, but not every ISO code (e.g. TWN).
+ */
+export function getCountryName(
+  iso3Code: string,
+  locale: string = "en",
+): string | null {
+  const entry = COUNTRY_NAMES[iso3Code.toUpperCase()];
+  if (!entry) return null;
+  return entry[locale] ?? entry.en ?? null;
 }

@@ -18,12 +18,12 @@ export const dynamic = "force-dynamic";
 export default async function SpeakerProfilePage({
   params,
 }: {
-  params: Promise<{ path: string[] }>;
+  params: Promise<{ locale: string; path: string[] }>;
 }) {
   const user = await getCurrentUser();
   const t = await getTranslations("speakers");
 
-  const { path } = await params;
+  const { locale, path } = await params;
   const entitySlug = path[0] ?? "";
   const personSlug = path.length > 1 ? path[1] : undefined;
 
@@ -35,7 +35,10 @@ export default async function SpeakerProfilePage({
           <p className={cn(typography.body, "py-8 text-muted-foreground")}>
             {t.rich("signInPrompt", {
               signInLink: (chunks) => (
-                <Link href="/login" className="text-un-blue-text hover:underline">
+                <Link
+                  href="/login"
+                  className="text-un-blue-text hover:underline"
+                >
                   {chunks}
                 </Link>
               ),
@@ -54,7 +57,10 @@ export default async function SpeakerProfilePage({
           <p className={cn(typography.body, "py-8 text-muted-foreground")}>
             {t.rich("experimentalGated", {
               aboutLink: (chunks) => (
-                <Link href="/about" className="text-un-blue-text hover:underline">
+                <Link
+                  href="/about"
+                  className="text-un-blue-text hover:underline"
+                >
                   {chunks}
                 </Link>
               ),
@@ -65,7 +71,11 @@ export default async function SpeakerProfilePage({
     );
   }
 
-  const profile = await getEntityProfileBySlug(entitySlug, personSlug ?? null);
+  const profile = await getEntityProfileBySlug(
+    entitySlug,
+    personSlug ?? null,
+    locale,
+  );
   if (!profile) notFound();
 
   const total = profile.refs.length;
@@ -73,7 +83,7 @@ export default async function SpeakerProfilePage({
 
   // Only build the first page; the rest is loaded via the infinite-scroll API.
   const firstPage = profile.refs.slice(0, SPEAKER_PAGE_SIZE);
-  const initialBubbles = await refsToBubbles(firstPage);
+  const initialBubbles = await refsToBubbles(firstPage, locale);
 
   return (
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">

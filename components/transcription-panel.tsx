@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { SpeakerMapping } from "@/lib/speakers";
 import type { Video } from "@/lib/un-api";
 import { getCountryName } from "@/lib/country-lookup";
@@ -189,6 +189,7 @@ export function TranscriptionPanel({
     null,
   );
   const t = useTranslations("transcript.panel");
+  const locale = useLocale();
   // Covers the POST round-trip (click → response) so the Generate button can
   // show instant feedback before the server resolves Kaltura and starts polling.
   const [starting, setStarting] = useState(false);
@@ -293,19 +294,22 @@ export function TranscriptionPanel({
     [],
   );
 
-  const loadCountryNames = useCallback(async (mapping: SpeakerMapping) => {
-    const names = new Map<string, string>();
-    const iso3Codes = new Set<string>();
-    Object.values(mapping).forEach((info) => {
-      if (info.affiliation && info.affiliation.length === 3)
-        iso3Codes.add(info.affiliation);
-    });
-    for (const code of iso3Codes) {
-      const name = await getCountryName(code);
-      if (name) names.set(code, name);
-    }
-    setCountryNames(names);
-  }, []);
+  const loadCountryNames = useCallback(
+    async (mapping: SpeakerMapping) => {
+      const names = new Map<string, string>();
+      const iso3Codes = new Set<string>();
+      Object.values(mapping).forEach((info) => {
+        if (info.affiliation && info.affiliation.length === 3)
+          iso3Codes.add(info.affiliation);
+      });
+      for (const code of iso3Codes) {
+        const name = getCountryName(code, locale);
+        if (name) names.set(code, name);
+      }
+      setCountryNames(names);
+    },
+    [locale],
+  );
 
   useEffect(() => {
     if (statements && Object.keys(speakerMappings).length > 0) {
@@ -389,7 +393,8 @@ export function TranscriptionPanel({
       if (data.transcriptId) {
         // Bind to the active language's controller so a tab switch aborts the
         // long-running poll instead of leaking state into the new language.
-        const signal = pollAbortRef.current?.signal ?? new AbortController().signal;
+        const signal =
+          pollAbortRef.current?.signal ?? new AbortController().signal;
         await pollForCompletion(data.transcriptId, signal);
       }
     } catch (err) {
@@ -525,7 +530,9 @@ export function TranscriptionPanel({
         setPendingRetranscribeStage(data.stage);
       }
       if (data.stage === "error") {
-        setRetranscribeError(data.error_message || "Fresh transcription failed");
+        setRetranscribeError(
+          data.error_message || "Fresh transcription failed",
+        );
         setPendingRetranscribeId(null);
         setPendingRetranscribeStage(null);
         return;
@@ -593,7 +600,9 @@ export function TranscriptionPanel({
       }
     } catch (err) {
       setRetranscribeError(
-        err instanceof Error ? err.message : "Failed to start fresh transcription",
+        err instanceof Error
+          ? err.message
+          : "Failed to start fresh transcription",
       );
     } finally {
       setRetranscribeStarting(false);
@@ -604,7 +613,8 @@ export function TranscriptionPanel({
     if (transcriptId) {
       setStage("transcribing");
       setErrorMessage(null);
-      const signal = pollAbortRef.current?.signal ?? new AbortController().signal;
+      const signal =
+        pollAbortRef.current?.signal ?? new AbortController().signal;
       pollForCompletion(transcriptId, signal).catch((err) => {
         if (signal.aborted) return;
         setErrorMessage(err instanceof Error ? err.message : "Retry failed");
