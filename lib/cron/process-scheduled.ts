@@ -175,36 +175,55 @@ export async function runProcessScheduled(
           continue;
         }
 
-        // For interrupted rows we also claim+incrementRetry here so the
-        // counter advances even though submitTranscription does its own
-        // INSERT-or-UPDATE. (submitTranscription's saveTranscript leaves
-        // worker_id / retry_count untouched, so this claim is needed.)
-        if (item.transcription_status === "interrupted") {
-          const claimed = await claimTranscript(
-            item.transcript_id,
-            ["interrupted"],
-            "transcribing",
-            workerId,
-            { incrementRetry: true },
-          );
-          if (!claimed) continue;
-        }
+        // Claim BEFORE submitTranscription, for both scheduled and
+        // interrupted rows. submitTranscription with existingTranscriptId
+        // skips its own dedupe check, so without this gate two overlapping
+        // ticks (job lock expired/contended) could both start a pipeline
+        // for the same row. The claim is the atomic arbiter; incrementRetry
+        // only on the interrupted path so first runs don't count against
+        // the cap.
+        const fromStatus = item.transcription_status;
+        const claimed = await claimTranscript(
+          item.transcript_id,
+          [fromStatus],
+          "transcribing",
+          workerId,
+          { incrementRetry: fromStatus === "interrupted" },
+        );
+        if (!claimed) continue; // another worker grabbed it
 
-        const { transcriptId } = await submitTranscription(kalturaId, {
-          existingTranscriptId: item.transcript_id,
-          language: item.language_code || "en",
-          schedule,
-        });
-        if (item.transcription_status === "interrupted") {
-          console.log(
-            `[${ts()}] ↻ Resumed transcription for ${kalturaId} → ${transcriptId} (retry ${item.retry_count + 1})`,
-          );
-          resumed++;
-        } else {
-          console.log(
-            `[${ts()}] ✓ Started scheduled transcript for ${kalturaId} → ${transcriptId}`,
-          );
-          started++;
+        try {
+          const { transcriptId } = await submitTranscription(kalturaId, {
+            existingTranscriptId: item.transcript_id,
+            language: item.language_code || "en",
+            schedule,
+          });
+          if (fromStatus === "interrupted") {
+            console.log(
+              `[${ts()}] ↻ Resumed transcription for ${kalturaId} → ${transcriptId} (retry ${item.retry_count + 1})`,
+            );
+            resumed++;
+          } else {
+            console.log(
+              `[${ts()}] ✓ Started scheduled transcript for ${kalturaId} → ${transcriptId}`,
+            );
+            started++;
+          }
+        } catch (err) {
+          // We claimed but failed to start the pipeline — release back to
+          // the ORIGINAL status so the row isn't a zombie that the blanket
+          // heartbeat (worker_id = us, status in-flight) keeps "alive"
+          // forever with no actual pipeline running. Scheduled rows go back
+          // to `scheduled` (audio may simply not be ready — must not burn
+          // the retry cap); interrupted rows go back to `interrupted` (the
+          // claim already counted the attempt, so the cap bounds repeated
+          // submit failures).
+          await releaseTranscript(
+            item.transcript_id,
+            fromStatus,
+            err instanceof Error ? err.message : "Submit failed after claim",
+          ).catch(() => {});
+          throw err;
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);

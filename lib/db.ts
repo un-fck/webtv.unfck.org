@@ -519,7 +519,8 @@ export interface RunnableTranscript {
   end_time: number | null;
   audio_url: string;
   language_code: string | null;
-  transcription_status: TranscriptionStatus;
+  // Narrowed: the runnable query's WHERE clause only ever matches these two.
+  transcription_status: Extract<TranscriptionStatus, "scheduled" | "interrupted">;
   retry_count: number;
   has_raw_paragraphs: boolean;
   created_at: Date;
@@ -531,28 +532,30 @@ export interface RunnableTranscript {
 
 /**
  * Rows the picker should pick up: freshly `scheduled` (waiting for audio /
- * first attempt) or `interrupted` (a prior worker died mid-flight) under the
- * retry cap. Both classes are surfaced uniformly — the picker decides whether
- * to (re)submit transcription from scratch or resume the analysis stage based
- * on `has_raw_paragraphs`. FIFO by `created_at` keeps the oldest backlog
+ * first attempt) or `interrupted` (a prior worker died mid-flight). Both
+ * classes are surfaced uniformly — the picker decides whether to (re)submit
+ * transcription from scratch or resume the analysis stage based on
+ * `has_raw_paragraphs`. FIFO by `created_at` keeps the oldest backlog
  * draining first.
+ *
+ * Deliberately does NOT filter on `retry_count` — interrupted rows at or
+ * above the cap must still reach the picker loop so its cap guard escalates
+ * them to `error`. Filtering them out here would leave them invisible
+ * zombies: never retried, never errored, shown as forever-in-progress by
+ * the UI (which treats any non-error row as active).
  */
 export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
   const result = await pool.query(
-    q(
-      `SELECT t.transcript_id, t.kaltura_id, t.start_time, t.end_time, t.audio_url,
-              t.language_code, t.transcription_status, t.retry_count,
-              jsonb_array_length(COALESCE(t.content->'raw_paragraphs', '[]'::jsonb)) > 0
-                AS has_raw_paragraphs,
-              t.created_at,
-              v.scheduled_time
-         FROM webtv.transcripts t
-         JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
-        WHERE t.transcription_status = 'scheduled'
-           OR (t.transcription_status = 'interrupted' AND t.retry_count < ?)
-        ORDER BY t.created_at ASC`,
-      [MAX_INTERRUPTED_RETRIES],
-    ),
+    `SELECT t.transcript_id, t.kaltura_id, t.start_time, t.end_time, t.audio_url,
+            t.language_code, t.transcription_status, t.retry_count,
+            jsonb_array_length(COALESCE(t.content->'raw_paragraphs', '[]'::jsonb)) > 0
+              AS has_raw_paragraphs,
+            t.created_at,
+            v.scheduled_time
+       FROM webtv.transcripts t
+       JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
+      WHERE t.transcription_status IN ('scheduled', 'interrupted')
+      ORDER BY t.created_at ASC`,
   );
   return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
@@ -561,7 +564,8 @@ export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
     end_time: row.end_time as number | null,
     audio_url: row.audio_url as string,
     language_code: row.language_code as string | null,
-    transcription_status: row.transcription_status as TranscriptionStatus,
+    transcription_status:
+      row.transcription_status as RunnableTranscript["transcription_status"],
     retry_count: Number(row.retry_count ?? 0),
     has_raw_paragraphs: row.has_raw_paragraphs as boolean,
     created_at: row.created_at as Date,
@@ -580,14 +584,13 @@ export interface RunnableAnalysis {
 }
 
 export async function getRunnableAnalyses(): Promise<RunnableAnalysis[]> {
+  // No retry_count filter — capped rows must reach the picker's escalation
+  // guard (see getRunnableTranscripts).
   const result = await pool.query(
-    q(
-      `SELECT transcript_id, retry_count
-         FROM webtv.transcripts
-        WHERE analysis_status = 'interrupted' AND retry_count < ?
-        ORDER BY updated_at ASC`,
-      [MAX_INTERRUPTED_RETRIES],
-    ),
+    `SELECT transcript_id, retry_count
+       FROM webtv.transcripts
+      WHERE analysis_status = 'interrupted'
+      ORDER BY updated_at ASC`,
   );
   return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
@@ -701,13 +704,18 @@ export async function setRowOwnership(
 }
 
 /**
- * Set a terminal `transcription_status` (completed | error | interrupted)
- * AND clear worker ownership in a single statement. Used at every pipeline
- * exit so we never leave a row marked terminal with a stale `worker_id`.
+ * Set a not-owned-by-any-worker `transcription_status` (completed | error |
+ * interrupted | scheduled) AND clear worker ownership in a single statement.
+ * Used at every pipeline exit so we never leave a row marked terminal with a
+ * stale `worker_id`. `scheduled` is the give-back path: the picker claimed a
+ * row but failed to start the pipeline, and returns it to the queue.
  */
 export async function releaseTranscript(
   transcriptId: string,
-  status: Extract<TranscriptionStatus, "completed" | "error" | "interrupted">,
+  status: Extract<
+    TranscriptionStatus,
+    "completed" | "error" | "interrupted" | "scheduled"
+  >,
   errorMessage?: string,
 ): Promise<void> {
   await pool.query(
@@ -871,15 +879,26 @@ export async function withVideoLock<T>(
 }
 
 /**
- * Serialize a named cron job across replicas using a session-scope advisory
- * lock. Returns `fn`'s result on success, or `null` if another replica already
- * holds the lock (caller should treat that as "skipped, not an error").
+ * Serialize a named cron job across replicas using a TRANSACTION-scoped
+ * advisory lock held open for the duration of `fn`. Returns `fn`'s result on
+ * success, or `null` if another replica already holds the lock (caller
+ * should treat that as "skipped, not an error").
  *
- * Uses pg_try_advisory_lock (non-blocking) so a contended run exits cleanly
- * instead of piling up. Session-scope, not xact-scope, because the lock must
- * survive any internal transactions `fn` runs. The `finally` MUST explicitly
- * unlock before releasing the client back to the pool — session locks stick
- * to the underlying connection otherwise.
+ * MUST be xact-scoped, not session-scoped, because the app connects through
+ * PgBouncer in transaction-pooling mode (port 6432): outside an explicit
+ * transaction, consecutive statements on one client can be routed to
+ * DIFFERENT server connections. A session-scoped pg_try_advisory_lock would
+ * bind the lock to whichever server connection happened to execute it, the
+ * later pg_advisory_unlock would land on a different one (failing with only
+ * a WARNING), and the lock would leak until PgBouncer recycled the original
+ * connection — permanently blocking the job for every replica. (This
+ * happened in production; see the 020 job-system rework.)
+ *
+ * The explicit BEGIN pins the client to one server connection until COMMIT,
+ * and the xact lock auto-releases on COMMIT/ROLLBACK/disconnect — so a
+ * crashed job can never leak its lock. The connection sits
+ * "idle in transaction" while `fn` runs (`fn`'s own queries use the pool,
+ * not this client); job ticks are seconds-to-minutes, which is acceptable.
  */
 export async function withJobLock<T>(
   jobName: string,
@@ -887,22 +906,22 @@ export async function withJobLock<T>(
 ): Promise<T | null> {
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
     const { rows } = await client.query<{ locked: boolean }>(
-      "SELECT pg_try_advisory_lock($1, hashtext($2)::int) AS locked",
+      "SELECT pg_try_advisory_xact_lock($1, hashtext($2)::int) AS locked",
       [LOCK_NS_JOB, jobName],
     );
-    if (!rows[0]?.locked) return null;
+    if (!rows[0]?.locked) {
+      await client.query("ROLLBACK");
+      return null;
+    }
     try {
-      return await fn();
-    } finally {
-      await client
-        .query("SELECT pg_advisory_unlock($1, hashtext($2)::int)", [
-          LOCK_NS_JOB,
-          jobName,
-        ])
-        .catch((err) => {
-          console.warn(`withJobLock(${jobName}): unlock failed`, err);
-        });
+      const result = await fn();
+      await client.query("COMMIT"); // releases the xact lock
+      return result;
+    } catch (err) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw err;
     }
   } finally {
     client.release();

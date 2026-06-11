@@ -45,19 +45,48 @@ export function initWorker(): void {
   const workerId = currentWorkerId();
   console.log(`[server-init] worker ${workerId} starting`);
 
-  heartbeatTimer = setInterval(() => {
+  const tick = async () => {
     if (shuttingDown) return;
-    heartbeatOwnRows(workerId).catch((err) => {
+    try {
+      const count = await heartbeatOwnRows(workerId);
+      console.log(
+        `[server-init] heartbeat tick: refreshed ${count} owned row(s) for ${workerId}`,
+      );
+    } catch (err) {
       console.warn("[server-init] heartbeat failed:", err);
-    });
-  }, HEARTBEAT_INTERVAL_MS);
+    }
+  };
+  heartbeatTimer = setInterval(tick, HEARTBEAT_INTERVAL_MS);
   // Don't keep the event loop alive for the heartbeat alone — if everything
   // else has exited, we should too.
   if (typeof heartbeatTimer.unref === "function") heartbeatTimer.unref();
+  // Fire one tick immediately so we have fast feedback in logs that the
+  // mechanism is wired up (instead of waiting 60s for the first interval).
+  void tick();
+
+  // Patch process.exit so Next's own SIGTERM/SIGINT handlers (which call
+  // process.exit synchronously after server.close, on the same signal)
+  // can't preempt our async cleanup UPDATE. While we're shutting down, any
+  // attempt to exit is suppressed; once our cleanup commits we restore the
+  // real exit and call it ourselves. Without this, server.close (no open
+  // connections → completes in ms) races our DB UPDATE (~tens of ms) and
+  // wins, killing the cleanup before it commits.
+  const realExit = process.exit.bind(process);
+  let exitGuarded = false;
+  process.exit = ((code?: number) => {
+    if (exitGuarded) {
+      console.log(
+        `[server-init] suppressing process.exit(${code ?? 0}) during cleanup`,
+      );
+      return undefined as never;
+    }
+    return realExit(code);
+  }) as typeof process.exit;
 
   const onShutdown = (signal: NodeJS.Signals) => {
     if (shuttingDown) return;
     shuttingDown = true;
+    exitGuarded = true;
     console.log(`[server-init] received ${signal}, releasing owned rows`);
     if (heartbeatTimer) clearInterval(heartbeatTimer);
 
@@ -82,11 +111,9 @@ export function initWorker(): void {
       }, SIGTERM_CLEANUP_TIMEOUT_MS),
     );
 
-    // Call process.exit ourselves once cleanup is done (or timed out) so
-    // Next's parallel SIGINT handler can't exit the process before our
-    // UPDATE commits. Exit code 0 on graceful shutdown.
     Promise.race([cleanup, timeout]).finally(() => {
-      process.exit(0);
+      exitGuarded = false;
+      realExit(0);
     });
   };
 
@@ -98,14 +125,36 @@ export function initWorker(): void {
   // it never blocks server readiness. Dynamic import avoids dragging the
   // entire transcription module graph into the boot path; if instrumentation
   // ever gets imported on the Edge runtime by mistake, this stays inert.
+  //
+  // Short retry-with-backoff on `lock_held`: another replica (or, during a
+  // rollout, an old-code container) holding the advisory lock at the
+  // exact moment we boot would otherwise leave us doing nothing until the
+  // next cron tick. Five attempts × ~10s backoff gives plenty of room to
+  // catch a free window without keeping the boot path noisy.
   setImmediate(() => {
     void (async () => {
       try {
         const { runProcessScheduled } = await import("@/lib/cron/process-scheduled");
-        const result = await runProcessScheduled({
-          schedule: (work) => setImmediate(work),
-        });
-        console.log("[server-init] boot picker:", result);
+        for (let attempt = 1; attempt <= 5; attempt++) {
+          if (shuttingDown) return;
+          const result = await runProcessScheduled({
+            schedule: (work) => setImmediate(work),
+          });
+          if (!("skipped" in result)) {
+            console.log("[server-init] boot picker:", result);
+            return;
+          }
+          if (attempt < 5) {
+            console.log(
+              `[server-init] boot picker: lock held (attempt ${attempt}/5), retrying in 10s`,
+            );
+            await new Promise((r) => setTimeout(r, 10_000));
+          } else {
+            console.log(
+              "[server-init] boot picker: lock held after 5 attempts, leaving to cron",
+            );
+          }
+        }
       } catch (err) {
         console.error("[server-init] boot picker failed:", err);
       }
