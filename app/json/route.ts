@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getScheduleVideos } from "@/lib/un-api";
-import { scheduleLookbackDays } from "@/lib/config";
+import { scheduleLookbackDays, TRANSCRIPT_DISCLAIMER } from "@/lib/config";
 
 export async function GET() {
   try {
@@ -10,6 +10,7 @@ export async function GET() {
     const videosWithTranscripts = videos.filter((v) => v.hasTranscript);
 
     const response = NextResponse.json({
+      disclaimer: TRANSCRIPT_DISCLAIMER,
       count: videosWithTranscripts.length,
       videos: videosWithTranscripts.map((video) => ({
         id: video.id,

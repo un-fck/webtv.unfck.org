@@ -1,7 +1,7 @@
 {
   "metadata": {
     "siteTitle": "联合国转录",
-    "siteDescription": "浏览联合国网络电视的视频及所有发言的转录文本",
+    "siteDescription": "浏览联合国网络电视的视频及自动生成的所有发言转录文本 — 并非联合国正式记录",
     "aboutTitle": "关于本工具 — 联合国转录",
     "aboutDescription": "UN Web TV Transcripts 是什么、面向谁、如何运作,以及其准确性和局限性。",
     "loginTitle": "登录 — 联合国转录",
@@ -33,6 +33,7 @@
   "home": {
     "headline": "了解联合国发生了什么。",
     "lead": "浏览会议转录、查找发言者、跳转到视频中的相应时刻。",
+    "disclaimer": "转录文本为自动生成，并非联合国正式记录。",
     "learnMore": "了解更多 →",
     "backToHomepage": "← 返回首页"
   },
@@ -274,7 +275,9 @@
       "audioOutOfSyncRequest": "请求重新转录",
       "audioOutOfSyncStarting": "正在启动…",
       "audioOutOfSyncSignIn": "登录以请求重新转录",
-      "audioOutOfSyncInProgress": "正在生成新的转录。"
+      "audioOutOfSyncInProgress": "正在生成新的转录。",
+      "transcriptDisclaimer": "自动生成的转录 — 可能包含错误，并非联合国正式记录。<aboutLink>了解更多</aboutLink>",
+      "exportDisclaimer": "自动生成的转录 — 可能包含错误，并非联合国正式记录。"
     },
     "highlightsOnly": "仅显示要点",
     "allContent": "全部内容（含要点）"

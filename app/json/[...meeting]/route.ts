@@ -8,6 +8,7 @@ import {
 } from "@/lib/speakers";
 import { getCountryName } from "@/lib/country-lookup";
 import { symbolFromSlug } from "@/lib/meeting-slug";
+import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
 
 export async function GET(
   request: NextRequest,
@@ -46,6 +47,7 @@ export async function GET(
 
     if (!transcript) {
       const response = NextResponse.json({
+        disclaimer: TRANSCRIPT_DISCLAIMER,
         video,
         metadata,
         transcript: null,
@@ -57,6 +59,7 @@ export async function GET(
 
     if (transcript.transcription_status !== "completed") {
       const response = NextResponse.json({
+        disclaimer: TRANSCRIPT_DISCLAIMER,
         video,
         metadata,
         transcript: {
@@ -125,6 +128,7 @@ export async function GET(
     );
 
     const response = NextResponse.json({
+      disclaimer: TRANSCRIPT_DISCLAIMER,
       video: {
         id: record.asset_id,
         kaltura_id: record.kaltura_id,

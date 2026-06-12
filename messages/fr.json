@@ -1,7 +1,7 @@
 {
   "metadata": {
     "siteTitle": "Transcriptions de l'ONU",
-    "siteDescription": "Parcourir les vidéos d'UN Web TV avec les transcriptions de toutes les interventions",
+    "siteDescription": "Parcourir les vidéos d'UN Web TV avec des transcriptions de toutes les interventions générées automatiquement — comptes rendus non officiels de l'ONU",
     "aboutTitle": "À propos — Transcriptions de l'ONU",
     "aboutDescription": "Ce qu'est UN Web TV Transcripts, à qui il s'adresse, comment il fonctionne, et ses limites de précision.",
     "loginTitle": "Connexion — Transcriptions de l'ONU",
@@ -33,6 +33,7 @@
   "home": {
     "headline": "Lisez ce qui a été dit à l'ONU.",
     "lead": "Parcourez les transcriptions de réunions, trouvez les intervenants, accédez au moment voulu dans la vidéo.",
+    "disclaimer": "Les transcriptions sont générées automatiquement et ne sont pas des comptes rendus officiels de l'ONU.",
     "learnMore": "En savoir plus →",
     "backToHomepage": "← Retour à l'accueil"
   },
@@ -274,7 +275,9 @@
       "audioOutOfSyncRequest": "Demander une nouvelle transcription",
       "audioOutOfSyncStarting": "Démarrage…",
       "audioOutOfSyncSignIn": "Connectez-vous pour demander une nouvelle transcription",
-      "audioOutOfSyncInProgress": "Une nouvelle transcription est en cours."
+      "audioOutOfSyncInProgress": "Une nouvelle transcription est en cours.",
+      "transcriptDisclaimer": "Transcription générée automatiquement — peut contenir des erreurs. Ceci n'est pas un compte rendu officiel de l'Organisation des Nations Unies. <aboutLink>En savoir plus</aboutLink>",
+      "exportDisclaimer": "Transcription générée automatiquement — peut contenir des erreurs. Ceci n'est pas un compte rendu officiel de l'Organisation des Nations Unies."
     },
     "highlightsOnly": "Faits saillants",
     "allContent": "Tout le contenu avec faits saillants"
