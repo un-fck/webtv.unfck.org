@@ -140,6 +140,8 @@ export interface AuthUser {
   email: string;
   /** Single gate for all experimental features — toggled directly in the DB. */
   experimentalAccess: boolean;
+  /** When the user joined the experimental-features wait list; null = not on it. */
+  experimentalWaitlistAt: Date | null;
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -149,13 +151,39 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     id: string;
     email: string;
     experimental_access: boolean;
-  }>(`SELECT id, email, experimental_access FROM webtv.users WHERE id = ?`, [
-    session.userId,
-  ]);
+    experimental_waitlist_at: Date | null;
+  }>(
+    `SELECT id, email, experimental_access, experimental_waitlist_at
+     FROM webtv.users WHERE id = ?`,
+    [session.userId],
+  );
   if (!rows[0]) return null;
   return {
     id: rows[0].id,
     email: rows[0].email,
     experimentalAccess: Boolean(rows[0].experimental_access),
+    experimentalWaitlistAt: rows[0].experimental_waitlist_at,
   };
+}
+
+/**
+ * Join or leave the experimental-features wait list. Joining is idempotent
+ * and keeps the original join timestamp (COALESCE), so repeat clicks don't
+ * push the user back in line.
+ */
+export async function setExperimentalWaitlist(
+  userId: string,
+  join: boolean,
+): Promise<void> {
+  await query(
+    join
+      ? `UPDATE webtv.users
+         SET experimental_waitlist_at = COALESCE(experimental_waitlist_at, NOW()),
+             updated_at = NOW()
+         WHERE id = ?`
+      : `UPDATE webtv.users
+         SET experimental_waitlist_at = NULL, updated_at = NOW()
+         WHERE id = ?`,
+    [userId],
+  );
 }

@@ -59,17 +59,21 @@ CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category);
 CREATE INDEX IF NOT EXISTS idx_videos_fts ON videos USING GIN(fts_vec);
 CREATE INDEX IF NOT EXISTS idx_videos_removed_at ON videos(removed_at) WHERE removed_at IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_videos_trgm ON videos USING GIN (COALESCE(clean_title, title) gin_trgm_ops);
--- ── auth (see migrations 002 + 011) ──────────────────────────────────────────
+-- ── auth (see migrations 002 + 011 + 021) ────────────────────────────────────
 -- `users` is referenced by transcripts.created_by below, so it must be created
 -- before that table. Magic-link tokens back the passwordless login flow.
 -- `experimental_access` (migration 011) is a single boolean that gates ALL
 -- experimental features (proposition analysis, speaker directory); toggled
--- directly in psql, no in-app UI. `allowed_domains` is no longer enforced
--- (open registration) but kept for reference; see lib/auth/commands.ts.
+-- directly in psql, no in-app UI. `experimental_waitlist_at` (migration 021)
+-- records when the user joined the experimental-features wait list via the
+-- About page (NULL = not on the list; kept as a record even after access is
+-- granted). `allowed_domains` is no longer enforced (open registration) but
+-- kept for reference; see lib/auth/commands.ts.
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
     experimental_access BOOLEAN NOT NULL DEFAULT FALSE,
+    experimental_waitlist_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     last_login_at TIMESTAMPTZ
