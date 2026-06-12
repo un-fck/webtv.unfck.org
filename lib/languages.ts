@@ -9,14 +9,16 @@ export interface UnLanguage {
   kalturaName: string | null;
 }
 
+// Floor first, then official UN protocol order (alphabetical by English
+// name) — must match the locale order in i18n/routing.ts.
 export const UN_LANGUAGES: UnLanguage[] = [
   { code: "floor", name: "Floor (Original)", kalturaName: "interlingua" },
-  { code: "en", name: "English", kalturaName: "english" },
-  { code: "fr", name: "French", kalturaName: "french" },
-  { code: "es", name: "Spanish", kalturaName: "spanish" },
   { code: "ar", name: "Arabic", kalturaName: "arabic" },
   { code: "zh", name: "Chinese", kalturaName: "chinese" },
+  { code: "en", name: "English", kalturaName: "english" },
+  { code: "fr", name: "French", kalturaName: "french" },
   { code: "ru", name: "Russian", kalturaName: "russian" },
+  { code: "es", name: "Spanish", kalturaName: "spanish" },
 ];
 
 const byCode = new Map(UN_LANGUAGES.map((l) => [l.code, l]));
