@@ -195,7 +195,11 @@
     },
     "experimental": {
       "heading": "Fonctionnalités expérimentales",
-      "body": "Pour rejoindre la liste d'attente des fonctionnalités émergentes ou en test, cliquez ici :"
+      "body": "Pour rejoindre la liste d'attente des fonctionnalités émergentes ou en test, cliquez ici :",
+      "joinButton": "Rejoindre la liste d'attente",
+      "onList": "Vous êtes sur la liste d'attente",
+      "leave": "Quitter la liste d'attente",
+      "alreadyHaveAccess": "Vous avez déjà accès aux fonctionnalités expérimentales."
     }
   },
   "error": {

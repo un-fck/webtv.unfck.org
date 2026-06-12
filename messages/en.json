@@ -178,7 +178,11 @@
     },
     "experimental": {
       "heading": "Experimental features",
-      "body": "To join the wait list for emerging or test features, click here:"
+      "body": "To join the wait list for emerging or test features, click here:",
+      "joinButton": "Join the wait list",
+      "onList": "You're on the wait list",
+      "leave": "Leave the wait list",
+      "alreadyHaveAccess": "You already have access to experimental features."
     }
   },
   "error": {

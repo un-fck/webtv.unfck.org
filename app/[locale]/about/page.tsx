@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 // import { getProvider } from "@/lib/providers/registry";
 // import { UN_LANGUAGES, getLanguageDisplayName } from "@/lib/languages";
 import { getCurrentUser } from "@/lib/auth/service";
+import { ExperimentalWaitlistButton } from "@/components/experimental-waitlist-button";
 
 // Reads the current user to decide whether to render the experimental-features
 // section (logged-in users only); must render dynamically per viewer.
@@ -64,7 +65,6 @@ export default async function AboutPage() {
   // Only show the experimental-features section to logged-in users;
   // anonymous viewers don't see it at all.
   const user = await getCurrentUser();
-  const showExperimental = user !== null;
   const t = await getTranslations("about");
   const tHome = await getTranslations("home");
   const locale = await getLocale();
@@ -248,7 +248,9 @@ export default async function AboutPage() {
                   })}
                 </p>
               </div>
-              <p className="mb-3 text-foreground">{t("accuracy.issuesIntro")}</p>
+              <p className="mb-3 text-foreground">
+                {t("accuracy.issuesIntro")}
+              </p>
               <ul className="space-y-2 text-foreground">
                 {accuracyIssues.map((item) => (
                   <li key={item} className="flex items-start gap-2">
@@ -292,12 +294,21 @@ export default async function AboutPage() {
               </p>
             </section>
 
-            {showExperimental && (
+            {user && (
               <section>
                 <h2 className={cn(typography.sectionTitle, "mb-3")}>
                   {t("experimental.heading")}
                 </h2>
                 <p className="mb-3 text-foreground">{t("experimental.body")}</p>
+                {user.experimentalAccess ? (
+                  <p className="text-foreground">
+                    {t("experimental.alreadyHaveAccess")}
+                  </p>
+                ) : (
+                  <ExperimentalWaitlistButton
+                    initialOnWaitlist={user.experimentalWaitlistAt !== null}
+                  />
+                )}
               </section>
             )}
           </div>

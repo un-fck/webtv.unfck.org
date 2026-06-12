@@ -195,7 +195,11 @@
     },
     "experimental": {
       "heading": "Funcionalidades experimentales",
-      "body": "Para unirse a la lista de espera de funcionalidades emergentes o en pruebas, haga clic aquí:"
+      "body": "Para unirse a la lista de espera de funcionalidades emergentes o en pruebas, haga clic aquí:",
+      "joinButton": "Unirse a la lista de espera",
+      "onList": "Está en la lista de espera",
+      "leave": "Salir de la lista de espera",
+      "alreadyHaveAccess": "Ya tiene acceso a las funcionalidades experimentales."
     }
   },
   "error": {
