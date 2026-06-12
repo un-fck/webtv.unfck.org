@@ -40,6 +40,7 @@ import {
 import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { rememberScheduleUrl } from "@/lib/schedule-return";
 import { CategoryPill } from "@/components/category-pill";
+import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
 // Curated categories shown inline as primary filter pills, in display order.
@@ -536,6 +537,7 @@ export function VideoTable({
 }: VideoTableProps) {
   const router = useRouter();
   const t = useT();
+  const tHome = useTranslations("home");
   const tCategory = useCategoryName();
   const searchParams = useSearchParams();
   // Active UI locale; appended to /api/videos so server-side
@@ -1137,6 +1139,18 @@ export function VideoTable({
             </span>
           </label>
         )}
+        {/* Provenance note — muted body text with extra breathing room so it
+            reads as a legend for the table below rather than another filter
+            control. */}
+        <p className={cn(typography.body, "pt-1 text-muted-foreground")}>
+          {tHome("disclaimer")}{" "}
+          <Link
+            href="/about"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            {tHome("learnMore")}
+          </Link>
+        </p>
       </div>
 
       {/* Search results: count text only — sort is always date-desc. */}

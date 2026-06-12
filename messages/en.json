@@ -1,7 +1,7 @@
 {
   "metadata": {
     "siteTitle": "UN Transcripts",
-    "siteDescription": "Browse UN Web TV videos with transcripts of all speeches",
+    "siteDescription": "Browse UN Web TV videos with automatically generated transcripts of all speeches — not official UN records",
     "aboutTitle": "About — UN Transcripts",
     "aboutDescription": "What UN Web TV Transcripts is, who it serves, how it works, and its accuracy and limitations.",
     "loginTitle": "Sign in — UN Transcripts",
@@ -33,6 +33,7 @@
   "home": {
     "headline": "Read what was said at the UN.",
     "lead": "Skim meeting transcripts, find speakers, jump to the moment in the video.",
+    "disclaimer": "Transcripts are generated automatically and are not official UN records.",
     "learnMore": "Learn more →",
     "backToHomepage": "← Back to homepage"
   },
@@ -257,7 +258,9 @@
       "audioOutOfSyncRequest": "Request a fresh transcription",
       "audioOutOfSyncStarting": "Starting…",
       "audioOutOfSyncSignIn": "Sign in to request a fresh transcription",
-      "audioOutOfSyncInProgress": "A fresh transcription is in progress."
+      "audioOutOfSyncInProgress": "A fresh transcription is in progress.",
+      "transcriptDisclaimer": "Automatically generated transcript — may contain errors. Not an official United Nations record. <aboutLink>Learn more</aboutLink>",
+      "exportDisclaimer": "Automatically generated transcript — may contain errors. Not an official United Nations record."
     },
     "highlightsOnly": "Highlights only",
     "allContent": "All content with highlights"

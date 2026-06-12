@@ -26,6 +26,9 @@ import {
 import { TranscriptView } from "@/components/transcript-view";
 import { RawTranscriptView } from "@/components/raw-transcript-view";
 import { FlaggedTranscriptBanner } from "@/components/flagged-transcript-banner";
+import { Link } from "@/i18n/navigation";
+import { typography } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 export interface LanguageOption {
   code: string;
@@ -669,6 +672,7 @@ export function TranscriptionPanel({
   const downloadDocx = () => {
     if (!segments || !statements) return;
     let rtf = "{\\rtf1\\ansi\\deff0\n";
+    rtf += `{\\i ${escapeRtf(t("exportDisclaimer"))}}\\line\\line\n`;
     segments.forEach((segment) => {
       const firstStmtIndex = segment.statementIndices[0] ?? 0;
       rtf += `{\\b ${escapeRtf(getSpeakerText(firstStmtIndex))}`;
@@ -770,6 +774,13 @@ export function TranscriptionPanel({
       });
     });
 
+    // Keep the disclaimer off the data sheet (row 1 stays the header for
+    // anyone piping the file into pandas etc.) — it gets its own sheet.
+    const notesSheet = workbook.addWorksheet("Notes");
+    notesSheet.getColumn(1).width = 110;
+    notesSheet.getCell("A1").value = t("exportDisclaimer");
+    notesSheet.getCell("A2").value = window.location.href;
+
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -809,7 +820,11 @@ export function TranscriptionPanel({
   const downloadTxt = () => {
     const body = buildPlainTextBody();
     if (body === null) return;
-    triggerDownload(body, "txt", "text/plain;charset=utf-8");
+    triggerDownload(
+      `${t("exportDisclaimer")}\n\n---\n\n${body}`,
+      "txt",
+      "text/plain;charset=utf-8",
+    );
   };
 
   // Returns true on a successful clipboard write so the toolbar can decide
@@ -834,6 +849,7 @@ export function TranscriptionPanel({
       `Language: ${selectedLanguage}`,
       `Transcript: ${pageUrl}`,
       `JSON API: ${jsonUrl}`,
+      t("exportDisclaimer"),
     ].join("\n");
     const text = `${header}\n\n---\n\n${body}`;
     try {
@@ -888,12 +904,17 @@ export function TranscriptionPanel({
   const downloadSrt = () => {
     const cues = buildCaptionCues();
     if (cues.length === 0) return;
-    const body = cues
-      .map(
+    // SRT has no comment syntax, so the disclaimer rides as a short cue at
+    // the very start (briefly visible in the player).
+    const disclaimerEnd = Math.max(1000, Math.min(2000, cues[0].start));
+    const disclaimerCue = `1\n${formatCueTime(0, ",")} --> ${formatCueTime(disclaimerEnd, ",")}\n[${t("exportDisclaimer")}]\n`;
+    const body = [
+      disclaimerCue,
+      ...cues.map(
         (cue, i) =>
-          `${i + 1}\n${formatCueTime(cue.start, ",")} --> ${formatCueTime(cue.end, ",")}\n${cue.text}\n`,
-      )
-      .join("\n");
+          `${i + 2}\n${formatCueTime(cue.start, ",")} --> ${formatCueTime(cue.end, ",")}\n${cue.text}\n`,
+      ),
+    ].join("\n");
     triggerDownload(body, "srt", "application/x-subrip;charset=utf-8");
   };
 
@@ -902,6 +923,7 @@ export function TranscriptionPanel({
     if (cues.length === 0) return;
     const body =
       "WEBVTT\n\n" +
+      `NOTE ${t("exportDisclaimer")}\n\n` +
       cues
         .map(
           (cue) =>
@@ -1073,6 +1095,29 @@ export function TranscriptionPanel({
         onDownloadVtt={downloadVtt}
         onCopyToClipboard={copyToClipboard}
       />
+
+      {/* Permanent provenance note for automatic transcripts, styled like the
+          panel's other notification bubbles (FlaggedTranscriptBanner, the
+          no-transcript hint) but in the neutral register since it is not an
+          exceptional state. Scoped like the FlaggedTranscriptBanner: hidden in
+          the PV view, where the content actually is the official record. */}
+      {viewMode !== "pv" &&
+        (segments || (rawParagraphs && rawParagraphs.length > 0)) && (
+          <div className="mt-2 rounded-lg border border-border bg-muted/30 px-4 py-3">
+            <p className={cn(typography.body, "text-muted-foreground")}>
+              {t.rich("transcriptDisclaimer", {
+                aboutLink: (chunks) => (
+                  <Link
+                    href="/about"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </p>
+          </div>
+        )}
 
       {checking && stage === "idle" && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">

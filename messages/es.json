@@ -1,7 +1,7 @@
 {
   "metadata": {
     "siteTitle": "Transcripciones de la ONU",
-    "siteDescription": "Explore los vídeos de UN Web TV con transcripciones de todas las intervenciones",
+    "siteDescription": "Explore los vídeos de UN Web TV con transcripciones generadas automáticamente de todas las intervenciones — no son actas oficiales de las Naciones Unidas",
     "aboutTitle": "Acerca de — Transcripciones de la ONU",
     "aboutDescription": "Qué es UN Web TV Transcripts, a quién va dirigido, cómo funciona y sus limitaciones de precisión.",
     "loginTitle": "Iniciar sesión — Transcripciones de la ONU",
@@ -33,6 +33,7 @@
   "home": {
     "headline": "Lea lo que se dijo en la ONU.",
     "lead": "Recorra las transcripciones de las reuniones, encuentre oradores, vaya al momento en el vídeo.",
+    "disclaimer": "Las transcripciones se generan automáticamente y no son actas oficiales de las Naciones Unidas.",
     "learnMore": "Más información →",
     "backToHomepage": "← Volver al inicio"
   },
@@ -274,7 +275,9 @@
       "audioOutOfSyncRequest": "Solicitar una nueva transcripción",
       "audioOutOfSyncStarting": "Iniciando…",
       "audioOutOfSyncSignIn": "Inicie sesión para solicitar una nueva transcripción",
-      "audioOutOfSyncInProgress": "Una nueva transcripción está en curso."
+      "audioOutOfSyncInProgress": "Una nueva transcripción está en curso.",
+      "transcriptDisclaimer": "Transcripción generada automáticamente — puede contener errores. No es un acta oficial de las Naciones Unidas. <aboutLink>Más información</aboutLink>",
+      "exportDisclaimer": "Transcripción generada automáticamente — puede contener errores. No es un acta oficial de las Naciones Unidas."
     },
     "highlightsOnly": "Solo destacados",
     "allContent": "Todo el contenido con destacados"
