@@ -63,7 +63,9 @@ export function LoginForm() {
                   required
                   autoComplete="email"
                   aria-invalid={status === "error" ? true : undefined}
-                  aria-describedby={status === "error" ? "email-error" : undefined}
+                  aria-describedby={
+                    status === "error" ? "email-error" : undefined
+                  }
                   className="w-full rounded-lg border border-border px-4 py-2.5 text-sm transition-all placeholder:text-muted-foreground focus:border-un-blue focus:ring-2 focus:ring-un-blue/20 focus:outline-none"
                 />
               </div>

@@ -20,10 +20,7 @@ import {
 import { currentWorkerId } from "./worker-identity";
 import { identifySpeakers } from "./pipeline";
 import type { SpeakerMapping } from "./speakers";
-import {
-  trackTranscription,
-  trackTranscriptionError,
-} from "./usage-tracking";
+import { trackTranscription, trackTranscriptionError } from "./usage-tracking";
 import { bcp47ToKalturaName } from "./languages";
 import type { GeminiTranscriptionOptions } from "./gemini-transcription";
 import { setSpeakerMapping } from "./speakers";
@@ -387,12 +384,7 @@ export async function runSpeakerIdentification(
   // reidentify script).
   const claimed = await claimTranscript(
     transcriptId,
-    [
-      "interrupted",
-      "identifying_speakers",
-      "analyzing_topics",
-      "completed",
-    ],
+    ["interrupted", "identifying_speakers", "analyzing_topics", "completed"],
     "identifying_speakers",
     currentWorkerId(),
   );
@@ -551,11 +543,8 @@ export async function submitTranscription(
 export async function runPropositionAnalysisJob(
   transcriptId: string,
 ): Promise<{ ok: boolean; code?: string; message?: string }> {
-  const {
-    claimAnalysis,
-    releaseAnalysis,
-    updateTranscriptContent,
-  } = await import("./db");
+  const { claimAnalysis, releaseAnalysis, updateTranscriptContent } =
+    await import("./db");
   const { getSpeakerMapping } = await import("./speakers");
   const { analyzePropositions } = await import("./pipeline");
   const { AzureOpenAI } = await import("openai");

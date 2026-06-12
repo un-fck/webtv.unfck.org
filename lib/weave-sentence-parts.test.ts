@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  weaveSentenceParts,
-  type WeaveWord,
-} from "@/lib/weave-sentence-parts";
+import { weaveSentenceParts, type WeaveWord } from "@/lib/weave-sentence-parts";
 
 /**
  * Tests cover every per-language provider currently wired in STT_ROUTING

@@ -10,11 +10,12 @@ import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
 const SECTION_KINDS: EntityKind[] = ["country", "group", "org"];
-const SECTION_TITLE_KEY: Record<EntityKind, "countries" | "groups" | "organs"> = {
-  country: "countries",
-  group: "groups",
-  org: "organs",
-};
+const SECTION_TITLE_KEY: Record<EntityKind, "countries" | "groups" | "organs"> =
+  {
+    country: "countries",
+    group: "groups",
+    org: "organs",
+  };
 
 function profileHref(slug: string, name?: string | null) {
   const base = `/speakers/${slug}`;
@@ -35,8 +36,7 @@ function EntityRow({
   const [open, setOpen] = useState(false);
   const t = useTranslations("speakerOverview");
 
-  const labelMatches =
-    searching && entity.label.toLowerCase().includes(query);
+  const labelMatches = searching && entity.label.toLowerCase().includes(query);
   // Person-match-only: search hit persons inside this org but not the org name
   // itself. Auto-expand and filter the list down to the matching persons.
   const personMatchOnly = searching && !labelMatches;

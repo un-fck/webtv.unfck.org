@@ -32,10 +32,7 @@ async function respondWithCached(cached: Transcript) {
   // historically triggered an auto-rerun of the analysis pipeline from this
   // POST). Both now return the same error: a cached short-circuit must not
   // silently kick off paid GPT work — recover via `pnpm retranscribe`.
-  if (
-    !cached.content.statements ||
-    cached.content.statements.length === 0
-  ) {
+  if (!cached.content.statements || cached.content.statements.length === 0) {
     return apiError(
       400,
       "old_format",

@@ -1,4 +1,9 @@
-import { getVideoByAssetId, saveVideo, type VideoI18n, type VideoRecord } from "./db";
+import {
+  getVideoByAssetId,
+  saveVideo,
+  type VideoI18n,
+  type VideoRecord,
+} from "./db";
 import { parseMeetingSymbol } from "./pv-documents";
 import { meetingSlugFromVideo } from "./meeting-slug";
 import { extractKalturaId } from "./kaltura";
@@ -314,9 +319,12 @@ export async function fetchVideosForDate(
   const yesterday = formatDate(new Date(Date.now() - 86400000));
   const revalidate = date >= today ? 300 : date === yesterday ? 3600 : 86400;
 
-  const response = await fetch(`https://webtv.un.org/${locale}/schedule/${date}`, {
-    next: { revalidate },
-  });
+  const response = await fetch(
+    `https://webtv.un.org/${locale}/schedule/${date}`,
+    {
+      next: { revalidate },
+    },
+  );
 
   const html = await response.text();
   const videos: Video[] = [];

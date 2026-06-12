@@ -208,8 +208,7 @@ export function isTranscriptFlagged(t: Transcript): boolean {
     t.time_offset_ms == null &&
     t.aligned_duration_ms != null &&
     t.source_duration_ms != null &&
-    t.aligned_duration_ms <
-      t.source_duration_ms - REALIGN_REDUCTION_TRIGGER_MS
+    t.aligned_duration_ms < t.source_duration_ms - REALIGN_REDUCTION_TRIGGER_MS
   );
 }
 
@@ -520,7 +519,10 @@ export interface RunnableTranscript {
   audio_url: string;
   language_code: string | null;
   // Narrowed: the runnable query's WHERE clause only ever matches these two.
-  transcription_status: Extract<TranscriptionStatus, "scheduled" | "interrupted">;
+  transcription_status: Extract<
+    TranscriptionStatus,
+    "scheduled" | "interrupted"
+  >;
   retry_count: number;
   has_raw_paragraphs: boolean;
   created_at: Date;
@@ -870,10 +872,10 @@ export async function withVideoLock<T>(
 ): Promise<T> {
   const key = `${kalturaId}:${language ?? ""}`;
   return withTransaction(async (client) => {
-    await client.query(
-      "SELECT pg_advisory_xact_lock($1, hashtext($2)::int)",
-      [LOCK_NS_VIDEO, key],
-    );
+    await client.query("SELECT pg_advisory_xact_lock($1, hashtext($2)::int)", [
+      LOCK_NS_VIDEO,
+      key,
+    ]);
     return fn(client);
   });
 }
@@ -1654,14 +1656,8 @@ async function runVideosQuery(args: {
   offset: number;
   localeFilter?: LocaleFilter;
 }): Promise<VideosQueryResult> {
-  const {
-    conditions,
-    conditionArgs,
-    orderBy,
-    pageSize,
-    offset,
-    localeFilter,
-  } = args;
+  const { conditions, conditionArgs, orderBy, pageSize, offset, localeFilter } =
+    args;
 
   const filterActive = localeFilterActive(localeFilter);
   const whereAll = conditions.join(" AND ");
@@ -1842,10 +1838,7 @@ export async function queryVideos(
     // back to date desc.
     const pattern = `%${trimmedQ}%`;
     return runVideosQuery({
-      conditions: [
-        ...conditions,
-        "(title ILIKE ? OR clean_title ILIKE ?)",
-      ],
+      conditions: [...conditions, "(title ILIKE ? OR clean_title ILIKE ?)"],
       conditionArgs: [...conditionArgs, pattern, pattern],
       orderBy: explicit ?? "date DESC, scheduled_time ASC, asset_id ASC",
       pageSize,

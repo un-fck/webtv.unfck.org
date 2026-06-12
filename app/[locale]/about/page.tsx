@@ -234,7 +234,9 @@ export default async function AboutPage() {
                   })}
                 </p>
               </div>
-              <p className="mb-3 text-foreground">{t("accuracy.issuesIntro")}</p>
+              <p className="mb-3 text-foreground">
+                {t("accuracy.issuesIntro")}
+              </p>
               <ul className="space-y-2 text-foreground">
                 {accuracyIssues.map((item) => (
                   <li key={item} className="flex items-start gap-2">

@@ -83,7 +83,11 @@ export async function rateLimit(opts: {
   }
 }
 
-function rateLimitedResponse(resetMs: number, message: string, status: 429 | 503): NextResponse {
+function rateLimitedResponse(
+  resetMs: number,
+  message: string,
+  status: 429 | 503,
+): NextResponse {
   const retryAfter = Math.ceil(resetMs / 1000);
   const res = apiError(
     status,
@@ -146,7 +150,9 @@ export async function enforceGlobalDailyLimit(
     count: result.count,
     reset_in_seconds: Math.ceil(result.resetMs / 1000),
   };
-  console.warn(JSON.stringify({ event: "global_daily_ceiling_tripped", ...meta }));
+  console.warn(
+    JSON.stringify({ event: "global_daily_ceiling_tripped", ...meta }),
+  );
   Sentry.captureMessage(`Global daily ceiling tripped: ${bucket}`, {
     level: "warning",
     tags: { kind: "global_daily_ceiling" },

@@ -182,7 +182,8 @@ export function AnalysisView({
                     key={pos.stance}
                     className={`rounded-full px-2 py-0.5 text-xs ${STANCE_COLORS[pos.stance].bg} ${STANCE_COLORS[pos.stance].text}`}
                   >
-                    {tStance(pos.stance as StanceKey)}: {pos.stakeholders.length}
+                    {tStance(pos.stance as StanceKey)}:{" "}
+                    {pos.stakeholders.length}
                   </span>
                 ))}
               </div>

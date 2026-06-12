@@ -138,139 +138,136 @@ export function TranscriptToolbar({
       <div className="flex flex-wrap items-center gap-2">
         <h2 className={typography.sectionTitle}>{t("transcript")}</h2>
         {availableLanguages.length > 0 && (
-        <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
-          <PopoverTrigger
-            className={cn(
-              typography.label,
-              "flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-            )}
-          >
-            <Globe className="h-3 w-3" />
-            {selectedLangName}
-            <ChevronDown className="h-3 w-3" />
-          </PopoverTrigger>
-          <PopoverContent
-            align="start"
-            className="w-52 overflow-hidden p-0"
-          >
-            <ul role="menu" className="flex flex-col">
-              {availableLanguages.map((lang) => (
-                <li key={lang.code} role="none">
-                  <button
-                    role="menuitem"
-                    disabled={!lang.available}
-                    onClick={() => {
-                      if (lang.available) {
-                        onLanguageChange(lang.code);
-                        setLanguageOpen(false);
-                      }
-                    }}
-                    className={cn(
-                      "flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-                      !lang.available
-                        ? "cursor-not-allowed text-muted-foreground/40"
-                        : lang.code === selectedLanguage
-                          ? "bg-muted/50 font-medium"
-                          : "hover:bg-muted",
-                    )}
-                  >
-                    <span className="flex-1">{displayName(lang.code)}</span>
-                    {!lang.available && (
-                      <span className="text-[10px] text-muted-foreground/40">
-                        {t("noAudio")}
-                      </span>
-                    )}
-                    {lang.code === selectedLanguage && (
-                      <Check className="h-3 w-3 text-primary" />
-                    )}
-                    {lang.available && lang.transcriptStatus === "completed" && (
-                      <span
-                        className="h-2 w-2 rounded-full bg-green-500"
-                        title={t("transcriptAvailable")}
-                      />
-                    )}
-                    {lang.available &&
-                      lang.transcriptStatus &&
-                      lang.transcriptStatus !== "completed" &&
-                      lang.transcriptStatus !== "error" && (
-                        <span
-                          className="h-2 w-2 animate-pulse rounded-full bg-amber-500"
-                          title={t("inProgress")}
-                        />
-                      )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </PopoverContent>
-        </Popover>
-      )}
-
-      {(pvSymbol || (hasSegments && (hasPropositions || hasTopics))) &&
-        viewTabCount >= 2 && (
-          <div
-            role="tablist"
-            className="flex rounded-md border border-border bg-muted"
-          >
-            <button
-              role="tab"
-              aria-selected={viewMode === "transcript"}
-              onClick={() => onViewModeChange("transcript")}
+          <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
+            <PopoverTrigger
               className={cn(
-                "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                viewMode === "transcript"
-                  ? "bg-background text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+                typography.label,
+                "flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               )}
             >
-              <FileText className="h-3 w-3" />
-              {t("transcript")}
-            </button>
-            {isLoggedIn && (
-              <button
-                role="tab"
-                aria-selected={viewMode === "analysis"}
-                onClick={() => onViewModeChange("analysis")}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                  viewMode === "analysis"
-                    ? "bg-background text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-                disabled={stage !== "completed" && !hasPropositions}
-                title={
-                  stage !== "completed" && !hasPropositions
-                    ? t("transcriptionMustComplete")
-                    : undefined
-                }
-              >
-                <BarChart3 className="h-3 w-3" />
-                {t("analysis")}
-              </button>
-            )}
-            {pvSymbol && (
-              <button
-                role="tab"
-                aria-selected={viewMode === "pv"}
-                onClick={() => onViewModeChange("pv")}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                  viewMode === "pv"
-                    ? "bg-background text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <BookOpen className="h-3 w-3" />
-                {pvSymbol?.includes("/SR.")
-                  ? t("summaryRecord")
-                  : t("verbatimRecord")}
-              </button>
-            )}
-          </div>
+              <Globe className="h-3 w-3" />
+              {selectedLangName}
+              <ChevronDown className="h-3 w-3" />
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-52 overflow-hidden p-0">
+              <ul role="menu" className="flex flex-col">
+                {availableLanguages.map((lang) => (
+                  <li key={lang.code} role="none">
+                    <button
+                      role="menuitem"
+                      disabled={!lang.available}
+                      onClick={() => {
+                        if (lang.available) {
+                          onLanguageChange(lang.code);
+                          setLanguageOpen(false);
+                        }
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+                        !lang.available
+                          ? "cursor-not-allowed text-muted-foreground/40"
+                          : lang.code === selectedLanguage
+                            ? "bg-muted/50 font-medium"
+                            : "hover:bg-muted",
+                      )}
+                    >
+                      <span className="flex-1">{displayName(lang.code)}</span>
+                      {!lang.available && (
+                        <span className="text-[10px] text-muted-foreground/40">
+                          {t("noAudio")}
+                        </span>
+                      )}
+                      {lang.code === selectedLanguage && (
+                        <Check className="h-3 w-3 text-primary" />
+                      )}
+                      {lang.available &&
+                        lang.transcriptStatus === "completed" && (
+                          <span
+                            className="h-2 w-2 rounded-full bg-green-500"
+                            title={t("transcriptAvailable")}
+                          />
+                        )}
+                      {lang.available &&
+                        lang.transcriptStatus &&
+                        lang.transcriptStatus !== "completed" &&
+                        lang.transcriptStatus !== "error" && (
+                          <span
+                            className="h-2 w-2 animate-pulse rounded-full bg-amber-500"
+                            title={t("inProgress")}
+                          />
+                        )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </PopoverContent>
+          </Popover>
         )}
 
-        </div>
-        <div className="flex items-center gap-2">
+        {(pvSymbol || (hasSegments && (hasPropositions || hasTopics))) &&
+          viewTabCount >= 2 && (
+            <div
+              role="tablist"
+              className="flex rounded-md border border-border bg-muted"
+            >
+              <button
+                role="tab"
+                aria-selected={viewMode === "transcript"}
+                onClick={() => onViewModeChange("transcript")}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  viewMode === "transcript"
+                    ? "bg-background text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <FileText className="h-3 w-3" />
+                {t("transcript")}
+              </button>
+              {isLoggedIn && (
+                <button
+                  role="tab"
+                  aria-selected={viewMode === "analysis"}
+                  onClick={() => onViewModeChange("analysis")}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    viewMode === "analysis"
+                      ? "bg-background text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  disabled={stage !== "completed" && !hasPropositions}
+                  title={
+                    stage !== "completed" && !hasPropositions
+                      ? t("transcriptionMustComplete")
+                      : undefined
+                  }
+                >
+                  <BarChart3 className="h-3 w-3" />
+                  {t("analysis")}
+                </button>
+              )}
+              {pvSymbol && (
+                <button
+                  role="tab"
+                  aria-selected={viewMode === "pv"}
+                  onClick={() => onViewModeChange("pv")}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    viewMode === "pv"
+                      ? "bg-background text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <BookOpen className="h-3 w-3" />
+                  {pvSymbol?.includes("/SR.")
+                    ? t("summaryRecord")
+                    : t("verbatimRecord")}
+                </button>
+              )}
+            </div>
+          )}
+      </div>
+      <div className="flex items-center gap-2">
         {starting && (
           <button
             disabled
@@ -288,8 +285,11 @@ export function TranscriptToolbar({
             else queue it to run automatically once it does. Anonymous users
             see a sign-in prompt instead — generation requires login so it can
             be attributed and counted against the per-user daily cap. */}
-        {!hasContent && !checking && stage === "idle" && !starting && (
-          isLoggedIn ? (
+        {!hasContent &&
+          !checking &&
+          stage === "idle" &&
+          !starting &&
+          (isLoggedIn ? (
             <button
               onClick={audioAvailable ? onTranscribe : onSchedule}
               className={cn(
@@ -315,8 +315,7 @@ export function TranscriptToolbar({
             >
               {t("signInToTranscribe")}
             </Link>
-          )
-        )}
+          ))}
 
         {/* Bell: pure subscribe toggle, only while a transcript is pending. */}
         {showBell && (
@@ -339,11 +338,7 @@ export function TranscriptToolbar({
               {/* Toast: announce to AT via aria-live, visible toast above.
                   Same slot for both Share ("link") and Copy ("transcript") —
                   they never fire simultaneously. */}
-              <div
-                role="status"
-                aria-live="polite"
-                className="sr-only"
-              >
+              <div role="status" aria-live="polite" className="sr-only">
                 {copyToast === "link"
                   ? t("linkCopied")
                   : copyToast === "transcript"
@@ -373,10 +368,7 @@ export function TranscriptToolbar({
                 <span className="hidden sm:inline">{t("download")}</span>
                 <ChevronDown className="h-3 w-3" />
               </PopoverTrigger>
-              <PopoverContent
-                align="end"
-                className="w-44 overflow-hidden p-0"
-              >
+              <PopoverContent align="end" className="w-44 overflow-hidden p-0">
                 <ul role="menu" className="flex flex-col">
                   <li role="none">
                     <button

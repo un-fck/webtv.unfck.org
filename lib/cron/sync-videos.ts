@@ -100,7 +100,9 @@ export async function runSyncVideos(
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[sync-videos:${range}] Error syncing ${video.id}: ${msg}`);
+        console.error(
+          `[sync-videos:${range}] Error syncing ${video.id}: ${msg}`,
+        );
         errors.push(`${video.id}: ${msg}`);
       }
     }
@@ -114,7 +116,9 @@ export async function runSyncVideos(
         durationsBackfilled = r.updated;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[sync-videos:${range}] Duration backfill failed: ${msg}`);
+        console.error(
+          `[sync-videos:${range}] Duration backfill failed: ${msg}`,
+        );
       }
 
       try {
@@ -123,7 +127,9 @@ export async function runSyncVideos(
         videosRestored = r.restored;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[sync-videos:${range}] Removed-video reap failed: ${msg}`);
+        console.error(
+          `[sync-videos:${range}] Removed-video reap failed: ${msg}`,
+        );
       }
     }
 

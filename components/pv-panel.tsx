@@ -237,9 +237,7 @@ export function PVPanel({
     return (
       <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        {pvSymbol.includes("/SR.")
-          ? t("loadingSummary")
-          : t("loadingVerbatim")}
+        {pvSymbol.includes("/SR.") ? t("loadingSummary") : t("loadingVerbatim")}
       </div>
     );
   }

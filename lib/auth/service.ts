@@ -149,10 +149,9 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     id: string;
     email: string;
     experimental_access: boolean;
-  }>(
-    `SELECT id, email, experimental_access FROM webtv.users WHERE id = ?`,
-    [session.userId],
-  );
+  }>(`SELECT id, email, experimental_access FROM webtv.users WHERE id = ?`, [
+    session.userId,
+  ]);
   if (!rows[0]) return null;
   return {
     id: rows[0].id,

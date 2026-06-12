@@ -3,7 +3,11 @@ import { Roboto, Noto_Sans_Arabic, Noto_Sans_SC } from "next/font/google";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import {
+  getMessages,
+  getTranslations,
+  setRequestLocale,
+} from "next-intl/server";
 import "../globals.css";
 import { AnimatedCornerLogo } from "@/components/animated-corner-logo";
 import { SiteFooter } from "@/components/site-footer";

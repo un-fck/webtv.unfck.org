@@ -81,7 +81,9 @@ export const azureOpenai: TranscriptionProvider = {
       let inputTokens = 0;
       let outputTokens = 0;
 
-      const addUsage = (raw: { usage?: { input_tokens?: number; output_tokens?: number } }) => {
+      const addUsage = (raw: {
+        usage?: { input_tokens?: number; output_tokens?: number };
+      }) => {
         inputTokens += raw.usage?.input_tokens ?? 0;
         outputTokens += raw.usage?.output_tokens ?? 0;
       };
@@ -164,7 +166,8 @@ export const azureOpenai: TranscriptionProvider = {
           ? {
               inputTokens,
               outputTokens,
-              audioSeconds: totalDurationMs > 0 ? totalDurationMs / 1000 : undefined,
+              audioSeconds:
+                totalDurationMs > 0 ? totalDurationMs / 1000 : undefined,
             }
           : totalDurationMs > 0
             ? { audioSeconds: totalDurationMs / 1000 }

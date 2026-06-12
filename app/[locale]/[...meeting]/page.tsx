@@ -64,7 +64,11 @@ export default async function MeetingPage({
 
   if (!kalturaId) {
     return (
-      <main id="main" tabIndex={-1} className="min-h-screen bg-background px-4 sm:px-6">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="min-h-screen bg-background px-4 sm:px-6"
+      >
         <div className="mx-auto max-w-5xl py-8">
           <Link
             href="/"

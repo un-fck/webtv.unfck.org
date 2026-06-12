@@ -1,10 +1,7 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import {
-  CATEGORY_DOT_CLASS,
-  getCategoryColor,
-} from "@/lib/category-colors";
+import { CATEGORY_DOT_CLASS, getCategoryColor } from "@/lib/category-colors";
 import { cn } from "@/lib/utils";
 
 interface BaseProps {

@@ -146,7 +146,14 @@
      component (e.g. focus-visible:ring-*) load later in the cascade and
      override this without needing !important. The browser default outline is
      also kept as a final fallback when this rule is reset by `outline-none`. */
-  :where(button, a, [role="button"], [role="menuitem"], [role="tab"], [tabindex]):focus-visible {
+  :where(
+    button,
+    a,
+    [role="button"],
+    [role="menuitem"],
+    [role="tab"],
+    [tabindex]
+  ):focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
@@ -219,8 +226,7 @@ html {
    declares the matching --font-* variables. We pick the right primary font
    per :lang() while keeping Roboto as a Latin-script fallback. */
 :lang(ar) {
-  font-family:
-    var(--font-arabic), var(--font-roboto), system-ui, sans-serif;
+  font-family: var(--font-arabic), var(--font-roboto), system-ui, sans-serif;
 }
 
 :lang(zh) {

@@ -55,7 +55,8 @@ function buildDateRange(): string[] {
   const start = arg("start");
   const end = arg("end");
   if (start && /^\d{4}-\d{2}-\d{2}$/.test(start)) {
-    const endDate = end && /^\d{4}-\d{2}-\d{2}$/.test(end) ? new Date(end) : new Date();
+    const endDate =
+      end && /^\d{4}-\d{2}-\d{2}$/.test(end) ? new Date(end) : new Date();
     const startDate = new Date(start);
     const dates: string[] = [];
     for (

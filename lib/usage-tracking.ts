@@ -8,16 +8,10 @@ import type {
   ChatCompletionCreateParamsNonStreaming,
 } from "openai/resources/chat/completions/completions";
 
-import {
-  insertProcessingUsageEvent,
-  type ProcessingUsageProvider,
-} from "./db";
+import { insertProcessingUsageEvent, type ProcessingUsageProvider } from "./db";
 import type { GeminiUsageMetadata } from "./gemini-transcription";
 import { estimateCostUsd } from "./providers/pricing";
-import type {
-  TranscriptionProvider,
-  TranscriptUsage,
-} from "./providers/types";
+import type { TranscriptionProvider, TranscriptUsage } from "./providers/types";
 
 // Where failed usage-event inserts are spooled for later backfill. Override
 // with USAGE_EVENTS_FAILED_PATH; defaults to the OS temp dir (writable on Vercel).

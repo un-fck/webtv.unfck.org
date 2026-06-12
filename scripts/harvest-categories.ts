@@ -88,7 +88,9 @@ async function main() {
     .toISOString()
     .slice(0, 10);
   const dates = dateRange(start, 365);
-  console.error(`Harvesting ${dates.length} dates × ${LOCALES.length} locales = ${dates.length * LOCALES.length} requests...`);
+  console.error(
+    `Harvesting ${dates.length} dates × ${LOCALES.length} locales = ${dates.length * LOCALES.length} requests...`,
+  );
 
   // assetId → { locale → category }
   const perAsset = new Map<string, Partial<Record<Locale, string>>>();
@@ -142,9 +144,7 @@ async function main() {
       if (locale === "en") continue;
       const candidates = byLocale[locale];
       if (!candidates || Object.keys(candidates).length === 0) continue;
-      const best = Object.entries(candidates).sort(
-        (a, b) => b[1] - a[1],
-      )[0][0];
+      const best = Object.entries(candidates).sort((a, b) => b[1] - a[1])[0][0];
       row[locale] = best;
       anyTranslation = true;
     }
@@ -158,7 +158,9 @@ async function main() {
 
   // Summary to stderr; JSON to stdout.
   const total = Object.keys(sorted).length;
-  console.error(`\nCollected ${total} English categories with at least one translation:`);
+  console.error(
+    `\nCollected ${total} English categories with at least one translation:`,
+  );
   for (const [en, row] of Object.entries(sorted)) {
     const langs = LOCALES.filter((l) => l !== "en" && row[l]).join(",");
     console.error(`  ${en.padEnd(40)} → ${langs}`);

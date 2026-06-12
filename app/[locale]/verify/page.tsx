@@ -13,7 +13,11 @@ export async function generateMetadata() {
 export default async function VerifyPage() {
   const t = await getTranslations("verify");
   return (
-    <main id="main" tabIndex={-1} className="flex min-h-screen flex-col bg-background">
+    <main
+      id="main"
+      tabIndex={-1}
+      className="flex min-h-screen flex-col bg-background"
+    >
       <SiteHeader />
       <div className="flex flex-1 items-center justify-center px-4">
         <div className="w-full max-w-sm">

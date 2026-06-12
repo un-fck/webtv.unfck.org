@@ -45,10 +45,7 @@ export function MobileAuthSection() {
       </div>
       <button
         onClick={handleLogout}
-        className={cn(
-          linkClass,
-          "flex items-center gap-2 text-left",
-        )}
+        className={cn(linkClass, "flex items-center gap-2 text-left")}
       >
         <LogOut className="h-4 w-4 text-muted-foreground" />
         {t("signOut")}

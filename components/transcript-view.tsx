@@ -240,7 +240,9 @@ export function TranscriptView({
                                 sent.text,
                                 sent.words,
                               );
-                              const wholeIsClickable = !parts.some((p) => p.word);
+                              const wholeIsClickable = !parts.some(
+                                (p) => p.word,
+                              );
                               const inner = parts.map((part, partIdx) => {
                                 if (part.word) {
                                   const isActiveWord =
@@ -282,7 +284,7 @@ export function TranscriptView({
                                     : {})}
                                   className={`${
                                     wholeIsClickable
-                                      ? "cursor-pointer hover:opacity-70 "
+                                      ? "cursor-pointer hover:opacity-70"
                                       : ""
                                   }${isHighlighted ? pillClass : ""}`}
                                   style={{

@@ -65,9 +65,7 @@ export function SubscribeToggle({ kalturaId, language }: SubscribeToggleProps) {
     <button
       onClick={toggle}
       disabled={pending}
-      title={
-        subscribed ? t("subscribedTooltip") : t("subscribeTooltip")
-      }
+      title={subscribed ? t("subscribedTooltip") : t("subscribeTooltip")}
       className={cn(
         typography.label,
         "flex items-center gap-1.5 rounded-md border px-2.5 py-1 transition-colors disabled:opacity-50",

@@ -224,10 +224,7 @@ export async function realignTranscript(
   };
 
   const lang = getLanguageFullName(input.languageCode || "en");
-  const { entryId, audioUrl } = await getKalturaAudioUrl(
-    input.kalturaId,
-    lang,
-  );
+  const { entryId, audioUrl } = await getKalturaAudioUrl(input.kalturaId, lang);
 
   let currentSec = opts.currentSec;
   if (currentSec == null) {

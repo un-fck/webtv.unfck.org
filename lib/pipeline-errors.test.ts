@@ -28,7 +28,7 @@ describe("isTransientPipelineError", () => {
   // burn paid provider attempts on something a retry cannot fix.
   const intrinsic = [
     'AssemblyAI submit failed: {"error": "Your current account balance is negative"}',
-    "Command failed: ffmpeg -i \"/tmp/un-audio-123.mp4\" -f segment -segment_time 600",
+    'Command failed: ffmpeg -i "/tmp/un-audio-123.mp4" -f segment -segment_time 600',
     "No entry found",
     "Pipeline stalled (no progress for >2 hours); auto-marked as error.",
   ];

@@ -276,10 +276,7 @@ export async function runProcessScheduled(
       }
     }
 
-    if (
-      scheduled.length === 0 &&
-      interruptedAnalyses.length === 0
-    ) {
+    if (scheduled.length === 0 && interruptedAnalyses.length === 0) {
       return {
         processed: 0,
         started: 0,

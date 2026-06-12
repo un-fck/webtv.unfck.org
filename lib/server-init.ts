@@ -18,10 +18,7 @@
  *      start running immediately, without waiting for the next cron tick.
  *      Detached via `setImmediate` so it never blocks server readiness.
  */
-import {
-  heartbeatOwnRows,
-  markOwnRowsInterrupted,
-} from "@/lib/db";
+import { heartbeatOwnRows, markOwnRowsInterrupted } from "@/lib/db";
 import { currentWorkerId } from "@/lib/worker-identity";
 
 const HEARTBEAT_INTERVAL_MS = 60_000;
@@ -134,7 +131,8 @@ export function initWorker(): void {
   setImmediate(() => {
     void (async () => {
       try {
-        const { runProcessScheduled } = await import("@/lib/cron/process-scheduled");
+        const { runProcessScheduled } =
+          await import("@/lib/cron/process-scheduled");
         for (let attempt = 1; attempt <= 5; attempt++) {
           if (shuttingDown) return;
           const result = await runProcessScheduled({
