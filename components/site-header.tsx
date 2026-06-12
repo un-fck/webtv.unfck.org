@@ -52,6 +52,14 @@ function HeaderPickers({ compact = false }: { compact?: boolean }) {
 
 export function SiteHeader({ wide = false }: { wide?: boolean }) {
   const t = useTranslations("header");
+  // Breakpoint above which the emblem moves outboard into the page margin.
+  // - Default container is max-w-5xl (1024px); outboard needs ~46px of side
+  //   margin → viewport ≥ ~1070px. We use 1152px for comfortable breathing.
+  // - Wide container is max-w-7xl (1280px); we need ~1326px before the emblem
+  //   even fits, so we wait for 1408px before folding outboard. Below that it
+  //   stays inline next to the wordmark.
+  const outboardOnly = wide ? "hidden min-[1408px]:block" : "hidden min-[1152px]:block";
+  const inlineOnly = wide ? "min-[1408px]:hidden" : "min-[1152px]:hidden";
   return (
     <header className="relative border-b border-border py-3">
       <div
@@ -60,36 +68,64 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
           wide ? widePageWidth : pageWidth,
         )}
       >
-        {/* UN Web TV-style lockup: emblem | divider | wordmark + badge, one
-            unified click target. Below 400px the emblem and its divider drop
-            so the wordmark and badge keep room next to the pickers/menu. */}
+        {/* On wide viewports the square emblem sits in the page margin
+            immediately to the left of the centered container; on smaller
+            viewports it folds back inline with the wordmark. Both branches
+            share the same logical Link so the entire branding click target
+            stays unified. */}
+        {/* Emblem aspect is ≈1.198:1 (wider than tall); arbitrary widths
+            below = round(height × 1.198). Explicit width is also required on
+            the absolutely-positioned anchor since the global
+            `img, video { max-width: 100% }` reset would otherwise clamp to the
+            parent's containing-block width — and an absolute parent with no
+            defined width collapses to 0.
+
+            The 24.74px right offset overshoots into the container's px-8
+            padding zone so the visible gap between emblem and "United Nations"
+            equals the original horizontal logo's emblem-wordmark gap
+            (23.01/126.89 ≈ 18.14% of emblem height → 7.26px at h-10). */}
         <Link
           href="/"
           aria-label={t("logoAlt")}
-          className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-75"
+          className={cn(
+            "absolute top-1/2 end-[calc(100%-24.74px)] h-10 w-[47.9px] -translate-y-1/2 transition-opacity hover:opacity-75",
+            outboardOnly,
+          )}
         >
-          {/* Emblem aspect is ≈1.198:1 (wider than tall); the arbitrary width
-              = round(height × 1.198). */}
           <Image
             src="/images/un-emblem-colour.svg"
             alt=""
             width={152}
             height={127}
-            className="hidden h-10 w-[47.9px] shrink-0 select-none min-[400px]:block"
+            className="h-10 w-[47.9px] shrink-0 select-none"
             draggable={false}
           />
-          <span
-            aria-hidden
-            className="hidden h-10 w-px shrink-0 bg-foreground min-[400px]:block"
+        </Link>
+        <Link
+          href="/"
+          aria-label={t("logoAlt")}
+          className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-75"
+        >
+          <Image
+            src="/images/un-emblem-colour.svg"
+            alt=""
+            width={152}
+            height={127}
+            className={cn("h-10 w-[47.9px] shrink-0 select-none", inlineOnly)}
+            draggable={false}
           />
           {/* Mobile: wordmark + "Public Preview" badge stack vertically so the
               title can shrink and the badge stays visible without competing for
               row width with the pickers/menu. md+: original inline layout. */}
           <span className="flex flex-col items-start gap-1 md:flex-row md:items-center md:gap-2.5">
-            {/* Brand-first wordmark regardless of locale grammar — this is a
-                logotype, not a sentence. */}
-            <span className="text-lg leading-none font-bold tracking-tight text-foreground md:text-[23.83px]">
-              {t("wordmarkBrand")} {t("wordmarkDescriptor")}
+            {/* Both words are real text so the baseline lines up perfectly;
+                same size, only the weight differs. Brand-first wordmark
+                regardless of locale grammar — this is a logotype, not a sentence. */}
+            <span className="text-lg leading-none tracking-tight text-foreground md:text-[23.83px]">
+              <span className="hidden font-bold md:inline">
+                {t("wordmarkBrand")}{" "}
+              </span>
+              <span className="font-light">{t("wordmarkDescriptor")}</span>
             </span>
             <span className="rounded-md bg-un-blue/10 px-1.5 py-0.5 text-[10px] leading-none font-semibold whitespace-nowrap text-un-blue md:px-2 md:py-1 md:text-xs">
               {t("publicPreview")}
