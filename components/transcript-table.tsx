@@ -1,6 +1,11 @@
 "use client";
 
-import type { ServerParams } from "@/app/[locale]/page";
+import {
+  type ServerParams,
+  parseScheduleParams,
+  rawFromSearchParams,
+  scheduleParamsKey,
+} from "@/lib/schedule-params";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -24,7 +29,14 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { rememberScheduleUrl } from "@/lib/schedule-return";
 import { CategoryPill } from "@/components/category-pill";
@@ -486,6 +498,16 @@ function SegmentedToggle({
 // coarse All / With transcript toggle.
 const ALL_DOC_TYPES = ["transcript", "pv", "sr"];
 
+// What the server would render for the current address bar, in the same
+// normalized form as scheduleParamsKey(serverParams) — the two being equal
+// means the rendered page matches the URL.
+const urlParamsKey = () =>
+  scheduleParamsKey(
+    parseScheduleParams(
+      rawFromSearchParams(new URLSearchParams(window.location.search)),
+    ),
+  );
+
 interface VideoTableProps {
   videos: Video[];
   totalCount: number;
@@ -534,12 +556,43 @@ export function VideoTable({
   const [rows, setRows] = useState<Video[]>(videos);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(videos.length < totalCount);
+  // Feed identity, bumped on every reseed. An in-flight loadMore chunk was
+  // requested under the filters of a *previous* identity; if a reseed lands
+  // first, that chunk must be discarded — the upcoming view fires a loadMore
+  // automatically right after almost every filter change (short viewport
+  // keeps the sentinel visible), so this race is the rule, not the exception.
+  const feedEpoch = useRef(0);
   useEffect(() => {
+    feedEpoch.current += 1;
     setRows(videos);
     setHasMore(videos.length < totalCount);
   }, [videos, totalCount]);
 
-  // URL-driven param updater
+  // The committed server state, readable from inside timeouts without
+  // capturing a stale closure.
+  const serverParamsRef = useRef(serverParams);
+  useEffect(() => {
+    serverParamsRef.current = serverParams;
+  });
+
+  // Our navigations run inside this transition, so isNavPending flips false
+  // exactly when the router has settled (RSC payload committed) — the moment
+  // the verification effect below can tell a dropped commit from one that's
+  // simply still in flight.
+  const [isNavPending, startNavTransition] = useTransition();
+  // Set on every updateParams call; cleared once the URL's state has been
+  // verified as rendered. Gates verification to our own navigations so
+  // back/forward or <Link> traffic never triggers a spurious replace.
+  const needsVerify = useRef(false);
+  const healRetries = useRef(0);
+
+  // URL-driven param updater. The next URL is composed from the *live* URL
+  // (window.location, which router.push updates synchronously), NOT from the
+  // serverParams prop: the prop only updates when a navigation's RSC payload
+  // commits — a full round-trip after the click — so composing from it would
+  // silently revert any change still in flight (rapid "Upcoming → category
+  // pill" clicks used to drop view=upcoming this way). Only the keys present
+  // in `updates` are touched; everything else in the URL is preserved.
   const updateParams = useCallback(
     (
       updates: Partial<ServerParams> & {
@@ -548,30 +601,93 @@ export function VideoTable({
       },
     ) => {
       const { resetPage = true, replace = false, ...paramUpdates } = updates;
-      const next = { ...serverParams, ...paramUpdates };
-      if (resetPage && !("page" in paramUpdates)) {
-        next.page = 1;
-      }
+      const sp = new URLSearchParams(window.location.search);
+      const setOrDelete = (key: string, value: string | undefined) => {
+        if (value) sp.set(key, value);
+        else sp.delete(key);
+      };
+      const setList = (key: string, values: string[] | undefined) => {
+        sp.delete(key);
+        values?.forEach((v) => sp.append(key, v));
+      };
 
-      const sp = new URLSearchParams();
-      if (next.page > 1) sp.set("page", String(next.page));
-      if (next.pageSize !== 50) sp.set("pageSize", String(next.pageSize));
-      if (next.sort) sp.set("sort", next.sort);
-      if (next.date) sp.set("date", next.date);
-      next.body?.forEach((v) => sp.append("body", v));
-      next.category?.forEach((v) => sp.append("category", v));
-      next.text?.forEach((v) => sp.append("text", v));
-      if (next.q) sp.set("q", next.q);
-      if (next.includeOtherLangs) sp.set("xlang", "1");
-      if (next.view === "upcoming") sp.set("view", "upcoming");
+      if ("page" in paramUpdates)
+        setOrDelete(
+          "page",
+          (paramUpdates.page ?? 1) > 1 ? String(paramUpdates.page) : undefined,
+        );
+      else if (resetPage) sp.delete("page");
+      if ("pageSize" in paramUpdates)
+        setOrDelete(
+          "pageSize",
+          paramUpdates.pageSize && paramUpdates.pageSize !== 50
+            ? String(paramUpdates.pageSize)
+            : undefined,
+        );
+      if ("sort" in paramUpdates) setOrDelete("sort", paramUpdates.sort);
+      if ("date" in paramUpdates) setOrDelete("date", paramUpdates.date);
+      if ("body" in paramUpdates) setList("body", paramUpdates.body);
+      if ("category" in paramUpdates)
+        setList("category", paramUpdates.category);
+      if ("text" in paramUpdates) setList("text", paramUpdates.text);
+      if ("q" in paramUpdates) setOrDelete("q", paramUpdates.q);
+      if ("includeOtherLangs" in paramUpdates)
+        setOrDelete("xlang", paramUpdates.includeOtherLangs ? "1" : undefined);
+      if ("view" in paramUpdates)
+        setOrDelete(
+          "view",
+          paramUpdates.view === "upcoming" ? "upcoming" : undefined,
+        );
 
-      const href = sp.toString() ? `?${sp}` : "/";
+      const qs = sp.toString();
+      const href = qs ? `?${qs}` : "/";
+      needsVerify.current = true;
+      healRetries.current = 0;
       // Search updates use replace() so typing doesn't flood browser history.
-      if (replace) router.replace(href, { scroll: false });
-      else router.push(href, { scroll: false });
+      startNavTransition(() => {
+        if (replace) router.replace(href, { scroll: false });
+        else router.push(href, { scroll: false });
+      });
     },
-    [serverParams, router],
+    [router, startNavTransition],
   );
+
+  // Self-heal for dropped navigations: under rapid successive pushes the
+  // Next 16 router sometimes completes the final RSC fetch but never commits
+  // it — the URL is right while the rendered tree keeps the previous filter
+  // state, permanently (reproduced on 16.2.4; cf. the router-cache
+  // regressions around vercel/next.js#92187). Whenever our navigation
+  // transition settles, verify that the server state on screen matches the
+  // URL; if it still doesn't a beat later (300ms re-check, so a commit that
+  // is merely about to land isn't double-fetched), re-issue the URL as a
+  // replace() to force a fresh payload. Both sides are compared through the
+  // same parser, so a URL the server normalizes away (e.g. a 1-char q) can
+  // never cause a refresh loop; the retry cap bounds the worst case.
+  useEffect(() => {
+    if (isNavPending || !needsVerify.current) return;
+    if (urlParamsKey() === scheduleParamsKey(serverParams)) {
+      needsVerify.current = false;
+      healRetries.current = 0;
+      return;
+    }
+    if (healRetries.current >= 3) {
+      needsVerify.current = false;
+      return;
+    }
+    const id = setTimeout(() => {
+      if (urlParamsKey() === scheduleParamsKey(serverParamsRef.current)) {
+        needsVerify.current = false;
+        healRetries.current = 0;
+        return;
+      }
+      healRetries.current += 1;
+      const search = window.location.search;
+      startNavTransition(() =>
+        router.replace(search ? search : "/", { scroll: false }),
+      );
+    }, 300);
+    return () => clearTimeout(id);
+  }, [isNavPending, serverParams, searchParams, router, startNavTransition]);
 
   // Tracks the q value we last wrote to the URL ourselves, so the sync effect
   // below can tell our own live-search writes apart from external navigation.
@@ -627,6 +743,9 @@ export function VideoTable({
   const loadMore = useCallback(() => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
+    // Pagination must extend the feed the rows came from, so the chunk query
+    // is built from serverParams (the committed payload), not the URL.
+    const epoch = feedEpoch.current;
     const sp = new URLSearchParams();
     sp.set("offset", String(rows.length));
     sp.set("locale", locale);
@@ -640,6 +759,9 @@ export function VideoTable({
     fetch(`/api/videos?${sp}`)
       .then((res) => res.json())
       .then((data) => {
+        // The feed was reseeded while this chunk was in flight — it belongs
+        // to the previous filter state, drop it.
+        if (epoch !== feedEpoch.current) return;
         setRows((prev) => {
           const seen = new Set(prev.map((v) => v.id));
           const fresh = (data.videos as Video[]).filter((v) => !seen.has(v.id));

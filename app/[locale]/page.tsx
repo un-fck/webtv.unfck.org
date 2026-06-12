@@ -12,82 +12,16 @@ import { SiteHeader } from "@/components/site-header";
 import { HomeHero } from "@/components/home-hero";
 import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
+import { parseScheduleParams } from "@/lib/schedule-params";
 
 export const dynamic = "force-dynamic";
 
 const DAYS_BACK = 365;
 
-export interface ServerParams {
-  page: number;
-  pageSize: number;
-  sort?: string; // undefined = default date desc (browse and search both)
-  date?: string;
-  body?: string[];
-  category?: string[];
-  text?: string[]; // "transcript" | "pv" | "sr"
-  q?: string;
-  // "Include meetings in other languages" toggle, default off. When off and
-  // the active locale is non-English, the schedule hides meetings without a
-  // harvested i18n entry for that locale.
-  includeOtherLangs?: boolean;
-  // Schedule view mode: undefined / "recent" (default) shows today + past in
-  // descending order; "upcoming" shows strictly future days in ascending
-  // order. Ignored in search mode.
-  view?: "upcoming";
-}
-
-function parseSearchParams(
-  raw: Record<string, string | string[] | undefined>,
-): ServerParams {
-  const page = Math.max(1, parseInt(String(raw.page ?? "1"), 10) || 1);
-  const pageSize = [25, 50, 100, 200].includes(Number(raw.pageSize))
-    ? Number(raw.pageSize)
-    : 50;
-  const sort = ["date_desc", "date_asc", "title_asc", "title_desc"].includes(
-    String(raw.sort ?? ""),
-  )
-    ? String(raw.sort)
-    : undefined; // auto: date desc (default for browse and search)
-  const date =
-    typeof raw.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.date)
-      ? raw.date
-      : undefined;
-  const body = Array.isArray(raw.body)
-    ? raw.body.filter(Boolean)
-    : typeof raw.body === "string" && raw.body
-      ? [raw.body]
-      : undefined;
-  const category = Array.isArray(raw.category)
-    ? raw.category.filter(Boolean)
-    : typeof raw.category === "string" && raw.category
-      ? [raw.category]
-      : undefined;
-  const textRaw = Array.isArray(raw.text)
-    ? raw.text
-    : typeof raw.text === "string" && raw.text
-      ? [raw.text]
-      : [];
-  const text = textRaw.filter((d) => ["transcript", "pv", "sr"].includes(d));
-  const q =
-    typeof raw.q === "string" && raw.q.trim().length >= 2
-      ? raw.q.trim()
-      : undefined;
-  const includeOtherLangs = raw.xlang === "1";
-  const view = raw.view === "upcoming" ? "upcoming" : undefined;
-
-  return {
-    page,
-    pageSize,
-    sort,
-    date,
-    body: body?.length ? body : undefined,
-    category: category?.length ? category : undefined,
-    text: text.length ? text : undefined,
-    q,
-    includeOtherLangs,
-    view,
-  };
-}
+// Parsing and the ServerParams shape live in lib/schedule-params.ts — the
+// client table runs the same parser over window.location to detect dropped
+// navigations, so the two sides must never diverge.
+export type { ServerParams } from "@/lib/schedule-params";
 
 export default async function Home({
   params: routeParams,
@@ -97,7 +31,7 @@ export default async function Home({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const [{ locale }, raw] = await Promise.all([routeParams, searchParams]);
-  const params = parseSearchParams(raw);
+  const params = parseScheduleParams(raw);
 
   // Sort: explicit param wins. Otherwise default to relevance (undefined →
   // rank DESC inside queryVideos) when there's a free-text query, else
