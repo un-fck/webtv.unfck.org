@@ -125,8 +125,19 @@
     "signInPrompt": "Por favor <signInLink>inicie sesión</signInLink> para gestionar sus suscripciones."
   },
   "footer": {
-    "notOfficial": "Acta no oficial de las Naciones Unidas.",
-    "unOrgLinkLabel": "Abrir un.org en este idioma"
+    "unName": "Naciones Unidas",
+    "donate": "Donaciones",
+    "socialLabel": "Redes sociales",
+    "linksLabel": "Enlaces de las Naciones Unidas",
+    "links": {
+      "siteIndex": "Índice del sitio",
+      "contact": "Comuníquese con nosotros",
+      "copyright": "Propiedad intelectual",
+      "faq": "Preguntas Frecuentes",
+      "fraudAlert": "Alerta de fraude",
+      "privacyNotice": "Privacidad",
+      "termsOfUse": "Condiciones de utilización"
+    }
   },
   "about": {
     "pageTitle": "Acerca de",

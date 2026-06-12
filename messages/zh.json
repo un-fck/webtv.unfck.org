@@ -125,8 +125,19 @@
     "signInPrompt": "请<signInLink>登录</signInLink>以管理您的订阅。"
   },
   "footer": {
-    "notOfficial": "非联合国正式记录。",
-    "unOrgLinkLabel": "以此语言打开 un.org"
+    "unName": "联合国",
+    "donate": "捐款",
+    "socialLabel": "社交媒体",
+    "linksLabel": "联合国链接",
+    "links": {
+      "siteIndex": "网址索引",
+      "contact": "联系我们",
+      "copyright": "版权所有",
+      "faq": "常见问题解答",
+      "fraudAlert": "提防诈骗",
+      "privacyNotice": "隐私通告",
+      "termsOfUse": "使用条款"
+    }
   },
   "about": {
     "pageTitle": "关于",

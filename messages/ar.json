@@ -125,8 +125,19 @@
     "signInPrompt": "يرجى <signInLink>تسجيل الدخول</signInLink> لإدارة اشتراكاتك."
   },
   "footer": {
-    "notOfficial": "ليس محضراً رسمياً للأمم المتحدة.",
-    "unOrgLinkLabel": "فتح un.org بهذه اللغة"
+    "unName": "الأمم المتحدة",
+    "donate": "تبرعوا",
+    "socialLabel": "وسائل التواصل الاجتماعي",
+    "linksLabel": "روابط الأمم المتحدة",
+    "links": {
+      "siteIndex": "دليل الموقع",
+      "contact": "اتصل بنا",
+      "copyright": "حقوق النشر والطبع",
+      "faq": "أسئلة شائعة",
+      "fraudAlert": "تحذير من عمليات إحتيال",
+      "privacyNotice": "بيان الخصوصيات",
+      "termsOfUse": "شروط الإستخدام"
+    }
   },
   "about": {
     "pageTitle": "حول الأداة",

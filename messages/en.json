@@ -108,8 +108,19 @@
     "signInPrompt": "Please <signInLink>sign in</signInLink> to manage your subscriptions."
   },
   "footer": {
-    "notOfficial": "Not an official United Nations record.",
-    "unOrgLinkLabel": "Open un.org in this language"
+    "unName": "United Nations",
+    "donate": "Donate",
+    "socialLabel": "Social media",
+    "linksLabel": "United Nations links",
+    "links": {
+      "siteIndex": "A-Z Site Index",
+      "contact": "Contact",
+      "copyright": "Copyright",
+      "faq": "FAQ",
+      "fraudAlert": "Fraud Alert",
+      "privacyNotice": "Privacy Notice",
+      "termsOfUse": "Terms of Use"
+    }
   },
   "about": {
     "pageTitle": "About",

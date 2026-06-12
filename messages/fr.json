@@ -125,8 +125,19 @@
     "signInPrompt": "Veuillez <signInLink>vous connecter</signInLink> pour gérer vos abonnements."
   },
   "footer": {
-    "notOfficial": "Compte rendu non officiel de l'Organisation des Nations Unies.",
-    "unOrgLinkLabel": "Ouvrir un.org dans cette langue"
+    "unName": "Nations Unies",
+    "donate": "Faites un don",
+    "socialLabel": "Réseaux sociaux",
+    "linksLabel": "Liens des Nations Unies",
+    "links": {
+      "siteIndex": "Index de A à Z",
+      "contact": "Contactez-nous",
+      "copyright": "Droits d'auteur",
+      "faq": "FAQ",
+      "fraudAlert": "Courriers frauduleux",
+      "privacyNotice": "Confidentialité de l'information",
+      "termsOfUse": "Conditions d'utilisation"
+    }
   },
   "about": {
     "pageTitle": "À propos",
