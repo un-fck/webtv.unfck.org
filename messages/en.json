@@ -113,42 +113,41 @@
   },
   "about": {
     "pageTitle": "About",
-    "tagline": "Automatic transcripts for UN Web TV meetings.",
     "whatIsThis": {
       "heading": "What is this?",
-      "body": "UN Web TV Transcripts is a public preview tool that automatically generates searchable text transcripts from United Nations meeting recordings published on <webtvLink>UN Web TV</webtvLink>."
+      "body": "UN Transcripts is a public preview tool that automatically generates transcripts from public United Nations meeting recordings, for example <webtvLink>UN Web TV</webtvLink>. These transcripts are not official UN records."
     },
     "whoIsItFor": {
       "heading": "Who is it for?",
-      "intro": "The tool is designed to help anyone who needs quick access to the spoken content of UN meetings, including:",
+      "intro": "The tool is designed to help anyone who needs quick access to the spoken content of public UN meetings, including:",
       "item1": "Diplomats and delegation staff following proceedings across multiple organs",
-      "item2": "Researchers and academics studying UN debates and voting records",
+      "item2": "Researchers and academics studying public UN debates and voting records",
       "item3": "Journalists covering United Nations affairs",
-      "item4": "Civil society organisations monitoring policy discussions",
-      "item5": "UN Secretariat staff reviewing meeting records"
+      "item4": "Civil society organisations engaging in policy discussions",
+      "item5": "UN Secretariat staff reviewing public meeting records"
     },
     "coverage": {
       "heading": "What meetings are covered?",
-      "intro": "The tool covers public meetings recorded and published on UN Web TV, including:",
-      "item1": "Security Council (SC) — open meetings and briefings",
-      "item2": "General Assembly (GA) — plenary and main committee sessions",
-      "item3": "Human Rights Council (HRC)",
-      "item4": "Economic and Social Council (ECOSOC)",
-      "item5": "Other inter-governmental bodies as available on Web TV",
+      "intro": "The tool covers public meetings recorded and published on public UN platforms, including:",
+      "item1": "Security Council",
+      "item2": "General Assembly",
+      "item3": "Human Rights Council",
+      "item4": "Economic and Social Council",
+      "item5": "Other inter-governmental bodies as available on UN Web TV",
       "closed": "Closed or confidential meetings are not recorded on Web TV and are therefore not covered."
     },
     "howItWorks": {
       "heading": "How it works",
       "step1Title": "Meeting schedule collection",
-      "step1Body": "The system monitors UN Web TV for newly published meeting recordings. Meeting metadata — title, date, UN organ, and document references — is extracted from the Web TV website and stored.",
+      "step1Body": "The system keeps an always up-to-date collection of UN meetings via UN Web TV.",
       "step2Title": "Audio transcription",
-      "step2Body": "We transcribe the existing UN audio channels — the original \"floor\" mix and each official UN interpretation channel — directly. No machine translation is applied. Each channel is transcribed by a speech-to-text model chosen for that language.",
+      "step2Body": "We transcribe the existing UN audio channels — the original \"floor\" channel and each of the available official UN interpretation channels. No machine translation is applied. Each channel is transcribed by an appropriate speech-to-text model for that language.",
       "step3Title": "Speaker identification",
-      "step3Body": "After transcription, a second AI model analyses the text and audio to assign names and affiliations to each speaker where possible. It uses contextual clues — such as the chair introducing delegates, country name mentions, and speaker diarization — together with the official list of participants when available.",
+      "step3Body": "After transcription, a second model analyses the text and audio to assign names and affiliations to each speaker where possible. It uses contextual clues — such as the chair introducing delegates, country name mentions, and speaker diarization — together with the official list of participants when available. Where this is not possible, placeholders such as “Speaker 1” are displayed.",
       "step4Title": "Topic analysis",
-      "step4Body": "The transcript is automatically analysed to identify the main policy topics discussed, using categories relevant to UN proceedings (e.g. humanitarian affairs, international peace and security, human rights).",
+      "step4Body": "The transcript is automatically analysed to identify the main policy topics discussed, using categories relevant to the proceedings (e.g. humanitarian affairs, international peace and security, human rights). The defined topics depend on the content of each video, and do not follow a pre-defined schema. They are for informational purposes only.",
       "step5Title": "Official record alignment",
-      "step5Body": "Where official verbatim or summary records (PV/SR documents) exist, the system retrieves them and adds timestamps to align the text with the video. Besides timestamps, no AI processing is involved for these documents."
+      "step5Body": "Where official <pvLink>verbatim records (procès-verbaux, or PVs)</pvLink> or <srLink>summary records (SR documents)</srLink> exist, the site also makes them available alongside the unofficial automatic transcripts."
     },
     "models": {
       "heading": "Transcription model per language",
@@ -159,18 +158,17 @@
     },
     "accuracy": {
       "heading": "Accuracy and limitations",
-      "para1": "These transcripts are created using automatic speech recognition and are not official UN records.",
-      "para2": "They are a faster, unofficial reference that may be useful for monitoring and research, but should not be cited as authoritative. For the official record, please refer to the <odsLink>UN Official Document System</odsLink> (verbatim records, summary records, and resolutions).",
-      "issuesIntro": "Automatic transcription is much faster than human transcription but introduces errors a human reviewer would catch. Common issues include:",
-      "issue1": "Proper nouns — country names, delegate names, place names, and UN document symbols may be misheard or misspelt",
-      "issue2": "Technical terminology — legal or procedural phrases specific to UN practice may be transcribed incorrectly",
-      "issue3": "Accented speech — accuracy varies by speaker accent and microphone quality",
-      "issue4": "Overlapping speech — when multiple speakers talk simultaneously, attribution may be wrong"
+      "para1": "These transcripts are created using automatic speech recognition and are not official records.",
+      "para2": "They are a faster, unofficial reference, but should not be cited as authoritative. For the official record, please refer to the <odsLink>UN Official Document System</odsLink> (verbatim records, summary records, and resolutions).",
+      "issuesIntro": "Automatic transcription is much faster than human transcription but may introduce errors. Common issues include:",
+      "issue1": "Names, abbreviations or document symbols may be misheard or misspelt",
+      "issue2": "Accuracy can also vary by speaker and microphone quality",
+      "issue3": "For very long meetings, not all speakers may be distinguished"
     },
     "sources": {
       "heading": "Data sources",
       "webtvLabel": "UN Web TV",
-      "webtvBody": "— Meeting recordings and metadata, delivered via the Kaltura media platform (publicly accessible at webtv.un.org).",
+      "webtvBody": "— Meeting recordings and metadata, delivered via the platform (publicly accessible at webtv.un.org).",
       "odsLabel": "UN Official Document System",
       "odsBody": "— Official verbatim records (PV documents) retrieved from documents.un.org where available."
     },
@@ -180,7 +178,7 @@
     },
     "experimental": {
       "heading": "Experimental features",
-      "body": "Experimental features (proposition analysis, speaker directory) are available to selected UN-system accounts during the preview period. To request access, please contact the maintainers."
+      "body": "To join the wait list for emerging or test features, click here:"
     }
   },
   "error": {

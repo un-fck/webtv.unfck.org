@@ -130,42 +130,41 @@
   },
   "about": {
     "pageTitle": "À propos",
-    "tagline": "Transcriptions automatiques des réunions d'UN Web TV.",
     "whatIsThis": {
       "heading": "Qu'est-ce que c'est ?",
-      "body": "UN Web TV Transcripts est un outil en aperçu public qui génère automatiquement des transcriptions textuelles consultables à partir des enregistrements de réunions des Nations Unies publiés sur <webtvLink>UN Web TV</webtvLink>."
+      "body": "UN Transcripts est un outil en aperçu public qui génère automatiquement des transcriptions à partir des enregistrements publics de réunions des Nations Unies, par exemple <webtvLink>UN Web TV</webtvLink>. Ces transcriptions ne sont pas des documents officiels de l'ONU."
     },
     "whoIsItFor": {
       "heading": "À qui s'adresse-t-il ?",
-      "intro": "L'outil est conçu pour aider toute personne ayant besoin d'un accès rapide au contenu parlé des réunions de l'ONU, notamment :",
+      "intro": "L'outil est conçu pour aider toute personne ayant besoin d'un accès rapide au contenu parlé des réunions publiques de l'ONU, notamment :",
       "item1": "Les diplomates et le personnel des délégations qui suivent les travaux de plusieurs organes",
-      "item2": "Les chercheurs et universitaires étudiant les débats et votes de l'ONU",
+      "item2": "Les chercheurs et universitaires étudiant les débats publics et votes de l'ONU",
       "item3": "Les journalistes couvrant les affaires des Nations Unies",
-      "item4": "Les organisations de la société civile suivant les discussions politiques",
-      "item5": "Le personnel du Secrétariat de l'ONU examinant les comptes rendus de réunions"
+      "item4": "Les organisations de la société civile participant aux discussions politiques",
+      "item5": "Le personnel du Secrétariat de l'ONU examinant les comptes rendus de réunions publiques"
     },
     "coverage": {
       "heading": "Quelles réunions sont couvertes ?",
-      "intro": "L'outil couvre les réunions publiques enregistrées et publiées sur UN Web TV, notamment :",
-      "item1": "Conseil de sécurité — séances publiques et exposés",
-      "item2": "Assemblée générale — séances plénières et grandes commissions",
+      "intro": "L'outil couvre les réunions publiques enregistrées et publiées sur les plateformes publiques de l'ONU, notamment :",
+      "item1": "Conseil de sécurité",
+      "item2": "Assemblée générale",
       "item3": "Conseil des droits de l'homme",
       "item4": "Conseil économique et social",
-      "item5": "Autres organes intergouvernementaux disponibles sur Web TV",
+      "item5": "Autres organes intergouvernementaux disponibles sur UN Web TV",
       "closed": "Les réunions à huis clos ou confidentielles ne sont pas enregistrées sur Web TV et ne sont donc pas couvertes."
     },
     "howItWorks": {
       "heading": "Comment ça fonctionne",
       "step1Title": "Collecte du calendrier des réunions",
-      "step1Body": "Le système surveille UN Web TV pour repérer les nouveaux enregistrements de réunions publiés. Les métadonnées de chaque réunion — titre, date, organe de l'ONU et références documentaires — sont extraites du site Web TV et stockées.",
+      "step1Body": "Le système maintient une collection toujours à jour des réunions de l'ONU via UN Web TV.",
       "step2Title": "Transcription audio",
-      "step2Body": "Nous transcrivons directement les canaux audio existants de l'ONU — le mélange « parquet » original et chaque canal d'interprétation officielle de l'ONU. Aucune traduction automatique n'est appliquée. Chaque canal est transcrit par un modèle de reconnaissance vocale choisi pour cette langue.",
+      "step2Body": "Nous transcrivons les canaux audio existants de l'ONU — le canal « parquet » original et chacun des canaux d'interprétation officielle de l'ONU disponibles. Aucune traduction automatique n'est appliquée. Chaque canal est transcrit par un modèle de reconnaissance vocale approprié pour cette langue.",
       "step3Title": "Identification des intervenants",
-      "step3Body": "Après la transcription, un second modèle d'IA analyse le texte et l'audio pour attribuer noms et appartenances aux intervenants lorsque cela est possible. Il s'appuie sur des indices contextuels — la présidence donnant la parole, les mentions de noms de pays et la diarisation des locuteurs — ainsi que sur la liste officielle des participants lorsqu'elle est disponible.",
+      "step3Body": "Après la transcription, un second modèle analyse le texte et l'audio pour attribuer noms et appartenances aux intervenants lorsque cela est possible. Il s'appuie sur des indices contextuels — la présidence donnant la parole, les mentions de noms de pays et la diarisation des locuteurs — ainsi que sur la liste officielle des participants lorsqu'elle est disponible. Lorsque cela n'est pas possible, des libellés génériques tels que « Intervenant 1 » sont affichés.",
       "step4Title": "Analyse des sujets",
-      "step4Body": "La transcription est analysée automatiquement pour identifier les principaux sujets politiques abordés, à l'aide de catégories pertinentes pour les travaux de l'ONU (par exemple les affaires humanitaires, la paix et la sécurité internationales, les droits de l'homme).",
+      "step4Body": "La transcription est analysée automatiquement pour identifier les principaux sujets politiques abordés, à l'aide de catégories pertinentes pour les travaux concernés (par exemple les affaires humanitaires, la paix et la sécurité internationales, les droits de l'homme). Les sujets définis dépendent du contenu de chaque vidéo et ne suivent pas un schéma prédéfini. Ils sont fournis à titre purement informatif.",
       "step5Title": "Alignement avec les comptes rendus officiels",
-      "step5Body": "Lorsqu'il existe des comptes rendus officiels (procès-verbaux ou comptes rendus analytiques, documents PV/SR), le système les récupère et y ajoute des horodatages pour les aligner avec la vidéo. À part les horodatages, aucun traitement par IA n'est appliqué à ces documents."
+      "step5Body": "Lorsqu'il existe des <pvLink>procès-verbaux officiels (comptes rendus in extenso, ou PV)</pvLink> ou des <srLink>comptes rendus analytiques (documents SR)</srLink>, le site les met également à disposition aux côtés des transcriptions automatiques non officielles."
     },
     "models": {
       "heading": "Modèle de transcription par langue",
@@ -176,18 +175,17 @@
     },
     "accuracy": {
       "heading": "Précision et limites",
-      "para1": "Ces transcriptions sont créées par reconnaissance vocale automatique et ne sont pas des documents officiels de l'ONU.",
-      "para2": "Il s'agit d'une référence non officielle, plus rapide, qui peut être utile pour le suivi et la recherche, mais qui ne doit pas être citée comme faisant foi. Pour les documents officiels, veuillez consulter le <odsLink>Système de diffusion électronique des documents de l'ONU</odsLink> (procès-verbaux, comptes rendus analytiques et résolutions).",
-      "issuesIntro": "La transcription automatique est beaucoup plus rapide que la transcription humaine, mais elle introduit des erreurs qu'un relecteur humain détecterait. Les problèmes courants incluent :",
-      "issue1": "Noms propres — les noms de pays, de délégués, de lieux et les cotes de documents de l'ONU peuvent être mal interprétés ou mal orthographiés",
-      "issue2": "Terminologie technique — les formules juridiques ou procédurales propres à la pratique de l'ONU peuvent être transcrites incorrectement",
-      "issue3": "Voix accentuées — la précision varie selon l'accent du locuteur et la qualité du microphone",
-      "issue4": "Voix superposées — lorsque plusieurs personnes parlent simultanément, l'attribution peut être erronée"
+      "para1": "Ces transcriptions sont créées par reconnaissance vocale automatique et ne sont pas des documents officiels.",
+      "para2": "Il s'agit d'une référence non officielle, plus rapide, mais qui ne doit pas être citée comme faisant foi. Pour les documents officiels, veuillez consulter le <odsLink>Système de diffusion électronique des documents de l'ONU</odsLink> (procès-verbaux, comptes rendus analytiques et résolutions).",
+      "issuesIntro": "La transcription automatique est beaucoup plus rapide que la transcription humaine, mais elle peut introduire des erreurs. Les problèmes courants incluent :",
+      "issue1": "Les noms, abréviations ou cotes de documents peuvent être mal entendus ou mal orthographiés",
+      "issue2": "La précision peut aussi varier selon le locuteur et la qualité du microphone",
+      "issue3": "Pour les réunions très longues, tous les intervenants ne sont pas toujours distingués"
     },
     "sources": {
       "heading": "Sources de données",
       "webtvLabel": "UN Web TV",
-      "webtvBody": "— Enregistrements et métadonnées des réunions, fournis via la plateforme média Kaltura (accessible publiquement sur webtv.un.org).",
+      "webtvBody": "— Enregistrements et métadonnées des réunions, fournis via la plateforme (accessible publiquement sur webtv.un.org).",
       "odsLabel": "Système de diffusion électronique des documents de l'ONU",
       "odsBody": "— Comptes rendus officiels (procès-verbaux) récupérés sur documents.un.org lorsqu'ils sont disponibles."
     },
@@ -197,7 +195,7 @@
     },
     "experimental": {
       "heading": "Fonctionnalités expérimentales",
-      "body": "Des fonctionnalités expérimentales (analyse des propositions, répertoire des intervenants) sont disponibles pour certains comptes du système des Nations Unies pendant la période d'aperçu. Pour demander l'accès, veuillez contacter les responsables."
+      "body": "Pour rejoindre la liste d'attente des fonctionnalités émergentes ou en test, cliquez ici :"
     }
   },
   "error": {

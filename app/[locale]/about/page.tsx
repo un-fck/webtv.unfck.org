@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils";
 // import { STT_ROUTING } from "@/lib/providers/config";
 // import { getProvider } from "@/lib/providers/registry";
 // import { UN_LANGUAGES, getLanguageDisplayName } from "@/lib/languages";
-import { getCurrentUser, isAllowedDomain } from "@/lib/auth/service";
+import { getCurrentUser } from "@/lib/auth/service";
 
 // Reads the current user to decide whether to render the experimental-features
-// section (UN-domain users only); must render dynamically per viewer.
+// section (logged-in users only); must render dynamically per viewer.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
@@ -61,11 +61,10 @@ function Step({
 }
 
 export default async function AboutPage() {
-  // Only show the experimental-features section to logged-in users on a
-  // UN-system domain. Anonymous viewers and non-UN logged-in users don't see
-  // it at all (deliberate: experimental access is currently UN-only).
+  // Only show the experimental-features section to logged-in users;
+  // anonymous viewers don't see it at all.
   const user = await getCurrentUser();
-  const showExperimental = user ? await isAllowedDomain(user.email) : false;
+  const showExperimental = user !== null;
   const t = await getTranslations("about");
   const tHome = await getTranslations("home");
   const locale = await getLocale();
@@ -88,7 +87,6 @@ export default async function AboutPage() {
     t("accuracy.issue1"),
     t("accuracy.issue2"),
     t("accuracy.issue3"),
-    t("accuracy.issue4"),
   ];
 
   return (
@@ -111,7 +109,6 @@ export default async function AboutPage() {
             <h1 className={cn(typography.pageTitle, "mb-3")}>
               {t("pageTitle")}
             </h1>
-            <p className={typography.lead}>{t("tagline")}</p>
           </div>
 
           <div className={cn(typography.prose, "space-y-10")}>
@@ -176,7 +173,24 @@ export default async function AboutPage() {
                   {t("howItWorks.step4Body")}
                 </Step>
                 <Step number="5" title={t("howItWorks.step5Title")}>
-                  {t("howItWorks.step5Body")}
+                  {t.rich("howItWorks.step5Body", {
+                    pvLink: (chunks) => (
+                      <ExternalLink
+                        href="https://www.un.org/dgacm/en/content/verbatim-reporting"
+                        className="text-un-blue-text underline underline-offset-4 hover:opacity-75"
+                      >
+                        {chunks}
+                      </ExternalLink>
+                    ),
+                    srLink: (chunks) => (
+                      <ExternalLink
+                        href="https://research.un.org/en/docs/meetings"
+                        className="text-un-blue-text underline underline-offset-4 hover:opacity-75"
+                      >
+                        {chunks}
+                      </ExternalLink>
+                    ),
+                  })}
                 </Step>
               </div>
             </section>

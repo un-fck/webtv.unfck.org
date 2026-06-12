@@ -130,42 +130,41 @@
   },
   "about": {
     "pageTitle": "Acerca de",
-    "tagline": "Transcripciones automáticas de las reuniones de UN Web TV.",
     "whatIsThis": {
       "heading": "¿Qué es esto?",
-      "body": "UN Web TV Transcripts es una herramienta en vista previa pública que genera automáticamente transcripciones de texto consultables a partir de las grabaciones de reuniones de las Naciones Unidas publicadas en <webtvLink>UN Web TV</webtvLink>."
+      "body": "UN Transcripts es una herramienta en vista previa pública que genera automáticamente transcripciones a partir de las grabaciones públicas de reuniones de las Naciones Unidas, por ejemplo <webtvLink>UN Web TV</webtvLink>. Estas transcripciones no son actas oficiales de la ONU."
     },
     "whoIsItFor": {
       "heading": "¿A quién va dirigido?",
-      "intro": "La herramienta está diseñada para ayudar a cualquier persona que necesite acceso rápido al contenido hablado de las reuniones de la ONU, incluidos:",
+      "intro": "La herramienta está diseñada para ayudar a cualquier persona que necesite acceso rápido al contenido hablado de las reuniones públicas de la ONU, incluidos:",
       "item1": "Diplomáticos y personal de delegaciones que siguen las actuaciones en varios órganos",
-      "item2": "Investigadores y académicos que estudian los debates y votaciones de la ONU",
+      "item2": "Investigadores y académicos que estudian los debates públicos y votaciones de la ONU",
       "item3": "Periodistas que cubren los asuntos de las Naciones Unidas",
-      "item4": "Organizaciones de la sociedad civil que supervisan los debates políticos",
-      "item5": "Personal de la Secretaría de la ONU que revisa actas de reuniones"
+      "item4": "Organizaciones de la sociedad civil que participan en los debates políticos",
+      "item5": "Personal de la Secretaría de la ONU que revisa actas de reuniones públicas"
     },
     "coverage": {
       "heading": "¿Qué reuniones se cubren?",
-      "intro": "La herramienta cubre las reuniones públicas grabadas y publicadas en UN Web TV, entre ellas:",
-      "item1": "Consejo de Seguridad — sesiones públicas y exposiciones informativas",
-      "item2": "Asamblea General — sesiones plenarias y de las Comisiones Principales",
+      "intro": "La herramienta cubre las reuniones públicas grabadas y publicadas en plataformas públicas de la ONU, entre ellas:",
+      "item1": "Consejo de Seguridad",
+      "item2": "Asamblea General",
       "item3": "Consejo de Derechos Humanos",
       "item4": "Consejo Económico y Social",
-      "item5": "Otros órganos intergubernamentales disponibles en Web TV",
+      "item5": "Otros órganos intergubernamentales disponibles en UN Web TV",
       "closed": "Las reuniones a puerta cerrada o confidenciales no se graban en Web TV y, por tanto, no están cubiertas."
     },
     "howItWorks": {
       "heading": "Cómo funciona",
       "step1Title": "Recopilación del calendario de reuniones",
-      "step1Body": "El sistema supervisa UN Web TV para detectar las grabaciones de nuevas reuniones publicadas. Los metadatos de cada reunión —título, fecha, órgano de la ONU y referencias documentales— se extraen del sitio Web TV y se almacenan.",
+      "step1Body": "El sistema mantiene una colección siempre actualizada de las reuniones de la ONU a través de UN Web TV.",
       "step2Title": "Transcripción del audio",
-      "step2Body": "Transcribimos directamente los canales de audio existentes de la ONU: la mezcla original del «pleno» y cada canal de interpretación oficial. No se aplica traducción automática. Cada canal es transcrito por un modelo de reconocimiento de voz elegido para ese idioma.",
+      "step2Body": "Transcribimos los canales de audio existentes de la ONU: el canal original del «pleno» y cada uno de los canales oficiales de interpretación de la ONU disponibles. No se aplica traducción automática. Cada canal es transcrito por un modelo de reconocimiento de voz apropiado para ese idioma.",
       "step3Title": "Identificación de oradores",
-      "step3Body": "Tras la transcripción, un segundo modelo de IA analiza el texto y el audio para asignar nombres y afiliaciones a cada orador siempre que sea posible. Utiliza indicios contextuales —la presidencia presentando a los delegados, las menciones de nombres de países y la diarización de hablantes— junto con la lista oficial de participantes cuando está disponible.",
+      "step3Body": "Tras la transcripción, un segundo modelo analiza el texto y el audio para asignar nombres y afiliaciones a cada orador siempre que sea posible. Utiliza indicios contextuales —la presidencia presentando a los delegados, las menciones de nombres de países y la diarización de hablantes— junto con la lista oficial de participantes cuando está disponible. Cuando esto no es posible, se muestran marcadores genéricos como «Orador 1».",
       "step4Title": "Análisis temático",
-      "step4Body": "La transcripción se analiza automáticamente para identificar los principales temas de política tratados, utilizando categorías pertinentes a las actuaciones de la ONU (por ejemplo, asuntos humanitarios, paz y seguridad internacionales, derechos humanos).",
+      "step4Body": "La transcripción se analiza automáticamente para identificar los principales temas de política tratados, utilizando categorías pertinentes a las actuaciones correspondientes (por ejemplo, asuntos humanitarios, paz y seguridad internacionales, derechos humanos). Los temas definidos dependen del contenido de cada vídeo y no siguen un esquema predefinido. Tienen únicamente fines informativos.",
       "step5Title": "Alineación con actas oficiales",
-      "step5Body": "Cuando existen actas oficiales (actas literales o resumidas, documentos PV/SR), el sistema las recupera y añade marcas de tiempo para alinear el texto con el vídeo. Aparte de las marcas de tiempo, no se aplica procesamiento de IA a estos documentos."
+      "step5Body": "Cuando existen <pvLink>actas literales oficiales (procès-verbaux, o PV)</pvLink> o <srLink>actas resumidas (documentos SR)</srLink>, el sitio también las pone a disposición junto a las transcripciones automáticas no oficiales."
     },
     "models": {
       "heading": "Modelo de transcripción por idioma",
@@ -176,18 +175,17 @@
     },
     "accuracy": {
       "heading": "Precisión y limitaciones",
-      "para1": "Estas transcripciones se generan mediante reconocimiento automático del habla y no son actas oficiales de la ONU.",
-      "para2": "Son una referencia no oficial más rápida, útil para el seguimiento y la investigación, pero no deben citarse como autoridad. Para las actas oficiales, consulte el <odsLink>Sistema de Archivo de Documentos de la ONU</odsLink> (actas literales, actas resumidas y resoluciones).",
-      "issuesIntro": "La transcripción automática es mucho más rápida que la humana, pero introduce errores que un revisor detectaría. Problemas habituales:",
-      "issue1": "Nombres propios — los nombres de países, delegados, lugares y signaturas de documentos de la ONU pueden interpretarse o escribirse mal",
-      "issue2": "Terminología técnica — fórmulas jurídicas o de procedimiento propias de la práctica de la ONU pueden transcribirse de forma incorrecta",
-      "issue3": "Acento del orador — la precisión varía según el acento del orador y la calidad del micrófono",
-      "issue4": "Habla superpuesta — cuando varias personas hablan al mismo tiempo, la atribución puede ser incorrecta"
+      "para1": "Estas transcripciones se generan mediante reconocimiento automático del habla y no son actas oficiales.",
+      "para2": "Son una referencia no oficial más rápida, pero no deben citarse como autoridad. Para las actas oficiales, consulte el <odsLink>Sistema de Archivo de Documentos de la ONU</odsLink> (actas literales, actas resumidas y resoluciones).",
+      "issuesIntro": "La transcripción automática es mucho más rápida que la humana, pero puede introducir errores. Problemas habituales:",
+      "issue1": "Los nombres, abreviaturas o signaturas de documentos pueden oírse o escribirse mal",
+      "issue2": "La precisión también puede variar según el orador y la calidad del micrófono",
+      "issue3": "En reuniones muy largas, es posible que no se distingan todos los oradores"
     },
     "sources": {
       "heading": "Fuentes de datos",
       "webtvLabel": "UN Web TV",
-      "webtvBody": "— Grabaciones y metadatos de reuniones, entregados a través de la plataforma de medios Kaltura (accesible públicamente en webtv.un.org).",
+      "webtvBody": "— Grabaciones y metadatos de reuniones, entregados a través de la plataforma (accesible públicamente en webtv.un.org).",
       "odsLabel": "Sistema de Archivo de Documentos de la ONU",
       "odsBody": "— Actas oficiales (documentos PV) obtenidas de documents.un.org cuando están disponibles."
     },
@@ -197,7 +195,7 @@
     },
     "experimental": {
       "heading": "Funcionalidades experimentales",
-      "body": "Las funcionalidades experimentales (análisis de propuestas, directorio de oradores) están disponibles para cuentas seleccionadas del sistema de las Naciones Unidas durante el período de vista previa. Para solicitar acceso, póngase en contacto con los responsables."
+      "body": "Para unirse a la lista de espera de funcionalidades emergentes o en pruebas, haga clic aquí:"
     }
   },
   "error": {
