@@ -2,7 +2,7 @@
 
 Browse and search UN Web TV videos with AI-generated transcripts, speaker identification, and topic analysis.
 
-**Live site**: [transcripts-un-two-zero.org](https://transcripts-un-two-zero.org)
+**Live site**: [transcripts.un.org](https://transcripts.un.org)
 
 ## Overview
 

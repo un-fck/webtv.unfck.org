@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/**/*": ["messages/**/*", "i18n/**/*"],
   },
+  redirects: async () => [
+    {
+      source: "/:path*",
+      has: [{ type: "host", value: "transcripts.un-two-zero.org" }],
+      destination: "https://transcripts.un.org/:path*",
+      permanent: true,
+    },
+  ],
 };
 
 // Sentry build-time wrapping: uploads source maps so stack traces in the
