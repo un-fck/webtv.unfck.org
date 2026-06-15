@@ -1599,6 +1599,12 @@ export interface VideosQueryParams {
   q?: string;
   daysBack?: number;
   date?: string;
+  /** Inclusive lower bound on the meeting date (YYYY-MM-DD). Applied as
+   *  `date >= ?::date`. Used by the home page's week-window mode. */
+  dateFrom?: string;
+  /** Inclusive upper bound on the meeting date (YYYY-MM-DD). Applied as
+   *  `date <= ?::date`. Used by the home page's week-window mode. */
+  dateTo?: string;
   bodies?: string[];
   categories?: string[];
   status?: "past" | "scheduled";
@@ -1719,6 +1725,8 @@ export async function queryVideos(
     q: queryText,
     daysBack = 365,
     date,
+    dateFrom,
+    dateTo,
     bodies,
     categories,
     status,
@@ -1740,6 +1748,16 @@ export async function queryVideos(
   if (date) {
     conditions.push("date = ?");
     conditionArgs.push(date);
+  }
+
+  if (dateFrom) {
+    conditions.push("date >= ?::date");
+    conditionArgs.push(dateFrom);
+  }
+
+  if (dateTo) {
+    conditions.push("date <= ?::date");
+    conditionArgs.push(dateTo);
   }
 
   if (bodies && bodies.length > 0) {
