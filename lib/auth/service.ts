@@ -41,20 +41,28 @@ export function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
+// Magic links are deliberately long-lived so a sign-in email that landed in
+// a spam folder is still usable when the user finds it. Threat model: link is
+// single-use, bound to one email, and inbox compromise dominates link-window
+// length anyway.
+const MAGIC_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const RESEND_COOLDOWN_MS = 2 * 60 * 1000;
+
 export async function recentTokenExists(email: string): Promise<boolean> {
-  // Block if an unused token was sent in the last 2 minutes (tokens expire 15
-  // minutes after creation).
+  // A token created less than RESEND_COOLDOWN_MS ago still has more than
+  // (TTL - cooldown) of life remaining on its expires_at.
+  const cutoff = new Date(Date.now() + MAGIC_TOKEN_TTL_MS - RESEND_COOLDOWN_MS);
   const rows = await query<{ count: string }>(
     `SELECT COUNT(*) as count FROM webtv.magic_tokens
-     WHERE email = ? AND used_at IS NULL AND expires_at > NOW() + INTERVAL '13 minutes'`,
-    [email.toLowerCase()],
+     WHERE email = ? AND used_at IS NULL AND expires_at > ?`,
+    [email.toLowerCase(), cutoff],
   );
   return parseInt(rows[0]?.count || "0") > 0;
 }
 
 export async function createMagicToken(email: string): Promise<string> {
   const token = generateToken();
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + MAGIC_TOKEN_TTL_MS);
   await query(
     `INSERT INTO webtv.magic_tokens (token, email, expires_at) VALUES (?, ?, ?)`,
     [token, email.toLowerCase(), expiresAt],

@@ -46,6 +46,7 @@
     "submitting": "Envoi en cours…",
     "sentTitle": "Veuillez consulter votre messagerie",
     "sentBody": "Nous avons envoyé un lien de connexion à {email}",
+    "sentSpamHint": "Si vous ne le voyez pas dans la minute, veuillez consulter votre dossier de courrier indésirable. Le lien est valable 24 heures.",
     "errorEmailRequired": "Adresse électronique requise",
     "errorInvalidEmail": "Adresse électronique non valide",
     "errorRecentToken": "Un lien magique a été envoyé récemment. Veuillez consulter votre messagerie ou patienter quelques minutes.",
@@ -362,9 +363,10 @@
     "magicLink": {
       "subject": "Connexion à UN Transcripts",
       "heading": "Connexion à UN Transcripts",
-      "body": "Cliquez sur le bouton ci-dessous pour vous connecter. Ce lien est valable 15 minutes.",
+      "body": "Cliquez sur le bouton ci-dessous pour vous connecter. Ce lien est valable 24 heures.",
       "cta": "Se connecter",
       "fallback": "Ou copiez-collez cette adresse dans votre navigateur :",
+      "spamHint": "Si ce courriel se trouve dans votre dossier de courrier indésirable, veuillez le signaler comme « légitime » afin que les futurs liens de connexion arrivent dans votre boîte de réception.",
       "ignoreNote": "Si vous n'avez pas demandé ce courriel, vous pouvez l'ignorer en toute sécurité."
     }
   },

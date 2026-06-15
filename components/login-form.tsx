@@ -43,6 +43,9 @@ export function LoginForm() {
               <p className="mt-2 text-sm text-green-800">
                 {t("sentBody", { email })}
               </p>
+              <p className="mt-2 text-sm text-green-800">
+                {t("sentSpamHint")}
+              </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">

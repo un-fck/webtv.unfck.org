@@ -46,6 +46,7 @@
     "submitting": "Enviando…",
     "sentTitle": "Consulte su correo electrónico",
     "sentBody": "Hemos enviado un enlace de inicio de sesión a {email}",
+    "sentSpamHint": "Si no lo ve en un minuto, revise su carpeta de correo no deseado o spam. El enlace es válido durante 24 horas.",
     "errorEmailRequired": "Se requiere correo electrónico",
     "errorInvalidEmail": "Dirección de correo electrónico no válida",
     "errorRecentToken": "Se envió recientemente un enlace mágico. Consulte su correo electrónico o espere unos minutos.",
@@ -362,9 +363,10 @@
     "magicLink": {
       "subject": "Iniciar sesión en UN Transcripts",
       "heading": "Iniciar sesión en UN Transcripts",
-      "body": "Haga clic en el botón siguiente para iniciar sesión. Este enlace es válido durante 15 minutos.",
+      "body": "Haga clic en el botón siguiente para iniciar sesión. Este enlace es válido durante 24 horas.",
       "cta": "Iniciar sesión",
       "fallback": "O copie y pegue esta dirección en su navegador:",
+      "spamHint": "Si este correo llegó a su carpeta de correo no deseado, márquelo como «No es spam» para que los próximos enlaces de inicio de sesión lleguen a su bandeja de entrada.",
       "ignoreNote": "Si no solicitó este correo, puede ignorarlo con seguridad."
     }
   },

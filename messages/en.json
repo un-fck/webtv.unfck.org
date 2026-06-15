@@ -46,6 +46,7 @@
     "submitting": "Sending...",
     "sentTitle": "Please check your email",
     "sentBody": "We have sent a sign-in link to {email}",
+    "sentSpamHint": "If you don't see it within a minute, please check your spam or junk folder. The link is valid for 24 hours.",
     "errorEmailRequired": "Email required",
     "errorInvalidEmail": "Invalid email address",
     "errorRecentToken": "A magic link was recently sent. Please check your email or wait a few minutes.",
@@ -357,9 +358,10 @@
     "magicLink": {
       "subject": "Sign in to UN Transcripts",
       "heading": "Sign in to UN Transcripts",
-      "body": "Click the button below to sign in. This link is valid for 15 minutes.",
+      "body": "Click the button below to sign in. This link is valid for 24 hours.",
       "cta": "Sign in",
       "fallback": "Or copy and paste this URL into your browser:",
+      "spamHint": "If this email landed in your spam folder, please mark it as 'Not Spam' so future sign-in links arrive in your inbox.",
       "ignoreNote": "If you didn't request this email, you can safely ignore it."
     }
   }

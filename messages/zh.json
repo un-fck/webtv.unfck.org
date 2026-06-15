@@ -46,6 +46,7 @@
     "submitting": "发送中…",
     "sentTitle": "请查看您的邮箱",
     "sentBody": "我们已将登录链接发送至 {email}",
+    "sentSpamHint": "如果一分钟内仍未收到,请同时查看垃圾邮件或广告邮件文件夹。该链接 24 小时内有效。",
     "errorEmailRequired": "需要电子邮件",
     "errorInvalidEmail": "电子邮件地址无效",
     "errorRecentToken": "最近已发送过登录链接。请检查邮箱或稍等几分钟。",
@@ -362,9 +363,10 @@
     "magicLink": {
       "subject": "登录 UN Transcripts",
       "heading": "登录 UN Transcripts",
-      "body": "点击下方按钮登录。此链接 15 分钟内有效。",
+      "body": "点击下方按钮登录。此链接 24 小时内有效。",
       "cta": "登录",
       "fallback": "或将以下链接复制粘贴到浏览器中:",
+      "spamHint": "如果这封邮件被归入垃圾邮件文件夹,请将其标记为「非垃圾邮件」,以便后续的登录链接可直接送达您的收件箱。",
       "ignoreNote": "如果您没有请求此邮件,可以安全地忽略它。"
     }
   },
