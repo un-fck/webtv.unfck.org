@@ -22,6 +22,11 @@ export interface ServerParams {
   // descending order; "upcoming" shows strictly future days in ascending
   // order. Ignored in search mode.
   view?: "upcoming";
+  // Default-browse window expansion. The home page in its unfiltered state
+  // loads `[today − 7w, today + 7w]` so the initial render reliably covers a
+  // full week each way regardless of how dense the schedule is. The "Load
+  // more" button increments this; undefined = 1 (the initial week).
+  weeks?: number;
 }
 
 export type RawSearchParams = Record<string, string | string[] | undefined>;
@@ -62,6 +67,14 @@ export function parseScheduleParams(raw: RawSearchParams): ServerParams {
       : undefined;
   const includeOtherLangs = raw.xlang === "1";
   const view = raw.view === "upcoming" ? "upcoming" : undefined;
+  // Upper bound mirrors MAX_WEEKS in components/transcript-table.tsx — half a
+  // year each side is the practical limit of the default-browse window before
+  // search / the date picker become better tools.
+  const weeksNum = Number(raw.weeks);
+  const weeks =
+    Number.isInteger(weeksNum) && weeksNum >= 2 && weeksNum <= 26
+      ? weeksNum
+      : undefined;
 
   return {
     page,
@@ -74,6 +87,7 @@ export function parseScheduleParams(raw: RawSearchParams): ServerParams {
     q,
     includeOtherLangs,
     view,
+    weeks,
   };
 }
 
@@ -104,5 +118,6 @@ export function scheduleParamsKey(p: ServerParams): string {
     q: p.q,
     xlang: p.includeOtherLangs === true,
     view: p.view,
+    weeks: p.weeks,
   });
 }

@@ -640,6 +640,13 @@ export function VideoTable({
           "view",
           paramUpdates.view === "upcoming" ? "upcoming" : undefined,
         );
+      if ("weeks" in paramUpdates)
+        setOrDelete(
+          "weeks",
+          paramUpdates.weeks && paramUpdates.weeks > 1
+            ? String(paramUpdates.weeks)
+            : undefined,
+        );
 
       const qs = sp.toString();
       const href = qs ? `?${qs}` : "/";
@@ -738,11 +745,39 @@ export function VideoTable({
   // both render in the same date-grouped layout.
   const isSearchMode = !!serverParams.q;
 
+  // Default-browse mode: no q, no date filter, no body/category/text filter.
+  // This is the only mode that uses the symmetric `±(7·weeks − 1)`-day date
+  // window (see app/[locale]/page.tsx), so it's also the only mode where
+  // "Load more" widens the window via the URL `weeks` param instead of paging
+  // by row offset. Filtered/search modes fall through to the offset-based
+  // loadMore below.
+  const isDefaultBrowse =
+    !serverParams.q &&
+    !serverParams.date &&
+    !serverParams.body &&
+    !serverParams.category &&
+    !serverParams.text;
+  const currentWeeks = Math.max(1, serverParams.weeks ?? 1);
+  // Half a year each side is plenty for browse-the-schedule use cases, and it
+  // keeps the SSR row count well under queryVideos's pageSize cap (set to
+  // 2000 in app/[locale]/page.tsx). Past this, anyone looking for older
+  // meetings should reach for search or the date picker, both of which use
+  // the filtered/offset pagination path with no cap.
+  const MAX_WEEKS = 26;
+  const canWidenWindow = isDefaultBrowse && currentWeeks < MAX_WEEKS;
+
   // Append the next chunk from /api/videos using the current filters and
   // (if set) text query. The endpoint is the single feed entry point now;
   // queryVideos in lib/db.ts decides whether to apply FTS or just structural
   // predicates based on whether `q` is present.
   const loadMore = useCallback(() => {
+    // Default-browse widens the window by one week via the URL — the SSR
+    // payload then re-renders with a wider symmetric date window.
+    if (isDefaultBrowse) {
+      if (currentWeeks >= MAX_WEEKS) return;
+      updateParams({ weeks: currentWeeks + 1, resetPage: false });
+      return;
+    }
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     // Pagination must extend the feed the rows came from, so the chunk query
@@ -772,8 +807,9 @@ export function VideoTable({
         let nextHasMore = Boolean(data.hasMore);
         // Upcoming view only renders future rows, but the server pages
         // descend through the whole date window. Once a chunk has no future
-        // rows we know the rest of the feed is all past — keep going and the
-        // bottom sentinel would refire on each invisible chunk in a loop.
+        // rows we know the rest of the feed is all past, so we stop
+        // advertising further pages — clicking "Load more" on the upcoming
+        // view past that point would only fetch invisible past rows.
         if (
           nextHasMore &&
           serverParams.view === "upcoming" &&
@@ -787,30 +823,17 @@ export function VideoTable({
       })
       .catch(() => {})
       .finally(() => setLoadingMore(false));
-  }, [loadingMore, hasMore, rows.length, serverParams, locale, isFutureDay]);
-
-  // Auto-load the next chunk when the bottom sentinel nears the viewport. The
-  // callback is held in a ref so the observer doesn't reattach every render;
-  // re-running on rows.length re-fires if the sentinel is still in view after
-  // a short append (so the feed keeps filling until the viewport scrolls).
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const loadMoreRef = useRef(loadMore);
-  useEffect(() => {
-    loadMoreRef.current = loadMore;
-  });
-  useEffect(() => {
-    if (!hasMore) return;
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) loadMoreRef.current();
-      },
-      { rootMargin: "800px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasMore, rows.length]);
+  }, [
+    loadingMore,
+    hasMore,
+    rows.length,
+    serverParams,
+    locale,
+    isFutureDay,
+    isDefaultBrowse,
+    currentWeeks,
+    updateParams,
+  ]);
 
   // Coarse "With transcript" filter: active when every doc type is selected
   // (any of transcript / PV / SR counts as a transcript). Drives the All vs
@@ -1195,20 +1218,32 @@ export function VideoTable({
         )}
       </div>
 
-      {/* Infinite scroll: sentinel auto-loads the next chunk; the button is a
-          fallback / explicit control. */}
-      {hasMore && (
-        <div ref={sentinelRef} className="flex justify-center pt-4">
+      {/* Manual expansion: the initial SSR load covers a fixed window (one
+          week each way in default browse; the first 100 rows for filters /
+          search), so the feed never auto-grows. The user clicks "Load more"
+          to widen the window (default browse, via URL `weeks`) or fetch the
+          next offset chunk (filters / search). Keeps the footer reachable
+          instead of always sitting just out of reach behind an infinite
+          scroll trigger. */}
+      {(isDefaultBrowse ? canWidenWindow : hasMore) && (
+        <div className="flex justify-center pt-4">
           <button
             onClick={() => loadMore()}
-            disabled={loadingMore}
+            disabled={isDefaultBrowse ? isNavPending : loadingMore}
             className="rounded-full border border-border px-6 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loadingMore ? t("loading") : t("loadMore")}
+            {(isDefaultBrowse ? isNavPending : loadingMore)
+              ? t("loading")
+              : t("loadMore")}
           </button>
         </div>
       )}
-      {!hasMore && rows.length > 0 && (
+      {/* "Showing N meetings" footer: only when the feed is fully exhausted,
+          i.e. there's no further chunk (filters / search) and no further
+          window to widen into (default browse). Otherwise the count would
+          appear next to a still-clickable "Load more" button and read as a
+          total when it's really just the current view. */}
+      {(isDefaultBrowse ? !canWidenWindow : !hasMore) && rows.length > 0 && (
         <div className="pt-4 text-center text-sm text-muted-foreground">
           {isSearchMode
             ? t("results", { count: rows.length })

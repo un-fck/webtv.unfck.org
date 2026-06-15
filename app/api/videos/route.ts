@@ -6,9 +6,10 @@ import {
 } from "@/lib/cached-db";
 import { recordToVideo } from "@/lib/un-api";
 
-// Chunk size for infinite-scroll loading of the feed. Must match the initial
-// chunk rendered server-side in app/page.tsx.
-const CHUNK = 50;
+// Chunk size for offset-based "Load more" in filtered / search modes.
+// (Default-browse mode uses a date-window instead and never paginates via
+// this offset path — see app/[locale]/page.tsx.)
+const CHUNK = 100;
 const DAYS_BACK = 365;
 
 const SORT_VALUES = ["date_desc", "date_asc", "title_asc", "title_desc"];
