@@ -77,6 +77,12 @@ export async function generateMetadata({
   const alternateLocale = routing.locales
     .filter((l) => l !== locale)
     .map((l) => OG_LOCALE[l] ?? l);
+  // Search Console / Bing Webmaster Tools verification. Both consoles support
+  // multiple verification methods; we use the HTML meta tag method because the
+  // token can live in an env var instead of a committed file. Either is
+  // optional — without it, ownership has to be re-verified manually.
+  const googleVerification = process.env.GOOGLE_SITE_VERIFICATION;
+  const bingVerification = process.env.BING_SITE_VERIFICATION;
   return {
     metadataBase: new URL(base),
     title,
@@ -97,6 +103,12 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
+    },
+    verification: {
+      ...(googleVerification && { google: googleVerification }),
+      ...(bingVerification && {
+        other: { "msvalidate.01": bingVerification },
+      }),
     },
   };
 }

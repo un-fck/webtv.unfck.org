@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
-  return { title: t("loginTitle") };
+  return {
+    title: t("loginTitle"),
+    robots: { index: false, follow: false },
+  };
 }
 
 export default async function LoginPage({

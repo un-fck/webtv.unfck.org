@@ -15,6 +15,13 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+// Login-gated, intentionally not indexed. Mirrors the speaker overview
+// (/speakers) — the directory is private and shouldn't surface in search
+// engines.
+export const metadata = {
+  robots: { index: false, follow: false },
+};
+
 export default async function SpeakerProfilePage({
   params,
 }: {

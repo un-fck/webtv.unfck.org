@@ -12,7 +12,16 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         allow: "/",
         // Locale-prefixed paths require the wildcard — /en/login etc. wouldn't
         // match a bare "/login" disallow under Google's matching rules.
-        disallow: ["/api/", "/*/login", "/*/verify", "/*/subscriptions"],
+        disallow: [
+          "/api/",
+          "/*/login",
+          "/*/verify",
+          "/*/subscriptions",
+          // Speaker directory (overview + per-entity profiles) is
+          // login-gated and must not be indexed.
+          "/*/speakers",
+          "/*/speakers/*",
+        ],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

@@ -19,6 +19,7 @@ export async function generateMetadata({
     title: t("subscriptionsTitle"),
     description: t("subscriptionsDescription"),
     alternates: alternatesFor(locale, "/subscriptions"),
+    robots: { index: false, follow: false },
   };
 }
 

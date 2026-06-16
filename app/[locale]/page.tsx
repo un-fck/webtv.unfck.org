@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 import { recordToVideo } from "@/lib/un-api";
 import { queryVideos, type VideosQueryParams } from "@/lib/db";
 import {
@@ -13,6 +14,7 @@ import { HomeHero } from "@/components/home-hero";
 import { pageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 import { parseScheduleParams } from "@/lib/schedule-params";
+import { getBaseUrl } from "@/lib/get-base-url";
 
 export const dynamic = "force-dynamic";
 
@@ -146,8 +148,47 @@ export default async function Home({
     ),
   );
 
+  const base = await getBaseUrl();
+  const tMeta = await getTranslations({ locale, namespace: "metadata" });
+  const siteName = tMeta("siteTitle");
+  // Two schema.org blocks for the homepage:
+  //   - WebSite + potentialAction → enables Google's sitelinks search box,
+  //     which deep-links queries straight into our schedule page's `q` param.
+  //   - Organization → seeds a knowledge-graph identity for the project so
+  //     brand searches start to consolidate around our domain instead of
+  //     other "UN transcripts" results.
+  // Both are emitted as a JSON-LD `@graph` so they share one <script> tag.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${base}/#website`,
+        url: `${base}/${locale}`,
+        name: siteName,
+        description: tMeta("siteDescription"),
+        inLanguage: locale,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${base}/${locale}/?q={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
+        publisher: { "@id": `${base}/#organization` },
+      },
+      {
+        "@type": "Organization",
+        "@id": `${base}/#organization`,
+        name: siteName,
+        url: base,
+      },
+    ],
+  };
+
   return (
-    <PageShell>
+    <PageShell jsonLd={jsonLd}>
       <VideoTable
         videos={videos}
         totalCount={total}
@@ -160,9 +201,24 @@ export default async function Home({
   );
 }
 
-function PageShell({ children }: { children: React.ReactNode }) {
+function PageShell({
+  children,
+  jsonLd,
+}: {
+  children: React.ReactNode;
+  jsonLd?: object;
+}) {
   return (
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          // JSON.stringify escapes </ vectors; the payload is composed
+          // entirely from translation catalog values + the configured
+          // base URL, so no user input reaches this string.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       <SiteHeader />
       <div className={cn("mx-auto px-4 sm:px-8", pageWidth)}>
         <HomeHero />

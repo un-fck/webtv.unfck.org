@@ -22,6 +22,10 @@ export async function generateMetadata({
     title: t("speakersTitle"),
     description: t("speakersDescription"),
     alternates: alternatesFor(locale, "/speakers"),
+    // Login-gated. robots.txt already disallows /*/speakers; this is the
+    // belt-and-suspenders meta tag in case a crawler reaches the page via
+    // a link without re-fetching robots.txt.
+    robots: { index: false, follow: false },
   };
 }
 

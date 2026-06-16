@@ -7,7 +7,10 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
-  return { title: t("verifyTitle") };
+  return {
+    title: t("verifyTitle"),
+    robots: { index: false, follow: false },
+  };
 }
 
 export default async function VerifyPage() {

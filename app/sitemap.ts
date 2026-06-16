@@ -4,9 +4,10 @@ import { getSitemapVideos } from "@/lib/db";
 import { getBaseUrl } from "@/lib/get-base-url";
 
 // Public-facing routes that are the same path across locales. Auth-walled
-// surfaces (login, verify, subscriptions) and gated speaker detail pages are
-// intentionally omitted; they shouldn't be crawled.
-const STATIC_PATHS = ["/", "/about", "/speakers"] as const;
+// surfaces (login, verify, subscriptions) and the entire speaker directory
+// (overview + detail pages, login-gated) are intentionally omitted; they
+// shouldn't be crawled or indexed.
+const STATIC_PATHS = ["/", "/about"] as const;
 
 /**
  * Emit a sitemap that lists every public route × every official locale, with
