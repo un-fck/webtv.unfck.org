@@ -209,6 +209,36 @@ cross-check for named officials.
 - **Long meetings, many short turns** → lumping + diarization miscount _(V1/V3)_.
 - **Dense proper nouns / numbers / resolution symbols** → spelling/ITN drift, misheard figures.
 
+## 10. Watchlist — MAI-Transcribe-1.5 (assessed 2026-06, not yet evaluated)
+
+Microsoft AI's in-house STT (preview, version 2026-06-02), served via the **LLM Speech API
+on the Azure Speech resource we already have** (`AZURE_SPEECH_KEY`/`AZURE_SPEECH_ENDPOINT`
+— same creds as `azure-speech-batch`; synchronous multipart REST, ≤300 MB WAV/MP3/FLAC).
+Being on Azure is a real plus: no new vendor or billing relationship, and integration is
+~80 lines next to `lib/providers/azure-speech.ts`.
+
+- **Claims:** best-in-class WER across 43 languages (FLEURS), #3 on Artificial Analysis
+  (2.4%), ~1 h of audio in <15 s (≈5× faster than gemini/scribe/gpt-4o-transcribe),
+  $0.36/hr (standard-audio SKU, ≈ gpt-4o-transcribe).
+- **Disqualified from the §7 stack today: no diarization** (docs are explicit — it joins
+  the mistral/alibaba/omni zero-diarization bucket) and **segment-level timestamps only**
+  (Azure's feature matrix marks word-level ❌ for MAI). Diarization is on Microsoft's
+  public roadmap — **re-assess when it ships**; combined with the WER claims it would
+  challenge azure-openai's fr/es/ar/ru slot, and possibly en.
+- **Genuinely novel for us: `phraseList` entity biasing** (1.5 only) — inject a roster of
+  current officeholders / "UN80" / resolution symbols at transcription time, applied
+  contextually (Microsoft claims up to 30% WER gain on keyword-heavy audio). This is
+  exactly the *external* hallucination mitigation §6.1 calls for, but inside the provider.
+  Worth a targeted test against the §9 entity criteria.
+- **Open questions for an eval run:** (a) `zh` is missing from the model's language table
+  despite the "43 languages" claim — smoke-test before any Chinese conclusions; (b) it's
+  LLM-family with a "readability-optimized" default (i.e. it edits — set
+  `transcribeStyle: "verbatim"`), so check the Keita→Kanem trap (V1); (c) multi-lingual
+  mode is the default — check floor behavior (V5), though no diarization rules out the
+  floor slot for now.
+- Docs: <https://learn.microsoft.com/en-us/azure/ai-services/speech-service/mai-transcribe>
+  (model page) and `.../llm-speech` (API + feature matrix).
+
 ## Implementation notes
 
 - Shared async helper `lib/providers/dashscope-asr.ts` backs fun-asr + alibaba. Request shapes
