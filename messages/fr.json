@@ -222,7 +222,9 @@
     "scheduleHint": "Le calendrier n'a pas pu être chargé. Ce problème est généralement temporaire — veuillez réessayer.",
     "tryAgain": "Réessayer",
     "meetingNotFound": "Réunion introuvable",
-    "meetingNotFoundHint": "Cette réunion n'a pas pu être trouvée. Elle a peut-être été supprimée ou renommée."
+    "meetingNotFoundHint": "Cette réunion n'a pas pu être trouvée. Elle a peut-être été supprimée ou renommée.",
+    "pageNotFound": "Page introuvable",
+    "pageNotFoundHint": "La page que vous recherchez est introuvable."
   },
   "languages": {
     "floor": "Original (parquet)",
