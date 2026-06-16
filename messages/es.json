@@ -222,7 +222,9 @@
     "scheduleHint": "No se pudo cargar el calendario. Suele ser temporal — vuelva a intentarlo.",
     "tryAgain": "Reintentar",
     "meetingNotFound": "Reunión no encontrada",
-    "meetingNotFoundHint": "No se pudo encontrar esta reunión. Es posible que se haya eliminado o renombrado."
+    "meetingNotFoundHint": "No se pudo encontrar esta reunión. Es posible que se haya eliminado o renombrado.",
+    "pageNotFound": "Página no encontrada",
+    "pageNotFoundHint": "No se ha podido encontrar la página solicitada."
   },
   "languages": {
     "floor": "Original (sala)",

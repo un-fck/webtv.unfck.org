@@ -222,7 +222,9 @@
     "scheduleHint": "无法加载日程。通常这是暂时问题 — 请稍后再试。",
     "tryAgain": "重试",
     "meetingNotFound": "未找到该会议",
-    "meetingNotFoundHint": "无法找到此会议。它可能已被删除或重命名。"
+    "meetingNotFoundHint": "无法找到此会议。它可能已被删除或重命名。",
+    "pageNotFound": "页面未找到",
+    "pageNotFoundHint": "无法找到您要查找的页面。"
   },
   "languages": {
     "floor": "原始(现场)",

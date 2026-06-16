@@ -205,7 +205,9 @@
     "scheduleHint": "The schedule could not be loaded. This is usually temporary — please try again.",
     "tryAgain": "Try again",
     "meetingNotFound": "Meeting not found",
-    "meetingNotFoundHint": "This meeting could not be found. It may have been removed or renamed."
+    "meetingNotFoundHint": "This meeting could not be found. It may have been removed or renamed.",
+    "pageNotFound": "Page not found",
+    "pageNotFoundHint": "The page you are looking for could not be found."
   },
   "languages": {
     "floor": "Floor (Original)",
