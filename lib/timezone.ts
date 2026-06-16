@@ -243,6 +243,22 @@ function formatAbsoluteDate(
     return `${wd}${day} ${month}${showYear ? ` ${dateYear}` : ""}`;
   }
 
+  // Chinese: CLDR runs date and weekday together with no separator
+  // ("3月9日星期一"); UN zh style inserts a space ("3月9日 星期一").
+  if (locale.startsWith("zh")) {
+    const datePart = date.toLocaleDateString(locale, {
+      timeZone: tz,
+      month: "long",
+      day: "numeric",
+      ...(showYear ? { year: "numeric" } : {}),
+    });
+    if (weekday === "none") return datePart;
+    const wd = new Intl.DateTimeFormat(locale, { timeZone: tz, weekday }).format(
+      date,
+    );
+    return `${datePart} ${wd}`;
+  }
+
   // UN English style is day-month-year ("15 June 2025"), which matches en-GB
   // rather than Intl's en-US default ("June 15, 2025").
   const intlLocale = locale === "en" ? "en-GB" : locale;
@@ -254,6 +270,13 @@ function formatAbsoluteDate(
     day: "numeric",
     ...(showYear ? { year: "numeric" } : {}),
   });
+
+  // English: en-GB Intl emits "Monday 9 March" (no comma) but "Tuesday,
+  // 4 November 2025" (with comma) — inconsistent. UN English style uses the
+  // comma in both cases (per UN Journal); inject it after the weekday.
+  if (locale === "en" && weekday !== "none" && !formatted.includes(",")) {
+    return formatted.replace(/^(\S+)\s/, "$1, ");
+  }
 
   // Russian Intl appends " г." (год = year); UN datelines omit it.
   if (locale.startsWith("ru")) {
@@ -289,5 +312,5 @@ export function formatMeetingDateTime(
   ctx: MeetingFormatContext,
 ): string {
   if (!scheduledTime) return formatMeetingDate(date, ctx);
-  return `${formatMeetingDate(scheduledTime, ctx)} ${formatMeetingTime(scheduledTime, ctx)}`;
+  return `${formatMeetingDate(scheduledTime, ctx)}${relativeComma(ctx.locale)}${formatMeetingTime(scheduledTime, ctx)}`;
 }
