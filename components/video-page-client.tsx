@@ -374,7 +374,10 @@ export function VideoPageClient({
               {(() => {
                 const items = [
                   video.date &&
-                    formatMeetingDate(video.scheduledTime ?? video.date),
+                    formatMeetingDate(video.scheduledTime ?? video.date, {
+                      weekday: "none",
+                      relative: "prefix",
+                    }),
                   video.scheduledTime && formatMeetingTime(video.scheduledTime),
                   video.duration,
                 ].filter(Boolean);

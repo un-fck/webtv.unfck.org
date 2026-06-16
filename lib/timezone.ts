@@ -106,11 +106,43 @@ export function formatMeetingTime(
   });
 }
 
+// UN house-style Arabic month names: Levantine name slash Western-Latinate
+// name (e.g. "حزيران/يونيه" for June). Intl.DateTimeFormat cannot produce
+// this dual form — see https://news.un.org/ar/ datelines for the convention.
+const UN_ARABIC_MONTHS = [
+  "كانون الثاني/يناير",
+  "شباط/فبراير",
+  "آذار/مارس",
+  "نيسان/أبريل",
+  "أيار/مايو",
+  "حزيران/يونيه",
+  "تموز/يوليه",
+  "آب/أغسطس",
+  "أيلول/سبتمبر",
+  "تشرين الأول/أكتوبر",
+  "تشرين الثاني/نوفمبر",
+  "كانون الأول/ديسمبر",
+];
+
+// Locale-appropriate comma between relative label and absolute date.
+function relativeComma(locale: string): string {
+  if (locale.startsWith("ar")) return "، ";
+  if (locale.startsWith("zh") || locale.startsWith("ja")) return "，";
+  return ", ";
+}
+
 export function formatMeetingDate(
   dateOrTimestamp: string,
   ctx: MeetingFormatContext,
-  options: { shortWeekday?: boolean } = {},
+  options: {
+    weekday?: "long" | "short" | "none";
+    // "alone"  → return relative label by itself for today/±1 (default)
+    // "prefix" → return "Today, 15 June" for today/±1, else absolute alone
+    // "off"    → never use relative; always return the absolute date
+    relative?: "alone" | "prefix" | "off";
+  } = {},
 ): string {
+  const { weekday = "long", relative = "alone" } = options;
   const tz = resolveTimezone(ctx.timezone);
   const date =
     dateOrTimestamp.length > 10
@@ -137,10 +169,46 @@ export function formatMeetingDate(
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  if (dateStr === todayStr) return ctx.relative.today;
-  if (dateStr === isoDay(tomorrow)) return ctx.relative.tomorrow;
-  if (dateStr === isoDay(yesterday)) return ctx.relative.yesterday;
+  let relativeLabel: string | null = null;
+  if (relative !== "off") {
+    if (dateStr === todayStr) relativeLabel = ctx.relative.today;
+    else if (dateStr === isoDay(tomorrow)) relativeLabel = ctx.relative.tomorrow;
+    else if (dateStr === isoDay(yesterday))
+      relativeLabel = ctx.relative.yesterday;
+  }
 
+  if (relativeLabel && relative === "alone") return relativeLabel;
+
+  if (relativeLabel && relative === "prefix") {
+    // When prefixing "Today / Yesterday / Tomorrow", drop the weekday from
+    // the absolute portion — the relative label already conveys it, and
+    // "Today, Sunday, 15 June" reads with one comma too many.
+    const absoluteNoWeekday = formatAbsoluteDate(
+      date,
+      tz,
+      ctx.locale,
+      "none",
+      now,
+    );
+    return `${relativeLabel}${relativeComma(ctx.locale)}${absoluteNoWeekday}`;
+  }
+
+  const absolute = formatAbsoluteDate(date, tz, ctx.locale, weekday, now);
+
+  // Intl emits lowercase weekday names in French/Spanish/Italian by spec
+  // (`mardi 2 juin`); in day-section headings we want sentence case
+  // (`Mardi 2 juin`). `toLocaleUpperCase(locale)` is a no-op for scripts
+  // without case (Arabic, Chinese).
+  return absolute.charAt(0).toLocaleUpperCase(ctx.locale) + absolute.slice(1);
+}
+
+function formatAbsoluteDate(
+  date: Date,
+  tz: string,
+  locale: string,
+  weekday: "long" | "short" | "none",
+  now: Date,
+): string {
   const currentYear = now.toLocaleDateString("en-CA", {
     timeZone: tz,
     year: "numeric",
@@ -149,19 +217,49 @@ export function formatMeetingDate(
     timeZone: tz,
     year: "numeric",
   });
-  const formatted = date.toLocaleDateString(ctx.locale, {
+  const showYear = dateYear !== currentYear;
+
+  // Arabic uses UN dual-named months; Intl can't produce that form.
+  if (locale.startsWith("ar")) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .formatToParts(date)
+      .reduce<Record<string, string>>((acc, p) => {
+        acc[p.type] = p.value;
+        return acc;
+      }, {});
+    const day = String(Number(parts.day));
+    const month = UN_ARABIC_MONTHS[Number(parts.month) - 1];
+    const wd =
+      weekday === "none"
+        ? ""
+        : new Intl.DateTimeFormat("ar", { timeZone: tz, weekday }).format(
+            date,
+          ) + "، ";
+    return `${wd}${day} ${month}${showYear ? ` ${dateYear}` : ""}`;
+  }
+
+  // UN English style is day-month-year ("15 June 2025"), which matches en-GB
+  // rather than Intl's en-US default ("June 15, 2025").
+  const intlLocale = locale === "en" ? "en-GB" : locale;
+
+  const formatted = date.toLocaleDateString(intlLocale, {
     timeZone: tz,
-    weekday: options.shortWeekday ? "short" : "long",
-    month: "short",
+    ...(weekday !== "none" ? { weekday } : {}),
+    month: "long",
     day: "numeric",
-    ...(dateYear !== currentYear ? { year: "numeric" } : {}),
+    ...(showYear ? { year: "numeric" } : {}),
   });
-  // Intl emits lowercase weekday names in French/Spanish/Italian by spec
-  // (`mardi 2 juin`), but in our day-section headings we want sentence case
-  // (`Mardi 2 juin`). `toLocaleUpperCase(locale)` is a no-op for scripts
-  // without case (Arabic, Chinese) and matches the user's "Aujourd'hui /
-  // Today / Hoy" translations which are already capitalized.
-  return formatted.charAt(0).toLocaleUpperCase(ctx.locale) + formatted.slice(1);
+
+  // Russian Intl appends " г." (год = year); UN datelines omit it.
+  if (locale.startsWith("ru")) {
+    return formatted.replace(/\s*г\.?\s*$/u, "");
+  }
+  return formatted;
 }
 
 // True when the given date/timestamp falls strictly after "today" in the

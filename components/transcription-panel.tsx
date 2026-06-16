@@ -834,9 +834,12 @@ export function TranscriptionPanel({
     if (body === null) return false;
     const pageUrl = window.location.href;
     const jsonUrl = `${window.location.origin}/json/${video.slug}`;
-    // Date + time use the same formatters as the page header so the clipboard
-    // matches what the user sees on screen (locale + timezone aware).
-    const dateDisplay = formatMeetingDate(video.scheduledTime ?? video.date);
+    // Clipboard line is plain text, no schedule context — show the absolute
+    // date only ("15 June 2026"), no weekday, no "Today" relative label.
+    const dateDisplay = formatMeetingDate(video.scheduledTime ?? video.date, {
+      weekday: "none",
+      relative: "off",
+    });
     const timeDisplay = video.scheduledTime
       ? formatMeetingTime(video.scheduledTime)
       : null;

@@ -856,7 +856,9 @@ export function VideoTable({
   >(() => {
     let prevDay: string | null = null;
     return rows.map((video) => {
-      const dateLabel = formatMeetingDate(video.scheduledTime ?? video.date);
+      const dateLabel = formatMeetingDate(video.scheduledTime ?? video.date, {
+        relative: "prefix",
+      });
       const showDay = dateLabel !== prevDay;
       prevDay = dateLabel;
       return {
