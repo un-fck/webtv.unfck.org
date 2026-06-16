@@ -13,6 +13,17 @@ Don't assume, don't hide confusion, surface tradeoffs. Before implementing:
 
 (For trivial tasks, use judgment — this biases toward caution over speed.)
 
+## Never call the transcripts "AI-generated"
+
+In any user-visible copy — page text, meta descriptions, OG cards, README, social
+posts — say **"automatic transcripts"** or **"automatically generated
+transcripts"**. Never "AI-generated transcripts". "AI-generated" connotes
+*invented* content (the model making things up); these transcripts are speech
+recognition over real meeting audio, not generation. The phrasing matters for
+trust. The same applies to derivatives ("automatic speaker identification",
+"automatic topic analysis"). Internal/dev docs (this file, `docs/ai.md`) may
+still use "AI" technically.
+
 ## Every user-visible string change must update all six locale catalogs
 
 The app is internationalized via `next-intl` with message catalogs at

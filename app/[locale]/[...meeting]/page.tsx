@@ -15,11 +15,21 @@ import { localizeWebtvAssetUrl } from "@/lib/un-links";
 
 export const dynamic = "force-dynamic";
 
-// Surface the meeting title in the document <title> so each meeting page gets
-// its own tab/SERP label instead of inheriting the generic "UN Transcripts"
-// from the layout. The brand suffix is localized via the `siteTitle` key; the
-// meeting title itself stays in WebTV's source language (English) until a
-// translation pipeline is in place.
+function formatMetaDate(iso: string, locale: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(locale, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+// Surface the meeting title in the document <title>, og:title, and twitter:title
+// so each meeting page gets its own tab/SERP/share-card label instead of
+// inheriting the generic "UN Transcripts" from the layout. The brand suffix is
+// localized via the `siteTitle` key; the meeting title itself stays in WebTV's
+// source language (English) until a translation pipeline is in place.
 export async function generateMetadata({
   params,
 }: {
@@ -32,11 +42,45 @@ export async function generateMetadata({
 
   const title = record.clean_title || record.title;
   const t = await getTranslations({ locale, namespace: "metadata" });
+  const siteTitle = t("siteTitle");
+  const pageTitle = `${title} — ${siteTitle}`;
+  const dateLabel = formatMetaDate(record.date, locale);
+  const description = record.body
+    ? t("meetingDescription", { body: record.body, date: dateLabel })
+    : t("meetingDescriptionNoBody", { date: dateLabel });
+
   // Meeting slugs are already locale-agnostic (the path doesn't include the
   // locale prefix), so each alternate just wraps the same slug per locale.
   return {
-    title: `${title} — ${t("siteTitle")}`,
+    title: pageTitle,
+    description,
     alternates: alternatesFor(locale, `/${slug}`),
+    openGraph: {
+      type: "article",
+      siteName: siteTitle,
+      title,
+      description,
+      url: `/${locale}/${slug}`,
+      publishedTime: record.date,
+      section: record.body ?? undefined,
+      // Catch-all routes can't host a metadata-image file (Next.js disallows
+      // segments after `[...meeting]`), so the per-meeting OG card is served
+      // by a route handler at `/api/og/meeting/[...slug]` instead.
+      images: [
+        {
+          url: `/api/og/meeting/${slug}`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`/api/og/meeting/${slug}`],
+    },
   };
 }
 
@@ -102,8 +146,38 @@ export default async function MeetingPage({
   const metadata = await getVideoMetadata(record.asset_id);
   const isLoggedIn = !!(await getCurrentUser());
 
+  // Schema.org VideoObject — helps Google rich results and some unfurlers.
+  // `thumbnailUrl` and `contentUrl` are left off because the canonical thumbnail
+  // is the og:image (Next.js emits it automatically from opengraph-image.tsx),
+  // and the Kaltura content URL changes per session.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: record.clean_title || record.title,
+    description: metadata.description || metadata.summary || undefined,
+    uploadDate: record.date,
+    duration:
+      typeof record.duration === "number" && record.duration > 0
+        ? `PT${Math.round(record.duration)}S`
+        : undefined,
+    inLanguage: locale,
+    isFamilyFriendly: true,
+    publisher: {
+      "@type": "Organization",
+      name: "United Nations",
+      url: "https://www.un.org",
+    },
+  };
+
   return (
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        // JSON.stringify escapes </ vectors; the only injection surface is
+        // record fields (title/body/etc.) which are TEXT columns we already
+        // render to HTML elsewhere.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <VideoPageClient
         kalturaId={kalturaId}
         video={video}

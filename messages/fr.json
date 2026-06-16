@@ -9,7 +9,9 @@
     "speakersTitle": "Intervenants — Transcriptions de l'ONU",
     "speakersDescription": "Parcourir toutes les personnes ayant pris la parole dans les réunions transcrites de l'ONU, par pays, groupe et organe.",
     "subscriptionsTitle": "Abonnements — Transcriptions de l'ONU",
-    "subscriptionsDescription": "Gérer vos notifications par courriel pour les transcriptions."
+    "subscriptionsDescription": "Gérer vos notifications par courriel pour les transcriptions.",
+    "meetingDescription": "Réunion ({body}), {date}. Lisez la transcription automatique avec identification des intervenants — chaque intervention, horodatée sur la vidéo.",
+    "meetingDescriptionNoBody": "Réunion des Nations Unies, {date}. Lisez la transcription automatique avec identification des intervenants — chaque intervention, horodatée sur la vidéo."
   },
   "header": {
     "about": "À propos",

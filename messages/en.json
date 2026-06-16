@@ -9,7 +9,9 @@
     "speakersTitle": "Speakers — UN Transcripts",
     "speakersDescription": "Browse everyone who has spoken across transcribed UN meetings, by country, group, and organ.",
     "subscriptionsTitle": "Subscriptions — UN Transcripts",
-    "subscriptionsDescription": "Manage your transcript email notifications."
+    "subscriptionsDescription": "Manage your transcript email notifications.",
+    "meetingDescription": "{body} meeting, {date}. Read the automatic transcript with speaker identification — every speech, timestamped to the video.",
+    "meetingDescriptionNoBody": "United Nations meeting, {date}. Read the automatic transcript with speaker identification — every speech, timestamped to the video."
   },
   "header": {
     "about": "About",
