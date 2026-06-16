@@ -42,7 +42,7 @@ async function fetchGoogleFont(weight: 300 | 400 | 700): Promise<ArrayBuffer> {
 
 export async function getOgFonts(): Promise<OgFont[]> {
   if (!cachedFontsPromise) {
-    cachedFontsPromise = (async () => {
+    cachedFontsPromise = (async (): Promise<OgFont[]> => {
       const [light, regular, bold] = await Promise.all([
         fetchGoogleFont(300),
         fetchGoogleFont(400),
