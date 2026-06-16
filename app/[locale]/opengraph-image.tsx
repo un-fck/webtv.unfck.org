@@ -40,7 +40,12 @@ export default async function Image({
           justifyContent: "space-between",
           background: "#fff",
           color: "#1a1a1a",
-          padding: "72px 80px",
+          // Teams (and iMessage's square thumbnail) crop the OG image with
+          // object-fit: cover to a near-square box, dropping the outer ~17%
+          // on each side. The horizontal safe-area padding here keeps the
+          // emblem, wordmark, headline, and titles inside that center band on
+          // those clients without making the wide-format unfurls look hollow.
+          padding: "72px 200px",
           fontFamily: "Roboto",
         }}
       >

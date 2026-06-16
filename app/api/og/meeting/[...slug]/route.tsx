@@ -7,10 +7,13 @@ export const dynamic = "force-dynamic";
 
 const SIZE = { width: 1200, height: 630 };
 
-// Two title sizes only — short titles get the headline treatment, long ones
-// step down once. Both are big enough to stay readable in small unfurls.
+// Two title sizes — short titles get the headline treatment, long ones step
+// down once. Buckets are tuned for the narrower content column (800px wide
+// after the safe-area padding) so the longest real titles still fit in 5 lines.
 function fitTitleSize(title: string): number {
-  return title.length <= 80 ? 80 : 56;
+  if (title.length <= 56) return 80;
+  if (title.length <= 110) return 56;
+  return 44;
 }
 
 function formatDate(iso: string): string {
@@ -58,7 +61,13 @@ export async function GET(
           justifyContent: "space-between",
           background: "#fff",
           color: "#1a1a1a",
-          padding: "72px 80px",
+          // Teams (and iMessage's square thumbnail) crop the OG image with
+          // object-fit: cover to a near-square box, dropping the outer ~17%
+          // on each side. The horizontal safe-area padding keeps the header
+          // + title + meta inside that center band on those clients without
+          // making the wide-format unfurls look hollow. See app/[locale]/
+          // opengraph-image.tsx for the matching site-card padding.
+          padding: "72px 200px",
           fontFamily: "Roboto",
         }}
       >

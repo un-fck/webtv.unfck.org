@@ -143,6 +143,10 @@ export function OgHeader({
           borderRadius: 12,
           fontSize: 24,
           fontWeight: 600,
+          // The tighter safe-area padding squeezes the row; pin the badge
+          // to a single line so "Public Preview" never breaks into two.
+          whiteSpace: "nowrap",
+          flexShrink: 0,
         }}
       >
         {badge}
