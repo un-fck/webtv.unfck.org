@@ -37,7 +37,10 @@ export function useMeetingFormat() {
     return {
       formatMeetingDate: (
         dateOrTimestamp: string,
-        options?: { shortWeekday?: boolean },
+        options?: {
+          weekday?: "long" | "short" | "none";
+          relative?: "alone" | "prefix" | "off";
+        },
       ) => formatMeetingDateCore(dateOrTimestamp, ctx, options),
       formatMeetingTime: (timestamp: string) =>
         formatMeetingTimeCore(timestamp, { timezone, locale }),

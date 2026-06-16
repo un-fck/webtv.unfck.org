@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Bell } from "lucide-react";
 import { useLanguageDisplayName } from "@/lib/hooks/use-language-display-name";
+import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 import { UN_LANGUAGES } from "@/lib/languages";
@@ -28,21 +29,15 @@ interface VideoSub {
   emailed_at: string | null;
 }
 
-function formatEmailedAt(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
-
 export function SubscriptionsManager() {
   const [loading, setLoading] = useState(true);
   const [feeds, setFeeds] = useState<FeedOption[]>([]);
   const [videoSubs, setVideoSubs] = useState<VideoSub[]>([]);
   const t = useTranslations("subscriptionsManager");
   const displayName = useLanguageDisplayName();
+  const { formatMeetingDateTime } = useMeetingFormat();
+  const formatEmailedAt = (iso: string) =>
+    formatMeetingDateTime(iso, iso);
 
   const load = useCallback(() => {
     fetch("/api/subscriptions")

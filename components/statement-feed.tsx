@@ -5,21 +5,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { ProfileBubble } from "@/lib/speaker-index";
 import { VideoMoment } from "@/components/video-moment";
+import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
 const PREVIEW_SENTENCES = 3;
-
-function formatDate(date: string | null): string {
-  if (!date) return "";
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return date;
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 function ExpandableText({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
@@ -79,6 +69,10 @@ function SpeakerBadges({ bubble }: { bubble: ProfileBubble }) {
 
 function StatementCard({ bubble }: { bubble: ProfileBubble }) {
   const t = useTranslations("statementFeed");
+  const { formatMeetingDate } = useMeetingFormat();
+  const dateLabel = bubble.date
+    ? formatMeetingDate(bubble.date, { weekday: "none" })
+    : "";
   return (
     <li className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
       <div className="mb-2">
@@ -102,7 +96,7 @@ function StatementCard({ bubble }: { bubble: ProfileBubble }) {
           "mt-3 flex items-center justify-between gap-3 border-t border-border/50 pt-2",
         )}
       >
-        <span>{formatDate(bubble.date)}</span>
+        <span>{dateLabel}</span>
         <Link
           href={`/${bubble.meetingSlug}`}
           className="hover:text-un-blue-text hover:underline"
