@@ -9,7 +9,9 @@
     "speakersTitle": "发言者 — 联合国转录",
     "speakersDescription": "按国家、集团和机构,浏览在已转录的联合国会议上发言过的所有人。",
     "subscriptionsTitle": "订阅 — 联合国转录",
-    "subscriptionsDescription": "管理您的转录电子邮件通知。"
+    "subscriptionsDescription": "管理您的转录电子邮件通知。",
+    "meetingDescription": "{body}会议,{date}。阅读自动转录及发言者识别 — 每一次发言均与视频时间戳对齐。",
+    "meetingDescriptionNoBody": "联合国会议,{date}。阅读自动转录及发言者识别 — 每一次发言均与视频时间戳对齐。"
   },
   "header": {
     "about": "关于",

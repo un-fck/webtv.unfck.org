@@ -1,6 +1,6 @@
 # UN Web TV Transcribed
 
-Browse and search UN Web TV videos with AI-generated transcripts, speaker identification, and topic analysis.
+Browse and search UN Web TV videos with automatically generated transcripts, speaker identification, and topic analysis.
 
 **Live site**: [transcripts.un.org](https://transcripts.un.org)
 

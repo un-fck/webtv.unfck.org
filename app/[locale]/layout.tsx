@@ -52,6 +52,18 @@ const notoSC = Noto_Sans_SC({
   display: "swap",
 });
 
+// Map next-intl locale codes to the BCP-47 forms Open Graph expects
+// (og:locale = `language_TERRITORY`). One default territory per UN language —
+// fine for first-pass unfurls; only used by Facebook/LinkedIn renderers.
+const OG_LOCALE: Record<string, string> = {
+  ar: "ar_AR",
+  zh: "zh_CN",
+  en: "en_US",
+  fr: "fr_FR",
+  ru: "ru_RU",
+  es: "es_ES",
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -60,13 +72,32 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata" });
   const base = await getBaseUrl();
+  const title = t("siteTitle");
+  const description = t("siteDescription");
+  const alternateLocale = routing.locales
+    .filter((l) => l !== locale)
+    .map((l) => OG_LOCALE[l] ?? l);
   return {
     metadataBase: new URL(base),
-    title: t("siteTitle"),
-    description: t("siteDescription"),
+    title,
+    description,
     // Layout-level alternates target the home page; per-route generateMetadata
     // (e.g. /about, /[...meeting]) overrides these with the matching path.
     alternates: alternatesFor(locale, "/"),
+    openGraph: {
+      type: "website",
+      siteName: title,
+      title,
+      description,
+      url: `/${locale}`,
+      locale: OG_LOCALE[locale] ?? locale,
+      alternateLocale,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
   };
 }
 
