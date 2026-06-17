@@ -94,8 +94,22 @@ export async function GET(request: NextRequest) {
 
   const hasMore = offset + videos.length < total;
 
+  const slim = sp.get("slim") === "1";
+  const payload = slim
+    ? videos.map((v) => ({
+        title: v.title,
+        date: v.date,
+        body: v.body,
+        category: v.category,
+        slug: v.slug,
+        duration: v.duration,
+        hasTranscript: v.hasTranscript,
+        jsonUrl: `/json/${v.slug}`,
+      }))
+    : videos;
+
   const response = NextResponse.json({
-    videos,
+    videos: payload,
     total,
     totalIncludingOther,
     hasMore,

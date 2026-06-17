@@ -28,12 +28,47 @@ export function formatTimecodeMs(ms: number | null | undefined): string {
 // declared locally so this helper stays decoupled from the panel's richer
 // internal types.
 export interface PlainTextSegment {
+  speaker?: string;
   statementIndices: number[];
   timestamp: number | null;
 }
 
 export interface PlainTextStatement {
-  paragraphs: Array<{ sentences: Array<{ text: string }> }>;
+  paragraphs: Array<{ sentences: Array<{ text: string; start?: number }> }>;
+}
+
+/**
+ * Group consecutive statements by speaker identity into segments. Pure-data
+ * utility shared by the client-side panel and the server-side text formatter.
+ */
+export function buildSpeakerSegments(
+  statements: PlainTextStatement[],
+  speakerMappings: SpeakerMapping,
+): PlainTextSegment[] {
+  const segs: PlainTextSegment[] = [];
+  if (statements.length === 0) return segs;
+
+  let currentSegment: PlainTextSegment | null = null;
+  statements.forEach((stmt, index) => {
+    const speakerInfo = speakerMappings[index.toString()];
+    const speakerId = JSON.stringify(speakerInfo || {});
+    const firstSentence = stmt.paragraphs[0]?.sentences[0];
+    const timestamp =
+      firstSentence?.start != null ? firstSentence.start / 1000 : null;
+
+    if (!currentSegment || currentSegment.speaker !== speakerId) {
+      if (currentSegment) segs.push(currentSegment);
+      currentSegment = {
+        speaker: speakerId,
+        statementIndices: [index],
+        timestamp,
+      };
+    } else {
+      currentSegment.statementIndices.push(index);
+    }
+  });
+  if (currentSegment) segs.push(currentSegment);
+  return segs;
 }
 
 /**

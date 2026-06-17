@@ -9,6 +9,12 @@ import {
 import { getCountryName } from "@/lib/country-lookup";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
+import {
+  buildSpeakerSegments,
+  formatTranscriptAsPlainText,
+  formatSpeakerText,
+  formatTimecode,
+} from "@/lib/transcript-formatting";
 
 export async function GET(
   request: NextRequest,
@@ -91,6 +97,43 @@ export async function GET(
     }
 
     const topics = transcript.content.topics || {};
+
+    const format = request.nextUrl.searchParams.get("format");
+    if (format === "text") {
+      const segments = buildSpeakerSegments(
+        transcript.content.statements,
+        speakerMappings,
+      );
+      const body = formatTranscriptAsPlainText(
+        segments,
+        transcript.content.statements,
+        (idx) => formatSpeakerText(idx, speakerMappings, countryNames),
+        formatTimecode,
+      );
+      const title = video.cleanTitle || video.title;
+      const date = video.date
+        ? new Date(video.date).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })
+        : "";
+      const header = [
+        `UN Transcripts — https://transcripts.un.org/en/${slug}`,
+        [title, video.body, date].filter(Boolean).join(" — "),
+        `Language: ${transcript.language_code}`,
+        TRANSCRIPT_DISCLAIMER,
+        "",
+        "---",
+        "",
+      ].join("\n");
+      return new Response(header + body, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "s-maxage=60, stale-while-revalidate=300",
+        },
+      });
+    }
 
     // Timestamps are already realignment-shifted by the display getter
     // (getTranscriptByKalturaId).
