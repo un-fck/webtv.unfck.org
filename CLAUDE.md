@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Agent instructions for working with this codebase.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Think before coding
 
@@ -197,7 +197,6 @@ Detailed docs live in `docs/` — read these before working on the relevant subs
 - `docs/official-transcripts.md` — Which UN organs produce PV vs SR records, document symbol patterns
 - `docs/api.md` — Public API: URL scheme, JSON endpoints, response shapes
 - `docs/realignment.md` — Realigning transcript timestamps after WebTV re-cuts a video: detection (duration reduction), Gemini-computed front-shift offset, geometric validation, `source_duration_ms`/`time_offset_ms`/`aligned_duration_ms`, and where the offset is applied
-- `REVIEW.md` (project root) — current code review, known issues, ranked refactor opportunities
 
 ## Architecture
 
