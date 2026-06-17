@@ -18,6 +18,7 @@ import {
   formatTimecode,
   formatSpeakerText,
   formatTranscriptAsPlainText,
+  buildSpeakerSegments,
 } from "@/lib/transcript-formatting";
 import {
   TranscriptToolbar,
@@ -269,30 +270,7 @@ export function TranscriptionPanel({
       statementsData: Statement[],
       mappings: SpeakerMapping,
     ): SpeakerSegment[] => {
-      const segs: SpeakerSegment[] = [];
-      if (statementsData.length === 0) return segs;
-
-      let currentSegment: SpeakerSegment | null = null;
-      statementsData.forEach((stmt, index) => {
-        const speakerInfo = mappings[index.toString()];
-        const speakerId = JSON.stringify(speakerInfo || {});
-        const timestamp = stmt.paragraphs[0]?.sentences[0]?.start
-          ? stmt.paragraphs[0].sentences[0].start / 1000
-          : 0;
-
-        if (!currentSegment || currentSegment.speaker !== speakerId) {
-          if (currentSegment) segs.push(currentSegment);
-          currentSegment = {
-            speaker: speakerId,
-            statementIndices: [index],
-            timestamp,
-          };
-        } else {
-          currentSegment.statementIndices.push(index);
-        }
-      });
-      if (currentSegment) segs.push(currentSegment);
-      return segs;
+      return buildSpeakerSegments(statementsData, mappings) as SpeakerSegment[];
     },
     [],
   );
