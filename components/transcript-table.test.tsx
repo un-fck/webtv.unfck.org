@@ -88,11 +88,7 @@ function renderTable() {
         serverParams={{ page: 1, pageSize: 50 }}
         availableDates={[...new Set(videos.map((v) => v.date))]}
         filterOptions={{
-          bodies: [
-            ...new Set(videos.map((v) => v.body).filter(Boolean)),
-          ] as string[],
           categories: [...new Set(videos.map((v) => v.category))],
-          bodyCounts: {},
           categoryCounts: {},
         }}
       />

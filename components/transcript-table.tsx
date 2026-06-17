@@ -186,9 +186,10 @@ function DateFilterPopover({
 }
 
 // Category filter rendered inline as a single wrapping bar of toggle pills.
-// The inline row shows the curated INLINE_CATEGORIES when present. Everything
-// else lives behind a "More" pill that opens a popover with the same toggle
-// UI (without color dots), so no category becomes unreachable.
+// Single-select: clicking a pill makes it the sole active category; clicking
+// the active pill clears the filter. The inline row shows the curated
+// INLINE_CATEGORIES when present; everything else lives behind a "More" pill
+// that opens a popover with the same UI, so no category becomes unreachable.
 function CategoryFilterRows({
   options,
   selected,
@@ -196,29 +197,22 @@ function CategoryFilterRows({
   counts,
 }: {
   options: string[];
-  selected: string[];
-  onChange: (values: string[]) => void;
+  selected: string | undefined;
+  onChange: (value: string | undefined) => void;
   counts?: Record<string, number>;
 }) {
   const t = useTranslations("schedule");
   const tCategory = useCategoryName();
   // Optimistic mirror of `selected` so clicks update the pill UI immediately,
   // before the URL-driven RSC round-trip lands a fresh `selected` prop. Without
-  // this, rapid clicks (especially deselecting one of several active pills)
-  // appear unresponsive — the handler closes over the stale prop and the visual
-  // state only catches up when the server responds. Synced from the prop via a
-  // value-based key so identity-only changes (`?? []`) don't clobber pending
-  // edits.
+  // this, rapid clicks appear unresponsive — the handler closes over the stale
+  // prop and the visual state only catches up when the server responds.
   const [optimisticSelected, setOptimisticSelected] = useState(selected);
-  const selectedKey = [...selected].sort().join("\0");
   useEffect(() => {
     setOptimisticSelected(selected);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedKey]);
+  }, [selected]);
   const toggle = (value: string) => {
-    const next = optimisticSelected.includes(value)
-      ? optimisticSelected.filter((v) => v !== value)
-      : [...optimisticSelected, value];
+    const next = optimisticSelected === value ? undefined : value;
     setOptimisticSelected(next);
     onChange(next);
   };
@@ -239,16 +233,14 @@ function CategoryFilterRows({
       key={opt}
       category={opt}
       label={tCategory(opt)}
-      active={optimisticSelected.includes(opt)}
+      active={optimisticSelected === opt}
       onClick={() => toggle(opt)}
       count={counts?.[opt]}
     />
   );
 
-  const overflowSelectedCount = overflowItems.filter((c) =>
-    optimisticSelected.includes(c),
-  ).length;
-  const overflowActive = overflowSelectedCount > 0;
+  const overflowActive =
+    !!optimisticSelected && overflowItems.includes(optimisticSelected);
 
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -263,9 +255,6 @@ function CategoryFilterRows({
             }`}
           >
             {t("moreCategories")}
-            {overflowActive && (
-              <span className="ml-1 opacity-75">{overflowSelectedCount}</span>
-            )}
           </PopoverTrigger>
           <PopoverContent
             align="start"
@@ -520,9 +509,7 @@ interface VideoTableProps {
   serverParams: ServerParams;
   availableDates: string[];
   filterOptions: {
-    bodies: string[];
     categories: string[];
-    bodyCounts: Record<string, number>;
     categoryCounts: Record<string, number>;
   };
 }
@@ -628,9 +615,8 @@ export function VideoTable({
         );
       if ("sort" in paramUpdates) setOrDelete("sort", paramUpdates.sort);
       if ("date" in paramUpdates) setOrDelete("date", paramUpdates.date);
-      if ("body" in paramUpdates) setList("body", paramUpdates.body);
       if ("category" in paramUpdates)
-        setList("category", paramUpdates.category);
+        setOrDelete("category", paramUpdates.category);
       if ("text" in paramUpdates) setList("text", paramUpdates.text);
       if ("q" in paramUpdates) setOrDelete("q", paramUpdates.q);
       if ("includeOtherLangs" in paramUpdates)
@@ -745,7 +731,7 @@ export function VideoTable({
   // both render in the same date-grouped layout.
   const isSearchMode = !!serverParams.q;
 
-  // Default-browse mode: no q, no date filter, no body/category/text filter.
+  // Default-browse mode: no q, no date filter, no category/text filter.
   // This is the only mode that uses the symmetric `±(7·weeks − 1)`-day date
   // window (see app/[locale]/page.tsx), so it's also the only mode where
   // "Load more" widens the window via the URL `weeks` param instead of paging
@@ -754,7 +740,6 @@ export function VideoTable({
   const isDefaultBrowse =
     !serverParams.q &&
     !serverParams.date &&
-    !serverParams.body &&
     !serverParams.category &&
     !serverParams.text;
   const currentWeeks = Math.max(1, serverParams.weeks ?? 1);
@@ -790,8 +775,7 @@ export function VideoTable({
     if (serverParams.includeOtherLangs) sp.set("xlang", "1");
     if (serverParams.sort) sp.set("sort", serverParams.sort);
     if (serverParams.date) sp.set("date", serverParams.date);
-    serverParams.body?.forEach((v) => sp.append("body", v));
-    serverParams.category?.forEach((v) => sp.append("category", v));
+    if (serverParams.category) sp.set("category", serverParams.category);
     serverParams.text?.forEach((v) => sp.append("text", v));
     fetch(`/api/videos?${sp}`)
       .then((res) => res.json())
@@ -859,8 +843,7 @@ export function VideoTable({
 
   const hasActiveFilters =
     !!serverParams.date ||
-    (serverParams.body?.length ?? 0) > 0 ||
-    (serverParams.category?.length ?? 0) > 0 ||
+    !!serverParams.category ||
     (serverParams.text?.length ?? 0) > 0;
   const showEmptyState = rows.length === 0;
 
@@ -932,9 +915,7 @@ export function VideoTable({
     const isLive = video.status === "live";
     const time = video.scheduledTime;
     const duration = formatDuration(video.duration);
-    const activeCategory =
-      (serverParams.category ?? []).length === 1 &&
-      serverParams.category![0] === category;
+    const activeCategory = serverParams.category === category;
 
     return (
       <tr
@@ -996,7 +977,7 @@ export function VideoTable({
               active={activeCategory}
               onClick={() =>
                 updateParams({
-                  category: activeCategory ? undefined : [category],
+                  category: activeCategory ? undefined : category,
                 })
               }
               label={tCategory(category)}
@@ -1043,7 +1024,6 @@ export function VideoTable({
   const clearAllFilters = () =>
     updateParams({
       date: undefined,
-      body: undefined,
       category: undefined,
       text: undefined,
       q: undefined,
@@ -1136,10 +1116,8 @@ export function VideoTable({
         </div>
         <CategoryFilterRows
           options={filterOptions.categories}
-          selected={serverParams.category ?? []}
-          onChange={(vals) =>
-            updateParams({ category: vals.length ? vals : undefined })
-          }
+          selected={serverParams.category}
+          onChange={(val) => updateParams({ category: val })}
           counts={filterOptions.categoryCounts}
         />
         {localeFilterApplicable && (

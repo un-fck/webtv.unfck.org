@@ -84,7 +84,7 @@ export default async function Home({
   // "one week" really means seven distinct days. The "Load more" button
   // widens the window by another week via the `weeks` URL param.
   const isDefaultBrowse =
-    !params.q && !params.date && !params.body && !params.category && !params.text;
+    !params.q && !params.date && !params.category && !params.text;
   const weeks = Math.max(1, params.weeks ?? 1);
   const windowDays = 7 * weeks - 1;
 
@@ -109,8 +109,7 @@ export default async function Home({
         q: params.q,
         daysBack: DAYS_BACK,
         date: params.date,
-        bodies: params.body,
-        categories: params.category,
+        category: params.category,
         docs: params.text,
         sort,
         // Filtered/search mode: keep offset-based "Load more" pagination

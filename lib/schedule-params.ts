@@ -10,8 +10,7 @@ export interface ServerParams {
   pageSize: number;
   sort?: string; // undefined = default date desc (browse and search both)
   date?: string;
-  body?: string[];
-  category?: string[];
+  category?: string;
   text?: string[]; // "transcript" | "pv" | "sr"
   q?: string;
   // "Include meetings in other languages" toggle, default off. When off and
@@ -45,16 +44,14 @@ export function parseScheduleParams(raw: RawSearchParams): ServerParams {
     typeof raw.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.date)
       ? raw.date
       : undefined;
-  const body = Array.isArray(raw.body)
-    ? raw.body.filter(Boolean)
-    : typeof raw.body === "string" && raw.body
-      ? [raw.body]
-      : undefined;
-  const category = Array.isArray(raw.category)
-    ? raw.category.filter(Boolean)
+  // Category is single-select. If multiple values arrive in the URL (legacy
+  // links from when this was multi-select, or hand-edited), keep the first.
+  const categoryRaw = Array.isArray(raw.category)
+    ? raw.category.find(Boolean)
     : typeof raw.category === "string" && raw.category
-      ? [raw.category]
+      ? raw.category
       : undefined;
+  const category = categoryRaw || undefined;
   const textRaw = Array.isArray(raw.text)
     ? raw.text
     : typeof raw.text === "string" && raw.text
@@ -81,8 +78,7 @@ export function parseScheduleParams(raw: RawSearchParams): ServerParams {
     pageSize,
     sort,
     date,
-    body: body?.length ? body : undefined,
-    category: category?.length ? category : undefined,
+    category,
     text: text.length ? text : undefined,
     q,
     includeOtherLangs,
@@ -112,8 +108,7 @@ export function scheduleParamsKey(p: ServerParams): string {
     pageSize: p.pageSize,
     sort: p.sort,
     date: p.date,
-    body: sorted(p.body),
-    category: sorted(p.category),
+    category: p.category,
     text: sorted(p.text),
     q: p.q,
     xlang: p.includeOtherLangs === true,

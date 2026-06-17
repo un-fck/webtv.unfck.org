@@ -1617,8 +1617,7 @@ export interface VideosQueryParams {
   /** Inclusive upper bound on the meeting date (YYYY-MM-DD). Applied as
    *  `date <= ?::date`. Used by the home page's week-window mode. */
   dateTo?: string;
-  bodies?: string[];
-  categories?: string[];
+  category?: string;
   status?: "past" | "scheduled";
   docs?: string[];
   /** Explicit sort. When omitted, default is `date DESC` for both browse
@@ -1739,8 +1738,7 @@ export async function queryVideos(
     date,
     dateFrom,
     dateTo,
-    bodies,
-    categories,
+    category,
     status,
     docs,
     sort,
@@ -1772,14 +1770,9 @@ export async function queryVideos(
     conditionArgs.push(dateTo);
   }
 
-  if (bodies && bodies.length > 0) {
-    conditions.push(`body IN (${bodies.map(() => "?").join(", ")})`);
-    conditionArgs.push(...bodies);
-  }
-
-  if (categories && categories.length > 0) {
-    conditions.push(`category IN (${categories.map(() => "?").join(", ")})`);
-    conditionArgs.push(...categories);
+  if (category) {
+    conditions.push("category = ?");
+    conditionArgs.push(category);
   }
 
   if (status === "past") {
@@ -1901,37 +1894,22 @@ export async function getAvailableDates(
 }
 
 export async function getFilterOptions(daysBack: number = 365): Promise<{
-  bodies: string[];
   categories: string[];
-  bodyCounts: Record<string, number>;
   categoryCounts: Record<string, number>;
 }> {
-  const [bodiesResult, categoriesResult] = await Promise.all([
-    pool.query(
-      q(
-        "SELECT body, COUNT(*) as cnt FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND body IS NOT NULL GROUP BY body ORDER BY body",
-        [daysBack],
-      ),
+  const categoriesResult = await pool.query(
+    q(
+      "SELECT category, COUNT(*) as cnt FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND category IS NOT NULL GROUP BY category ORDER BY category",
+      [daysBack],
     ),
-    pool.query(
-      q(
-        "SELECT category, COUNT(*) as cnt FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND category IS NOT NULL GROUP BY category ORDER BY category",
-        [daysBack],
-      ),
-    ),
-  ]);
+  );
 
-  const bodyCounts: Record<string, number> = {};
   const categoryCounts: Record<string, number> = {};
-  for (const row of bodiesResult.rows)
-    bodyCounts[row.body as string] = Number(row.cnt);
   for (const row of categoriesResult.rows)
     categoryCounts[row.category as string] = Number(row.cnt);
 
   return {
-    bodies: Object.keys(bodyCounts),
     categories: Object.keys(categoryCounts),
-    bodyCounts,
     categoryCounts,
   };
 }
