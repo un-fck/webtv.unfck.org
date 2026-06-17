@@ -1466,26 +1466,38 @@ const VISIBLE_VIDEO = `(
 )`;
 
 /**
- * Slim listing used by the sitemap — just enough to emit a `<url>` entry per
- * video. Keeps the query off the full row scan so sitemap regeneration stays
- * cheap as the archive grows.
+ * Per-(meeting, language) entries for the sitemap. We only list pairs where a
+ * completed transcript exists in that exact language — meetings without any
+ * transcript would be thin pages (player + UN Web TV link), and locale variants
+ * without a matching transcript would be near-duplicates that risk being
+ * flagged as low-quality. The full archive is in scope (no `daysBack`
+ * cutoff): transcribed meetings are permanent indexable content.
+ *
+ * Filtered to `supportedLocales` so `floor`-track transcripts (multilingual
+ * mixed audio, not a public UI locale) don't leak into the sitemap.
  */
-export async function getSitemapVideos(
-  daysBack: number = 365,
-): Promise<Array<{ slug: string; updated_at: Date }>> {
+export async function getSitemapMeetingLanguages(
+  supportedLocales: readonly string[],
+): Promise<
+  Array<{ slug: string; languageCode: string; lastModified: Date }>
+> {
   const result = await pool.query(
     q(
-      `SELECT slug, updated_at FROM webtv.videos
-       WHERE last_seen >= CURRENT_DATE - ?::int
-         AND slug IS NOT NULL
-         AND ${VISIBLE_VIDEO}
-       ORDER BY date DESC`,
-      [daysBack],
+      `SELECT v.slug, t.language_code,
+              GREATEST(v.updated_at, t.updated_at) AS last_modified
+         FROM webtv.videos v
+         JOIN webtv.transcripts t ON t.kaltura_id = v.kaltura_id
+        WHERE t.transcription_status = 'completed'
+          AND v.slug IS NOT NULL
+          AND t.language_code = ANY(?::text[])
+        ORDER BY v.date DESC`,
+      [supportedLocales as unknown as string[]],
     ),
   );
   return result.rows.map((r) => ({
     slug: r.slug as string,
-    updated_at: r.updated_at as Date,
+    languageCode: r.language_code as string,
+    lastModified: r.last_modified as Date,
   }));
 }
 
