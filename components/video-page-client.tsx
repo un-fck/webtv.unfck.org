@@ -489,18 +489,19 @@ export function VideoPageClient({
 
               {/* Topics — offset so header aligns with first speaker label,
                   pills align with paragraph box. The transcript disclaimer
-                  bubble adds 48.75px above the first speech bubble (2px
-                  borders + 24px padding + one 22.75px body line; its mt-2
-                  collapses into the toolbar's mb-3), so mirror its visibility
-                  condition (see TranscriptionPanel) and grow the offset by
-                  exactly that amount. Measured with Playwright at 1440px. */}
+                  bubble adds 60.75px above the first speech bubble (2px
+                  borders + 24px padding + one 22.75px body line + 12px mb-3
+                  below; its mt-2 collapses into the toolbar's mb-3), so
+                  mirror its visibility condition (see TranscriptionPanel)
+                  and grow the offset by exactly that amount. Measured with
+                  Playwright at 1440px. */}
               <div
                 className={`shrink-0 ${
                   isVideoDocked
                     ? "mt-2"
                     : panelData?.viewMode !== "pv" &&
                         (panelData?.hasSegments || panelData?.hasRawParagraphs)
-                      ? "mt-[96.75px]"
+                      ? "mt-[108.75px]"
                       : "mt-[48px]"
                 }`}
               >

@@ -1084,7 +1084,7 @@ export function TranscriptionPanel({
           the PV view, where the content actually is the official record. */}
       {viewMode !== "pv" &&
         (segments || (rawParagraphs && rawParagraphs.length > 0)) && (
-          <div className="mt-2 rounded-lg border border-border bg-muted/30 px-4 py-3">
+          <div className="mt-2 mb-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
             <p className={cn(typography.body, "text-muted-foreground")}>
               {t.rich("transcriptDisclaimer", {
                 aboutLink: (chunks) => (
