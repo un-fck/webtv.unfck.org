@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { requestMagicLink } from "@/lib/auth/commands";
+import { useLocale, useTranslations } from "next-intl";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -13,16 +12,29 @@ export function LoginForm() {
   );
   const [errorMsg, setErrorMsg] = useState("");
   const t = useTranslations("login");
+  const locale = useLocale();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("loading");
     setErrorMsg("");
-    const result = await requestMagicLink(email);
-    if (result.success) {
-      setStatus("sent");
-    } else {
-      setErrorMsg(result.error);
+    try {
+      const res = await fetch("/api/auth/request-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, locale }),
+      });
+      const result = (await res.json()) as
+        | { ok: true }
+        | { ok: false; error: string };
+      if (result.ok) {
+        setStatus("sent");
+      } else {
+        setErrorMsg(result.error);
+        setStatus("error");
+      }
+    } catch {
+      setErrorMsg(t("errorSendFailed"));
       setStatus("error");
     }
   }
