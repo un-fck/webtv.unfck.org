@@ -4,7 +4,8 @@ import { getVideoBySlug } from "@/lib/db";
 import { getCachedTranscriptedEntries } from "@/lib/cached-db";
 import { notFound } from "next/navigation";
 import { VideoPageClient } from "@/components/video-page-client";
-import { extractKalturaId } from "@/lib/kaltura";
+import { extractKalturaId, KALTURA_PARTNER_ID, KALTURA_UICONF_ID } from "@/lib/kaltura";
+import { getBaseUrl } from "@/lib/get-base-url";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 import { getCurrentUser } from "@/lib/auth/service";
@@ -147,19 +148,30 @@ export default async function MeetingPage({
   const isLoggedIn = !!(await getCurrentUser());
 
   // Schema.org VideoObject — helps Google rich results and some unfurlers.
-  // `thumbnailUrl` and `contentUrl` are left off because the canonical thumbnail
-  // is the og:image (Next.js emits it automatically from opengraph-image.tsx),
-  // and the Kaltura content URL changes per session.
+  // `description`, `thumbnailUrl`, and `embedUrl` are required (or strongly
+  // recommended) by Google's video structured data spec.
+  const tMeta = await getTranslations({ locale, namespace: "metadata" });
+  const dateLabel = formatMetaDate(record.date, locale);
+  const fallbackDescription = record.body
+    ? tMeta("meetingDescription", { body: record.body, date: dateLabel })
+    : tMeta("meetingDescriptionNoBody", { date: dateLabel });
+  const baseUrl = await getBaseUrl();
+  const embedUrl = `https://cdnapisec.kaltura.com/p/${KALTURA_PARTNER_ID}/sp/${KALTURA_PARTNER_ID}00/embedIframeJs/uiconf_id/${KALTURA_UICONF_ID}/partner_id/${KALTURA_PARTNER_ID}?iframeembed=true&entry_id=${record.entry_id ?? kalturaId}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "VideoObject",
     name: record.clean_title || record.title,
-    description: metadata.description || metadata.summary || undefined,
+    description:
+      metadata.description || metadata.summary || fallbackDescription,
+    // OG image is a guaranteed 1200x630 PNG (Kaltura's thumbnail endpoint
+    // 404s for many older entries and live recordings).
+    thumbnailUrl: `${baseUrl}/api/og/meeting/${slug}`,
     uploadDate: record.date,
     duration:
       typeof record.duration === "number" && record.duration > 0
         ? `PT${Math.round(record.duration)}S`
         : undefined,
+    embedUrl,
     inLanguage: locale,
     isFamilyFriendly: true,
     publisher: {
