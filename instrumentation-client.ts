@@ -16,35 +16,15 @@ if (
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV,
     tracesSampleRate: 0,
-    // Filter known noise: Kaltura player errors (third-party SDK, not our
-    // bug), Microsoft Outlook SafeLink scanner ("Object Not Found Matching
-    // Id"), and stale-client errors after a deploy (Server Action id no
-    // longer exists in the new bundle). All actionable client errors still
-    // come through.
+    // Filter known noise from external actors we can't fix: Microsoft Outlook
+    // SafeLink scanner ("Object Not Found Matching Id") and stale-client
+    // errors after a deploy (Server Action id no longer exists in the new
+    // bundle). Kaltura player errors are handled at the source — see
+    // `reportKalturaError` in components/video-player.tsx.
     ignoreErrors: [
-      /KalturaPlayerError/,
       /Object Not Found Matching Id:\d+, MethodName:/,
       /Server Action .* was not found on the server/,
     ],
-    // The Kaltura player also raises UnhandledRejections whose value is an
-    // *object* (not a string), so ignoreErrors can't see them. Drop any
-    // rejection whose serialized value mentions a Kaltura player error
-    // shape (the `errorDetails` / `category` keys are the giveaway).
-    beforeSend(event) {
-      const values = event.exception?.values ?? [];
-      for (const ex of values) {
-        const v = ex.value ?? "";
-        if (
-          v.includes("KalturaPlayerError") ||
-          (v.includes("category") &&
-            v.includes("errorDetails") &&
-            v.includes("severity"))
-        ) {
-          return null;
-        }
-      }
-      return event;
-    },
     integrations: [
       Sentry.feedbackIntegration({
         colorScheme: "light",

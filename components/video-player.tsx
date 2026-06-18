@@ -1,6 +1,5 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import { useEffect, useRef } from "react";
 
 interface AudioTrack {
@@ -29,28 +28,14 @@ interface KalturaPlayer {
   ) => void;
 }
 
-// The Kaltura SDK rejects promises and emits error events with plain objects
-// like { category, code, data, severity }. Sentry can't extract a message from
-// those and falls back to "Object captured as promise rejection with keys: ...".
-// Wrap them into a proper Error so the issue page shows the category/code.
+// Kaltura emits errors as plain objects like { category, code, data, severity }.
+// We log to the console for local debugging but do NOT forward to Sentry: the
+// category=3 (MEDIA) family is almost entirely user-side noise (network,
+// ad-blocker, geoblock, codec) that we can't act on, and users who hit an
+// actually-broken player report via the feedback widget with more context than
+// an anonymous error would carry.
 function reportKalturaError(source: string, payload: unknown) {
-  const p = (payload ?? {}) as {
-    category?: number;
-    code?: number;
-    severity?: number;
-    name?: string;
-    data?: unknown;
-  };
-  const label =
-    typeof p.name === "string" && p.name
-      ? p.name
-      : `category=${p.category ?? "?"} code=${p.code ?? "?"}`;
-  const err = new Error(`Kaltura player ${source}: ${label}`);
-  err.name = "KalturaPlayerError";
-  Sentry.captureException(err, {
-    tags: { component: "kaltura-player", source },
-    extra: { payload: p },
-  });
+  console.warn(`[kaltura] ${source}`, payload);
 }
 
 interface VideoPlayerProps {
