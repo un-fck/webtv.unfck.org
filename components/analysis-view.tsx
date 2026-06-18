@@ -155,7 +155,7 @@ export function AnalysisView({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="mt-2 space-y-4">
       {propositions.map((prop) => {
         const isExpanded = expandedProps.has(prop.key);
 
