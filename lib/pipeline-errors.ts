@@ -15,8 +15,13 @@ export function isTransientPipelineError(err: unknown): boolean {
     "timeout",
     "fetch failed",
     "econnreset",
+    "econnrefused",
     "etimedout",
     "enotfound",
     "socket hang up",
+    // pg / pg-pool: socket killed by PgBouncer/Azure LB/NAT idle reap.
+    // The "timeout" patterns above already cover "Connection terminated due
+    // to connection timeout", but the bare "unexpectedly" wording does not.
+    "connection terminated unexpectedly",
   ].some((pattern) => msg.includes(pattern));
 }

@@ -63,13 +63,24 @@ function getPool(): Pool {
     ssl: process.env.PG_SSL_CA
       ? { ca: readFileSync(process.env.PG_SSL_CA, "utf8") }
       : { rejectUnauthorized: true },
-    // Per-instance pool size. On Vercel many instances each hold their own pool,
-    // and PgBouncer (transaction mode) does the real fan-in to Postgres, so keep
-    // this small — a high number here just hogs PgBouncer client slots. Override
-    // with PG_POOL_MAX for long-running scripts that benefit from more.
-    max: Number(process.env.PG_POOL_MAX) || 2,
-    idleTimeoutMillis: 30_000,
+    // Per-instance pool size. We run a small number of long-lived Node
+    // processes on Azure (not the Vercel fan-out model), so a pool of 10 fits
+    // comfortably under Azure Postgres `max_connections` even with several
+    // app instances, and gives Promise.all-style cron stages headroom to run
+    // queries in parallel without forcing new connects. Override with
+    // PG_POOL_MAX for long-running scripts.
+    max: Number(process.env.PG_POOL_MAX) || 10,
+    // Keep idle sockets warm for 10 min so cron ticks (5–15 min cadence) and
+    // low-traffic pages don't pay the cold-connect cost on every request.
+    idleTimeoutMillis: 600_000,
     connectionTimeoutMillis: 5_000,
+    // Send TCP keepalives so we detect sockets silently dropped by an
+    // intermediate (Azure load balancer / NAT / PgBouncer idle reap) before
+    // the next query trips over a dead connection. Without this, the pool
+    // happily hands out corpses and surfaces "Connection terminated
+    // unexpectedly" to the caller.
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10_000,
   });
   _pool.on("error", (err) => {
     console.error("PostgreSQL pool error:", err);

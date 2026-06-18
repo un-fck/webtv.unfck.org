@@ -11,6 +11,22 @@
 // transcription/provider import graph into the Edge bundle of
 // `register()`, which is what previously broke dev + Vercel builds.
 import * as Sentry from "@sentry/nextjs";
+import { isTransientPipelineError } from "@/lib/pipeline-errors";
+
+// Drop Sentry events from cron routes when the underlying cause is a transient
+// DB/network blip. Crons re-fire every 5–15 min by design, so a single failed
+// tick is not actionable — reporting it just buries real signal. Non-cron
+// routes (user-facing pages, /api/*) still report normally so we hear about
+// problems users actually hit.
+function filterCronTransients(event: Sentry.ErrorEvent): Sentry.ErrorEvent | null {
+  const url = event.request?.url ?? "";
+  if (!url.includes("/api/cron/")) return event;
+  const exceptions = event.exception?.values ?? [];
+  const anyTransient = exceptions.some((ex) =>
+    isTransientPipelineError(new Error(ex.value ?? "")),
+  );
+  return anyTransient ? null : event;
+}
 
 export async function register() {
   // Worker init: SIGTERM handler, heartbeat tick, boot picker. Production-
@@ -42,6 +58,7 @@ export async function register() {
     // Errors only — perf tracing off by default to keep noise low. Set
     // SENTRY_TRACES_SAMPLE_RATE=0.1 (or similar) to enable.
     tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE) || 0,
+    beforeSend: filterCronTransients,
   };
   // Same config for both runtimes; the SDK adapter is selected by
   // Sentry's nextjs integration based on NEXT_RUNTIME.

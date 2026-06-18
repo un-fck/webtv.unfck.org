@@ -163,7 +163,7 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Required for the web app:**
 
-- `DATABASE_URL` — PostgreSQL connection string (Azure Database for PostgreSQL via PgBouncer port 6432). All tables live in the `webtv` schema and every query is explicitly schema-qualified (`webtv.<table>`); there is no `search_path` setup, so this works regardless of the connection's default schema.
+- `DATABASE_URL` — PostgreSQL connection string (Azure Database for PostgreSQL, direct on port 5432; we used to go through Azure's built-in PgBouncer on 6432 but dropped it — with a few long-lived Azure app instances the fan-in benefit was unused while PgBouncer's invisible idle-socket reaping was generating "Connection terminated unexpectedly" errors). All tables live in the `webtv` schema and every query is explicitly schema-qualified (`webtv.<table>`); there is no `search_path` setup, so this works regardless of the connection's default schema.
 - `GEMINI_API_KEY` — transcription of the multilingual "floor" track + PV document alignment (Gemini)
 - `ASSEMBLYAI_API_KEY` — English transcription (AssemblyAI Universal-3 Pro)
 - `DASHSCOPE_API_KEY` — Chinese transcription (Alibaba Fun-ASR)

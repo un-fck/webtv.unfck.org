@@ -10,6 +10,9 @@ describe("isTransientPipelineError", () => {
     "Download failed: 404 Not Found",
     "Request timed out.",
     "timeout exceeded when trying to connect",
+    "Connection terminated due to connection timeout",
+    "Connection terminated unexpectedly",
+    "connect ECONNREFUSED 135.119.130.82:6432",
     "fetch failed",
   ];
   it.each(transient)("retryable: %s", (msg) => {
