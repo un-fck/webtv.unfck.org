@@ -13,6 +13,14 @@ Don't assume, don't hide confusion, surface tradeoffs. Before implementing:
 
 (For trivial tasks, use judgment — this biases toward caution over speed.)
 
+## Never merge branches or worktrees yourself
+
+Do NOT run `git merge`, fast-forward, or otherwise integrate a branch/worktree
+into another branch unless the user explicitly asks for it in this
+conversation. Finishing a worktree means committing and stopping — leave the
+branch for the user to merge (or ask first). The same applies to pushing,
+force-pushing, rebasing onto shared branches, and deleting branches.
+
 ## Never call the transcripts "AI-generated"
 
 In any user-visible copy — page text, meta descriptions, OG cards, README, social
