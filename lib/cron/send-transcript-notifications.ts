@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import {
   getRecentlyCompletedTranscripts,
   getVideoByKalturaId,
@@ -79,6 +80,13 @@ export async function runSendTranscriptNotifications(): Promise<SendNotification
               console.error(
                 `[notifications] Failed to email ${recipient.email} for ${t.transcript_id}: ${msg}`,
               );
+              Sentry.captureException(err, {
+                tags: {
+                  pipeline: "notifications",
+                  kind: "send_failed",
+                  transcript_id: t.transcript_id,
+                },
+              });
               errors.push(`${t.transcript_id}/${recipient.email}: ${msg}`);
             }
           }
@@ -87,6 +95,13 @@ export async function runSendTranscriptNotifications(): Promise<SendNotification
           console.error(
             `[notifications] Error processing ${t.transcript_id}: ${msg}`,
           );
+          Sentry.captureException(err, {
+            tags: {
+              pipeline: "notifications",
+              kind: "process_failed",
+              transcript_id: t.transcript_id,
+            },
+          });
           errors.push(`${t.transcript_id}: ${msg}`);
         }
       }

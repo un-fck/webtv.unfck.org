@@ -18,6 +18,7 @@
  *      start running immediately, without waiting for the next cron tick.
  *      Detached via `setImmediate` so it never blocks server readiness.
  */
+import * as Sentry from "@sentry/nextjs";
 import { heartbeatOwnRows, markOwnRowsInterrupted } from "@/lib/db";
 import { currentWorkerId } from "@/lib/worker-identity";
 
@@ -51,6 +52,9 @@ export function initWorker(): void {
       );
     } catch (err) {
       console.warn("[server-init] heartbeat failed:", err);
+      Sentry.captureException(err, {
+        tags: { pipeline: "worker", kind: "heartbeat_failed", worker_id: workerId },
+      });
     }
   };
   heartbeatTimer = setInterval(tick, HEARTBEAT_INTERVAL_MS);
@@ -98,6 +102,9 @@ export function initWorker(): void {
       })
       .catch((err) => {
         console.error("[server-init] cleanup UPDATE failed:", err);
+        Sentry.captureException(err, {
+          tags: { pipeline: "worker", kind: "shutdown_cleanup_failed", worker_id: workerId },
+        });
       });
     const timeout = new Promise<void>((resolve) =>
       setTimeout(() => {

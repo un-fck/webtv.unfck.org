@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { pool, withJobLock } from "@/lib/db";
 import {
   realignTranscript,
@@ -129,6 +130,9 @@ export async function runRealign(): Promise<RealignResult> {
         console.error(
           `[realign] error ${r.transcript_id}: ${err instanceof Error ? err.message : String(err)}`,
         );
+        Sentry.captureException(err, {
+          tags: { pipeline: "realign", transcript_id: r.transcript_id },
+        });
       }
     }
 

@@ -1,4 +1,5 @@
 import { after } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import {
   getRunnableTranscripts,
   getRunnableAnalyses,
@@ -123,6 +124,18 @@ export async function runProcessScheduled(
               "error",
               `Abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries`,
             );
+            Sentry.captureMessage(
+              `Transcript abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries`,
+              {
+                level: "error",
+                tags: {
+                  pipeline: "transcription",
+                  kind: "abandoned",
+                  transcript_id: item.transcript_id,
+                },
+                extra: { language: item.language_code },
+              },
+            );
             abandoned++;
             continue;
           }
@@ -238,6 +251,12 @@ export async function runProcessScheduled(
             `[${ts()}] [process-scheduled] error on ${item.transcript_id}:`,
             err,
           );
+          Sentry.captureException(err, {
+            tags: {
+              pipeline: "process_scheduled",
+              transcript_id: item.transcript_id,
+            },
+          });
           errors.push(`${item.transcript_id}: ${msg}`);
         }
       }
@@ -253,6 +272,17 @@ export async function runProcessScheduled(
             item.transcript_id,
             "error",
             `Analysis abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries`,
+          );
+          Sentry.captureMessage(
+            `Proposition analysis abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries`,
+            {
+              level: "error",
+              tags: {
+                pipeline: "propositions",
+                kind: "abandoned",
+                transcript_id: item.transcript_id,
+              },
+            },
           );
           abandoned++;
           continue;
@@ -272,6 +302,12 @@ export async function runProcessScheduled(
         analysisResumed++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
+        Sentry.captureException(err, {
+          tags: {
+            pipeline: "process_scheduled_analysis",
+            transcript_id: item.transcript_id,
+          },
+        });
         errors.push(`analysis ${item.transcript_id}: ${msg}`);
       }
     }

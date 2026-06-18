@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import * as Sentry from "@sentry/nextjs";
 
 const ts = () => new Date().toTimeString().slice(0, 8);
 const plog = (...args: unknown[]) => console.log(`[${ts()}]`, ...args);
@@ -309,6 +310,11 @@ async function runTranscriptionPipeline(
     );
   } catch (err) {
     perr("[Pipeline] Error:", err);
+    if (!isTransientPipelineError(err)) {
+      Sentry.captureException(err, {
+        tags: { pipeline: "transcription", transcript_id: transcriptId },
+      });
+    }
     await releaseTranscript(
       transcriptId,
       isTransientPipelineError(err) ? "interrupted" : "error",
@@ -328,6 +334,11 @@ async function runAnalysisPipeline(
     await identifySpeakers(paragraphs, transcriptId, speakerMapping);
     await releaseTranscript(transcriptId, "completed");
   } catch (err) {
+    if (!isTransientPipelineError(err)) {
+      Sentry.captureException(err, {
+        tags: { pipeline: "analysis", transcript_id: transcriptId },
+      });
+    }
     await releaseTranscript(
       transcriptId,
       isTransientPipelineError(err) ? "interrupted" : "error",
@@ -408,6 +419,11 @@ export async function runSpeakerIdentification(
       topics: updated?.content.topics || {},
     };
   } catch (error) {
+    if (!isTransientPipelineError(error)) {
+      Sentry.captureException(error, {
+        tags: { pipeline: "speaker_identification", transcript_id: transcriptId },
+      });
+    }
     await releaseTranscript(
       transcriptId,
       isTransientPipelineError(error) ? "interrupted" : "error",
@@ -591,6 +607,9 @@ export async function runPropositionAnalysisJob(
     await releaseAnalysis(transcriptId, "completed");
     return { ok: true };
   } catch (error) {
+    Sentry.captureException(error, {
+      tags: { pipeline: "propositions", transcript_id: transcriptId },
+    });
     await releaseAnalysis(
       transcriptId,
       "error",

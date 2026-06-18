@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { formatDate, scrapeVideosForDates, videoToRecord } from "@/lib/un-api";
 import { resolveEntryId } from "@/lib/kaltura-helpers";
 import {
@@ -103,6 +104,9 @@ export async function runSyncVideos(
         console.error(
           `[sync-videos:${range}] Error syncing ${video.id}: ${msg}`,
         );
+        Sentry.captureException(err, {
+          tags: { pipeline: "sync_videos", range, asset_id: video.id },
+        });
         errors.push(`${video.id}: ${msg}`);
       }
     }
@@ -119,6 +123,9 @@ export async function runSyncVideos(
         console.error(
           `[sync-videos:${range}] Duration backfill failed: ${msg}`,
         );
+        Sentry.captureException(err, {
+          tags: { pipeline: "sync_videos", kind: "duration_backfill" },
+        });
       }
 
       try {
@@ -130,6 +137,9 @@ export async function runSyncVideos(
         console.error(
           `[sync-videos:${range}] Removed-video reap failed: ${msg}`,
         );
+        Sentry.captureException(err, {
+          tags: { pipeline: "sync_videos", kind: "reap_removed" },
+        });
       }
     }
 
