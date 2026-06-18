@@ -228,6 +228,7 @@ export function VideoPageClient({
   );
 
   const topicPills = (() => {
+    if (panelData?.viewMode === "analysis") return null;
     if (!panelData?.topics || Object.keys(panelData.topics).length === 0)
       return null;
 

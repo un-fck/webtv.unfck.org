@@ -1124,6 +1124,18 @@ export function TranscriptionPanel({
         />
       )}
 
+      {flagged && viewMode !== "pv" && (
+        <FlaggedTranscriptBanner
+          sourceDurationMs={sourceDurationMs}
+          alignedDurationMs={alignedDurationMs}
+          isLoggedIn={isLoggedIn}
+          pendingStage={pendingRetranscribeStage}
+          starting={retranscribeStarting}
+          error={retranscribeError}
+          onRetranscribe={handleRetranscribe}
+        />
+      )}
+
       {isLoggedIn && viewMode === "analysis" && propositions.length > 0 && (
         <AnalysisView
           propositions={propositions}
@@ -1162,18 +1174,6 @@ export function TranscriptionPanel({
             </button>
           </div>
         )}
-
-      {flagged && viewMode !== "pv" && (
-        <FlaggedTranscriptBanner
-          sourceDurationMs={sourceDurationMs}
-          alignedDurationMs={alignedDurationMs}
-          isLoggedIn={isLoggedIn}
-          pendingStage={pendingRetranscribeStage}
-          starting={retranscribeStarting}
-          error={retranscribeError}
-          onRetranscribe={handleRetranscribe}
-        />
-      )}
 
       {viewMode === "pv" && pvSymbol && (
         <PVPanel
