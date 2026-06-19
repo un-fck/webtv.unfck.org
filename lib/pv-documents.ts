@@ -98,6 +98,60 @@ export function parseMeetingSymbol(
     return `E/${year}/SR.${meetingNum}`;
   }
 
+  // Human Rights treaty bodies: titles end "(ACRONYM)" and have the
+  //   "Nth Meeting, Mth Session" prefix. Meeting numbers are cumulative
+  //   across sessions, so the symbol uniquely identifies a row even
+  //   without session in the URL.
+  //
+  // Acronym → official symbol prefix (the suffix is always SR.{n}). Most
+  // use {ACRONYM}/C/SR.N; CESCR sits under ECOSOC so its symbol is
+  // E/C.12/SR.N; SPT (Subcommittee on Prevention of Torture) uses
+  // CAT/OP/SR.N.
+  const TREATY_BODY_PREFIX: Record<string, string> = {
+    CAT: "CAT/C",
+    CERD: "CERD/C",
+    CCPR: "CCPR/C",
+    CEDAW: "CEDAW/C",
+    CRC: "CRC/C",
+    CRPD: "CRPD/C",
+    CESCR: "E/C.12",
+    CMW: "CMW/C",
+    CED: "CED/C",
+    SPT: "CAT/OP",
+  };
+  const tbM = title.match(
+    /^(\d+)(?:st|nd|rd|th)\s+Meeting,\s+\d+(?:st|nd|rd|th)\s+Session.*\(([A-Z]+)\)\s*$/,
+  );
+  if (tbM) {
+    const acronym = tbM[2];
+    const prefix = TREATY_BODY_PREFIX[acronym];
+    if (prefix) {
+      return `${prefix}/SR.${tbM[1]}`;
+    }
+  }
+
+  // Daily press briefings — identified by date (+ host). Three flavours:
+  //   SG Spokesperson, PGA Spokesperson, UN Geneva.
+  if (videoDate) {
+    const date = videoDate.slice(0, 10); // YYYY-MM-DD
+    // SG: explicit "Spokesperson of the Secretary-General" wording, or the
+    //   topic-prefix "X & other topics - Daily Press Briefing" form, which
+    //   is also always SG. PGA-led briefings always say "PGA"; exclude.
+    if (
+      !/PGA/i.test(title) &&
+      (/Daily Press Briefing.*Spokesperson.*Secretary-General/i.test(title) ||
+        /Daily Press Briefing/i.test(title))
+    ) {
+      return `BRIEFING/SG/${date}`;
+    }
+    if (/PGA.*Spokesperson|Spokesperson.*PGA/i.test(title)) {
+      return `BRIEFING/PGA/${date}`;
+    }
+    if (/UN Geneva (?:Press )?Briefing/i.test(title)) {
+      return `BRIEFING/GENEVA/${date}`;
+    }
+  }
+
   return null;
 }
 

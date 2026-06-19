@@ -63,6 +63,147 @@ describe("parseMeetingSymbol (real titles from the metadata dump)", () => {
   it("returns null for non-meeting titles", () => {
     expect(parseMeetingSymbol("Press conference on Sudan", "Other")).toBeNull();
   });
+
+  describe("treaty bodies", () => {
+    // One real title per acronym, taken from the production data sample.
+    const TB_CASES: Array<[string, string]> = [
+      [
+        "2264th Meeting, 84th Session, Committee against Torture (CAT)",
+        "CAT/C/SR.2264",
+      ],
+      [
+        "3225th Meeting, 117th Session, Committee on the Elimination of Racial Discrimination (CERD)",
+        "CERD/C/SR.3225",
+      ],
+      ["4100th Meeting, 140th Session, Human Rights Committee (CCPR)", "CCPR/C/SR.4100"],
+      [
+        "1900th Meeting, 88th Session, Committee on the Elimination of Discrimination against Women (CEDAW)",
+        "CEDAW/C/SR.1900",
+      ],
+      ["2700th Meeting, 95th Session, Committee on the Rights of the Child (CRC)", "CRC/C/SR.2700"],
+      [
+        "650th Meeting, 30th Session, Committee on the Rights of Persons with Disabilities (CRPD)",
+        "CRPD/C/SR.650",
+      ],
+      [
+        "100th Meeting, 75th Session, Committee on Economic, Social and Cultural Rights (CESCR)",
+        "E/C.12/SR.100",
+      ],
+      [
+        "500th Meeting, 38th Session, Committee on Migrant Workers (CMW)",
+        "CMW/C/SR.500",
+      ],
+      [
+        "400th Meeting, 28th Session, Committee on Enforced Disappearances (CED)",
+        "CED/C/SR.400",
+      ],
+      [
+        "200th Meeting, 45th Session, Subcommittee on Prevention of Torture (SPT)",
+        "CAT/OP/SR.200",
+      ],
+    ];
+
+    it.each(TB_CASES)("%s → %s", (title, expected) => {
+      expect(parseMeetingSymbol(title, "Human Rights Treaty Bodies")).toBe(
+        expected,
+      );
+    });
+
+    it("ignores trailing-(X) titles for non-treaty-body acronyms", () => {
+      // A title that happens to end "(X)" but isn't a known acronym must not
+      // resolve to a treaty-body symbol.
+      expect(
+        parseMeetingSymbol(
+          "1st Meeting, 1st Session, Some Other Committee (XYZ)",
+          "Other",
+        ),
+      ).toBeNull();
+    });
+
+    it("ignores treaty-body-shaped titles without the meeting/session prefix", () => {
+      // Chairpersons-of-treaty-bodies meetings have the prefix but no acronym
+      // in parens at end — explicitly out of scope.
+      expect(
+        parseMeetingSymbol(
+          "10th Meeting, 38th Session - Chairpersons of the Human Rights Treaty Bodies",
+          "Human Rights Treaty Bodies",
+        ),
+      ).toBeNull();
+    });
+  });
+
+  describe("daily press briefings", () => {
+    it("recognises the SG Spokesperson daily briefing", () => {
+      expect(
+        parseMeetingSymbol(
+          "Daily Press Briefing by the Spokesperson of the Secretary-General",
+          "Press Conferences",
+          "2026-06-19",
+        ),
+      ).toBe("BRIEFING/SG/2026-06-19");
+    });
+
+    it("recognises the topic-prefix SG variant", () => {
+      expect(
+        parseMeetingSymbol(
+          "Sudan, Lebanon, Occupied Palestinian Territory & other topics - Daily Press Briefing",
+          "Press Conferences",
+          "2026-06-18",
+        ),
+      ).toBe("BRIEFING/SG/2026-06-18");
+    });
+
+    it("recognises the joint SG/PGA daily briefing as SG", () => {
+      // The Spokesperson of the SG is the host; PGA appears alongside but
+      // doesn't change the citation.
+      expect(
+        parseMeetingSymbol(
+          "Daily Press Briefing by the Spokesperson of the Secretary-General & the President of the General Assembly",
+          "Press Conferences",
+          "2026-02-23",
+        ),
+      ).toBe("BRIEFING/SG/2026-02-23");
+    });
+
+    it("recognises PGA Spokesperson briefings", () => {
+      expect(
+        parseMeetingSymbol(
+          "Upcoming Meetings Schedule & other topics - PGA Spokesperson's Briefing",
+          "Press Conferences",
+          "2026-05-18",
+        ),
+      ).toBe("BRIEFING/PGA/2026-05-18");
+    });
+
+    it("recognises UN Geneva press briefings", () => {
+      expect(
+        parseMeetingSymbol(
+          "UN Geneva Press Briefing: UNHCR, UNICEF, WHO, IFRC, UNDIR",
+          "Press Conferences",
+          "2026-06-16",
+        ),
+      ).toBe("BRIEFING/GENEVA/2026-06-16");
+    });
+
+    it("returns null when videoDate is missing", () => {
+      expect(
+        parseMeetingSymbol(
+          "Daily Press Briefing by the Spokesperson of the Secretary-General",
+          "Press Conferences",
+        ),
+      ).toBeNull();
+    });
+
+    it("does not match unrelated press conferences", () => {
+      expect(
+        parseMeetingSymbol(
+          "Press Conference: IAEA Director General Rafael Grossi",
+          "Press Conferences",
+          "2026-06-18",
+        ),
+      ).toBeNull();
+    });
+  });
 });
 
 describe("getPVDocumentUrl", () => {

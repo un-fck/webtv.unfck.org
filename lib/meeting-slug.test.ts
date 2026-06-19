@@ -14,6 +14,14 @@ const SYMBOL_SLUG: Array<[string, string]> = [
   ["A/C.3/79/SR.5", "ga/c3/79/5"],
   ["A/HRC/58/SR.59", "hrc/58/59"],
   ["E/2024/SR.10", "ecosoc/2024/10"],
+  ["CAT/C/SR.2264", "cat/2264"],
+  ["CERD/C/SR.3225", "cerd/3225"],
+  ["CCPR/C/SR.4100", "ccpr/4100"],
+  ["E/C.12/SR.100", "cescr/100"],
+  ["CAT/OP/SR.200", "spt/200"],
+  ["BRIEFING/SG/2026-06-19", "briefing/sg/2026-06-19"],
+  ["BRIEFING/PGA/2026-05-18", "briefing/pga/2026-05-18"],
+  ["BRIEFING/GENEVA/2026-06-16", "briefing/geneva/2026-06-16"],
 ];
 
 describe("slugFromSymbol", () => {
@@ -88,6 +96,14 @@ describe("symbolFromSlug trailing /N part suffix", () => {
       pvPart: 2,
     });
     expect(symbolFromSlug("ecosoc/2024/10/4")?.pvPart).toBe(4);
+    expect(symbolFromSlug("cat/2264/2")).toEqual({
+      pvSymbol: "CAT/C/SR.2264",
+      pvPart: 2,
+    });
+    expect(symbolFromSlug("briefing/sg/2026-06-19/2")).toEqual({
+      pvSymbol: "BRIEFING/SG/2026-06-19",
+      pvPart: 2,
+    });
   });
 
   it("does not consume the meeting number itself as a part", () => {

@@ -24,6 +24,8 @@ Citation URLs — derived from UN document symbols. Multi-part recordings of the
 - GA Committees: \`/ga/c{n}/{session}/{meeting}[/{p}]\`
 - Human Rights Council: \`/hrc/{session}/{meeting}[/{p}]\`
 - ECOSOC: \`/ecosoc/{year}/{meeting}[/{p}]\`
+- Human rights treaty bodies (cumulative SR numbering): \`/cat/{n}[/{p}]\`, \`/cerd/{n}\`, \`/ccpr/{n}\`, \`/cedaw/{n}\`, \`/crc/{n}\`, \`/crpd/{n}\`, \`/cescr/{n}\`, \`/cmw/{n}\`, \`/ced/{n}\`, \`/spt/{n}\`
+- Daily press briefings (host + date): \`/briefing/sg/{YYYY-MM-DD}[/{p}]\`, \`/briefing/pga/{YYYY-MM-DD}\`, \`/briefing/geneva/{YYYY-MM-DD}\`
 
 Permalink URLs — mirror UN Web TV's asset URLs, so swapping the host gets you the corresponding transcript.
 

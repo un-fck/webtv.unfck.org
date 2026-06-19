@@ -17,6 +17,37 @@
  * See docs/official-transcripts.md for which organs use PV vs SR.
  */
 
+/**
+ * Treaty-body symbol prefixes. The slug is `{acronym}/{n}` regardless of
+ * which symbol family the body uses (most are `{ACRONYM}/C/SR.N`; CESCR
+ * sits under ECOSOC as `E/C.12/SR.N`; SPT uses `CAT/OP/SR.N`).
+ */
+const TREATY_BODY_SYMBOL_TO_SLUG: Array<[RegExp, string]> = [
+  [/^CAT\/C\/SR\.(\d+)$/, "cat"],
+  [/^CERD\/C\/SR\.(\d+)$/, "cerd"],
+  [/^CCPR\/C\/SR\.(\d+)$/, "ccpr"],
+  [/^CEDAW\/C\/SR\.(\d+)$/, "cedaw"],
+  [/^CRC\/C\/SR\.(\d+)$/, "crc"],
+  [/^CRPD\/C\/SR\.(\d+)$/, "crpd"],
+  [/^E\/C\.12\/SR\.(\d+)$/, "cescr"],
+  [/^CMW\/C\/SR\.(\d+)$/, "cmw"],
+  [/^CED\/C\/SR\.(\d+)$/, "ced"],
+  [/^CAT\/OP\/SR\.(\d+)$/, "spt"],
+];
+
+const TREATY_BODY_SLUG_TO_SYMBOL: Record<string, string> = {
+  cat: "CAT/C",
+  cerd: "CERD/C",
+  ccpr: "CCPR/C",
+  cedaw: "CEDAW/C",
+  crc: "CRC/C",
+  crpd: "CRPD/C",
+  cescr: "E/C.12",
+  cmw: "CMW/C",
+  ced: "CED/C",
+  spt: "CAT/OP",
+};
+
 /** Derive a URL slug from a PV/SR document symbol. */
 export function slugFromSymbol(symbol: string): string | null {
   // Security Council: S/PV.NNNN
@@ -42,6 +73,17 @@ export function slugFromSymbol(symbol: string): string | null {
   // ECOSOC: E/YYYY/SR.NN
   const ecosoc = symbol.match(/^E\/(\d{4})\/SR\.(\d+)$/);
   if (ecosoc) return `ecosoc/${ecosoc[1]}/${ecosoc[2]}`;
+
+  // Treaty bodies: {ACRONYM}/C/SR.N → {acronym}/N (CESCR / SPT exceptions
+  // covered by the lookup).
+  for (const [re, prefix] of TREATY_BODY_SYMBOL_TO_SLUG) {
+    const m = symbol.match(re);
+    if (m) return `${prefix}/${m[1]}`;
+  }
+
+  // Daily briefings: BRIEFING/{HOST}/{YYYY-MM-DD}
+  const brief = symbol.match(/^BRIEFING\/(SG|PGA|GENEVA)\/(\d{4}-\d{2}-\d{2})$/);
+  if (brief) return `briefing/${brief[1].toLowerCase()}/${brief[2]}`;
 
   return null;
 }
@@ -154,6 +196,27 @@ export function symbolFromSlug(slug: string): ParsedCitationSlug | null {
     };
   }
 
+  // Treaty bodies: {acronym}/N → {symbol prefix}/SR.N
+  if (segs.length === 2 && /^\d+$/.test(segs[1])) {
+    const prefix = TREATY_BODY_SLUG_TO_SYMBOL[segs[0]];
+    if (prefix) {
+      return { pvSymbol: `${prefix}/SR.${segs[1]}`, pvPart };
+    }
+  }
+
+  // Daily briefings: briefing/{sg|pga|geneva}/{YYYY-MM-DD}
+  if (
+    segs[0] === "briefing" &&
+    segs.length === 3 &&
+    /^(sg|pga|geneva)$/.test(segs[1]) &&
+    /^\d{4}-\d{2}-\d{2}$/.test(segs[2])
+  ) {
+    return {
+      pvSymbol: `BRIEFING/${segs[1].toUpperCase()}/${segs[2]}`,
+      pvPart,
+    };
+  }
+
   return null;
 }
 
@@ -168,5 +231,7 @@ function canonicalSegmentCount(
   if (prefix === "ga") return 3;
   if (prefix === "hrc") return 3;
   if (prefix === "ecosoc") return 3;
+  if (prefix in TREATY_BODY_SLUG_TO_SYMBOL) return 2;
+  if (prefix === "briefing") return 3;
   return null;
 }

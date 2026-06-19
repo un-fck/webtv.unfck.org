@@ -846,7 +846,7 @@ export async function markOwnRowsInterrupted(
 }
 
 /** Run `fn` inside a single BEGIN/COMMIT on one pooled client. */
-async function withTransaction<T>(
+export async function withTransaction<T>(
   fn: (client: import("pg").PoolClient) => Promise<T>,
 ): Promise<T> {
   const client = await pool.connect();
@@ -1420,7 +1420,7 @@ export async function saveVideo(
  * Serialized on `pv_symbol` via a transaction-scoped advisory lock so
  * concurrent saves on sibling rows can't double-assign the same number.
  */
-async function assignPvPartsForCluster(
+export async function assignPvPartsForCluster(
   client: import("pg").PoolClient,
   pvSymbol: string,
 ): Promise<void> {
