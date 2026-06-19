@@ -4,116 +4,122 @@ All endpoints are public with no authentication required.
 
 ## URL Scheme
 
-Meeting pages use human-readable slugs derived from UN document symbols:
+Every meeting page URL has matching data URLs — just append `.json` or `.txt`:
+
+| Format | Example | Use for |
+|--------|---------|---------|
+| HTML page | `/en/sc/10175` | Humans, browsers |
+| Structured JSON | `/en/sc/10175.json` | Programmatic access |
+| Plain text | `/en/sc/10175.txt` | LLM context |
+
+The locale prefix selects the transcript language (`en`, `fr`, `es`, `ar`, `zh`, `ru`). Override with `?language=XX` if you want a language different from the URL locale.
+
+Internally the rewrite is handled by `proxy.ts`, which maps `/{locale}/{...path}.{json|txt}` to `app/api/data/[locale]/[...path]/route.ts` with `?format=` set. The catch-all handler dispatches on the first segment (`meetings` → list, `asset` → permalink, anything else → citation slug).
+
+### Citation slugs
+
+Slugs are derived from UN document symbols. Multi-part recordings of the same meeting take a trailing `/N` (the unsuffixed form addresses part 1).
 
 | UN Body | Symbol Pattern | URL Pattern | Example |
 |---|---|---|---|
-| Security Council | `S/PV.{n}` | `/sc/{n}` | `/sc/9748` |
-| General Assembly plenary | `A/{s}/PV.{n}` | `/ga/{s}/{n}` | `/ga/79/21` |
-| GA Emergency Special Session | `A/ES-{s}/PV.{n}` | `/ga/es{s}/{n}` | `/ga/es11/23` |
-| GA Committees | `A/C.{c}/{s}/SR.{n}` | `/ga/c{c}/{s}/{n}` | `/ga/c1/79/7` |
-| Human Rights Council | `A/HRC/{s}/SR.{n}` | `/hrc/{s}/{n}` | `/hrc/58/59` |
-| ECOSOC | `E/{y}/SR.{n}` | `/ecosoc/{y}/{n}` | `/ecosoc/2024/10` |
-| Other / no symbol | — | `/meeting/{asset_id}` | `/meeting/k1tofqtch6` |
+| Security Council | `S/PV.{n}` | `/{locale}/sc/{n}[/{p}]` | `/en/sc/10175` |
+| General Assembly plenary | `A/{s}/PV.{n}` | `/{locale}/ga/{s}/{n}[/{p}]` | `/en/ga/79/21` |
+| GA Emergency Special Session | `A/ES-{s}/PV.{n}` | `/{locale}/ga/es{s}/{n}[/{p}]` | `/en/ga/es11/23` |
+| GA Committees | `A/C.{c}/{s}/SR.{n}` | `/{locale}/ga/c{c}/{s}/{n}[/{p}]` | `/en/ga/c1/79/7` |
+| Human Rights Council | `A/HRC/{s}/SR.{n}` | `/{locale}/hrc/{s}/{n}[/{p}]` | `/en/hrc/58/59` |
+| ECOSOC | `E/{y}/SR.{n}` | `/{locale}/ecosoc/{y}/{n}[/{p}]` | `/en/ecosoc/2024/10` |
 
-Multi-part meetings append `-part-{n}`: `/sc/9748-part-2`.
+### Permalink (any meeting by asset id)
 
-The slug is stored in the `videos.slug` column and computed from the video's `pv_symbol` field via `lib/meeting-slug.ts`.
+```
+/{locale}/asset/{asset_id}
+```
+
+Mirrors UN Web TV's URL grammar exactly — swap the host `webtv.un.org` → `transcripts.un.org` to find the corresponding transcript page.
+
+Slug logic lives in `lib/meeting-slug.ts`; the page-URL builder is `videoUrl()` in `lib/video-url.ts`.
 
 ## Search & browse meetings
 
 ```
-GET /api/videos
+GET /{locale}/meetings.json
 ```
 
-Unified endpoint for both browsing and searching the meeting archive. This is the same endpoint that powers the homepage table. Covers the last 365 days (`last_seen`-based).
+Returns a paginated list of UN meetings matching the given filters. Covers the last 365 days.
 
 ### Query parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `q` | string | Search meeting titles and metadata — not transcript content (FTS with trigram ILIKE fallback). Min 2 characters. |
-| `body` | string (multi) | Filter by UN body. Repeat for multiple: `?body=Security+Council&body=General+Assembly` |
-| `category` | string (multi) | Filter by meeting category. Repeat for multiple. |
+| `category` | string | Filter by meeting category. |
 | `date` | YYYY-MM-DD | Filter to a specific date. |
 | `sort` | enum | `date_desc` (default), `date_asc`, `title_asc`, `title_desc` |
 | `offset` | integer | Pagination offset. Results come in chunks of 100. |
 | `text` | string (multi) | Filter by available documents: `transcript`, `pv` (verbatim record), `sr` (summary record). |
-| `locale` | string | UI locale for localized fields (en, fr, es, ar, zh, ru). |
-| `xlang` | `1` | Include meetings in other languages (disables per-locale visibility filter). |
-| `slim` | `1` | Compact response — returns only essential fields (recommended for machine consumers / LLM context). |
+| `xlang` | `1` | Include meetings not yet available in the URL locale (default: hide them). |
 
 ### Response
 
 ```json
 {
-  "videos": [ ... ],
+  "meetings": [
+    {
+      "title": "...",
+      "date": "YYYY-MM-DDT00:00:00.000Z",
+      "body": "Security Council",
+      "category": "...",
+      "slug": "sc/10175",
+      "duration": "01:30:00",
+      "hasTranscript": true,
+      "pageUrl": "/en/sc/10175",
+      "jsonUrl": "/en/sc/10175.json",
+      "textUrl": "/en/sc/10175.txt"
+    }
+  ],
   "total": 42,
   "totalIncludingOther": 50,
-  "hasMore": true
+  "hasMore": true,
+  "offset": 0,
+  "pageSize": 100
 }
 ```
 
-**Default video object fields**: `id`, `url`, `title`, `cleanTitle`, `category`, `duration`, `date`, `scheduledTime`, `status`, `eventCode`, `eventType`, `body`, `sessionNumber`, `partNumber`, `pvSymbol`, `pvAvailable`, `slug`, `hasTranscript`, `hasTranscriptInLocale`, `removed`, `i18n`.
+The `.txt` variant (`GET /{locale}/meetings.txt`) returns a one-line-per-meeting summary.
 
-**With `slim=1`**: `title`, `date`, `body`, `category`, `slug`, `duration`, `hasTranscript`, `jsonUrl`.
+The internal homepage feed still lives at `/api/videos` and returns the full video shape used by the table component — it is not part of the public contract and may change.
 
-## JSON API
-
-### List recent transcribed meetings
+## Get a single meeting
 
 ```
-GET /json
-```
-
-Returns transcribed meetings from the last 14 days with metadata and links:
-
-```json
-{
-  "disclaimer": "Automatically generated transcript — ...",
-  "count": 12,
-  "videos": [
-    {
-      "id": "security-council/k1abc123",
-      "slug": "sc/9748",
-      "title": "9748th meeting",
-      "clean_title": "9748th meeting",
-      "url": "https://webtv.un.org/en/asset/k1abc123",
-      "page_url": "/sc/9748",
-      "json_url": "/json/sc/9748",
-      "date": "2024-03-15",
-      "duration": "01:30:00",
-      "category": "Security Council",
-      "body": "Security Council"
-    }
-  ]
-}
-```
-
-### Get a single meeting
-
-```
-GET /json/{meeting-slug}
+GET /{locale}/{slug}.json
 ```
 
 Examples:
-- `GET /json/sc/9748`
-- `GET /json/ga/79/21`
-- `GET /json/hrc/58/59`
+
+- `GET /en/sc/10175.json`
+- `GET /fr/ga/79/21.json` (French transcript)
+- `GET /en/sc/10175/2.json` (part 2)
+- `GET /en/asset/k1o/k1o43lgs4z.json` (permalink form)
 
 Returns the video object with full transcript data including statements, speaker mappings, and topics.
 
-#### Query parameters
+### Query parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `language` | string | Language track to return (en, fr, es, ar, zh, ru). Defaults to the first available. |
-| `format` | `text` | Return a plain-text transcript instead of JSON. Speaker-labeled, compact for LLM context. |
+| `language` | string | Language track to return (en, fr, es, ar, zh, ru). Overrides the URL locale's default. |
 
-#### Plain-text format (`?format=text`)
+### Plain-text format
 
 ```
-UN Transcripts — https://transcripts.un.org/en/{slug}
+GET /{locale}/{slug}.txt
+```
+
+Returns the transcript as plain text with speaker labels, compact for LLM context:
+
+```
+UN Transcripts — https://transcripts.un.org/en/sc/10175
 {title} — {body} — {date}
 Language: en
 Automatically generated transcript — may contain errors. Not an official United Nations record.
@@ -125,7 +131,7 @@ Automatically generated transcript — may contain errors. Not an official Unite
 {transcript text...}
 ```
 
-#### JSON response shape
+### JSON response shape
 
 ```json
 {
@@ -140,7 +146,9 @@ Automatically generated transcript — may contain errors. Not an official Unite
     "duration": "HH:MM:SS",
     "category": "...",
     "body": "...",
-    "slug": "..."
+    "pv_symbol": "S/PV.10175",
+    "pv_part": 1,
+    "slug": "sc/10175"
   },
   "metadata": {
     "summary": "...",

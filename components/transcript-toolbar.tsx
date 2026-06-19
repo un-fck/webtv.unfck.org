@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
   Check,
@@ -84,6 +84,7 @@ export function TranscriptToolbar({
   onDownloadVtt,
   onCopyToClipboard,
 }: TranscriptToolbarProps) {
+  const locale = useLocale();
   const [languageOpen, setLanguageOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
   // null when no toast is showing; "link" after Share copies the page URL;
@@ -446,7 +447,7 @@ export function TranscriptToolbar({
                     <button
                       role="menuitem"
                       onClick={() => {
-                        window.open(`/json/${videoSlug}`, "_blank");
+                        window.open(`/${locale}/${videoSlug}.json`, "_blank");
                         setDownloadOpen(false);
                       }}
                       className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"

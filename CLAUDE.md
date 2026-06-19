@@ -276,8 +276,9 @@ Historically the schema avoided FK constraints and enforced referential integrit
 | `/api/cron/process-scheduled`        | GET    | Cron: process scheduled transcripts (auth via `CRON_SECRET`)         |
 | `/api/cron/sync-videos`              | GET    | Cron: sync UN Web TV schedule (auth via `CRON_SECRET`)               |
 | `/api/cron/check-pv`                 | GET    | Cron: check PV document availability (auth via `CRON_SECRET`)        |
-| `/json`                              | GET    | JSON API: all transcribed videos                                     |
-| `/json/[...meeting]`                 | GET    | JSON API: single video by meeting slug                               |
+| `/{locale}/meetings.json`            | GET    | Public list/search (rewritten by `proxy.ts` → `/api/data/[locale]/meetings`) |
+| `/{locale}/{slug}.json`              | GET    | Single meeting JSON (rewritten → `/api/data/[locale]/[...path]?format=json`) |
+| `/{locale}/{slug}.txt`               | GET    | Single meeting plain text (rewritten → `...?format=text`)            |
 
 Cron schedule (`docker/crontab.template`): `process-scheduled` every 5 min, `sync-videos` (near) every 15 min, `sync-videos?range=far` every 6 hours, `check-pv` every 6 hours, `send-transcript-notifications` every 5 min, `realign` hourly, `liveness-sweep` every 15 min (backstop that flips heartbeat-stale rows to `interrupted` — graceful shutdowns are handled directly by the worker's SIGTERM handler in `lib/server-init.ts`).
 

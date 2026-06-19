@@ -139,7 +139,7 @@ A video can be cut **more than once**. `time_offset_ms` alone can't tell us when
 
 The offset is applied at the **data-access layer**, so no display surface has to remember to do it:
 
-- **Display getters auto-shift.** `mapTranscriptRowForDisplay()` in `lib/db.ts` runs `applyTimeOffset()` on the returned content. Wired into `getTranscript`, `getTranscriptByKalturaId`, `getActiveTranscriptByKalturaId`, `getActiveTranscriptByEntryId` — so the poll API, the `check` route, the `/json` route, and the POST cache-hit are all correct for free.
+- **Display getters auto-shift.** `mapTranscriptRowForDisplay()` in `lib/db.ts` runs `applyTimeOffset()` on the returned content. Wired into `getTranscript`, `getTranscriptByKalturaId`, `getActiveTranscriptByKalturaId`, `getActiveTranscriptByEntryId` — so the poll API, the `check` route, the `.json`/`.txt` data routes, and the POST cache-hit are all correct for free.
 - **Speaker feed.** `getStatementsForRefs` projects `start` in raw SQL (for performance across many refs), so it adds `+ COALESCE(time_offset_ms, 0)` directly in the query — kept in lockstep with the getters.
 - **Raw getters stay raw.** `getTranscriptById` (pipeline, analysis, poll re-entry) and the realignment scripts' own queries read **un-shifted** timestamps. This is the crucial invariant: the offset is computed from, and re-saved relative to, the *original* timeline, so reprocessing must never see shifted data.
 

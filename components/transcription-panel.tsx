@@ -811,7 +811,7 @@ export function TranscriptionPanel({
     const body = buildPlainTextBody();
     if (body === null) return false;
     const pageUrl = window.location.href;
-    const jsonUrl = `${window.location.origin}/json/${video.slug}`;
+    const jsonUrl = `${window.location.origin}/${locale}/${video.slug}.json`;
     // Clipboard line is plain text, no schedule context — show the absolute
     // date only ("15 June 2026"), no weekday, no "Today" relative label.
     const dateDisplay = formatMeetingDate(video.scheduledTime ?? video.date, {

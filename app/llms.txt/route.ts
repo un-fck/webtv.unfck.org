@@ -6,34 +6,44 @@ UN Transcripts provides searchable, timestamped transcripts of public meetings f
 
 Available in all six official UN languages: English, French, Spanish, Arabic, Chinese, Russian.
 
+## The "append .json / .txt" rule
+
+Every meeting page URL has matching data URLs — just append \`.json\` or \`.txt\`:
+
+- Page (HTML): \`/en/sc/10175\`
+- Same content as JSON: \`/en/sc/10175.json\`
+- Same content as plain text: \`/en/sc/10175.txt\` (recommended for LLM context)
+
+The locale prefix in the URL (\`/en\`, \`/fr\`, \`/ar\`, \`/zh\`, \`/ru\`, \`/es\`) selects the transcript language; override with \`?language=XX\` if needed.
+
 ## How to use (search → read)
 
-- Search meetings: \`GET /api/videos?q={query}&slim=1\` — search meeting titles and metadata with filters for body, category, date, and document type. Paginated (100 per page). Covers the last 365 days. Use \`slim=1\` for compact responses. Note: searches titles/metadata only, not transcript content.
-- Read transcript (text): \`GET /json/{slug}?format=text\` — plain-text transcript with speaker labels, compact for LLM context. No time limit — works for any meeting by slug.
-- Read transcript (JSON): \`GET /json/{slug}\` — structured JSON with timestamps, speakers, topics, and optional word-level timing.
+- Search meetings: \`GET /en/meetings.json?q={query}\` — search meeting titles and metadata with filters for body, category, date, and document type. Paginated (100 per page). Covers the last 365 days. Note: searches titles/metadata only, not transcript content.
+- Read transcript (text): \`GET /en/{slug}.txt\` — plain-text transcript with speaker labels, compact for LLM context.
+- Read transcript (JSON): \`GET /en/{slug}.json\` — structured JSON with timestamps, speakers, topics, and optional word-level timing.
 - [Full API reference](/llms-full.txt): detailed query parameters, response shapes, and known limitations.
 
 ## Meeting URL scheme
 
 Meeting pages have two URL families:
 
-Citation URLs — derived from UN document symbols. Multi-part recordings of the same meeting (resumed, continued) take a trailing \`/N\` (e.g. \`/sc/10175/2\` for the resumed part). The unsuffixed form addresses part 1.
+Citation URLs — derived from UN document symbols. Multi-part recordings of the same meeting (resumed, continued) take a trailing \`/N\` (e.g. \`/en/sc/10175/2\` for the resumed part). The unsuffixed form addresses part 1.
 
-- Security Council: \`/sc/{n}[/{p}]\` (e.g. /sc/9748 for S/PV.9748)
-- General Assembly: \`/ga/{session}/{meeting}[/{p}]\` (e.g. /ga/79/21)
-- GA Committees: \`/ga/c{n}/{session}/{meeting}[/{p}]\`
-- Human Rights Council: \`/hrc/{session}/{meeting}[/{p}]\`
-- ECOSOC: \`/ecosoc/{year}/{meeting}[/{p}]\`
-- Human rights treaty bodies (cumulative SR numbering): \`/cat/{n}[/{p}]\`, \`/cerd/{n}\`, \`/ccpr/{n}\`, \`/cedaw/{n}\`, \`/crc/{n}\`, \`/crpd/{n}\`, \`/cescr/{n}\`, \`/cmw/{n}\`, \`/ced/{n}\`, \`/spt/{n}\`
-- Daily press briefings (host + date): \`/briefing/sg/{YYYY-MM-DD}[/{p}]\`, \`/briefing/pga/{YYYY-MM-DD}\`, \`/briefing/geneva/{YYYY-MM-DD}\`
+- Security Council: \`/{locale}/sc/{n}[/{p}]\` (e.g. /en/sc/9748 for S/PV.9748)
+- General Assembly: \`/{locale}/ga/{session}/{meeting}[/{p}]\` (e.g. /en/ga/79/21)
+- GA Committees: \`/{locale}/ga/c{n}/{session}/{meeting}[/{p}]\`
+- Human Rights Council: \`/{locale}/hrc/{session}/{meeting}[/{p}]\`
+- ECOSOC: \`/{locale}/ecosoc/{year}/{meeting}[/{p}]\`
+- Human rights treaty bodies (cumulative SR numbering): \`/{locale}/cat/{n}[/{p}]\`, \`/{locale}/cerd/{n}\`, \`/{locale}/ccpr/{n}\`, \`/{locale}/cedaw/{n}\`, \`/{locale}/crc/{n}\`, \`/{locale}/crpd/{n}\`, \`/{locale}/cescr/{n}\`, \`/{locale}/cmw/{n}\`, \`/{locale}/ced/{n}\`, \`/{locale}/spt/{n}\`
+- Daily press briefings (host + date): \`/{locale}/briefing/sg/{YYYY-MM-DD}[/{p}]\`, \`/{locale}/briefing/pga/{YYYY-MM-DD}\`, \`/{locale}/briefing/geneva/{YYYY-MM-DD}\`
 
 Permalink URLs — mirror UN Web TV's asset URLs, so swapping the host gets you the corresponding transcript.
 
-- Any meeting by its asset id: \`/asset/{asset_id}\` (e.g. /asset/k1o/k1o43lgs4z mirrors webtv.un.org/en/asset/k1o/k1o43lgs4z)
+- Any meeting by its asset id: \`/{locale}/asset/{asset_id}\` (e.g. /en/asset/k1o/k1o43lgs4z mirrors webtv.un.org/en/asset/k1o/k1o43lgs4z)
 
 ## Pages
 
-- [Home](/)
+- [Home](/en)
 - [About](/en/about)
 `;
 
