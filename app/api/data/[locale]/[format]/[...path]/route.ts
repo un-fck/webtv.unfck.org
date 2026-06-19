@@ -30,12 +30,14 @@ import {
 } from "@/lib/transcript-formatting";
 
 // Unified data-API handler. The proxy (proxy.ts) rewrites
-//   /{locale}/{slug}.json     → /api/data/{locale}/{slug}?format=json
-//   /{locale}/{slug}.txt      → /api/data/{locale}/{slug}?format=text
-//   /{locale}/meetings.json   → /api/data/{locale}/meetings?format=json
+//   /{locale}/{slug}.json     → /api/data/{locale}/json/{slug}
+//   /{locale}/{slug}.txt      → /api/data/{locale}/text/{slug}
+//   /{locale}/meetings.json   → /api/data/{locale}/json/meetings
 // so the public URL grammar mirrors page URLs ("append .json / .txt to any
 // meeting page to get the same content as data"), while the implementation
-// lives in one place.
+// lives in one place. Format is encoded as a path segment rather than a
+// query param because `NextResponse.rewrite` does not reliably surface
+// added search params to the destination handler's `request.nextUrl`.
 
 const SUPPORTED_LOCALES = routing.locales as readonly string[];
 const SUPPORTED_FORMATS = ["json", "text"] as const;
@@ -70,15 +72,15 @@ function textResponse(body: string, cacheable = true): Response {
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ locale: string; path: string[] }> },
+  context: {
+    params: Promise<{ locale: string; format: string; path: string[] }>;
+  },
 ) {
   try {
-    const { locale, path } = await context.params;
+    const { locale, format: formatRaw, path } = await context.params;
     if (!SUPPORTED_LOCALES.includes(locale)) {
       return NextResponse.json({ error: "Unknown locale" }, { status: 404 });
     }
-
-    const formatRaw = request.nextUrl.searchParams.get("format") ?? "json";
     if (!SUPPORTED_FORMATS.includes(formatRaw as Format)) {
       return badRequest(
         `format must be one of: ${SUPPORTED_FORMATS.join(", ")}`,

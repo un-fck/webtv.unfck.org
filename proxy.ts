@@ -13,9 +13,13 @@ export default function middleware(req: NextRequest) {
   const m = req.nextUrl.pathname.match(DATA_PATH);
   if (m) {
     const [, locale, path, ext] = m;
+    // Format is encoded as the FIRST segment after the locale (text | json),
+    // not as a query param. `NextResponse.rewrite` doesn't reliably propagate
+    // added query params to the destination handler's `request.nextUrl`, but
+    // path segments survive intact via the route's params.
+    const fmt = ext === "txt" ? "text" : "json";
     const url = req.nextUrl.clone();
-    url.pathname = `/api/data/${locale}/${path}`;
-    url.searchParams.set("format", ext === "txt" ? "text" : "json");
+    url.pathname = `/api/data/${locale}/${fmt}/${path}`;
     return NextResponse.rewrite(url);
   }
 
