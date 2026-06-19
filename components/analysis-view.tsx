@@ -49,7 +49,9 @@ interface Statement {
     }>;
     start: number;
     end: number;
-    words: Array<{
+    // Optional at every level — see transcription-panel.tsx; first paint
+    // runs without words and the array fills in once /words returns.
+    words?: Array<{
       text: string;
       start: number;
       end: number;
@@ -58,7 +60,7 @@ interface Statement {
   }>;
   start: number;
   end: number;
-  words: Array<{
+  words?: Array<{
     text: string;
     start: number;
     end: number;

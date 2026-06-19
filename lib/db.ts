@@ -376,6 +376,24 @@ export async function getTranscriptById(
   return mapTranscriptRow(result.rows[0]);
 }
 
+/**
+ * Display-shifted lookup by transcript_id — same realignment offset that
+ * `getTranscriptByKalturaId` applies, but keyed on the row id (used by the
+ * lazy words endpoint, which already knows the transcript_id from the
+ * /check response that preceded it).
+ */
+export async function getTranscriptByIdForDisplay(
+  transcriptId: string,
+): Promise<Transcript | null> {
+  const result = await pool.query(
+    q("SELECT * FROM webtv.transcripts WHERE transcript_id = ?", [
+      transcriptId,
+    ]),
+  );
+  if (result.rows.length === 0) return null;
+  return mapTranscriptRowForDisplay(result.rows[0]);
+}
+
 export async function saveTranscript(
   entryId: string,
   transcriptId: string,

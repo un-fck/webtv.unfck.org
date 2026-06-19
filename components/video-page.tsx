@@ -18,6 +18,43 @@ import { widePageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "@/components/external-link";
 import { VideoPageClient } from "@/components/video-page-client";
+import { getActiveTranscriptByKalturaId } from "@/lib/db";
+import { getSpeakerMapping } from "@/lib/speakers";
+import { stripWordsFromStatements } from "@/lib/strip-words";
+import type { InitialTranscript } from "@/components/transcription-panel";
+
+async function loadInitialTranscript({
+  kalturaId,
+  locale,
+  isLoggedIn,
+}: {
+  kalturaId: string;
+  locale: string;
+  isLoggedIn: boolean;
+}): Promise<InitialTranscript | null> {
+  const transcript = await getActiveTranscriptByKalturaId(kalturaId, locale);
+  if (
+    !transcript ||
+    transcript.transcription_status !== "completed" ||
+    !transcript.content.statements?.length
+  ) {
+    return null;
+  }
+  const speakerMappings =
+    (await getSpeakerMapping(transcript.transcript_id)) || {};
+  return {
+    statements: stripWordsFromStatements(transcript.content.statements),
+    speakerMappings,
+    topics: transcript.content.topics || {},
+    // Propositions are gated on login in /api/transcripts/check — mirror
+    // that here so signed-out viewers don't see private analysis in the SSR
+    // payload (and anonymous Bing/Copilot snippet pipelines never see it).
+    propositions: isLoggedIn ? transcript.content.propositions || [] : [],
+    transcriptId: transcript.transcript_id,
+    language: transcript.language_code ?? locale,
+    analysisStatus: transcript.analysis_status,
+  };
+}
 
 function formatMetaDate(iso: string, locale: string): string {
   const d = new Date(iso);
@@ -176,6 +213,18 @@ export async function renderVideoPage({
   const textHref = `/${locale}/${canonicalPath}.txt`;
   const jsonHref = `/${locale}/${canonicalPath}.json`;
 
+  // Server-fetch the transcript for the URL locale so the rendered HTML
+  // includes the full transcript text (no client round-trip needed for first
+  // paint, and no-JS crawlers see the content). The panel skips its own
+  // /check fetch when this is supplied. Word-level timestamps are stripped
+  // here — they're 63% of the payload and the panel pulls them lazily via
+  // /api/transcripts/[id]/words once the transcript is on screen.
+  const initialTranscript = await loadInitialTranscript({
+    kalturaId,
+    locale,
+    isLoggedIn,
+  });
+
   return (
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">
       <script
@@ -187,6 +236,7 @@ export async function renderVideoPage({
         video={video}
         metadata={metadata}
         isLoggedIn={isLoggedIn}
+        initialTranscript={initialTranscript}
       />
       {/* Server-rendered after the (client-only) transcript panel so an
           agent fetching this URL with no JS sees fetchable links to the

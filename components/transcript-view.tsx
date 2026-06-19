@@ -26,11 +26,14 @@ interface Statement {
     }>;
     start: number;
     end: number;
-    words: Word[];
+    // Optional at every level — first paint runs without word-level
+    // timestamps; they get merged in once /api/transcripts/[id]/words
+    // returns and the panel re-renders.
+    words?: Word[];
   }>;
   start: number;
   end: number;
-  words: Word[];
+  words?: Word[];
 }
 
 interface SpeakerSegment {

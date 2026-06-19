@@ -19,11 +19,13 @@ interface Statement {
     }>;
     start: number;
     end: number;
-    words: Array<{ text: string; start: number; end: number }>;
+    // Optional at every level — the hook only reads sentence-level words
+    // anyway, and words load lazily after first paint.
+    words?: Array<{ text: string; start: number; end: number }>;
   }>;
   start: number;
   end: number;
-  words: Array<{ text: string; start: number; end: number }>;
+  words?: Array<{ text: string; start: number; end: number }>;
 }
 
 interface PlaybackTrackingResult {

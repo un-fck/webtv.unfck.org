@@ -83,6 +83,26 @@ export interface TranscriptionPanelData {
   viewMode?: string;
 }
 
+/**
+ * Pre-loaded transcript data the meeting page can pass when it was already
+ * fetched server-side. When this is supplied, the panel skips its first
+ * /api/transcripts/check round-trip on mount; the transcript is in the
+ * initial HTML payload (visible to no-JS crawlers) and the first paint
+ * happens at hydration instead of after a network call.
+ *
+ * Word-level timing is intentionally absent — the panel fetches it lazily
+ * from /api/transcripts/[id]/words, same as the /check fast path.
+ */
+export interface InitialTranscript {
+  statements: Statement[];
+  speakerMappings: SpeakerMapping;
+  topics: Record<string, { key: string; label: string; description: string }>;
+  propositions: Proposition[];
+  transcriptId: string;
+  language: string;
+  analysisStatus: "none" | "analyzing" | "completed" | "error" | "interrupted";
+}
+
 interface TranscriptionPanelProps {
   kalturaId: string;
   player?: {
@@ -101,6 +121,7 @@ interface TranscriptionPanelProps {
   onDataChange?: (data: TranscriptionPanelData) => void;
   isLoggedIn: boolean;
   pvSymbol?: string;
+  initialTranscript?: InitialTranscript | null;
 }
 
 interface Word {
@@ -127,11 +148,14 @@ interface Statement {
     }>;
     start: number;
     end: number;
-    words: Word[];
+    // Words are optional at every level: the /api/transcripts/check fast
+    // path and the SSR pre-load both strip them for speed, and the panel
+    // re-merges them in once /api/transcripts/[id]/words returns.
+    words?: Word[];
   }>;
   start: number;
   end: number;
-  words: Word[];
+  words?: Word[];
 }
 
 export function TranscriptionPanel({
@@ -149,26 +173,43 @@ export function TranscriptionPanel({
   onDataChange,
   isLoggedIn,
   pvSymbol,
+  initialTranscript,
 }: TranscriptionPanelProps) {
+  // Server-fetched data is only "initial" when it matches the URL locale.
+  // After a language switch the panel falls back to the /check fast path,
+  // and the initial value is no longer relevant.
+  const hasMatchingInitial =
+    !!initialTranscript && initialTranscript.language === selectedLanguage;
+
   const [segments, setSegments] = useState<SpeakerSegment[] | null>(null);
-  const [stage, setStage] = useState<Stage>("idle");
+  const [stage, setStage] = useState<Stage>(
+    hasMatchingInitial ? "completed" : "idle",
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [checking, setChecking] = useState(true);
-  const [speakerMappings, setSpeakerMappings] = useState<SpeakerMapping>({});
+  const [checking, setChecking] = useState(!hasMatchingInitial);
+  const [speakerMappings, setSpeakerMappings] = useState<SpeakerMapping>(
+    hasMatchingInitial ? initialTranscript!.speakerMappings : {},
+  );
   const [countryNames, setCountryNames] = useState<Map<string, string>>(
     new Map(),
   );
   const [topics, setTopics] = useState<
     Record<string, { key: string; label: string; description: string }>
-  >({});
-  const [statements, setStatements] = useState<Statement[] | null>(null);
+  >(hasMatchingInitial ? initialTranscript!.topics : {});
+  const [statements, setStatements] = useState<Statement[] | null>(
+    hasMatchingInitial ? initialTranscript!.statements : null,
+  );
   const [rawParagraphs, setRawParagraphs] = useState<RawParagraph[] | null>(
     null,
   );
-  const [transcriptId, setTranscriptId] = useState<string | null>(null);
+  const [transcriptId, setTranscriptId] = useState<string | null>(
+    hasMatchingInitial ? initialTranscript!.transcriptId : null,
+  );
   const [pvSpeakers, setPvSpeakers] = useState<PVSpeakerEntry[] | null>(null);
   const [pvActiveTurnIndex, setPvActiveTurnIndex] = useState<number>(-1);
-  const [propositions, setPropositions] = useState<Proposition[]>([]);
+  const [propositions, setPropositions] = useState<Proposition[]>(
+    hasMatchingInitial ? initialTranscript!.propositions : [],
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("transcript");
   const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
   // Realignment-flagged state — set when the displayed transcript is a
@@ -271,6 +312,63 @@ export function TranscriptionPanel({
       mappings: SpeakerMapping,
     ): SpeakerSegment[] => {
       return buildSpeakerSegments(statementsData, mappings) as SpeakerSegment[];
+    },
+    [],
+  );
+
+  // Lazy word-level timestamps. The /api/transcripts/check fast path strips
+  // words[] from its response (63% of payload) so first paint is fast; this
+  // pulls them in once the transcript is on screen and merges by index so
+  // sentence-level karaoke highlight + click-to-seek light up after a beat.
+  // The polling paths (pollForCompletion / pollRetranscribeUntilDone) still
+  // receive full word data, so we only fire this after the /check fast path.
+  const loadWords = useCallback(
+    async (tid: string, signal: AbortSignal) => {
+      try {
+        const res = await fetch(
+          `/api/transcripts/${encodeURIComponent(tid)}/words`,
+          { signal },
+        );
+        if (signal.aborted) return;
+        if (!res.ok) return;
+        const { statements: wordsByStatement } = (await res.json()) as {
+          statements: Array<{
+            words?: Word[];
+            paragraphs: Array<{
+              words?: Word[];
+              sentences: Array<{ words?: Word[] }>;
+            }>;
+          }>;
+        };
+        if (signal.aborted || !wordsByStatement) return;
+        setStatements((prev) => {
+          if (!prev) return prev;
+          return prev.map((stmt, si) => {
+            const wstmt = wordsByStatement[si];
+            if (!wstmt) return stmt;
+            return {
+              ...stmt,
+              ...(wstmt.words ? { words: wstmt.words } : {}),
+              paragraphs: stmt.paragraphs.map((para, pi) => {
+                const wpara = wstmt.paragraphs[pi];
+                if (!wpara) return para;
+                return {
+                  ...para,
+                  ...(wpara.words ? { words: wpara.words } : {}),
+                  sentences: para.sentences.map((sent, sei) => {
+                    const wsent = wpara.sentences[sei];
+                    if (!wsent?.words) return sent;
+                    return { ...sent, words: wsent.words };
+                  }),
+                };
+              }),
+            };
+          });
+        });
+      } catch {
+        // Network error or aborted; the panel keeps working with
+        // sentence-level seeks only.
+      }
     },
     [],
   );
@@ -914,8 +1012,29 @@ export function TranscriptionPanel({
     triggerDownload(body, "vtt", "text/vtt;charset=utf-8");
   };
 
+  // True until the very first run of the check-cache effect. Lets us skip the
+  // /check round-trip on initial mount when the meeting page passed a server-
+  // fetched `initialTranscript`. Subsequent runs (the user changing language)
+  // always go through the normal reset + fetch flow.
+  const consumedInitialRef = useRef(false);
+
   // Check cache on mount and language change
   useEffect(() => {
+    if (!consumedInitialRef.current) {
+      consumedInitialRef.current = true;
+      if (hasMatchingInitial) {
+        // SSR pre-loaded statements, speakerMappings, topics, propositions.
+        // Fire only the side-effects that /check would have done:
+        // country-name lookup + lazy word-timing fetch.
+        const ctrl = new AbortController();
+        pollAbortRef.current = ctrl;
+        setChecking(false);
+        void loadCountryNames(initialTranscript!.speakerMappings);
+        void loadWords(initialTranscript!.transcriptId, ctrl.signal);
+        return () => ctrl.abort();
+      }
+    }
+
     setSegments(null);
     setStatements(null);
     setRawParagraphs(null);
@@ -951,6 +1070,13 @@ export function TranscriptionPanel({
           if (data.transcriptId) setTranscriptId(data.transcriptId);
           if (data.statements && data.statements.length > 0) {
             setStatements(data.statements);
+            // /api/transcripts/check returns statements WITHOUT word-level
+            // timestamps for speed. Kick off the words fetch in parallel —
+            // the transcript renders immediately with sentence-level seeks;
+            // word-level karaoke/click lights up once /words arrives.
+            if (data.transcriptId) {
+              void loadWords(data.transcriptId, signal);
+            }
             if (data.topics) setTopics(data.topics);
             if (data.propositions) setPropositions(data.propositions);
             if (data.speakerMappings) {

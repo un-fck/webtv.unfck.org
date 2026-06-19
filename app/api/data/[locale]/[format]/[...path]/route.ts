@@ -22,6 +22,7 @@ import { symbolFromSlug } from "@/lib/meeting-slug";
 import { videoUrl } from "@/lib/video-url";
 import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
 import { routing } from "@/i18n/routing";
+import { compressedJson, compressedText } from "@/lib/compressed-json";
 import {
   buildSpeakerSegments,
   formatTranscriptAsPlainText,
@@ -55,20 +56,28 @@ function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
 }
 
-function jsonHeaders(res: NextResponse) {
-  res.headers.set("Content-Type", "application/json; charset=utf-8");
-  res.headers.set("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-  return res;
+// `compressedJson` / `compressedText` honor the request's Accept-Encoding
+// and gzip when present (Next's built-in compress middleware doesn't fire
+// for App Router route handlers — see lib/compressed-json.ts).
+
+async function jsonResponse(
+  request: NextRequest,
+  data: unknown,
+): Promise<Response> {
+  return compressedJson(request, data, {
+    headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=300" },
+  });
 }
 
-function textResponse(body: string, cacheable = true): Response {
-  return new Response(body, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      ...(cacheable
-        ? { "Cache-Control": "s-maxage=60, stale-while-revalidate=300" }
-        : {}),
-    },
+async function textResponse(
+  request: NextRequest,
+  body: string,
+  cacheable = true,
+): Promise<Response> {
+  return compressedText(request, body, {
+    headers: cacheable
+      ? { "Cache-Control": "s-maxage=60, stale-while-revalidate=300" }
+      : {},
   });
 }
 
@@ -157,43 +166,41 @@ async function handleMeeting(
   if (!transcript) {
     if (format === "text") {
       return textResponse(
+        request,
         buildHeader(locale, video, record, null) +
           "No transcript available.\n",
       );
     }
     const metadata = await getVideoMetadata(record.asset_id);
-    return jsonHeaders(
-      NextResponse.json({
-        disclaimer: TRANSCRIPT_DISCLAIMER,
-        video: serializeVideo(video, record),
-        metadata: serializeMetadata(metadata),
-        transcript: null,
-        message: "No transcript available",
-      }),
-    );
+    return jsonResponse(request, {
+      disclaimer: TRANSCRIPT_DISCLAIMER,
+      video: serializeVideo(video, record),
+      metadata: serializeMetadata(metadata),
+      transcript: null,
+      message: "No transcript available",
+    });
   }
 
   // In progress.
   if (transcript.transcription_status !== "completed") {
     if (format === "text") {
       return textResponse(
+        request,
         buildHeader(locale, video, record, transcript.language_code) +
           `Transcript not yet available (status: ${transcript.transcription_status}).\n`,
       );
     }
     const metadata = await getVideoMetadata(record.asset_id);
-    return jsonHeaders(
-      NextResponse.json({
-        disclaimer: TRANSCRIPT_DISCLAIMER,
-        video: serializeVideo(video, record),
-        metadata: serializeMetadata(metadata),
-        transcript: {
-          status: transcript.transcription_status,
-          transcriptId: transcript.transcript_id,
-        },
-        message: "Transcript not completed",
-      }),
-    );
+    return jsonResponse(request, {
+      disclaimer: TRANSCRIPT_DISCLAIMER,
+      video: serializeVideo(video, record),
+      metadata: serializeMetadata(metadata),
+      transcript: {
+        status: transcript.transcription_status,
+        transcriptId: transcript.transcript_id,
+      },
+      message: "Transcript not completed",
+    });
   }
 
   const speakerMappings =
@@ -225,6 +232,7 @@ async function handleMeeting(
       formatTimecode,
     );
     return textResponse(
+      request,
       buildHeader(locale, video, record, transcript.language_code) + body,
     );
   }
@@ -262,23 +270,21 @@ async function handleMeeting(
   });
 
   const metadata = await getVideoMetadata(record.asset_id);
-  return jsonHeaders(
-    NextResponse.json({
-      disclaimer: TRANSCRIPT_DISCLAIMER,
-      video: serializeVideo(video, record),
-      metadata: serializeMetadata(metadata),
-      transcript: {
-        transcript_id: transcript.transcript_id,
-        language: transcript.language_code,
-        data: transcriptData,
-        topics: Object.values(topics).map((t) => ({
-          key: t.key,
-          label: t.label,
-          description: t.description,
-        })),
-      },
-    }),
-  );
+  return jsonResponse(request, {
+    disclaimer: TRANSCRIPT_DISCLAIMER,
+    video: serializeVideo(video, record),
+    metadata: serializeMetadata(metadata),
+    transcript: {
+      transcript_id: transcript.transcript_id,
+      language: transcript.language_code,
+      data: transcriptData,
+      topics: Object.values(topics).map((t) => ({
+        key: t.key,
+        label: t.label,
+        description: t.description,
+      })),
+    },
+  });
 }
 
 function serializeVideo(
@@ -442,17 +448,15 @@ async function handleList(
     const tail = hasMore
       ? `\n... ${total - (offset + items.length)} more. Append ?offset=${offset + items.length} for the next page.\n`
       : "";
-    return textResponse(header + lines.join("\n") + tail + "\n");
+    return textResponse(request, header + lines.join("\n") + tail + "\n");
   }
 
-  return jsonHeaders(
-    NextResponse.json({
-      meetings: items,
-      total,
-      totalIncludingOther,
-      hasMore,
-      offset,
-      pageSize: LIST_PAGE_SIZE,
-    }),
-  );
+  return jsonResponse(request, {
+    meetings: items,
+    total,
+    totalIncludingOther,
+    hasMore,
+    offset,
+    pageSize: LIST_PAGE_SIZE,
+  });
 }

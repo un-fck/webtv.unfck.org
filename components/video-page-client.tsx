@@ -8,6 +8,7 @@ import {
   getTopicColor,
   type TranscriptionPanelData,
   type LanguageOption,
+  type InitialTranscript,
 } from "./transcription-panel";
 import { SpeakerToc, hasMeaningfulSpeakerInfo } from "./speaker-toc";
 import { PVSpeakerToc } from "./pv-panel";
@@ -30,6 +31,14 @@ interface VideoPageClientProps {
   video: Video;
   metadata: VideoMetadata;
   isLoggedIn: boolean;
+  /**
+   * Pre-fetched transcript for the URL locale. Server-rendered so a no-JS
+   * agent (Bing/Copilot snippet pipeline, etc.) sees the transcript text in
+   * the initial HTML payload. When supplied, the panel skips its on-mount
+   * /api/transcripts/check round-trip — the first paint matches the SSR
+   * output exactly, no re-fetch flash.
+   */
+  initialTranscript?: InitialTranscript | null;
 }
 
 export function VideoPageClient({
@@ -37,6 +46,7 @@ export function VideoPageClient({
   video,
   metadata,
   isLoggedIn,
+  initialTranscript,
 }: VideoPageClientProps) {
   const { formatMeetingDate, formatMeetingTime } = useMeetingFormat();
   const t = useTranslations("transcript");
@@ -456,6 +466,7 @@ export function VideoPageClient({
               pvSymbol={
                 video.pvAvailable && video.pvSymbol ? video.pvSymbol : undefined
               }
+              initialTranscript={initialTranscript}
             />
           </div>
 

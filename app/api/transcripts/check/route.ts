@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import {
   getActiveTranscriptByKalturaId,
   getPendingTranscriptByKalturaId,
@@ -6,6 +6,8 @@ import {
 } from "@/lib/db";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { apiError } from "@/lib/api-error";
+import { compressedJson } from "@/lib/compressed-json";
+import { stripWordsFromStatements } from "@/lib/strip-words";
 import { getCurrentUser } from "@/lib/auth/service";
 
 export async function GET(request: NextRequest) {
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
     const cached = await getActiveTranscriptByKalturaId(kalturaId, language);
 
     if (!cached || cached.transcription_status === "error") {
-      return NextResponse.json({ cached: false });
+      return compressedJson(request, { cached: false });
     }
 
     // Viewable as soon as content exists — independent of any later stage
@@ -47,8 +49,13 @@ export async function GET(request: NextRequest) {
               cached.language_code,
             )
           : null;
-      return NextResponse.json({
-        statements,
+      // Word-level timestamps are 63% of the raw payload (3 MB of 4.4 MB on a
+      // typical SC meeting) and aren't needed for first paint — sentence-level
+      // text + start/end are enough to render the transcript and seek to
+      // sentences. The panel fetches words separately via
+      // /api/transcripts/[id]/words once the transcript is on screen.
+      return compressedJson(request, {
+        statements: stripWordsFromStatements(statements),
         language: cached.language_code,
         cached: true,
         transcriptId: cached.transcript_id,
@@ -79,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     // In progress or scheduled — surface the stage so every viewer sees
     // progress (and doesn't start a duplicate); the client polls for content.
-    return NextResponse.json({
+    return compressedJson(request, {
       cached: false,
       transcriptId: cached.transcript_id,
       stage: cached.transcription_status,

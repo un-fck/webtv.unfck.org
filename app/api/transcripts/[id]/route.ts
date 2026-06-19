@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { pollTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { apiError } from "@/lib/api-error";
+import { compressedJson } from "@/lib/compressed-json";
 
 export async function GET(
   request: NextRequest,
@@ -29,21 +30,24 @@ export async function GET(
     // `Cache-Control: no-cache` so the browser revalidates via If-None-Match and
     // unchanged polls get a bodiless 304 (no client changes — the browser
     // transparently reuses its cached copy). Saves the repeated re-download.
+    // ETag is computed over the raw (un-gzipped) JSON so it stays stable
+    // regardless of whether the response gets encoded; clients sending
+    // Accept-Encoding: gzip just get a smaller 200 body with the same ETag.
     const body = JSON.stringify({ ...result, speakerMappings });
     const etag = `"${createHash("sha1").update(body).digest("base64")}"`;
-    const headers: Record<string, string> = {
-      "Cache-Control": "no-cache",
-      ETag: etag,
-    };
 
     if (request.headers.get("if-none-match") === etag) {
-      return new NextResponse(null, { status: 304, headers });
+      return new NextResponse(null, {
+        status: 304,
+        headers: { "Cache-Control": "no-cache", ETag: etag },
+      });
     }
 
-    return new NextResponse(body, {
-      status: 200,
-      headers: { ...headers, "Content-Type": "application/json" },
-    });
+    return compressedJson(
+      request,
+      { ...result, speakerMappings },
+      { headers: { "Cache-Control": "no-cache", ETag: etag } },
+    );
   } catch (error) {
     console.error("Poll error:", error);
     return apiError(
