@@ -8,6 +8,7 @@ import { getCountryName } from "@/lib/country-lookup";
 import { useScrollToActive } from "@/lib/hooks/use-scroll-to-active";
 import { BarChart3 } from "lucide-react";
 import { PVPanel, type PVSpeakerEntry } from "@/components/pv-panel";
+import { useMeetingState } from "@/components/meeting-state/meeting-state";
 import ExcelJS from "exceljs";
 import type { Proposition } from "@/lib/pipeline";
 import { StageProgress, type Stage } from "@/components/stage-progress";
@@ -105,20 +106,7 @@ export interface InitialTranscript {
 
 interface TranscriptionPanelProps {
   kalturaId: string;
-  player?: {
-    currentTime: number;
-    play: () => void;
-  };
   video: Video;
-  selectedLanguage: string;
-  onLanguageChange: (language: string) => void;
-  availableLanguages: LanguageOption[];
-  onLanguagesRefresh?: () => void;
-  selectedTopic: string | null;
-  onTopicSelect: (topic: string | null) => void;
-  topicCollapsed: boolean;
-  onTopicCollapsedChange: (collapsed: boolean) => void;
-  onDataChange?: (data: TranscriptionPanelData) => void;
   isLoggedIn: boolean;
   pvSymbol?: string;
   initialTranscript?: InitialTranscript | null;
@@ -160,21 +148,26 @@ interface Statement {
 
 export function TranscriptionPanel({
   kalturaId,
-  player,
   video,
-  selectedLanguage,
-  onLanguageChange,
-  availableLanguages,
-  onLanguagesRefresh,
-  selectedTopic,
-  onTopicSelect,
-  topicCollapsed,
-  onTopicCollapsedChange,
-  onDataChange,
   isLoggedIn,
   pvSymbol,
   initialTranscript,
 }: TranscriptionPanelProps) {
+  // Chrome-side state (player, language switcher, topic filter, sidebar
+  // data) lives in MeetingStateContext so we can stay in sync with
+  // VideoPageClient now that the panel is its sibling, not its child.
+  const {
+    player,
+    selectedLanguage,
+    setSelectedLanguage: onLanguageChange,
+    availableLanguages,
+    refreshLanguages: onLanguagesRefresh,
+    selectedTopic,
+    setSelectedTopic: onTopicSelect,
+    topicCollapsed,
+    setTopicCollapsed: onTopicCollapsedChange,
+    setPanelData: onDataChange,
+  } = useMeetingState();
   // Server-fetched data is only "initial" when it matches the URL locale.
   // After a language switch the panel falls back to the /check fast path,
   // and the initial value is no longer relevant.
