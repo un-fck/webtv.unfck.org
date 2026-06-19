@@ -11,7 +11,7 @@ async function resolveVideo(slug: string): Promise<VideoRecord | null> {
   }
   const parsed = symbolFromSlug(slug);
   if (!parsed) return null;
-  return getVideoByCitation(parsed.pvSymbol, parsed.pvPart);
+  return getVideoByCitation(parsed);
 }
 
 export const dynamic = "force-dynamic";

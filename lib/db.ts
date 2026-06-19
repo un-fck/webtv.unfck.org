@@ -1478,18 +1478,25 @@ export async function getVideoByAssetId(
 
 /**
  * Look up a video by its citation URL — the pv_symbol it cites and its
- * chronological ordinal within that symbol's cluster (defaults to 1 for the
- * unsuffixed citation form).
+ * chronological ordinal within that symbol's cluster.
+ *
+ * Slugs for SR-emitting organs (GA committees 2–6, HRC, ECOSOC) are
+ * ambiguous between PV and SR document symbols, so the parser hands us
+ * both candidates; this matches on either.
  */
-export async function getVideoByCitation(
-  pvSymbol: string,
-  pvPart: number = 1,
-): Promise<VideoRecord | null> {
+export async function getVideoByCitation(parsed: {
+  pvSymbol: string;
+  srSymbol?: string;
+  pvPart: number;
+}): Promise<VideoRecord | null> {
+  const candidates = parsed.srSymbol
+    ? [parsed.pvSymbol, parsed.srSymbol]
+    : [parsed.pvSymbol];
   const result = await pool.query(
-    q("SELECT * FROM webtv.videos WHERE pv_symbol = ? AND pv_part = ?", [
-      pvSymbol,
-      pvPart,
-    ]),
+    q(
+      "SELECT * FROM webtv.videos WHERE pv_symbol = ANY(?::text[]) AND pv_part = ?",
+      [candidates as unknown as string[], parsed.pvPart],
+    ),
   );
   if (result.rows.length === 0) return null;
   return mapVideoRow(result.rows[0]);

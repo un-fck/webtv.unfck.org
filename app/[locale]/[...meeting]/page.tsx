@@ -11,8 +11,7 @@ async function resolveCitation(meeting: string[]) {
   const slug = meeting.map(decodeURIComponent).join("/");
   const parsed = symbolFromSlug(slug);
   if (!parsed) return null;
-  const record = await getVideoByCitation(parsed.pvSymbol, parsed.pvPart);
-  return record;
+  return getVideoByCitation(parsed);
 }
 
 export async function generateMetadata({

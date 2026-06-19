@@ -117,7 +117,7 @@ export async function GET(
         { status: 404 },
       );
     }
-    const record = await getVideoByCitation(parsed.pvSymbol, parsed.pvPart);
+    const record = await getVideoByCitation(parsed);
     if (!record) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
