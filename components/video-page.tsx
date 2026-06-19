@@ -14,6 +14,8 @@ import { localizeWebtvAssetUrl } from "@/lib/un-links";
 import type { VideoRecord } from "@/lib/db";
 import { videoUrl } from "@/lib/video-url";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
+import { widePageWidth } from "@/lib/layout";
+import { cn } from "@/lib/utils";
 import { ExternalLink } from "@/components/external-link";
 import { VideoPageClient } from "@/components/video-page-client";
 
@@ -192,7 +194,12 @@ export async function renderVideoPage({
           rendered DOM but — critically — appears in the initial HTML
           payload before hydration, which is what HTML-parsing crawlers see.
           The site-wide llms.txt is linked from the site footer instead. */}
-      <p className="mx-auto max-w-5xl px-4 py-4 text-xs text-muted-foreground sm:px-6">
+      <p
+        className={cn(
+          "mx-auto px-4 py-4 text-xs text-muted-foreground sm:px-8",
+          widePageWidth,
+        )}
+      >
         {tFormats("title")}:{" "}
         <a href={textHref} className="underline hover:text-foreground">
           {tFormats("text")}

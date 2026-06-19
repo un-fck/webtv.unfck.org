@@ -10,14 +10,14 @@ import {
   type SocialNetwork,
 } from "@/components/social-icons";
 import { pageWidth, widePageWidth } from "@/lib/layout";
+import { MEETING_URL_PREFIXES } from "@/lib/meeting-slug";
 import { unUrl } from "@/lib/un-links";
 import { cn } from "@/lib/utils";
 
-// Wide pages all live under the [...meeting] catch-all and start with one of
-// these top-level segments (see lib/meeting-slug.ts). Everything else
-// (about, login, speakers, subscriptions, verify, home) uses the standard
-// pageWidth.
-const WIDE_SEGMENTS = new Set(["sc", "ga", "hrc", "ecosoc", "meeting"]);
+// Wide pages are exactly the meeting pages (catch-all under [...meeting] +
+// the /asset/{id} permalink form). Everything else (about, login, speakers,
+// subscriptions, verify, home) uses the standard pageWidth.
+const WIDE_SEGMENTS = new Set<string>(MEETING_URL_PREFIXES);
 
 function isWidePathname(pathname: string): boolean {
   // pathname is like "/{locale}/sc/9748" or "/{locale}" or "/{locale}/about".
