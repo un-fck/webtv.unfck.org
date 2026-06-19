@@ -53,13 +53,10 @@ CREATE TABLE IF NOT EXISTS videos (
     fts_vec tsvector GENERATED ALWAYS AS (
         to_tsvector('english', COALESCE(clean_title, title))
     ) STORED,
-    -- Deferred-until-commit so saveVideo's two-step "INSERT pv_symbol,
-    -- then assignPvPartsForCluster" doesn't violate the per-statement
-    -- check (migration 023).
     CONSTRAINT videos_pv_part_iff_symbol CHECK (
         (pv_symbol IS NULL AND pv_part IS NULL)
         OR (pv_symbol IS NOT NULL AND pv_part IS NOT NULL)
-    ) DEFERRABLE INITIALLY DEFERRED
+    )
 );
 CREATE UNIQUE INDEX IF NOT EXISTS videos_pv_symbol_part_uniq
     ON videos (pv_symbol, pv_part) WHERE pv_symbol IS NOT NULL;

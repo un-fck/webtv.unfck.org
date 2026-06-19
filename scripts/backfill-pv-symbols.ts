@@ -22,7 +22,7 @@ import {
   pool,
   q,
   withTransaction,
-  assignPvPartsForCluster,
+  assignPvSymbolAndPart,
 } from "../lib/db";
 import { parseMeetingSymbol } from "../lib/pv-documents";
 
@@ -71,13 +71,7 @@ async function main() {
     if (!APPLY) continue;
 
     await withTransaction(async (client) => {
-      await client.query(
-        q(`UPDATE webtv.videos SET pv_symbol = ? WHERE asset_id = ?`, [
-          symbol,
-          row.asset_id,
-        ]),
-      );
-      await assignPvPartsForCluster(client, symbol);
+      await assignPvSymbolAndPart(client, row.asset_id, symbol);
     });
   }
 

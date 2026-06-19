@@ -1334,15 +1334,19 @@ function mapVideoRow(row: Record<string, unknown>): VideoRecord {
 }
 
 /**
- * Persist a scraped video, then ensure its `pv_part` reflects its
- * chronological position within the pv_symbol cluster.
+ * Persist a scraped video. When a `pv_symbol` is set, `pv_part` is computed
+ * inline as the next available ordinal in that symbol's cluster (MAX+1) so
+ * the (pv_symbol, pv_part) CHECK constraint and partial UNIQUE index are
+ * satisfied at statement boundary — Postgres can't defer CHECK constraints.
  *
- * pv_part is assigned in **insertion order** keyed on
- * `(scheduled_time, created_at, asset_id)` and is frozen per row after first
- * assignment — so when WebTV adds a new "(Resumed)" or "(Continued)" sibling
- * later, existing rows keep their pv_part and the new one gets the next
- * available number. Citation URLs published in the wild therefore don't
- * shift.
+ * URL stability: an existing row's pv_part is preserved on UPSERT — only
+ * rows that don't already have a pv_part get one assigned. So when WebTV
+ * adds a new "(Resumed)" sibling later, existing siblings keep their
+ * citation URL and the new one takes the next available number.
+ *
+ * Concurrency: a per-pv_symbol transaction-scoped advisory lock serializes
+ * the MAX+1 read-then-write so concurrent saves on sibling rows can't
+ * double-assign the same number.
  */
 export async function saveVideo(
   video: Omit<
@@ -1351,13 +1355,28 @@ export async function saveVideo(
   >,
 ): Promise<void> {
   await withTransaction(async (client) => {
+    if (video.pv_symbol) {
+      await client.query(
+        q("SELECT pg_advisory_xact_lock(?, hashtext(?))", [
+          LOCK_NS_PV_SYMBOL,
+          video.pv_symbol,
+        ]),
+      );
+    }
     await client.query(
       q(
         `INSERT INTO webtv.videos (
              asset_id, entry_id, kaltura_id, title, clean_title, date, scheduled_time,
              duration, url, body, category, event_code, event_type,
-             session_number, pv_symbol, last_seen, i18n
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+             session_number, pv_symbol, pv_part, last_seen, i18n
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+             CASE WHEN ?::text IS NULL THEN NULL
+                  ELSE COALESCE(
+                    (SELECT MAX(pv_part) FROM webtv.videos WHERE pv_symbol = ?),
+                    0
+                  ) + 1
+             END,
+             ?, ?::jsonb)
            ON CONFLICT(asset_id) DO UPDATE SET
              entry_id = COALESCE(EXCLUDED.entry_id, videos.entry_id),
              kaltura_id = EXCLUDED.kaltura_id,
@@ -1371,6 +1390,19 @@ export async function saveVideo(
              event_type = EXCLUDED.event_type,
              session_number = EXCLUDED.session_number,
              pv_symbol = COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol),
+             pv_part = CASE
+               -- Already assigned — keep it (URL stability).
+               WHEN videos.pv_part IS NOT NULL THEN videos.pv_part
+               -- Symbol stays NULL → pv_part stays NULL (CHECK iff).
+               WHEN COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol) IS NULL THEN NULL
+               -- Newly gaining a symbol → take the next ordinal in the cluster.
+               ELSE COALESCE(
+                 (SELECT MAX(pv_part) FROM webtv.videos
+                   WHERE pv_symbol = COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol)
+                     AND asset_id <> videos.asset_id),
+                 0
+               ) + 1
+             END,
              last_seen = EXCLUDED.last_seen,
              -- Merge per-locale variants: a later sync that only re-scrapes a
              -- subset of locales must not blank the others. Newer keys win.
@@ -1392,36 +1424,26 @@ export async function saveVideo(
           video.event_type,
           video.session_number,
           video.pv_symbol,
+          video.pv_symbol, // for the VALUES CASE: NULL guard
+          video.pv_symbol, // for the VALUES CASE: cluster MAX lookup
           video.last_seen,
           JSON.stringify(video.i18n ?? {}),
         ],
       ),
     );
-
-    // Resolve the effective pv_symbol after the UPSERT (COALESCE may have
-    // kept the row's pre-existing value).
-    const symRes = await client.query(
-      q(`SELECT pv_symbol FROM webtv.videos WHERE asset_id = ?`, [
-        video.asset_id,
-      ]),
-    );
-    const effectiveSymbol = symRes.rows[0]?.pv_symbol as string | null;
-    if (effectiveSymbol) {
-      await assignPvPartsForCluster(client, effectiveSymbol);
-    }
   });
 }
 
 /**
- * Within `pv_symbol`'s cluster, assign `pv_part` to any rows that don't have
- * one yet, continuing the existing 1..N numbering. Rows that already have a
- * pv_part keep it (URL stability).
- *
- * Serialized on `pv_symbol` via a transaction-scoped advisory lock so
- * concurrent saves on sibling rows can't double-assign the same number.
+ * Backfill helper: set both `pv_symbol` and `pv_part` on a row that
+ * currently has neither, computing pv_part as MAX+1 within the cluster.
+ * Done in a single statement so the CHECK constraint is satisfied at
+ * statement boundary. Caller must take the pv_symbol advisory lock first
+ * to serialize against concurrent siblings.
  */
-export async function assignPvPartsForCluster(
+export async function assignPvSymbolAndPart(
   client: import("pg").PoolClient,
+  assetId: string,
   pvSymbol: string,
 ): Promise<void> {
   await client.query(
@@ -1430,37 +1452,18 @@ export async function assignPvPartsForCluster(
       pvSymbol,
     ]),
   );
-
-  // Highest pv_part already in use within the cluster; new rows continue from
-  // there in chronological order. Locked rows are stable since saveVideo's
-  // transaction holds the lock.
-  const used = await client.query(
+  await client.query(
     q(
-      `SELECT COALESCE(MAX(pv_part), 0) AS max_part
-         FROM webtv.videos
-        WHERE pv_symbol = ?`,
-      [pvSymbol],
+      `UPDATE webtv.videos
+          SET pv_symbol = ?,
+              pv_part = COALESCE(
+                (SELECT MAX(pv_part) FROM webtv.videos WHERE pv_symbol = ?),
+                0
+              ) + 1
+        WHERE asset_id = ?`,
+      [pvSymbol, pvSymbol, assetId],
     ),
   );
-  let next = ((used.rows[0]?.max_part as number | null) ?? 0) + 1;
-
-  const unset = await client.query(
-    q(
-      `SELECT asset_id FROM webtv.videos
-        WHERE pv_symbol = ? AND pv_part IS NULL
-        ORDER BY scheduled_time NULLS LAST, created_at, asset_id`,
-      [pvSymbol],
-    ),
-  );
-  for (const row of unset.rows) {
-    await client.query(
-      q(`UPDATE webtv.videos SET pv_part = ? WHERE asset_id = ?`, [
-        next,
-        row.asset_id,
-      ]),
-    );
-    next++;
-  }
 }
 
 export async function getVideoByAssetId(
