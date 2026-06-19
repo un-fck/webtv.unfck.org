@@ -28,11 +28,16 @@ CREATE TABLE IF NOT EXISTS videos (
     event_code TEXT,
     event_type TEXT,
     session_number TEXT,
-    part_number TEXT,
     pv_symbol TEXT,
+    -- Chronological ordinal within a pv_symbol cluster (1..N). Populated iff
+    -- pv_symbol is. Derived in saveVideo from (scheduled_time, created_at)
+    -- under an advisory lock keyed on the symbol; per-row value is frozen
+    -- after first assignment so citation URLs like /sc/10175/2 stay stable
+    -- when WebTV later adds another recording to the cluster. See
+    -- migration 022.
+    pv_part SMALLINT,
     pv_available BOOLEAN,
     pv_checked_at TIMESTAMPTZ,
-    slug TEXT,
     -- Set when the underlying Kaltura entry reports status 3 (DELETED); such
     -- rows are hidden from listings (see migration 006_removed_videos.sql).
     removed_at TIMESTAMPTZ,
@@ -47,9 +52,14 @@ CREATE TABLE IF NOT EXISTS videos (
     -- Generated column for full-text search (auto-maintained by PG)
     fts_vec tsvector GENERATED ALWAYS AS (
         to_tsvector('english', COALESCE(clean_title, title))
-    ) STORED
+    ) STORED,
+    CONSTRAINT videos_pv_part_iff_symbol CHECK (
+        (pv_symbol IS NULL AND pv_part IS NULL)
+        OR (pv_symbol IS NOT NULL AND pv_part IS NOT NULL)
+    )
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_slug ON videos(slug);
+CREATE UNIQUE INDEX IF NOT EXISTS videos_pv_symbol_part_uniq
+    ON videos (pv_symbol, pv_part) WHERE pv_symbol IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_videos_entry_id ON videos(entry_id);
 -- (kaltura_id is covered by the UNIQUE constraint's underlying index.)
 CREATE INDEX IF NOT EXISTS idx_videos_date ON videos(date);

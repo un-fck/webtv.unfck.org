@@ -29,7 +29,8 @@ export async function GET() {
         event_code: video.eventCode,
         event_type: video.eventType,
         session_number: video.sessionNumber,
-        part_number: video.partNumber,
+        pv_symbol: video.pvSymbol,
+        pv_part: video.pvPart,
       })),
     });
 

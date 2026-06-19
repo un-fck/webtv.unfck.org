@@ -25,6 +25,7 @@ interface VideoSub {
   kaltura_id: string;
   language: string;
   title: string | null;
+  /** Pre-resolved citation-or-permalink path; null when no underlying video. */
   slug: string | null;
   emailed_at: string | null;
 }

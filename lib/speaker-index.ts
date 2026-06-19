@@ -14,7 +14,7 @@ import {
  */
 const MIN_STATEMENT_DURATION_MS = 30_000;
 import { getCountryName } from "@/lib/country-lookup";
-import { meetingSlugFromVideo } from "@/lib/meeting-slug";
+import { videoUrl } from "@/lib/video-url";
 import { slugify } from "@/lib/speaker-keys";
 
 export { slugify } from "@/lib/speaker-keys";
@@ -174,9 +174,9 @@ async function buildSpeakerIndexFromRows(): Promise<SpeakerIndex> {
   const index: SpeakerIndex = { entities: new Map() };
 
   for (const row of rows) {
-    const meetingSlug = meetingSlugFromVideo({
+    const meetingSlug = videoUrl({
       pv_symbol: row.pv_symbol,
-      part_number: row.part_number,
+      pv_part: row.pv_part,
       asset_id: row.asset_id ?? row.entry_id,
     });
 

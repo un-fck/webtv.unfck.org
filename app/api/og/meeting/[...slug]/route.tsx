@@ -1,7 +1,18 @@
 import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
-import { getVideoBySlug } from "@/lib/db";
+import { getVideoByAssetId, getVideoByCitation } from "@/lib/db";
+import { symbolFromSlug } from "@/lib/meeting-slug";
 import { OgHeader, getOgFonts } from "@/lib/og";
+import type { VideoRecord } from "@/lib/db";
+
+async function resolveVideo(slug: string): Promise<VideoRecord | null> {
+  if (slug.startsWith("asset/")) {
+    return getVideoByAssetId(slug.slice("asset/".length));
+  }
+  const parsed = symbolFromSlug(slug);
+  if (!parsed) return null;
+  return getVideoByCitation(parsed.pvSymbol, parsed.pvPart);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +47,7 @@ export async function GET(
   // OG image is locale-agnostic v1 — title and meta show in English (matches
   // the WebTV source language) regardless of which locale page links to it.
   const [record, t, fonts] = await Promise.all([
-    getVideoBySlug(slug),
+    resolveVideo(slug),
     getTranslations({ locale: "en", namespace: "header" }),
     getOgFonts(),
   ]);

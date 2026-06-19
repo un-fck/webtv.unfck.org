@@ -2,21 +2,24 @@ import { SITE_TITLE, mailFrom, transporter } from "@/lib/auth/mail";
 import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
 import type { VideoRecord } from "@/lib/db";
 import { getBaseUrl } from "@/lib/get-base-url";
+import { videoUrl } from "@/lib/video-url";
 
-/** Public URL for a video, preferring its human-readable slug. */
-export async function videoUrl(
-  video: Pick<VideoRecord, "slug" | "asset_id">,
+/** Full URL (origin + path) for a video — used in transcript-ready emails. */
+async function videoFullUrl(
+  video: Pick<VideoRecord, "pv_symbol" | "pv_part" | "asset_id">,
 ): Promise<string> {
-  const path = video.slug || `meeting/${video.asset_id}`;
-  return `${await getBaseUrl()}/${path}`;
+  return `${await getBaseUrl()}/${videoUrl(video)}`;
 }
 
 /** Email a subscriber that a transcript they're waiting on is ready. */
 export async function sendTranscriptReady(
   email: string,
-  video: Pick<VideoRecord, "slug" | "asset_id" | "title" | "clean_title">,
+  video: Pick<
+    VideoRecord,
+    "pv_symbol" | "pv_part" | "asset_id" | "title" | "clean_title"
+  >,
 ): Promise<void> {
-  const link = await videoUrl(video);
+  const link = await videoFullUrl(video);
   const baseUrl = await getBaseUrl();
   const title = video.clean_title || video.title || "A meeting you follow";
 

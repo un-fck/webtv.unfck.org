@@ -15,14 +15,19 @@ Available in all six official UN languages: English, French, Spanish, Arabic, Ch
 
 ## Meeting URL scheme
 
-Meeting pages use human-readable slugs derived from UN document symbols:
+Meeting pages have two URL families:
 
-- Security Council: \`/sc/{n}\` (e.g. /sc/9748 for S/PV.9748)
-- General Assembly: \`/ga/{session}/{meeting}\` (e.g. /ga/79/21)
-- GA Committees: \`/ga/c{n}/{session}/{meeting}\`
-- Human Rights Council: \`/hrc/{session}/{meeting}\`
-- ECOSOC: \`/ecosoc/{year}/{meeting}\`
-- Other meetings: \`/meeting/{asset_id}\`
+Citation URLs — derived from UN document symbols. Multi-part recordings of the same meeting (resumed, continued) take a trailing \`/N\` (e.g. \`/sc/10175/2\` for the resumed part). The unsuffixed form addresses part 1.
+
+- Security Council: \`/sc/{n}[/{p}]\` (e.g. /sc/9748 for S/PV.9748)
+- General Assembly: \`/ga/{session}/{meeting}[/{p}]\` (e.g. /ga/79/21)
+- GA Committees: \`/ga/c{n}/{session}/{meeting}[/{p}]\`
+- Human Rights Council: \`/hrc/{session}/{meeting}[/{p}]\`
+- ECOSOC: \`/ecosoc/{year}/{meeting}[/{p}]\`
+
+Permalink URLs — mirror UN Web TV's asset URLs, so swapping the host gets you the corresponding transcript.
+
+- Any meeting by its asset id: \`/asset/{asset_id}\` (e.g. /asset/k1o/k1o43lgs4z mirrors webtv.un.org/en/asset/k1o/k1o43lgs4z)
 
 ## Pages
 

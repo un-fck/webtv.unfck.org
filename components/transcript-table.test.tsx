@@ -35,7 +35,6 @@ interface VideoFixture {
     eventType: string | null;
     body: string | null;
     sessionNumber: string | null;
-    partNumber: number | null;
     cleanTitle: string;
     pvSymbol: string | null;
   };
@@ -63,10 +62,10 @@ const videos: Video[] = fixtures.slice(0, 6).map((fx) => ({
   eventType: fx.expected.eventType,
   body: fx.expected.body,
   sessionNumber: fx.expected.sessionNumber,
-  partNumber: fx.expected.partNumber,
   pvSymbol: fx.expected.pvSymbol,
+  pvPart: fx.expected.pvSymbol ? 1 : null,
   pvAvailable: false,
-  slug: fx.expected.pvSymbol ? "x" : `meeting/${fx.id}`,
+  slug: fx.expected.pvSymbol ? "x" : `asset/${fx.id}`,
   hasTranscript: false,
   hasTranscriptInLocale: false,
   removed: false,

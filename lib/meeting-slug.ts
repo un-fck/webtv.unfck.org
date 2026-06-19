@@ -1,25 +1,23 @@
 /**
- * Human-readable meeting slug system.
+ * Conversion between UN document symbols and URL slugs.
  *
- * Converts UN document symbols (S/PV.9748, A/79/PV.21, etc.) to URL-friendly
- * slugs (sc/9748, ga/79/21) and back. Meetings without symbols fall back to
- * a date/title-based slug.
+ *   S/PV.9748      ↔  sc/9748
+ *   A/79/PV.21     ↔  ga/79/21
+ *   A/ES-11/PV.23  ↔  ga/es11/23
+ *   A/C.1/79/PV.7  ↔  ga/c1/79/7
+ *   A/C.3/79/SR.5  ↔  ga/c3/79/5
+ *   A/HRC/58/SR.59 ↔  hrc/58/59
+ *   E/2024/SR.10   ↔  ecosoc/2024/10
  *
- * See docs/official-transcripts.md for symbol patterns.
+ * Multi-part recordings of the same meeting are addressed with a trailing
+ * `/N` (e.g. `sc/9748/2`), where N is the chronological ordinal within the
+ * symbol's cluster — see the `pv_part` column on `videos`. Part 1 has no
+ * suffix.
+ *
+ * See docs/official-transcripts.md for which organs use PV vs SR.
  */
 
-/**
- * Derive a URL slug from a PV/SR document symbol.
- *
- * Examples:
- *   S/PV.9748         → sc/9748
- *   A/79/PV.21        → ga/79/21
- *   A/ES-11/PV.23     → ga/es11/23
- *   A/C.1/79/PV.7     → ga/c1/79/7
- *   A/C.3/79/SR.5     → ga/c3/79/5
- *   A/HRC/58/SR.59    → hrc/58/59
- *   E/2024/SR.10      → ecosoc/2024/10
- */
+/** Derive a URL slug from a PV/SR document symbol. */
 export function slugFromSymbol(symbol: string): string | null {
   // Security Council: S/PV.NNNN
   const sc = symbol.match(/^S\/PV\.(\d+)$/);
@@ -48,121 +46,127 @@ export function slugFromSymbol(symbol: string): string | null {
   return null;
 }
 
+export interface ParsedCitationSlug {
+  /** The PV symbol (verbatim record). Always returned. */
+  pvSymbol: string;
+  /**
+   * The SR (summary record) symbol where applicable — GA committees 2–6,
+   * HRC, ECOSOC use SR rather than PV in their official record series.
+   */
+  srSymbol?: string;
+  /** Chronological ordinal within the symbol's cluster; defaults to 1. */
+  pvPart: number;
+}
+
 /**
- * Reconstruct a PV/SR symbol from a URL slug.
+ * Parse a citation slug back into a document symbol + part ordinal.
  *
- * Returns both pvSymbol and srSymbol where applicable (e.g. GA committees 2-6
- * use SR records, not PV).
+ * Accepts an optional trailing `/N` (N ≥ 2) to address parts after the first.
+ * Returns null for non-citation slugs (e.g. `asset/...`).
  */
-export function symbolFromSlug(
-  slug: string,
-): { pvSymbol: string; srSymbol?: string } | null {
-  // A trailing -part-N disambiguates multiple video assets of the same meeting
-  // (e.g. a session and its "(Continued)" part); both reconstruct to the same
-  // underlying document symbol.
-  const parts = slug.replace(/-part-\d+$/, "").split("/");
+export function symbolFromSlug(slug: string): ParsedCitationSlug | null {
+  const segs = slug.split("/");
+
+  // Optional trailing "/N" — only consumed when the prefix's canonical
+  // segment count is exceeded by exactly one. Without this guard, /sc/10175
+  // would be misread as prefix=sc + part=10175 instead of meeting 10175.
+  let pvPart = 1;
+  const canonical = canonicalSegmentCount(segs[0], segs[1]);
+  if (
+    canonical !== null &&
+    segs.length === canonical + 1 &&
+    /^\d+$/.test(segs[segs.length - 1])
+  ) {
+    pvPart = parseInt(segs[segs.length - 1], 10);
+    segs.pop();
+  }
 
   // sc/NNNN → S/PV.NNNN
-  if (parts[0] === "sc" && parts.length === 2 && /^\d+$/.test(parts[1])) {
-    return { pvSymbol: `S/PV.${parts[1]}` };
+  if (segs[0] === "sc" && segs.length === 2 && /^\d+$/.test(segs[1])) {
+    return { pvSymbol: `S/PV.${segs[1]}`, pvPart };
   }
 
   // ga/esNN/NN → A/ES-NN/PV.NN
   if (
-    parts[0] === "ga" &&
-    parts.length === 3 &&
-    /^es\d+$/.test(parts[1]) &&
-    /^\d+$/.test(parts[2])
+    segs[0] === "ga" &&
+    segs.length === 3 &&
+    /^es\d+$/.test(segs[1]) &&
+    /^\d+$/.test(segs[2])
   ) {
-    const esNum = parts[1].slice(2);
-    return { pvSymbol: `A/ES-${esNum}/PV.${parts[2]}` };
+    const esNum = segs[1].slice(2);
+    return { pvSymbol: `A/ES-${esNum}/PV.${segs[2]}`, pvPart };
   }
 
   // ga/cN/NN/NN → A/C.N/NN/PV.NN or SR.NN
   if (
-    parts[0] === "ga" &&
-    parts.length === 4 &&
-    /^c[1-6]$/.test(parts[1]) &&
-    /^\d+$/.test(parts[2]) &&
-    /^\d+$/.test(parts[3])
+    segs[0] === "ga" &&
+    segs.length === 4 &&
+    /^c[1-6]$/.test(segs[1]) &&
+    /^\d+$/.test(segs[2]) &&
+    /^\d+$/.test(segs[3])
   ) {
-    const comNum = parts[1].slice(1);
+    const comNum = segs[1].slice(1);
     if (comNum === "1") {
-      return { pvSymbol: `A/C.1/${parts[2]}/PV.${parts[3]}` };
+      return { pvSymbol: `A/C.1/${segs[2]}/PV.${segs[3]}`, pvPart };
     }
     return {
-      pvSymbol: `A/C.${comNum}/${parts[2]}/PV.${parts[3]}`,
-      srSymbol: `A/C.${comNum}/${parts[2]}/SR.${parts[3]}`,
+      pvSymbol: `A/C.${comNum}/${segs[2]}/PV.${segs[3]}`,
+      srSymbol: `A/C.${comNum}/${segs[2]}/SR.${segs[3]}`,
+      pvPart,
     };
   }
 
   // ga/NN/NN → A/NN/PV.NN
   if (
-    parts[0] === "ga" &&
-    parts.length === 3 &&
-    /^\d+$/.test(parts[1]) &&
-    /^\d+$/.test(parts[2])
+    segs[0] === "ga" &&
+    segs.length === 3 &&
+    /^\d+$/.test(segs[1]) &&
+    /^\d+$/.test(segs[2])
   ) {
-    return { pvSymbol: `A/${parts[1]}/PV.${parts[2]}` };
+    return { pvSymbol: `A/${segs[1]}/PV.${segs[2]}`, pvPart };
   }
 
   // hrc/NN/NN → A/HRC/NN/SR.NN
   if (
-    parts[0] === "hrc" &&
-    parts.length === 3 &&
-    /^\d+$/.test(parts[1]) &&
-    /^\d+$/.test(parts[2])
+    segs[0] === "hrc" &&
+    segs.length === 3 &&
+    /^\d+$/.test(segs[1]) &&
+    /^\d+$/.test(segs[2])
   ) {
     return {
-      pvSymbol: `A/HRC/${parts[1]}/PV.${parts[2]}`,
-      srSymbol: `A/HRC/${parts[1]}/SR.${parts[2]}`,
+      pvSymbol: `A/HRC/${segs[1]}/PV.${segs[2]}`,
+      srSymbol: `A/HRC/${segs[1]}/SR.${segs[2]}`,
+      pvPart,
     };
   }
 
   // ecosoc/YYYY/NN → E/YYYY/SR.NN
   if (
-    parts[0] === "ecosoc" &&
-    parts.length === 3 &&
-    /^\d{4}$/.test(parts[1]) &&
-    /^\d+$/.test(parts[2])
+    segs[0] === "ecosoc" &&
+    segs.length === 3 &&
+    /^\d{4}$/.test(segs[1]) &&
+    /^\d+$/.test(segs[2])
   ) {
     return {
-      pvSymbol: `E/${parts[1]}/PV.${parts[2]}`,
-      srSymbol: `E/${parts[1]}/SR.${parts[2]}`,
+      pvSymbol: `E/${segs[1]}/PV.${segs[2]}`,
+      srSymbol: `E/${segs[1]}/SR.${segs[2]}`,
+      pvPart,
     };
   }
 
   return null;
 }
 
-/**
- * Generate a slug for a video record.
- *
- * Priority:
- * 1. From pv_symbol if present (human-readable meeting slug)
- * 2. Fallback to asset_id (the UN Web TV ID)
- *
- * Multi-part meetings append "-part-N" when part_number > 1.
- */
-export function meetingSlugFromVideo(video: {
-  pv_symbol: string | null;
-  part_number: string | null;
-  asset_id: string;
-}): string {
-  let slug: string;
-
-  if (video.pv_symbol) {
-    const symbolSlug = slugFromSymbol(video.pv_symbol);
-    slug = symbolSlug ?? `meeting/${video.asset_id}`;
-  } else {
-    slug = `meeting/${video.asset_id}`;
-  }
-
-  // Append part suffix for multi-part meetings
-  const partNum = video.part_number ? parseInt(video.part_number) : null;
-  if (partNum && partNum > 1) {
-    slug += `-part-${partNum}`;
-  }
-
-  return slug;
+/** Number of segments a citation slug of a given prefix has without `/N`. */
+function canonicalSegmentCount(
+  prefix: string,
+  second: string | undefined,
+): number | null {
+  if (prefix === "sc") return 2;
+  if (prefix === "ga" && second && /^es\d+$/.test(second)) return 3;
+  if (prefix === "ga" && second && /^c[1-6]$/.test(second)) return 4;
+  if (prefix === "ga") return 3;
+  if (prefix === "hrc") return 3;
+  if (prefix === "ecosoc") return 3;
+  return null;
 }

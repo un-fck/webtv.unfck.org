@@ -11,8 +11,8 @@
  *     has no rows to act on and can be deleted.
  *
  * Start small, then widen:
- *   tsx scripts/realign-backfill.ts sc/10155            # one id (slug/entry/kaltura)
- *   tsx scripts/realign-backfill.ts sc/10155 sc/10122   # a few ids
+ *   tsx scripts/realign-backfill.ts k1k/k1k...            # one asset/entry/kaltura id
+ *   tsx scripts/realign-backfill.ts k1k/... k1m/...       # a few ids
  *   tsx scripts/realign-backfill.ts --limit=5           # first 5 detected candidates
  *   tsx scripts/realign-backfill.ts                     # dry-run ALL candidates
  *   tsx scripts/realign-backfill.ts --apply --limit=5   # write offsets for 5
@@ -47,7 +47,7 @@ interface Row {
   entry_id: string;
   kaltura_id: string;
   language_code: string | null;
-  slug: string | null;
+  asset_id: string | null;
   vid_s: number | null;
   aligned_duration_ms: number | null;
   source_duration_ms: number | null;
@@ -56,17 +56,16 @@ interface Row {
 }
 
 async function selectCandidates(): Promise<Row[]> {
-  // Explicit targets: match any identifier the user might paste (asset_id from a
-  // /meeting/... URL, slug, entry_id, kaltura_id) and bypass the "legacy only"
+  // Explicit targets: match any identifier the user might paste (asset_id
+  // from a /asset/... URL, entry_id, kaltura_id) and bypass the "legacy only"
   // filter so a row transcribed after migration 008 can still be tested here.
   const where = targets.length
-    ? `AND (v.asset_id = ANY($1) OR v.slug = ANY($1)
-            OR t.entry_id = ANY($1) OR t.kaltura_id = ANY($1))`
+    ? `AND (v.asset_id = ANY($1) OR t.entry_id = ANY($1) OR t.kaltura_id = ANY($1))`
     : "AND t.source_duration_ms IS NULL"; // bulk run: legacy rows only
   const { rows } = await pool.query(
     `WITH x AS (
        SELECT t.transcript_id, t.entry_id, t.kaltura_id, t.language_code,
-              v.slug, v.duration AS vid_s,
+              v.asset_id, v.duration AS vid_s,
               t.aligned_duration_ms, t.source_duration_ms,
               t.content->'statements' AS statements,
               (SELECT max((s->>'end')::numeric)
@@ -135,7 +134,7 @@ async function main() {
   const flagged: RealignResult[] = [];
 
   for (const r of selected) {
-    const label = r.slug || r.entry_id;
+    const label = r.asset_id || r.entry_id;
     const canonical = entryByTranscript.get(r.transcript_id);
     const currentSec = canonical ? durations.get(canonical) : undefined;
     try {

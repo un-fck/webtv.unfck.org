@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { getSitemapMeetingLanguages } from "@/lib/db";
 import { getBaseUrl } from "@/lib/get-base-url";
+import { videoUrl } from "@/lib/video-url";
 
 // Public-facing routes that are the same path across locales. Auth-walled
 // surfaces (login, verify, subscriptions) and the entire speaker directory
@@ -57,10 +58,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { languages: Record<string, Date> }
   >();
   for (const row of rows) {
-    let bucket = bySlug.get(row.slug);
+    const slug = videoUrl(row);
+    let bucket = bySlug.get(slug);
     if (!bucket) {
       bucket = { languages: {} };
-      bySlug.set(row.slug, bucket);
+      bySlug.set(slug, bucket);
     }
     bucket.languages[row.languageCode] = row.lastModified;
   }

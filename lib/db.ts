@@ -1,7 +1,6 @@
 import { Pool } from "pg";
 import { readFileSync } from "fs";
 import "@/lib/load-env";
-import { slugFromSymbol } from "./meeting-slug";
 import { applyTimeOffset } from "./transcript-offset";
 
 // Transcript production lifecycle. Proposition analysis is a separate axis
@@ -870,6 +869,9 @@ async function withTransaction<T>(
 // happen to coincide.
 const LOCK_NS_VIDEO = 1;
 const LOCK_NS_JOB = 2;
+// Serializes pv_part assignment within a pv_symbol cluster during saveVideo
+// so concurrent syncs of sibling rows can't double-claim the same ordinal.
+const LOCK_NS_PV_SYMBOL = 3;
 
 // Serialize the "start transcription / schedule" critical section for one
 // video+language so two simultaneous clicks can't create duplicate rows.
@@ -1277,11 +1279,16 @@ export interface VideoRecord {
   event_code: string | null;
   event_type: string | null;
   session_number: string | null;
-  part_number: string | null;
   pv_symbol: string | null;
+  /**
+   * Chronological ordinal within the pv_symbol cluster (1..N); populated iff
+   * pv_symbol is. Drives the citation URL — pv_part=1 has no suffix
+   * (`/sc/10175`), pv_part>1 is suffixed (`/sc/10175/2`). Frozen per-row
+   * after first assignment so URLs stay stable when later siblings arrive.
+   */
+  pv_part: number | null;
   pv_available: boolean | null;
   pv_checked_at: Date | null;
-  slug: string | null;
   removed_at: Date | null;
   last_seen: string;
   created_at: Date;
@@ -1314,11 +1321,10 @@ function mapVideoRow(row: Record<string, unknown>): VideoRecord {
     event_code: row.event_code as string | null,
     event_type: row.event_type as string | null,
     session_number: row.session_number as string | null,
-    part_number: row.part_number as string | null,
     pv_symbol: (row.pv_symbol as string | null) ?? null,
+    pv_part: (row.pv_part as number | null) ?? null,
     pv_available: (row.pv_available as boolean | null) ?? null,
     pv_checked_at: (row.pv_checked_at as Date | null) ?? null,
-    slug: (row.slug as string | null) ?? null,
     removed_at: (row.removed_at as Date | null) ?? null,
     last_seen: row.last_seen as string,
     created_at: row.created_at as Date,
@@ -1328,59 +1334,30 @@ function mapVideoRow(row: Record<string, unknown>): VideoRecord {
 }
 
 /**
- * Resolve the unique slug to store for a video, using DB collision data rather
- * than brittle title parsing.
+ * Persist a scraped video, then ensure its `pv_part` reflects its
+ * chronological position within the pv_symbol cluster.
  *
- * - The base slug comes from `pv_symbol` (or the inherently-unique
- *   `meeting/{asset_id}` fallback).
- * - If this asset_id already has a row, its existing slug is kept (URL stability
- *   — we never repoint a published URL).
- * - Otherwise the base slug is used if free, else the lowest free
- *   `{base}-part-N` (N ≥ 2) is chosen.
+ * pv_part is assigned in **insertion order** keyed on
+ * `(scheduled_time, created_at, asset_id)` and is frozen per row after first
+ * assignment — so when WebTV adds a new "(Resumed)" or "(Continued)" sibling
+ * later, existing rows keep their pv_part and the new one gets the next
+ * available number. Citation URLs published in the wild therefore don't
+ * shift.
  */
-async function resolveVideoSlug(
-  assetId: string,
-  pvSymbol: string | null,
-): Promise<string> {
-  const base = (pvSymbol && slugFromSymbol(pvSymbol)) || `meeting/${assetId}`;
-
-  // Keep an existing asset's slug stable.
-  const existing = await pool.query(
-    q("SELECT slug FROM webtv.videos WHERE asset_id = ?", [assetId]),
-  );
-  const existingSlug = existing.rows[0]?.slug as string | undefined;
-  if (existingSlug) return existingSlug;
-
-  // Gather slugs already using this base (the base itself or any -part-N).
-  const taken = await pool.query(
-    q("SELECT slug FROM webtv.videos WHERE slug = ? OR slug LIKE ?", [
-      base,
-      `${base}-part-%`,
-    ]),
-  );
-  const used = new Set(taken.rows.map((r) => r.slug as string));
-  if (!used.has(base)) return base;
-
-  let n = 2;
-  while (used.has(`${base}-part-${n}`)) n++;
-  return `${base}-part-${n}`;
-}
-
 export async function saveVideo(
-  video: Omit<VideoRecord, "created_at" | "updated_at" | "removed_at">,
+  video: Omit<
+    VideoRecord,
+    "created_at" | "updated_at" | "removed_at" | "pv_part"
+  >,
 ): Promise<void> {
-  // Up to a few attempts to absorb a race where a concurrent save claims the
-  // slug we picked between our SELECT and INSERT (slug UNIQUE index → 23505).
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const slug = await resolveVideoSlug(video.asset_id, video.pv_symbol);
-    try {
-      await pool.query(
-        q(
-          `INSERT INTO webtv.videos (
+  await withTransaction(async (client) => {
+    await client.query(
+      q(
+        `INSERT INTO webtv.videos (
              asset_id, entry_id, kaltura_id, title, clean_title, date, scheduled_time,
              duration, url, body, category, event_code, event_type,
-             session_number, part_number, pv_symbol, slug, last_seen, i18n
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+             session_number, pv_symbol, last_seen, i18n
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
            ON CONFLICT(asset_id) DO UPDATE SET
              entry_id = COALESCE(EXCLUDED.entry_id, videos.entry_id),
              kaltura_id = EXCLUDED.kaltura_id,
@@ -1393,44 +1370,96 @@ export async function saveVideo(
              event_code = EXCLUDED.event_code,
              event_type = EXCLUDED.event_type,
              session_number = EXCLUDED.session_number,
-             part_number = EXCLUDED.part_number,
              pv_symbol = COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol),
-             slug = videos.slug,
              last_seen = EXCLUDED.last_seen,
              -- Merge per-locale variants: a later sync that only re-scrapes a
              -- subset of locales must not blank the others. Newer keys win.
              i18n = videos.i18n || EXCLUDED.i18n,
              updated_at = NOW()`,
-          [
-            video.asset_id,
-            video.entry_id,
-            video.kaltura_id,
-            video.title,
-            video.clean_title,
-            video.date,
-            video.scheduled_time,
-            video.duration,
-            video.url,
-            video.body,
-            video.category,
-            video.event_code,
-            video.event_type,
-            video.session_number,
-            video.part_number,
-            video.pv_symbol,
-            slug,
-            video.last_seen,
-            JSON.stringify(video.i18n ?? {}),
-          ],
-        ),
-      );
-      return;
-    } catch (err) {
-      // 23505 = unique_violation. Only retry slug collisions; rethrow otherwise.
-      const code = (err as { code?: string }).code;
-      if (code === "23505" && attempt < 4) continue;
-      throw err;
+        [
+          video.asset_id,
+          video.entry_id,
+          video.kaltura_id,
+          video.title,
+          video.clean_title,
+          video.date,
+          video.scheduled_time,
+          video.duration,
+          video.url,
+          video.body,
+          video.category,
+          video.event_code,
+          video.event_type,
+          video.session_number,
+          video.pv_symbol,
+          video.last_seen,
+          JSON.stringify(video.i18n ?? {}),
+        ],
+      ),
+    );
+
+    // Resolve the effective pv_symbol after the UPSERT (COALESCE may have
+    // kept the row's pre-existing value).
+    const symRes = await client.query(
+      q(`SELECT pv_symbol FROM webtv.videos WHERE asset_id = ?`, [
+        video.asset_id,
+      ]),
+    );
+    const effectiveSymbol = symRes.rows[0]?.pv_symbol as string | null;
+    if (effectiveSymbol) {
+      await assignPvPartsForCluster(client, effectiveSymbol);
     }
+  });
+}
+
+/**
+ * Within `pv_symbol`'s cluster, assign `pv_part` to any rows that don't have
+ * one yet, continuing the existing 1..N numbering. Rows that already have a
+ * pv_part keep it (URL stability).
+ *
+ * Serialized on `pv_symbol` via a transaction-scoped advisory lock so
+ * concurrent saves on sibling rows can't double-assign the same number.
+ */
+async function assignPvPartsForCluster(
+  client: import("pg").PoolClient,
+  pvSymbol: string,
+): Promise<void> {
+  await client.query(
+    q("SELECT pg_advisory_xact_lock(?, hashtext(?))", [
+      LOCK_NS_PV_SYMBOL,
+      pvSymbol,
+    ]),
+  );
+
+  // Highest pv_part already in use within the cluster; new rows continue from
+  // there in chronological order. Locked rows are stable since saveVideo's
+  // transaction holds the lock.
+  const used = await client.query(
+    q(
+      `SELECT COALESCE(MAX(pv_part), 0) AS max_part
+         FROM webtv.videos
+        WHERE pv_symbol = ?`,
+      [pvSymbol],
+    ),
+  );
+  let next = ((used.rows[0]?.max_part as number | null) ?? 0) + 1;
+
+  const unset = await client.query(
+    q(
+      `SELECT asset_id FROM webtv.videos
+        WHERE pv_symbol = ? AND pv_part IS NULL
+        ORDER BY scheduled_time NULLS LAST, created_at, asset_id`,
+      [pvSymbol],
+    ),
+  );
+  for (const row of unset.rows) {
+    await client.query(
+      q(`UPDATE webtv.videos SET pv_part = ? WHERE asset_id = ?`, [
+        next,
+        row.asset_id,
+      ]),
+    );
+    next++;
   }
 }
 
@@ -1444,21 +1473,21 @@ export async function getVideoByAssetId(
   return mapVideoRow(result.rows[0]);
 }
 
-export async function getVideoBySlug(
-  slug: string,
+/**
+ * Look up a video by its citation URL — the pv_symbol it cites and its
+ * chronological ordinal within that symbol's cluster (defaults to 1 for the
+ * unsuffixed citation form).
+ */
+export async function getVideoByCitation(
+  pvSymbol: string,
+  pvPart: number = 1,
 ): Promise<VideoRecord | null> {
-  let result = await pool.query(
-    q("SELECT * FROM webtv.videos WHERE slug = ?", [slug]),
+  const result = await pool.query(
+    q("SELECT * FROM webtv.videos WHERE pv_symbol = ? AND pv_part = ?", [
+      pvSymbol,
+      pvPart,
+    ]),
   );
-
-  if (result.rows.length === 0 && slug.startsWith("meeting/")) {
-    const rest = slug.slice("meeting/".length);
-    const assetId = rest.replace(/-part-\d+$/, "");
-    result = await pool.query(
-      q("SELECT * FROM webtv.videos WHERE asset_id = ?", [assetId]),
-    );
-  }
-
   if (result.rows.length === 0) return null;
   return mapVideoRow(result.rows[0]);
 }
@@ -1490,23 +1519,30 @@ const VISIBLE_VIDEO = `(
 export async function getSitemapMeetingLanguages(
   supportedLocales: readonly string[],
 ): Promise<
-  Array<{ slug: string; languageCode: string; lastModified: Date }>
+  Array<{
+    asset_id: string;
+    pv_symbol: string | null;
+    pv_part: number | null;
+    languageCode: string;
+    lastModified: Date;
+  }>
 > {
   const result = await pool.query(
     q(
-      `SELECT v.slug, t.language_code,
+      `SELECT v.asset_id, v.pv_symbol, v.pv_part, t.language_code,
               GREATEST(v.updated_at, t.updated_at) AS last_modified
          FROM webtv.videos v
          JOIN webtv.transcripts t ON t.kaltura_id = v.kaltura_id
         WHERE t.transcription_status = 'completed'
-          AND v.slug IS NOT NULL
           AND t.language_code = ANY(?::text[])
         ORDER BY v.date DESC`,
       [supportedLocales as unknown as string[]],
     ),
   );
   return result.rows.map((r) => ({
-    slug: r.slug as string,
+    asset_id: r.asset_id as string,
+    pv_symbol: (r.pv_symbol as string | null) ?? null,
+    pv_part: (r.pv_part as number | null) ?? null,
     languageCode: r.language_code as string,
     lastModified: r.last_modified as Date,
   }));
@@ -2045,7 +2081,7 @@ export interface SpeakerMappingWithMeta {
   language_code: string | null;
   asset_id: string | null;
   pv_symbol: string | null;
-  part_number: string | null;
+  pv_part: number | null;
   title: string | null;
   date: string | null;
 }
@@ -2066,7 +2102,7 @@ export async function getSpeakerMappingsWithMeta(): Promise<
     `SELECT DISTINCT ON (t.entry_id)
             sm.transcript_id, sm.mapping,
             t.entry_id, t.language_code,
-            v.asset_id, v.pv_symbol, v.part_number,
+            v.asset_id, v.pv_symbol, v.pv_part,
             COALESCE(v.clean_title, v.title) AS title, v.date
        FROM webtv.speaker_mappings sm
        JOIN webtv.transcripts t ON t.transcript_id = sm.transcript_id
@@ -2084,7 +2120,7 @@ export async function getSpeakerMappingsWithMeta(): Promise<
     language_code: (row.language_code as string | null) ?? null,
     asset_id: (row.asset_id as string | null) ?? null,
     pv_symbol: (row.pv_symbol as string | null) ?? null,
-    part_number: (row.part_number as string | null) ?? null,
+    pv_part: (row.pv_part as number | null) ?? null,
     title: (row.title as string | null) ?? null,
     date: row.date ? String(row.date) : null,
   }));
@@ -2271,7 +2307,9 @@ export interface UserVideoSubscription {
   kaltura_id: string;
   language: string;
   title: string | null;
-  slug: string | null;
+  asset_id: string | null;
+  pv_symbol: string | null;
+  pv_part: number | null;
   created_at: Date;
   /** When the "transcript ready" email was sent to this user, if it has been. */
   emailed_at: Date | null;
@@ -2285,7 +2323,8 @@ export async function getUserVideoSubscriptions(
   const result = await pool.query(
     q(
       `SELECT vs.kaltura_id, vs.language, vs.created_at,
-              COALESCE(v.clean_title, v.title) AS title, v.slug,
+              COALESCE(v.clean_title, v.title) AS title,
+              v.asset_id, v.pv_symbol, v.pv_part,
               (SELECT MAX(stn.sent_at)
                  FROM webtv.sent_transcript_notifications stn
                  JOIN webtv.transcripts t ON t.transcript_id = stn.transcript_id
@@ -2303,7 +2342,9 @@ export async function getUserVideoSubscriptions(
     kaltura_id: row.kaltura_id as string,
     language: row.language as string,
     title: (row.title as string | null) ?? null,
-    slug: (row.slug as string | null) ?? null,
+    asset_id: (row.asset_id as string | null) ?? null,
+    pv_symbol: (row.pv_symbol as string | null) ?? null,
+    pv_part: (row.pv_part as number | null) ?? null,
     created_at: row.created_at as Date,
     emailed_at: (row.emailed_at as Date | null) ?? null,
   }));

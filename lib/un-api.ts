@@ -5,7 +5,7 @@ import {
   type VideoRecord,
 } from "./db";
 import { parseMeetingSymbol } from "./pv-documents";
-import { meetingSlugFromVideo } from "./meeting-slug";
+import { videoUrl } from "./video-url";
 import { extractKalturaId } from "./kaltura";
 
 // Locales whose schedule pages get scraped alongside English. Mirrors the
@@ -28,9 +28,10 @@ export interface Video {
   eventType: string | null;
   body: string | null; // UN body (committee, council, assembly, etc.)
   sessionNumber: string | null;
-  partNumber: number | null;
   pvSymbol: string | null;
+  pvPart: number | null;
   pvAvailable: boolean;
+  /** Locale-agnostic path (no leading slash). Derived via `videoUrl()`. */
   slug: string;
   // `hasTranscript` = at least one completed transcript exists in *any*
   // language; `hasTranscriptInLocale` = one exists in the active UI locale
@@ -68,7 +69,7 @@ export function formatDate(date: Date): string {
 
 export function videoToRecord(
   video: Video,
-): Omit<VideoRecord, "created_at" | "updated_at" | "removed_at"> {
+): Omit<VideoRecord, "created_at" | "updated_at" | "removed_at" | "pv_part"> {
   // Parse duration: can be "HH:MM:SS" or "XX min" format, convert to seconds
   let durationSeconds: number | null = null;
   if (video.duration) {
@@ -84,8 +85,6 @@ export function videoToRecord(
   }
 
   const pv_symbol = parseMeetingSymbol(video.title, video.category, video.date);
-  const part_number =
-    video.partNumber !== null ? String(video.partNumber) : null;
 
   const kaltura_id = extractKalturaId(video.id);
   if (!kaltura_id) {
@@ -108,11 +107,9 @@ export function videoToRecord(
     event_code: video.eventCode,
     event_type: video.eventType,
     session_number: video.sessionNumber,
-    part_number,
     pv_symbol,
     pv_available: null,
     pv_checked_at: null,
-    slug: meetingSlugFromVideo({ pv_symbol, part_number, asset_id: video.id }),
     last_seen: new Date().toISOString().split("T")[0],
     i18n: video.i18n ?? {},
   };
@@ -170,11 +167,10 @@ export function recordToVideo(
     eventType: record.event_type,
     body: record.body,
     sessionNumber: record.session_number,
-    partNumber:
-      record.part_number !== null ? parseInt(record.part_number) : null,
     pvSymbol: record.pv_symbol ?? null,
+    pvPart: record.pv_part,
     pvAvailable: record.pv_available === true,
-    slug: record.slug ?? meetingSlugFromVideo(record),
+    slug: videoUrl(record),
     hasTranscript,
     hasTranscriptInLocale: hasTranscriptInLocale ?? hasTranscript,
     removed: record.removed_at !== null,
@@ -235,7 +231,6 @@ export function cleanTitle(
     eventCode: string | null;
     body: string | null;
     sessionNumber: string | null;
-    partNumber: number | null;
   },
 ): string {
   let cleaned = title;
@@ -257,7 +252,6 @@ export function extractMetadataFromTitle(title: string, category?: string) {
     eventType: null as string | null,
     body: null as string | null,
     sessionNumber: null as string | null,
-    partNumber: null as number | null,
   };
 
   // Extract event code (e.g., "EM07", "GO19")
@@ -290,15 +284,6 @@ export function extractMetadataFromTitle(title: string, category?: string) {
     /(\d+)(?:st|nd|rd|th) (?:plenary meeting|session)/,
   );
   if (sessionMatch) metadata.sessionNumber = sessionMatch[0];
-
-  // Extract part number from "(Part N)" or "(Resumed)" / "(resumed)"
-  const partMatch = title.match(/\(Part (\d+)\)/i);
-  if (partMatch) {
-    metadata.partNumber = parseInt(partMatch[1]);
-  } else if (/^\(resumed\)/i.test(title.trim())) {
-    // SC and other resumed meetings: "(Resumed) Title..." → part 2
-    metadata.partNumber = 2;
-  }
 
   return metadata;
 }
@@ -396,7 +381,6 @@ export async function fetchVideosForDate(
       : calculateStatus(scheduledDate, duration);
 
     const pvSymbol = parseMeetingSymbol(rawTitle, categoryText, date);
-    const partNumber = titleMetadata.partNumber;
     videos.push({
       id: assetId,
       // The canonical Video.url stays on `/en/` regardless of which locale
@@ -413,10 +397,15 @@ export async function fetchVideosForDate(
       status,
       ...titleMetadata,
       pvSymbol,
+      // pvPart is assigned by the DB on save; freshly-scraped rows don't
+      // know their cluster position yet.
+      pvPart: null,
       pvAvailable: false, // Determined by cron check
-      slug: meetingSlugFromVideo({
+      slug: videoUrl({
         pv_symbol: pvSymbol,
-        part_number: partNumber !== null ? String(partNumber) : null,
+        // Fresh scrapes are treated as pv_part=1 for link purposes; the
+        // backend reconciles on save.
+        pv_part: pvSymbol ? 1 : null,
         asset_id: assetId,
       }),
       hasTranscript: false, // Will be updated later

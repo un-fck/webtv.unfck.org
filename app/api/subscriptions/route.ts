@@ -6,6 +6,7 @@ import {
   getUserVideoSubscriptions,
   getVideoSubscription,
 } from "@/lib/db";
+import { videoUrl } from "@/lib/video-url";
 
 // GET /api/subscriptions
 //   - ?kalturaId=&language=  → { subscribed } for hydrating the per-video toggle
@@ -50,6 +51,20 @@ export async function GET(request: NextRequest) {
         description: f.description,
         subscribedLanguages: languagesByFeed.get(f.key) ?? [],
       })),
-    videoSubscriptions,
+    videoSubscriptions: videoSubscriptions.map((sub) => ({
+      kaltura_id: sub.kaltura_id,
+      language: sub.language,
+      title: sub.title,
+      // Resolved server-side so the UI only has to render the link.
+      slug: sub.asset_id
+        ? videoUrl({
+            asset_id: sub.asset_id,
+            pv_symbol: sub.pv_symbol,
+            pv_part: sub.pv_part,
+          })
+        : null,
+      created_at: sub.created_at,
+      emailed_at: sub.emailed_at,
+    })),
   });
 }

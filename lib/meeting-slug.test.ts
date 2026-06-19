@@ -1,11 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import {
-  slugFromSymbol,
-  symbolFromSlug,
-  meetingSlugFromVideo,
-} from "@/lib/meeting-slug";
+import { slugFromSymbol, symbolFromSlug } from "@/lib/meeting-slug";
 
 // Representative symbol→slug pairs covering every organ pattern (from the
 // module's own doc examples). Doubles as exact-slug spot checks for patterns
@@ -63,43 +59,49 @@ describe("symbol ↔ slug round-trip", () => {
     expect(symbolFromSlug("ga/c3/79/5")).toEqual({
       pvSymbol: "A/C.3/79/PV.5",
       srSymbol: "A/C.3/79/SR.5",
+      pvPart: 1,
     });
     // 1st Committee is verbatim-only (no SR)
-    expect(symbolFromSlug("ga/c1/79/7")).toEqual({ pvSymbol: "A/C.1/79/PV.7" });
+    expect(symbolFromSlug("ga/c1/79/7")).toEqual({
+      pvSymbol: "A/C.1/79/PV.7",
+      pvPart: 1,
+    });
   });
 });
 
-describe("meetingSlugFromVideo", () => {
-  it("prefers the pv_symbol slug", () => {
-    expect(
-      meetingSlugFromVideo({
-        pv_symbol: "S/PV.9748",
-        part_number: null,
-        asset_id: "k1q/k1qabc",
-      }),
-    ).toBe("sc/9748");
+describe("symbolFromSlug trailing /N part suffix", () => {
+  it("treats unsuffixed slugs as part 1", () => {
+    expect(symbolFromSlug("sc/10175")?.pvPart).toBe(1);
+    expect(symbolFromSlug("ga/79/21")?.pvPart).toBe(1);
+    expect(symbolFromSlug("hrc/58/59")?.pvPart).toBe(1);
   });
 
-  it("appends -part-N only when part > 1", () => {
-    const base = {
-      pv_symbol: "A/79/PV.21",
-      asset_id: "k1q/k1qabc",
-    };
-    expect(meetingSlugFromVideo({ ...base, part_number: "1" })).toBe(
-      "ga/79/21",
-    );
-    expect(meetingSlugFromVideo({ ...base, part_number: "2" })).toBe(
-      "ga/79/21-part-2",
-    );
+  it("reads the trailing /N as pvPart", () => {
+    expect(symbolFromSlug("sc/10175/2")).toEqual({
+      pvSymbol: "S/PV.10175",
+      pvPart: 2,
+    });
+    expect(symbolFromSlug("ga/79/21/3")?.pvPart).toBe(3);
+    expect(symbolFromSlug("ga/c3/79/5/2")).toEqual({
+      pvSymbol: "A/C.3/79/PV.5",
+      srSymbol: "A/C.3/79/SR.5",
+      pvPart: 2,
+    });
+    expect(symbolFromSlug("ecosoc/2024/10/4")?.pvPart).toBe(4);
   });
 
-  it("falls back to the asset_id when there is no symbol", () => {
-    expect(
-      meetingSlugFromVideo({
-        pv_symbol: null,
-        part_number: null,
-        asset_id: "k1q/k1qabc",
-      }),
-    ).toBe("meeting/k1q/k1qabc");
+  it("does not consume the meeting number itself as a part", () => {
+    // /sc/10175 is meeting 10175, NOT prefix=sc + part=10175. The canonical
+    // segment-count guard prevents that misread.
+    expect(symbolFromSlug("sc/10175")).toEqual({
+      pvSymbol: "S/PV.10175",
+      pvPart: 1,
+    });
+  });
+
+  it("returns null for non-citation grammars", () => {
+    expect(symbolFromSlug("asset/k1o/k1o43lgs4z")).toBeNull();
+    expect(symbolFromSlug("meeting/k1o/k1o43lgs4z")).toBeNull();
+    expect(symbolFromSlug("garbage")).toBeNull();
   });
 });

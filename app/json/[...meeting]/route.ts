@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getVideoBySlug, getTranscriptByKalturaId } from "@/lib/db";
+import {
+  getVideoByAssetId,
+  getVideoByCitation,
+  getTranscriptByKalturaId,
+} from "@/lib/db";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import {
   getSpeakerMapping,
@@ -8,6 +12,7 @@ import {
 } from "@/lib/speakers";
 import { getCountryName } from "@/lib/country-lookup";
 import { symbolFromSlug } from "@/lib/meeting-slug";
+import { videoUrl } from "@/lib/video-url";
 import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
 import {
   buildSpeakerSegments,
@@ -24,17 +29,16 @@ export async function GET(
     const { meeting } = await context.params;
     const slug = meeting.map(decodeURIComponent).join("/");
 
-    // Validate pattern
-    const isValidPattern =
-      symbolFromSlug(slug) !== null || slug.startsWith("meeting/");
-    if (!isValidPattern) {
-      return NextResponse.json(
-        { error: "Invalid meeting path" },
-        { status: 404 },
-      );
+    let record = null;
+    if (slug.startsWith("asset/")) {
+      const assetId = slug.slice("asset/".length);
+      record = await getVideoByAssetId(assetId);
+    } else {
+      const parsed = symbolFromSlug(slug);
+      if (parsed) {
+        record = await getVideoByCitation(parsed.pvSymbol, parsed.pvPart);
+      }
     }
-
-    const record = await getVideoBySlug(slug);
     if (!record) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
@@ -119,7 +123,7 @@ export async function GET(
           })
         : "";
       const header = [
-        `UN Transcripts — https://transcripts.un.org/en/${slug}`,
+        `UN Transcripts — https://transcripts.un.org/en/${videoUrl(record)}`,
         [title, video.body, date].filter(Boolean).join(" — "),
         `Language: ${transcript.language_code}`,
         TRANSCRIPT_DISCLAIMER,
@@ -187,8 +191,9 @@ export async function GET(
         event_code: video.eventCode,
         event_type: video.eventType,
         session_number: video.sessionNumber,
-        part_number: video.partNumber,
-        slug,
+        pv_symbol: record.pv_symbol,
+        pv_part: record.pv_part,
+        slug: videoUrl(record),
       },
       metadata: {
         summary: metadata.summary,

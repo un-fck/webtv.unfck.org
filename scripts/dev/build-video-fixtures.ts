@@ -31,7 +31,6 @@ interface DumpRow {
   eventType: string | null;
   body: string | null;
   sessionNumber: string | null;
-  partNumber: number | null;
   cleanTitle: string;
 }
 
@@ -48,7 +47,6 @@ function agrees(row: DumpRow): boolean {
     meta.eventType === row.eventType &&
     meta.body === row.body &&
     meta.sessionNumber === row.sessionNumber &&
-    meta.partNumber === row.partNumber &&
     cleanTitle(row.title, meta) === row.cleanTitle
   );
 }
@@ -69,7 +67,6 @@ const buckets: Array<{ name: string; pred: (r: DumpRow) => boolean }> = [
   },
   { name: "trusteeship", pred: (r) => r.body === "Trusteeship Council" },
   { name: "event-code", pred: (r) => r.eventCode !== null },
-  { name: "part-number", pred: (r) => r.partNumber !== null },
   { name: "session-number", pred: (r) => r.sessionNumber !== null },
   { name: "no-body", pred: (r) => r.body === null },
 ];

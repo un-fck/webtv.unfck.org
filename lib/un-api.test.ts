@@ -22,7 +22,6 @@ interface VideoFixture {
     eventType: string | null;
     body: string | null;
     sessionNumber: string | null;
-    partNumber: number | null;
     cleanTitle: string;
     pvSymbol: string | null;
     statusWhenFinished: "finished" | "live" | "scheduled";
@@ -48,7 +47,6 @@ describe("title metadata extraction (real UN video titles)", () => {
       eventType: fx.expected.eventType,
       body: fx.expected.body,
       sessionNumber: fx.expected.sessionNumber,
-      partNumber: fx.expected.partNumber,
     });
     expect(cleanTitle(fx.title, meta)).toBe(fx.expected.cleanTitle);
   });
@@ -70,8 +68,8 @@ describe("videoToRecord (real rows)", () => {
       eventType: fx.expected.eventType,
       body: fx.expected.body,
       sessionNumber: fx.expected.sessionNumber,
-      partNumber: fx.expected.partNumber,
       pvSymbol: fx.expected.pvSymbol,
+      pvPart: null,
       pvAvailable: false,
       slug: "",
       hasTranscript: false,
