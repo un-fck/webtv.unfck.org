@@ -378,7 +378,13 @@
     "removed": "تمت إزالة هذا الفيديو من UN Web TV.",
     "removedHadTranscript": "أُنشئ التفريغ أدناه عندما كان التسجيل لا يزال متاحًا.",
     "removedNoTranscript": "لم يعد التسجيل متاحًا للتشغيل أو التفريغ.",
-    "backToHomepage": "← العودة إلى الصفحة الرئيسية"
+    "backToHomepage": "← العودة إلى الصفحة الرئيسية",
+    "formats": {
+      "title": "صيغ قابلة للقراءة آليًا",
+      "text": "تفريغ نصي عادي",
+      "json": "JSON منظم",
+      "api": "وثائق API وLLM"
+    }
   },
   "subscribeToggle": {
     "subscribed": "مشترك",

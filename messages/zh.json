@@ -378,7 +378,13 @@
     "removed": "本视频已从联合国网络电视移除。",
     "removedHadTranscript": "下方的转录是在录像仍然可用时生成的。",
     "removedNoTranscript": "录像不再可用于播放或转录。",
-    "backToHomepage": "← 返回首页"
+    "backToHomepage": "← 返回首页",
+    "formats": {
+      "title": "机器可读格式",
+      "text": "纯文本转录",
+      "json": "结构化 JSON",
+      "api": "API 与 LLM 文档"
+    }
   },
   "subscribeToggle": {
     "subscribed": "已订阅",

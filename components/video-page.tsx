@@ -170,6 +170,10 @@ export async function renderVideoPage({
     },
   };
 
+  const tFormats = await getTranslations({ locale, namespace: "video.formats" });
+  const textHref = `/${locale}/${canonicalPath}.txt`;
+  const jsonHref = `/${locale}/${canonicalPath}.json`;
+
   return (
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">
       <script
@@ -182,6 +186,45 @@ export async function renderVideoPage({
         metadata={metadata}
         isLoggedIn={isLoggedIn}
       />
+      {/* Server-rendered after the (client-only) transcript panel so an
+          agent fetching this URL with no JS sees fully-qualified, fetchable
+          URLs to the .txt / .json siblings and the site-wide llms.txt.
+          Position is "below the transcript" in the rendered DOM but —
+          critically — appears in the initial HTML payload before hydration,
+          which is what HTML-parsing crawlers see. */}
+      <section
+        aria-labelledby="machine-formats-heading"
+        className="border-t border-border bg-muted/40 px-4 py-6 sm:px-6"
+      >
+        <div className="mx-auto max-w-5xl">
+          <h2
+            id="machine-formats-heading"
+            className="text-sm font-semibold text-foreground"
+          >
+            {tFormats("title")}
+          </h2>
+          <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+            <li>
+              {tFormats("text")}:{" "}
+              <a href={textHref} className="text-primary underline">
+                <code>{textHref}</code>
+              </a>
+            </li>
+            <li>
+              {tFormats("json")}:{" "}
+              <a href={jsonHref} className="text-primary underline">
+                <code>{jsonHref}</code>
+              </a>
+            </li>
+            <li>
+              {tFormats("api")}:{" "}
+              <a href="/llms.txt" className="text-primary underline">
+                <code>/llms.txt</code>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
     </main>
   );
 }
