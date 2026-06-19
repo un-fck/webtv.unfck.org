@@ -52,10 +52,22 @@ export async function buildVideoMetadata({
   const canonicalPath = videoUrl(record);
   const ogImage = `/api/og/meeting/${canonicalPath}`;
 
+  // Per-meeting machine-readable siblings. Each gets a <link rel="alternate"
+  // type="..."> in <head> (Next.js Metadata.alternates.types) so HTML-only
+  // crawlers discover the .txt/.json variants without needing the HTTP Link
+  // header set by proxy.ts.
+  const langAlternates = alternatesFor(locale, `/${canonicalPath}`);
+
   return {
     title: pageTitle,
     description,
-    alternates: alternatesFor(locale, `/${canonicalPath}`),
+    alternates: {
+      ...langAlternates,
+      types: {
+        "text/plain": `/${locale}/${canonicalPath}.txt`,
+        "application/json": `/${locale}/${canonicalPath}.json`,
+      },
+    },
     openGraph: {
       type: "article",
       siteName: siteTitle,

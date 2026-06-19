@@ -9,6 +9,12 @@ const intl = createMiddleware(routing);
 // format. See app/api/data/[locale]/[...path]/route.ts for the actual handler.
 const DATA_PATH = /^\/(ar|zh|en|fr|ru|es)\/(.+)\.(json|txt)$/;
 
+// Locale-prefixed paths whose first sub-segment names a meeting (citation
+// prefixes from lib/meeting-slug.ts plus the `asset/...` permalink form).
+// Used to decide whether to emit per-meeting `.txt`/`.json` Link headers.
+const MEETING_PATH =
+  /^\/(?:ar|zh|en|fr|ru|es)\/(sc|ga|hrc|ecosoc|cat|cerd|ccpr|cedaw|crc|crpd|cescr|cmw|ced|spt|briefing|asset)\//;
+
 export default function middleware(req: NextRequest) {
   const m = req.nextUrl.pathname.match(DATA_PATH);
   if (m) {
@@ -23,7 +29,30 @@ export default function middleware(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  return intl(req);
+  const res = intl(req);
+
+  // Discovery hints for LLM crawlers. The llms.txt spec doesn't standardize
+  // a discovery mechanism; the de-facto convention (Mintlify-hosted docs
+  // like docs.anthropic.com, docs.cursor.com) is HTTP `Link` headers with
+  // `rel="llms-txt"` / `rel="llms-full-txt"`. Always emitted here; per-
+  // meeting `.txt` / `.json` alternates are appended only on meeting URLs.
+  //
+  // We set this in proxy.ts (not next.config.ts `headers()`) because next-
+  // intl's middleware response replaces the default Next response, so
+  // routing-layer `headers()` does not propagate to locale-routed pages.
+  res.headers.append(
+    "Link",
+    '</llms.txt>; rel="llms-txt", </llms-full.txt>; rel="llms-full-txt"',
+  );
+  const pathname = req.nextUrl.pathname;
+  if (MEETING_PATH.test(pathname)) {
+    res.headers.append(
+      "Link",
+      `<${pathname}.txt>; rel="alternate"; type="text/plain", <${pathname}.json>; rel="alternate"; type="application/json"`,
+    );
+  }
+
+  return res;
 }
 
 export const config = {

@@ -75,11 +75,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // x-default points at English when present; otherwise omit so we don't
     // direct crawlers at a locale that has no transcript for this meeting.
     if (byLang.en) languages["x-default"] = `${base}/en/${slug}`;
+    // Same hreflang grouping for the .txt sibling — LLM crawlers that follow
+    // sitemap.xml (most do, since they share infra with search) get a direct
+    // path to the plain-text transcript.
+    const textLanguages: Record<string, string> = Object.fromEntries(
+      Object.keys(byLang).map((l) => [l, `${base}/${l}/${slug}.txt`]),
+    );
+    if (byLang.en) textLanguages["x-default"] = `${base}/en/${slug}.txt`;
     for (const locale of Object.keys(byLang)) {
       meetingEntries.push({
         url: `${base}/${locale}/${slug}`,
         lastModified: byLang[locale],
         alternates: { languages },
+      });
+      meetingEntries.push({
+        url: `${base}/${locale}/${slug}.txt`,
+        lastModified: byLang[locale],
+        alternates: { languages: textLanguages },
       });
     }
   }
