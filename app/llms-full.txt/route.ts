@@ -46,7 +46,7 @@ Returns a paginated list of UN meetings matching the given filters. Covers the l
 | \`category\` | string | Filter by meeting category. |
 | \`date\`  | YYYY-MM-DD | Filter to a specific date. |
 | \`sort\`  | enum | \`date_desc\` (default), \`date_asc\`, \`title_asc\`, \`title_desc\` |
-| \`offset\`| integer | Pagination offset. Results come in chunks of 100. |
+| \`offset\`| integer | Pagination offset. Results come in chunks of 250. |
 | \`text\`  | string (multi) | Filter by available documents: \`transcript\`, \`pv\` (verbatim record), \`sr\` (summary record). |
 | \`xlang\` | \`1\` | Include meetings not yet available in the URL locale (default: hide them). |
 

@@ -43,8 +43,10 @@ const SUPPORTED_LOCALES = routing.locales as readonly string[];
 const SUPPORTED_FORMATS = ["json", "text"] as const;
 type Format = (typeof SUPPORTED_FORMATS)[number];
 
-// Chunks of 100 match the homepage feed (lib/cached-db) so cache keys line up.
-const LIST_PAGE_SIZE = 100;
+// Page size for the public data API. Larger than the homepage feed's 100
+// chunk (lib/cached-db) — the homepage is paginated for UI rendering, this
+// surface is read by machines / LLMs that want fewer round-trips.
+const LIST_PAGE_SIZE = 250;
 const LIST_DAYS_BACK = 365;
 
 const SORT_VALUES = ["date_desc", "date_asc", "title_asc", "title_desc"];
@@ -429,14 +431,18 @@ async function handleList(
   const hasMore = offset + items.length < total;
 
   if (format === "text") {
+    const header = `# date        slug                  has_transcript  body — title
+# [T] = transcript available at /${locale}/{slug}.txt and .json
+\n`;
     const lines = items.map((m) => {
       const d = m.date ? new Date(m.date).toISOString().slice(0, 10) : "?";
-      return `${d}  ${m.slug.padEnd(20)}  ${m.body ?? ""} — ${m.title}`;
+      const t = m.hasTranscript ? "[T]" : "[ ]";
+      return `${d}  ${m.slug.padEnd(20)}  ${t}  ${m.body ?? ""} — ${m.title}`;
     });
     const tail = hasMore
       ? `\n... ${total - (offset + items.length)} more. Append ?offset=${offset + items.length} for the next page.\n`
       : "";
-    return textResponse(lines.join("\n") + tail + "\n");
+    return textResponse(header + lines.join("\n") + tail + "\n");
   }
 
   return jsonHeaders(

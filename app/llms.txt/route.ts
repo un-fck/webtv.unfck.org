@@ -18,7 +18,7 @@ The locale prefix in the URL (\`/en\`, \`/fr\`, \`/ar\`, \`/zh\`, \`/ru\`, \`/es
 
 ## How to use (search → read)
 
-- Search meetings: \`GET /en/meetings.json?q={query}\` — search meeting titles and metadata with filters for body, category, date, and document type. Paginated (100 per page). Covers the last 365 days. Note: searches titles/metadata only, not transcript content.
+- Search meetings: \`GET /en/meetings.json?q={query}\` — search meeting titles and metadata with filters for body, category, date, and document type. Paginated (250 per page). Covers the last 365 days. Note: searches titles/metadata only, not transcript content.
 - Read transcript (text): \`GET /en/{slug}.txt\` — plain-text transcript with speaker labels, compact for LLM context.
 - Read transcript (JSON): \`GET /en/{slug}.json\` — structured JSON with timestamps, speakers, topics, and optional word-level timing.
 - [Full API reference](/llms-full.txt): detailed query parameters, response shapes, and known limitations.
