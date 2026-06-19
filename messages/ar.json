@@ -135,6 +135,7 @@
     "linksLabel": "روابط الأمم المتحدة",
     "links": {
       "siteIndex": "دليل الموقع",
+      "llmsTxt": "لوكلاء الذكاء الاصطناعي",
       "contact": "اتصل بنا",
       "copyright": "حقوق النشر والطبع",
       "faq": "أسئلة شائعة",
@@ -381,9 +382,8 @@
     "backToHomepage": "← العودة إلى الصفحة الرئيسية",
     "formats": {
       "title": "صيغ قابلة للقراءة آليًا",
-      "text": "تفريغ نصي عادي",
-      "json": "JSON منظم",
-      "api": "وثائق API وLLM"
+      "text": "نص عادي",
+      "json": "JSON"
     }
   },
   "subscribeToggle": {

@@ -36,6 +36,10 @@ function isWidePathname(pathname: string): boolean {
 
 const LINK_PATHS = {
   siteIndex: "site-index",
+  // llms.txt is our own site, not un.org — handled specially in linkHref.
+  // Inserted next to siteIndex (the alphabetical index of pages) because
+  // it serves the same purpose for AI agents (an index of resources).
+  llmsTxt: null,
   contact: "contact-us-0",
   copyright: "about-us/copyright",
   faq: "about-us/frequently-asked-questions",
@@ -51,6 +55,7 @@ type LinkKey = keyof typeof LINK_PATHS;
 // English semantic order.
 const DEFAULT_LINK_ORDER: LinkKey[] = [
   "siteIndex",
+  "llmsTxt",
   "contact",
   "copyright",
   "faq",
@@ -68,6 +73,7 @@ const LINK_ORDER: Partial<Record<string, LinkKey[]>> = {
     "copyright",
     "faq",
     "siteIndex",
+    "llmsTxt",
   ],
   es: [
     "fraudAlert",
@@ -77,13 +83,15 @@ const LINK_ORDER: Partial<Record<string, LinkKey[]>> = {
     "privacyNotice",
     "copyright",
     "siteIndex",
+    "llmsTxt",
   ],
 };
 
 function linkHref(key: LinkKey, locale: string): string {
+  if (key === "llmsTxt") return "/llms.txt";
   // The Chinese contact page is the one URL that differs across locales.
   const path =
-    key === "contact" && locale === "zh" ? "contact" : LINK_PATHS[key];
+    key === "contact" && locale === "zh" ? "contact" : LINK_PATHS[key]!;
   return unUrl(path, locale);
 }
 

@@ -135,6 +135,7 @@
     "linksLabel": "Liens des Nations Unies",
     "links": {
       "siteIndex": "Index de A à Z",
+      "llmsTxt": "Pour les agents IA",
       "contact": "Contactez-nous",
       "copyright": "Droits d'auteur",
       "faq": "FAQ",
@@ -381,9 +382,8 @@
     "backToHomepage": "← Retour à l'accueil",
     "formats": {
       "title": "Formats lisibles par machine",
-      "text": "Transcription en texte brut",
-      "json": "JSON structuré",
-      "api": "Documentation API et LLM"
+      "text": "Texte brut",
+      "json": "JSON"
     }
   },
   "subscribeToggle": {

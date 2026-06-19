@@ -118,6 +118,7 @@
     "linksLabel": "United Nations links",
     "links": {
       "siteIndex": "A-Z Site Index",
+      "llmsTxt": "For AI agents",
       "contact": "Contact",
       "copyright": "Copyright",
       "faq": "FAQ",
@@ -279,9 +280,8 @@
     "backToHomepage": "← Back to homepage",
     "formats": {
       "title": "Machine-readable formats",
-      "text": "Plain-text transcript",
-      "json": "Structured JSON",
-      "api": "API & LLM documentation"
+      "text": "Plain text",
+      "json": "JSON"
     }
   },
   "pv": {

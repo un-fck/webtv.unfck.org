@@ -135,6 +135,7 @@
     "linksLabel": "Enlaces de las Naciones Unidas",
     "links": {
       "siteIndex": "Índice del sitio",
+      "llmsTxt": "Para agentes de IA",
       "contact": "Comuníquese con nosotros",
       "copyright": "Propiedad intelectual",
       "faq": "Preguntas Frecuentes",
@@ -381,9 +382,8 @@
     "backToHomepage": "← Volver al inicio",
     "formats": {
       "title": "Formatos legibles por máquina",
-      "text": "Transcripción en texto plano",
-      "json": "JSON estructurado",
-      "api": "Documentación API y LLM"
+      "text": "Texto plano",
+      "json": "JSON"
     }
   },
   "subscribeToggle": {

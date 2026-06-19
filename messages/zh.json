@@ -135,6 +135,7 @@
     "linksLabel": "联合国链接",
     "links": {
       "siteIndex": "网址索引",
+      "llmsTxt": "面向 AI 智能体",
       "contact": "联系我们",
       "copyright": "版权所有",
       "faq": "常见问题解答",
@@ -381,9 +382,8 @@
     "backToHomepage": "← 返回首页",
     "formats": {
       "title": "机器可读格式",
-      "text": "纯文本转录",
-      "json": "结构化 JSON",
-      "api": "API 与 LLM 文档"
+      "text": "纯文本",
+      "json": "JSON"
     }
   },
   "subscribeToggle": {
