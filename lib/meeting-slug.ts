@@ -18,6 +18,40 @@
  */
 
 /**
+ * Top-level path segments under `/{locale}/` that address a meeting page —
+ * the citation prefixes from the slug grammar above, plus `asset` for the
+ * Web TV-mirroring permalink form. Single source of truth, used by:
+ *
+ *   - proxy.ts (MEETING_PATH regex — decides where to append per-page
+ *     .txt/.json Link headers)
+ *   - components/site-footer.tsx (WIDE_SEGMENTS — decides which routes get
+ *     the wider page layout, matching the meeting page itself)
+ *
+ * Add a prefix here whenever a new citation family is introduced.
+ */
+export const MEETING_URL_PREFIXES = [
+  "sc",
+  "ga",
+  "hrc",
+  "ecosoc",
+  // Human rights treaty bodies
+  "cat",
+  "cerd",
+  "ccpr",
+  "cedaw",
+  "crc",
+  "crpd",
+  "cescr",
+  "cmw",
+  "ced",
+  "spt",
+  // Daily press briefings
+  "briefing",
+  // Permalink form (mirrors webtv.un.org/{locale}/asset/{id})
+  "asset",
+] as const;
+
+/**
  * Treaty-body symbol prefixes. The slug is `{acronym}/{n}` regardless of
  * which symbol family the body uses (most are `{ACRONYM}/C/SR.N`; CESCR
  * sits under ECOSOC as `E/C.12/SR.N`; SPT uses `CAT/OP/SR.N`).

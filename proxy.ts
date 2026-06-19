@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
+import { MEETING_URL_PREFIXES } from "./lib/meeting-slug";
 
 const intl = createMiddleware(routing);
 
@@ -9,11 +10,11 @@ const intl = createMiddleware(routing);
 // format. See app/api/data/[locale]/[...path]/route.ts for the actual handler.
 const DATA_PATH = /^\/(ar|zh|en|fr|ru|es)\/(.+)\.(json|txt)$/;
 
-// Locale-prefixed paths whose first sub-segment names a meeting (citation
-// prefixes from lib/meeting-slug.ts plus the `asset/...` permalink form).
-// Used to decide whether to emit per-meeting `.txt`/`.json` Link headers.
-const MEETING_PATH =
-  /^\/(?:ar|zh|en|fr|ru|es)\/(sc|ga|hrc|ecosoc|cat|cerd|ccpr|cedaw|crc|crpd|cescr|cmw|ced|spt|briefing|asset)\//;
+// Locale-prefixed paths whose first sub-segment names a meeting. Used to
+// decide whether to emit per-meeting `.txt`/`.json` Link headers.
+const MEETING_PATH = new RegExp(
+  `^\\/(?:ar|zh|en|fr|ru|es)\\/(?:${MEETING_URL_PREFIXES.join("|")})\\/`,
+);
 
 export default function middleware(req: NextRequest) {
   const m = req.nextUrl.pathname.match(DATA_PATH);
