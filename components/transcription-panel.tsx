@@ -988,27 +988,34 @@ export function TranscriptionPanel({
     triggerDownload(body, "vtt", "text/vtt;charset=utf-8");
   };
 
-  // True until the very first run of the check-cache effect. Lets us skip the
-  // /check round-trip on initial mount when the meeting page passed a server-
-  // fetched `initialTranscript`. Subsequent runs (the user changing language)
-  // always go through the normal reset + fetch flow.
-  const consumedInitialRef = useRef(false);
+  // Tracks the language we've already wired the panel for, so the effect
+  // is a no-op when it re-fires with the same (kalturaId, selectedLanguage).
+  // Critical for React Strict Mode dev double-invocation: a naive "consumed
+  // once" boolean ran the skip-branch on the first invoke then the reset+
+  // fetch branch on Strict Mode's second invoke, flipping `checking` true
+  // for a frame and producing a spurious "Checking for existing transcript"
+  // spinner even on pages whose SSR'd transcript was fully populated.
+  // Compare against the actual deps instead — only do work when they
+  // actually changed.
+  const wiredKeyRef = useRef<string | null>(null);
 
   // Check cache on mount and language change
   useEffect(() => {
-    if (!consumedInitialRef.current) {
-      consumedInitialRef.current = true;
-      if (hasMatchingInitial) {
-        // SSR pre-loaded statements, speakerMappings, topics, propositions
-        // (and segments + countryNames are computed inline via useMemo, so
-        // they're already in the SSR DOM). Only side-effect left to do is
-        // pulling word-level timestamps for karaoke/click-to-seek.
-        const ctrl = new AbortController();
-        pollAbortRef.current = ctrl;
-        setChecking(false);
-        void loadWords(initialTranscript!.transcriptId, ctrl.signal);
-        return () => ctrl.abort();
-      }
+    const key = `${kalturaId}|${selectedLanguage}`;
+    if (wiredKeyRef.current === key) return;
+    const firstWire = wiredKeyRef.current === null;
+    wiredKeyRef.current = key;
+
+    if (firstWire && hasMatchingInitial) {
+      // SSR pre-loaded statements, speakerMappings, topics, propositions
+      // (and segments + countryNames are computed inline via useMemo, so
+      // they're already in the SSR DOM). Only side-effect left to do is
+      // pulling word-level timestamps for karaoke/click-to-seek.
+      const ctrl = new AbortController();
+      pollAbortRef.current = ctrl;
+      setChecking(false);
+      void loadWords(initialTranscript!.transcriptId, ctrl.signal);
+      return () => ctrl.abort();
     }
 
     setStatements(null);
