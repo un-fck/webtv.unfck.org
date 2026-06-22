@@ -377,6 +377,12 @@ async function handleList(
   const dateRaw = sp.get("date");
   const date =
     dateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : undefined;
+  const fromRaw = sp.get("from");
+  const dateFrom =
+    fromRaw && /^\d{4}-\d{2}-\d{2}$/.test(fromRaw) ? fromRaw : undefined;
+  const toRaw = sp.get("to");
+  const dateTo =
+    toRaw && /^\d{4}-\d{2}-\d{2}$/.test(toRaw) ? toRaw : undefined;
   const docs = sp
     .getAll("text")
     .filter((d) => ["transcript", "pv", "sr"].includes(d));
@@ -394,6 +400,8 @@ async function handleList(
     q,
     daysBack: LIST_DAYS_BACK,
     date,
+    dateFrom,
+    dateTo,
     category: sp.get("category") || undefined,
     docs: docs.length ? docs : undefined,
     sort: { by, dir },

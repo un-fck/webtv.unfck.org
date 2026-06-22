@@ -163,7 +163,15 @@ export function buildSpec(): Record<string, unknown> {
             qp("category", "Filter by WebTV category name.", {
               type: "string",
             }),
-            qp("date", "Filter to a single date (YYYY-MM-DD).", {
+            qp("date", "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.", {
+              type: "string",
+              pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+            }),
+            qp("from", "Inclusive start of a date range (YYYY-MM-DD).", {
+              type: "string",
+              pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+            }),
+            qp("to", "Inclusive end of a date range (YYYY-MM-DD).", {
               type: "string",
               pattern: "^\\d{4}-\\d{2}-\\d{2}$",
             }),
@@ -180,8 +188,10 @@ export function buildSpec(): Record<string, unknown> {
               in: "query",
               required: false,
               description:
-                "Restrict to meetings that have the given document(s). " +
-                "Repeat to require multiple.",
+                "Filter by available document type. `transcript` = has an automatic transcript; " +
+                "`pv` = has an official verbatim record; `sr` = has an official summary record. " +
+                "Repeat to require multiple (e.g. `text=transcript&text=pv`). " +
+                "Use `text=transcript` to exclude meetings with no content to read.",
               schema: {
                 type: "array",
                 items: { type: "string", enum: ["transcript", "pv", "sr"] },

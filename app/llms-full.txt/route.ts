@@ -44,10 +44,12 @@ Returns a paginated list of UN meetings matching the given filters. Covers the l
 |-----------|------|-------------|
 | \`q\`     | string | Search meeting titles and metadata (not transcript content). Min 2 characters. |
 | \`category\` | string | Filter by meeting category. |
-| \`date\`  | YYYY-MM-DD | Filter to a specific date. |
+| \`date\`  | YYYY-MM-DD | Filter to a specific date. Mutually exclusive with \`from\`/\`to\`. |
+| \`from\`  | YYYY-MM-DD | Inclusive start of a date range. |
+| \`to\`    | YYYY-MM-DD | Inclusive end of a date range. |
 | \`sort\`  | enum | \`date_desc\` (default), \`date_asc\`, \`title_asc\`, \`title_desc\` |
 | \`offset\`| integer | Pagination offset. Results come in chunks of 250. |
-| \`text\`  | string (multi) | Filter by available documents: \`transcript\`, \`pv\` (verbatim record), \`sr\` (summary record). |
+| \`text\`  | string (multi) | Filter by document type: \`transcript\` = has automatic transcript; \`pv\` = has official verbatim record; \`sr\` = has official summary record. Use \`text=transcript\` to exclude meetings with no content. |
 | \`xlang\` | \`1\` | Include meetings not yet available in the URL locale (default: hide them). |
 
 ### Response shape
@@ -233,6 +235,13 @@ Closed or confidential meetings are not covered (they are not recorded on Web TV
 - **Time window**: search and browse cover the last 365 days, matching the website homepage.
 - **Transcript accuracy**: these are automatic speech recognition outputs, not official records. Names, abbreviations, and document symbols may be misheard. Accuracy varies by speaker and microphone quality.
 - **Languages**: six UN languages are supported (en, fr, es, ar, zh, ru). Not every meeting has transcripts in all languages — it depends on which audio tracks are available.
+
+---
+
+## Machine-readable spec
+
+OpenAPI 3.0 spec: \`GET /openapi.json\`
+Interactive reference: \`/openapi\`
 `;
 
 export function GET() {
