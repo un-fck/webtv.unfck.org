@@ -18,43 +18,10 @@ import { widePageWidth } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "@/components/external-link";
 import { VideoPageClient } from "@/components/video-page-client";
-import { getActiveTranscriptByKalturaId } from "@/lib/db";
-import { getSpeakerMapping } from "@/lib/speakers";
-import { stripWordsFromStatements } from "@/lib/strip-words";
-import type { InitialTranscript } from "@/components/transcription-panel";
-
-async function loadInitialTranscript({
-  kalturaId,
-  locale,
-  isLoggedIn,
-}: {
-  kalturaId: string;
-  locale: string;
-  isLoggedIn: boolean;
-}): Promise<InitialTranscript | null> {
-  const transcript = await getActiveTranscriptByKalturaId(kalturaId, locale);
-  if (
-    !transcript ||
-    transcript.transcription_status !== "completed" ||
-    !transcript.content.statements?.length
-  ) {
-    return null;
-  }
-  const speakerMappings =
-    (await getSpeakerMapping(transcript.transcript_id)) || {};
-  return {
-    statements: stripWordsFromStatements(transcript.content.statements),
-    speakerMappings,
-    topics: transcript.content.topics || {},
-    // Propositions are gated on login in /api/transcripts/check — mirror
-    // that here so signed-out viewers don't see private analysis in the SSR
-    // payload (and anonymous Bing/Copilot snippet pipelines never see it).
-    propositions: isLoggedIn ? transcript.content.propositions || [] : [],
-    transcriptId: transcript.transcript_id,
-    language: transcript.language_code ?? locale,
-    analysisStatus: transcript.analysis_status,
-  };
-}
+import { MeetingStateProvider } from "@/components/meeting-state/meeting-state";
+import { ServerTranscript } from "@/components/server-transcript";
+import { TranscriptSkeleton } from "@/components/transcript-skeleton";
+import { Suspense } from "react";
 
 function formatMetaDate(iso: string, locale: string): string {
   const d = new Date(iso);
@@ -213,31 +180,41 @@ export async function renderVideoPage({
   const textHref = `/${locale}/${canonicalPath}.txt`;
   const jsonHref = `/${locale}/${canonicalPath}.json`;
 
-  // Server-fetch the transcript for the URL locale so the rendered HTML
-  // includes the full transcript text (no client round-trip needed for first
-  // paint, and no-JS crawlers see the content). The panel skips its own
-  // /check fetch when this is supplied. Word-level timestamps are stripped
-  // here — they're 63% of the payload and the panel pulls them lazily via
-  // /api/transcripts/[id]/words once the transcript is on screen.
-  const initialTranscript = await loadInitialTranscript({
-    kalturaId,
-    locale,
-    isLoggedIn,
-  });
-
+  // Streaming SSR: the page shell (header, player, sidebar, machine-formats
+  // line below) is rendered synchronously and flushed at ~TTFB. The
+  // <ServerTranscript> inside the Suspense boundary awaits the transcript
+  // DB query in parallel; its resolved markup arrives as a late HTTP chunk
+  // and React swaps the skeleton for the real transcript in place. No-JS
+  // crawlers wait for the full response and see the transcript text inline
+  // either way — but humans see chrome paint at ~150 ms instead of ~700.
+  //
+  // State shared across the Suspense boundary (selectedLanguage, panelData,
+  // player, …) lives in <MeetingStateProvider> above, so the chrome
+  // (VideoPageClient) and the streamed-in panel can both read/write it.
   return (
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <VideoPageClient
-        kalturaId={kalturaId}
-        video={video}
-        metadata={metadata}
-        isLoggedIn={isLoggedIn}
-        initialTranscript={initialTranscript}
-      />
+      <MeetingStateProvider kalturaId={kalturaId}>
+        <VideoPageClient
+          kalturaId={kalturaId}
+          video={video}
+          metadata={metadata}
+          isLoggedIn={isLoggedIn}
+        >
+          <Suspense fallback={<TranscriptSkeleton />}>
+            <ServerTranscript
+              kalturaId={kalturaId}
+              locale={locale}
+              isLoggedIn={isLoggedIn}
+              video={video}
+              record={record}
+            />
+          </Suspense>
+        </VideoPageClient>
+      </MeetingStateProvider>
       {/* Server-rendered after the (client-only) transcript panel so an
           agent fetching this URL with no JS sees fetchable links to the
           .txt / .json siblings. Position is "below the transcript" in the
