@@ -1,0 +1,1611 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "UN Transcripts API",
+    "version": "1.0.0",
+    "description": "Public, read-only API for UN Web TV meeting records and automatically generated transcripts.\n\nMeeting URLs use human-readable slugs derived from official UN document symbols (S/PV.10175 → `sc/10175`, A/79/PV.21 → `ga/79/21`). Append `.json` or `.txt` to any meeting page URL to get the same content as data. Videos without a document symbol are addressable at `/{locale}/asset/{asset_id}`.\n\nTranscripts are produced by automatic speech recognition over real meeting audio — not official records. The authoritative record is the UN verbatim (PV) or summary (SR) document; see `GET /api/pv`."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "meetings",
+      "description": "Meeting records and transcripts."
+    },
+    {
+      "name": "discovery",
+      "description": "Audio tracks and source documents."
+    },
+    {
+      "name": "health",
+      "description": "Service status."
+    }
+  ],
+  "paths": {
+    "/{locale}/meetings.json": {
+      "get": {
+        "tags": [
+          "meetings"
+        ],
+        "summary": "Browse or search meetings (JSON)",
+        "description": "Paginated list of meetings within the last 365 days, newest first. Supports full-text search and filtering. Page size is 250.",
+        "operationId": "listMeetings",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "path",
+            "required": true,
+            "description": "One of the six official UN languages.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "zh",
+                "en",
+                "fr",
+                "ru",
+                "es"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "Full-text search query (min 2 chars).",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "Filter by WebTV category name.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "description": "Filter to a single date (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "Sort order (default date_desc).",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "date_desc",
+                "date_asc",
+                "title_asc",
+                "title_desc"
+              ]
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "description": "Pagination offset.",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "text",
+            "in": "query",
+            "required": false,
+            "description": "Restrict to meetings that have the given document(s). Repeat to require multiple.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "transcript",
+                  "pv",
+                  "sr"
+                ]
+              }
+            },
+            "style": "form",
+            "explode": true
+          },
+          {
+            "name": "xlang",
+            "in": "query",
+            "required": false,
+            "description": "Set to 1 to include transcripts that exist only in other languages.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of meetings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{locale}/meetings.txt": {
+      "get": {
+        "tags": [
+          "meetings"
+        ],
+        "summary": "Browse or search meetings (plain text)",
+        "description": "Same data as `meetings.json` in a compact, LLM-friendly plain-text table. Accepts the same query parameters.",
+        "operationId": "listMeetingsText",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "path",
+            "required": true,
+            "description": "One of the six official UN languages.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "zh",
+                "en",
+                "fr",
+                "ru",
+                "es"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plain-text meeting list.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{locale}/{slug}.json": {
+      "get": {
+        "tags": [
+          "meetings"
+        ],
+        "summary": "Get a single meeting and its transcript (JSON)",
+        "description": "Returns the meeting metadata and transcript for a slug derived from a UN document symbol. The response has one of three shapes depending on transcript availability (completed, in-progress, or absent — see the schema).\n\n`slug` may contain slashes (it is a multi-segment path). Examples:\n- `sc/10175` — Security Council (S/PV.10175)\n- `ga/79/21` — General Assembly plenary (A/79/PV.21)\n- `ga/c1/79/21` — GA First Committee\n- `hrc/55/12` — Human Rights Council\n- `ecosoc/2024/30` — ECOSOC\n- `asset/k1a2b3c4` — permalink for videos without a document symbol",
+        "operationId": "getMeeting",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "path",
+            "required": true,
+            "description": "One of the six official UN languages.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "zh",
+                "en",
+                "fr",
+                "ru",
+                "es"
+              ]
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "description": "Meeting slug derived from a UN document symbol (may contain slashes), or `asset/{asset_id}` for videos without a symbol.",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "securityCouncil": {
+                "value": "sc/10175",
+                "summary": "Security Council"
+              },
+              "generalAssembly": {
+                "value": "ga/79/21",
+                "summary": "GA plenary"
+              },
+              "gaCommittee": {
+                "value": "ga/c1/79/21",
+                "summary": "GA First Committee"
+              },
+              "humanRights": {
+                "value": "hrc/55/12",
+                "summary": "Human Rights Council"
+              },
+              "ecosoc": {
+                "value": "ecosoc/2024/30",
+                "summary": "ECOSOC"
+              },
+              "assetPermalink": {
+                "value": "asset/k1a2b3c4",
+                "summary": "Asset permalink"
+              }
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "description": "Transcript language to return (defaults to the URL locale).",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "zh",
+                "en",
+                "fr",
+                "ru",
+                "es"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The meeting and (if available) its transcript.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown locale, invalid slug, or video not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{locale}/{slug}.txt": {
+      "get": {
+        "tags": [
+          "meetings"
+        ],
+        "summary": "Get a single meeting transcript (plain text)",
+        "description": "Plain-text rendering of the transcript with speaker headers and timecodes. See the `.json` variant for the slug grammar.",
+        "operationId": "getMeetingText",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "path",
+            "required": true,
+            "description": "One of the six official UN languages.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "zh",
+                "en",
+                "fr",
+                "ru",
+                "es"
+              ]
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "description": "Meeting slug derived from a UN document symbol (may contain slashes), or `asset/{asset_id}` for videos without a symbol.",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "securityCouncil": {
+                "value": "sc/10175",
+                "summary": "Security Council"
+              },
+              "generalAssembly": {
+                "value": "ga/79/21",
+                "summary": "GA plenary"
+              },
+              "gaCommittee": {
+                "value": "ga/c1/79/21",
+                "summary": "GA First Committee"
+              },
+              "humanRights": {
+                "value": "hrc/55/12",
+                "summary": "Human Rights Council"
+              },
+              "ecosoc": {
+                "value": "ecosoc/2024/30",
+                "summary": "ECOSOC"
+              },
+              "assetPermalink": {
+                "value": "asset/k1a2b3c4",
+                "summary": "Asset permalink"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plain-text transcript.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown locale, invalid slug, or video not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/languages": {
+      "get": {
+        "tags": [
+          "discovery"
+        ],
+        "summary": "List audio language tracks for a video",
+        "description": "Returns all six UN languages with a flag for whether an audio track exists and the current transcript status for each.",
+        "operationId": "getLanguages",
+        "parameters": [
+          {
+            "name": "kalturaId",
+            "in": "query",
+            "required": true,
+            "description": "Kaltura player ID (the `kaltura_id` field).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available languages and transcript statuses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LanguagesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing kalturaId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pv": {
+      "get": {
+        "tags": [
+          "discovery"
+        ],
+        "summary": "Fetch a UN verbatim/summary record",
+        "description": "Fetches the official UN verbatim (PV) or summary (SR) record PDF for a document symbol, parses it to structured JSON, and caches it. This is the authoritative record (transcripts are not).",
+        "operationId": "getPvDocument",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "description": "UN document symbol, e.g. S/PV.10175.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "description": "Document language (default en).",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "zh",
+                "en",
+                "fr",
+                "ru",
+                "es"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Parsed document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PvResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing symbol.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Document not found or not available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Service health check",
+        "description": "Pings the database. 200 when healthy, 503 otherwise.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Healthy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unreachable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MeetingsResponse": {
+        "type": "object",
+        "properties": {
+          "meetings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "date": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "body": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "category": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "duration": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "hasTranscript": {
+                  "type": "boolean"
+                },
+                "pageUrl": {
+                  "type": "string"
+                },
+                "jsonUrl": {
+                  "type": "string"
+                },
+                "textUrl": {
+                  "type": "string",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "title",
+                "date",
+                "body",
+                "category",
+                "slug",
+                "duration",
+                "hasTranscript",
+                "pageUrl",
+                "jsonUrl",
+                "textUrl"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "totalIncludingOther": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Total ignoring the locale filter (see the xlang param)."
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "meetings",
+          "total",
+          "totalIncludingOther",
+          "hasMore",
+          "offset",
+          "pageSize"
+        ],
+        "additionalProperties": false
+      },
+      "MeetingResponse": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "disclaimer": {
+                "type": "string"
+              },
+              "video": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "UN Web TV asset ID (the DB primary key)."
+                  },
+                  "kaltura_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "title": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "clean_title": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "url": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "date": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "scheduled_time": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "duration": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "category": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "body": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "UN organ / body name."
+                  },
+                  "event_code": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "event_type": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "session_number": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "pv_symbol": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Official UN document symbol."
+                  },
+                  "pv_part": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "slug": {
+                    "type": "string",
+                    "description": "Human-readable meeting slug, e.g. sc/10175."
+                  }
+                },
+                "required": [
+                  "id",
+                  "kaltura_id",
+                  "title",
+                  "clean_title",
+                  "url",
+                  "date",
+                  "scheduled_time",
+                  "status",
+                  "duration",
+                  "category",
+                  "body",
+                  "event_code",
+                  "event_type",
+                  "session_number",
+                  "pv_symbol",
+                  "pv_part",
+                  "slug"
+                ],
+                "additionalProperties": false
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "summary": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "categories": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "geographic_subject": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "subject_topical": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "corporate_name": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "speaker_affiliation": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "related_documents": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "summary",
+                  "description",
+                  "categories",
+                  "geographic_subject",
+                  "subject_topical",
+                  "corporate_name",
+                  "speaker_affiliation",
+                  "related_documents"
+                ],
+                "additionalProperties": false,
+                "description": "Structured metadata harvested from the UN Web TV page."
+              },
+              "transcript": {
+                "type": "object",
+                "properties": {
+                  "transcript_id": {
+                    "type": "string"
+                  },
+                  "language": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "statement_number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "1-based index of the statement."
+                        },
+                        "paragraphs": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sentences": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "text": {
+                                      "type": "string"
+                                    },
+                                    "start": {
+                                      "type": "number",
+                                      "description": "Start time in seconds."
+                                    },
+                                    "end": {
+                                      "type": "number",
+                                      "description": "End time in seconds."
+                                    },
+                                    "topics": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "key": {
+                                            "type": "string"
+                                          },
+                                          "label": {
+                                            "type": "string"
+                                          },
+                                          "description": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "key",
+                                          "label",
+                                          "description"
+                                        ],
+                                        "additionalProperties": false,
+                                        "description": "A substantive policy topic identified across the meeting."
+                                      }
+                                    },
+                                    "words": {
+                                      "description": "Per-word timing; present only when word-level timing exists.",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "text": {
+                                            "type": "string"
+                                          },
+                                          "start": {
+                                            "type": "number",
+                                            "description": "Start time in seconds."
+                                          },
+                                          "end": {
+                                            "type": "number",
+                                            "description": "End time in seconds."
+                                          }
+                                        },
+                                        "required": [
+                                          "text",
+                                          "start",
+                                          "end"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "text",
+                                    "start",
+                                    "end",
+                                    "topics"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": [
+                              "sentences"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "speaker": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "affiliation": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "ISO alpha-3 country code or short affiliation label."
+                            },
+                            "affiliation_full": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "Official UN country name resolved from the ISO code."
+                            },
+                            "group": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "function": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "affiliation",
+                            "affiliation_full",
+                            "group",
+                            "function"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Resolved speaker for a statement."
+                        }
+                      },
+                      "required": [
+                        "statement_number",
+                        "paragraphs",
+                        "speaker"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "topics": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "label",
+                        "description"
+                      ],
+                      "additionalProperties": false,
+                      "description": "A substantive policy topic identified across the meeting."
+                    }
+                  }
+                },
+                "required": [
+                  "transcript_id",
+                  "language",
+                  "data",
+                  "topics"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "disclaimer",
+              "video",
+              "metadata",
+              "transcript"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "disclaimer": {
+                "type": "string"
+              },
+              "video": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "UN Web TV asset ID (the DB primary key)."
+                  },
+                  "kaltura_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "title": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "clean_title": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "url": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "date": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "scheduled_time": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "duration": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "category": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "body": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "UN organ / body name."
+                  },
+                  "event_code": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "event_type": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "session_number": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "pv_symbol": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Official UN document symbol."
+                  },
+                  "pv_part": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "slug": {
+                    "type": "string",
+                    "description": "Human-readable meeting slug, e.g. sc/10175."
+                  }
+                },
+                "required": [
+                  "id",
+                  "kaltura_id",
+                  "title",
+                  "clean_title",
+                  "url",
+                  "date",
+                  "scheduled_time",
+                  "status",
+                  "duration",
+                  "category",
+                  "body",
+                  "event_code",
+                  "event_type",
+                  "session_number",
+                  "pv_symbol",
+                  "pv_part",
+                  "slug"
+                ],
+                "additionalProperties": false
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "summary": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "categories": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "geographic_subject": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "subject_topical": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "corporate_name": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "speaker_affiliation": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "related_documents": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "summary",
+                  "description",
+                  "categories",
+                  "geographic_subject",
+                  "subject_topical",
+                  "corporate_name",
+                  "speaker_affiliation",
+                  "related_documents"
+                ],
+                "additionalProperties": false,
+                "description": "Structured metadata harvested from the UN Web TV page."
+              },
+              "transcript": {
+                "nullable": true
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "disclaimer",
+              "video",
+              "metadata",
+              "transcript",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "disclaimer": {
+                "type": "string"
+              },
+              "video": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "UN Web TV asset ID (the DB primary key)."
+                  },
+                  "kaltura_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "title": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "clean_title": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "url": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "date": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "scheduled_time": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "duration": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "category": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "body": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "UN organ / body name."
+                  },
+                  "event_code": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "event_type": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "session_number": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "pv_symbol": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Official UN document symbol."
+                  },
+                  "pv_part": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "slug": {
+                    "type": "string",
+                    "description": "Human-readable meeting slug, e.g. sc/10175."
+                  }
+                },
+                "required": [
+                  "id",
+                  "kaltura_id",
+                  "title",
+                  "clean_title",
+                  "url",
+                  "date",
+                  "scheduled_time",
+                  "status",
+                  "duration",
+                  "category",
+                  "body",
+                  "event_code",
+                  "event_type",
+                  "session_number",
+                  "pv_symbol",
+                  "pv_part",
+                  "slug"
+                ],
+                "additionalProperties": false
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "summary": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "categories": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "geographic_subject": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "subject_topical": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "corporate_name": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "speaker_affiliation": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "related_documents": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "summary",
+                  "description",
+                  "categories",
+                  "geographic_subject",
+                  "subject_topical",
+                  "corporate_name",
+                  "speaker_affiliation",
+                  "related_documents"
+                ],
+                "additionalProperties": false,
+                "description": "Structured metadata harvested from the UN Web TV page."
+              },
+              "transcript": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "Current pipeline stage."
+                  },
+                  "transcriptId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "transcriptId"
+                ],
+                "additionalProperties": false
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "disclaimer",
+              "video",
+              "metadata",
+              "transcript",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "One of three shapes depending on transcript availability: completed (full transcript), in-progress (status only), or absent (null)."
+      },
+      "LanguagesResponse": {
+        "type": "object",
+        "properties": {
+          "entryId": {
+            "type": "string",
+            "description": "Canonical Kaltura entry ID."
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "enum": [
+                    "ar",
+                    "zh",
+                    "en",
+                    "fr",
+                    "ru",
+                    "es"
+                  ],
+                  "description": "ISO 639-1 code of one of the six official UN languages."
+                },
+                "name": {
+                  "type": "string"
+                },
+                "available": {
+                  "type": "boolean",
+                  "description": "Whether an audio track exists for this language."
+                },
+                "transcriptStatus": {
+                  "type": "string",
+                  "nullable": true,
+                  "description": "Transcription status, or null if none exists."
+                }
+              },
+              "required": [
+                "code",
+                "name",
+                "available",
+                "transcriptStatus"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "entryId",
+          "languages"
+        ],
+        "additionalProperties": false
+      },
+      "PvResponse": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          },
+          "meetingNumber": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "provisional",
+              "official"
+            ]
+          },
+          "president": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "country"
+            ],
+            "additionalProperties": false,
+            "nullable": true
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "country": {
+                  "type": "string"
+                },
+                "representative": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "country",
+                "representative"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "agendaItems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "turns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "speaker": {
+                  "type": "string"
+                },
+                "affiliation": {
+                  "type": "string"
+                },
+                "spokenLanguage": {
+                  "type": "string"
+                },
+                "onBehalfOf": {
+                  "type": "string"
+                },
+                "paragraphNumber": {
+                  "type": "number"
+                },
+                "paragraphs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "speech",
+                    "procedural"
+                  ]
+                },
+                "proceduralParagraphs": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "required": [
+                "speaker",
+                "paragraphs",
+                "type"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "fullText": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "body",
+          "session",
+          "meetingNumber",
+          "date",
+          "location",
+          "language",
+          "status",
+          "president",
+          "members",
+          "agendaItems",
+          "turns",
+          "fullText"
+        ],
+        "additionalProperties": false,
+        "description": "Parsed UN verbatim (PV) or summary (SR) record."
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "DataApiError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "additionalProperties": false,
+        "description": "Error response from the meeting data API."
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "additionalProperties": false,
+        "description": "Structured error response from /api/* routes."
+      }
+    }
+  }
+}

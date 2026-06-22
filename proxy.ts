@@ -59,11 +59,12 @@ export default function middleware(req: NextRequest) {
 export const config = {
   // Two distinct matchers:
   //   1. The next-intl matcher: HTML pages without file extensions and
-  //      excluding internal namespaces (api routes, _next, Sentry tunnel).
+  //      excluding internal namespaces (api routes, _next, Sentry tunnel) and
+  //      the locale-free /openapi API docs page.
   //   2. A second matcher for `.json` / `.txt` URLs under a locale prefix,
   //      so this middleware can rewrite them to the data handler.
   matcher: [
-    "/((?!api|_next|_vercel|monitoring|.*\\..*).*)",
+    "/((?!api|_next|_vercel|monitoring|openapi|.*\\..*).*)",
     "/(ar|zh|en|fr|ru|es)/(.*\\.(?:json|txt))",
   ],
 };
