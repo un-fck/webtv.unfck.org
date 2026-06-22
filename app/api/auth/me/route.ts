@@ -1,3 +1,4 @@
+// Returns the authenticated user's email and feature flags.
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/service";
 

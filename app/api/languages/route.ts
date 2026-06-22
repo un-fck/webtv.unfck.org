@@ -1,3 +1,4 @@
+// Lists available audio language tracks and transcript status for a video.
 import { NextRequest, NextResponse } from "next/server";
 import { getAvailableAudioLanguages } from "@/lib/transcription";
 import { getTranscriptLanguagesByKalturaId } from "@/lib/db";

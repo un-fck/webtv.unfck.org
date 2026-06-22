@@ -1,3 +1,4 @@
+// Cron: emails subscribers when a requested transcript is ready.
 import { NextRequest, NextResponse } from "next/server";
 import { runSendTranscriptNotifications } from "@/lib/cron/send-transcript-notifications";
 import { apiError } from "@/lib/api-error";

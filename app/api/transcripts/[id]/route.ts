@@ -1,3 +1,4 @@
+// Polls transcript pipeline status and returns the result when complete.
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { pollTranscription } from "@/lib/transcription";

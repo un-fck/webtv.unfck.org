@@ -1,3 +1,4 @@
+// Verifies a magic-link token and creates an authenticated session.
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";

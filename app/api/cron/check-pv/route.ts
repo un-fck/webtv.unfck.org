@@ -1,3 +1,4 @@
+// Cron: checks for newly available PV documents on recent meetings.
 import { NextRequest, NextResponse } from "next/server";
 import { runCheckPv } from "@/lib/cron/check-pv";
 import { apiError } from "@/lib/api-error";

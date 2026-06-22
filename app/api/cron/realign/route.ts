@@ -1,3 +1,4 @@
+// Cron: recalculates timestamp offsets for re-cut videos.
 import { NextRequest, NextResponse } from "next/server";
 import { runRealign } from "@/lib/cron/realign";
 import { apiError } from "@/lib/api-error";

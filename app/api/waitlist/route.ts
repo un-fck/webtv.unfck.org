@@ -1,3 +1,4 @@
+// Records experimental-features waitlist interest for the current user.
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/require-user";
 import { setExperimentalWaitlist } from "@/lib/auth/service";

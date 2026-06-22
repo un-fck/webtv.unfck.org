@@ -22,6 +22,7 @@ The locale prefix in the URL (\`/en\`, \`/fr\`, \`/ar\`, \`/zh\`, \`/ru\`, \`/es
 - Read transcript (text): \`GET /en/{slug}.txt\` — plain-text transcript with speaker labels, compact for LLM context.
 - Read transcript (JSON): \`GET /en/{slug}.json\` — structured JSON with timestamps, speakers, topics, and optional word-level timing.
 - [Full API reference](/llms-full.txt): detailed query parameters, response shapes, and known limitations.
+- [OpenAPI spec](/openapi.json): machine-readable OpenAPI 3.0 spec (interactive UI at /openapi).
 
 ## Meeting URL scheme
 

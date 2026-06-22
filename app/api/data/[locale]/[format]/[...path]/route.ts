@@ -1,34 +1,35 @@
-import { NextRequest, NextResponse } from "next/server";
-import {
-  getVideoByAssetId,
-  getVideoByCitation,
-  getTranscriptByKalturaId,
-  queryVideos,
-  type VideoRecord,
-  type VideosQueryParams,
-} from "@/lib/db";
+// Public data API: meeting list and single-meeting detail as JSON or plain text.
+import { routing } from "@/i18n/routing";
 import {
   getCachedTranscriptedEntries,
   getCachedTranscriptedEntriesByLanguage,
 } from "@/lib/cached-db";
-import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
+import { compressedJson, compressedText } from "@/lib/compressed-json";
+import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
+import { getCountryName } from "@/lib/country-lookup";
 import {
+  getTranscriptByKalturaId,
+  getVideoByAssetId,
+  getVideoByCitation,
+  queryVideos,
+  type VideoRecord,
+  type VideosQueryParams,
+} from "@/lib/db";
+import { symbolFromSlug } from "@/lib/meeting-slug";
+import {
+  formatSpeakerInfo,
   getSpeakerMapping,
   SpeakerInfo,
-  formatSpeakerInfo,
 } from "@/lib/speakers";
-import { getCountryName } from "@/lib/country-lookup";
-import { symbolFromSlug } from "@/lib/meeting-slug";
-import { videoUrl } from "@/lib/video-url";
-import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
-import { routing } from "@/i18n/routing";
-import { compressedJson, compressedText } from "@/lib/compressed-json";
 import {
   buildSpeakerSegments,
-  formatTranscriptAsPlainText,
   formatSpeakerText,
   formatTimecode,
+  formatTranscriptAsPlainText,
 } from "@/lib/transcript-formatting";
+import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
+import { videoUrl } from "@/lib/video-url";
+import { NextRequest, NextResponse } from "next/server";
 
 // Unified data-API handler. The proxy (proxy.ts) rewrites
 //   /{locale}/{slug}.json     → /api/data/{locale}/json/{slug}
@@ -167,8 +168,7 @@ async function handleMeeting(
     if (format === "text") {
       return textResponse(
         request,
-        buildHeader(locale, video, record, null) +
-          "No transcript available.\n",
+        buildHeader(locale, video, record, null) + "No transcript available.\n",
       );
     }
     const metadata = await getVideoMetadata(record.asset_id);
@@ -377,6 +377,12 @@ async function handleList(
   const dateRaw = sp.get("date");
   const date =
     dateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : undefined;
+  const fromRaw = sp.get("from");
+  const dateFrom =
+    fromRaw && /^\d{4}-\d{2}-\d{2}$/.test(fromRaw) ? fromRaw : undefined;
+  const toRaw = sp.get("to");
+  const dateTo =
+    toRaw && /^\d{4}-\d{2}-\d{2}$/.test(toRaw) ? toRaw : undefined;
   const docs = sp
     .getAll("text")
     .filter((d) => ["transcript", "pv", "sr"].includes(d));
@@ -394,6 +400,8 @@ async function handleList(
     q,
     daysBack: LIST_DAYS_BACK,
     date,
+    dateFrom,
+    dateTo,
     category: sp.get("category") || undefined,
     docs: docs.length ? docs : undefined,
     sort: { by, dir },

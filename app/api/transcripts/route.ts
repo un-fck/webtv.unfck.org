@@ -1,3 +1,4 @@
+// Starts or schedules a new transcription for a video.
 import { NextRequest, NextResponse } from "next/server";
 import {
   getTranscriptByKalturaId,
