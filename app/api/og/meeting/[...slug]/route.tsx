@@ -1,9 +1,10 @@
-import { ImageResponse } from "next/og";
-import { getTranslations } from "next-intl/server";
+// Generates an Open Graph image for a meeting page.
+import type { VideoRecord } from "@/lib/db";
 import { getVideoByAssetId, getVideoByCitation } from "@/lib/db";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 import { OgHeader, getOgFonts } from "@/lib/og";
-import type { VideoRecord } from "@/lib/db";
+import { getTranslations } from "next-intl/server";
+import { ImageResponse } from "next/og";
 
 async function resolveVideo(slug: string): Promise<VideoRecord | null> {
   if (slug.startsWith("asset/")) {
@@ -62,66 +63,64 @@ export async function GET(
   const metaParts = [category, date].filter(Boolean);
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        background: "#fff",
+        color: "#1a1a1a",
+        // Teams (and iMessage's square thumbnail) crop the OG image with
+        // object-fit: cover to a near-square box, dropping the outer ~17%
+        // on each side. The horizontal safe-area padding keeps the header
+        // + title + meta inside that center band on those clients without
+        // making the wide-format unfurls look hollow. See app/[locale]/
+        // opengraph-image.tsx for the matching site-card padding.
+        padding: "72px 200px",
+        fontFamily: "Roboto",
+      }}
+    >
+      <OgHeader
+        brand={t("wordmarkBrand")}
+        descriptor={t("wordmarkDescriptor")}
+        badge={t("publicPreview")}
+      />
       <div
         style={{
-          width: "100%",
-          height: "100%",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
-          background: "#fff",
-          color: "#1a1a1a",
-          // Teams (and iMessage's square thumbnail) crop the OG image with
-          // object-fit: cover to a near-square box, dropping the outer ~17%
-          // on each side. The horizontal safe-area padding keeps the header
-          // + title + meta inside that center band on those clients without
-          // making the wide-format unfurls look hollow. See app/[locale]/
-          // opengraph-image.tsx for the matching site-card padding.
-          padding: "72px 200px",
-          fontFamily: "Roboto",
+          gap: 32,
+          paddingBottom: 24,
         }}
       >
-        <OgHeader
-          brand={t("wordmarkBrand")}
-          descriptor={t("wordmarkDescriptor")}
-          badge={t("publicPreview")}
-        />
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            gap: 32,
-            paddingBottom: 24,
+            fontSize: titleSize,
+            fontWeight: 700,
+            lineHeight: 1.1,
+            letterSpacing: "-0.01em",
+            overflow: "hidden",
           }}
         >
+          {title}
+        </div>
+        {metaParts.length > 0 && (
           <div
             style={{
               display: "flex",
-              fontSize: titleSize,
-              fontWeight: 700,
-              lineHeight: 1.1,
-              letterSpacing: "-0.01em",
-              overflow: "hidden",
+              fontSize: 36,
+              fontWeight: 400,
+              color: "#555",
             }}
           >
-            {title}
+            {metaParts.join("  ·  ")}
           </div>
-          {metaParts.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                fontSize: 36,
-                fontWeight: 400,
-                color: "#555",
-              }}
-            >
-              {metaParts.join("  ·  ")}
-            </div>
-          )}
-        </div>
+        )}
       </div>
-    ),
+    </div>,
     { ...SIZE, fonts },
   );
 }

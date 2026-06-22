@@ -1,3 +1,4 @@
+// Runs on-demand proposition analysis on a completed transcript.
 import { NextRequest, NextResponse } from "next/server";
 import { AzureOpenAI } from "openai";
 import { analyzePropositions } from "@/lib/pipeline";

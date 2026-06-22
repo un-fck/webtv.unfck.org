@@ -1,3 +1,4 @@
+// Checks for an existing transcript by Kaltura ID and language.
 import { NextRequest } from "next/server";
 import {
   getActiveTranscriptByKalturaId,

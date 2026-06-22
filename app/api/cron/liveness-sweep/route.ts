@@ -1,3 +1,4 @@
+// Cron: marks heartbeat-stale transcript rows as interrupted.
 import { NextRequest, NextResponse } from "next/server";
 import { runLivenessSweep } from "@/lib/cron/liveness-sweep";
 import { apiError } from "@/lib/api-error";

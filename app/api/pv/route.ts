@@ -1,3 +1,4 @@
+// Fetches and parses a UN PV or SR document PDF to structured JSON.
 import { NextRequest, NextResponse } from "next/server";
 import { getPVContent, savePVContent } from "@/lib/db";
 import { fetchPVDocument } from "@/lib/pv-documents";

@@ -1,3 +1,4 @@
+// Returns the current user's feed and video subscription state.
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/service";
 import {
