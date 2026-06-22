@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { SpeakerMapping } from "@/lib/speakers";
 import type { Video } from "@/lib/un-api";
@@ -8,6 +8,7 @@ import { getCountryName } from "@/lib/country-lookup";
 import { useScrollToActive } from "@/lib/hooks/use-scroll-to-active";
 import { BarChart3 } from "lucide-react";
 import { PVPanel, type PVSpeakerEntry } from "@/components/pv-panel";
+import { useMeetingState } from "@/components/meeting-state/meeting-state";
 import ExcelJS from "exceljs";
 import type { Proposition } from "@/lib/pipeline";
 import { StageProgress, type Stage } from "@/components/stage-progress";
@@ -105,20 +106,7 @@ export interface InitialTranscript {
 
 interface TranscriptionPanelProps {
   kalturaId: string;
-  player?: {
-    currentTime: number;
-    play: () => void;
-  };
   video: Video;
-  selectedLanguage: string;
-  onLanguageChange: (language: string) => void;
-  availableLanguages: LanguageOption[];
-  onLanguagesRefresh?: () => void;
-  selectedTopic: string | null;
-  onTopicSelect: (topic: string | null) => void;
-  topicCollapsed: boolean;
-  onTopicCollapsedChange: (collapsed: boolean) => void;
-  onDataChange?: (data: TranscriptionPanelData) => void;
   isLoggedIn: boolean;
   pvSymbol?: string;
   initialTranscript?: InitialTranscript | null;
@@ -160,28 +148,32 @@ interface Statement {
 
 export function TranscriptionPanel({
   kalturaId,
-  player,
   video,
-  selectedLanguage,
-  onLanguageChange,
-  availableLanguages,
-  onLanguagesRefresh,
-  selectedTopic,
-  onTopicSelect,
-  topicCollapsed,
-  onTopicCollapsedChange,
-  onDataChange,
   isLoggedIn,
   pvSymbol,
   initialTranscript,
 }: TranscriptionPanelProps) {
+  // Chrome-side state (player, language switcher, topic filter, sidebar
+  // data) lives in MeetingStateContext so we can stay in sync with
+  // VideoPageClient now that the panel is its sibling, not its child.
+  const {
+    player,
+    selectedLanguage,
+    setSelectedLanguage: onLanguageChange,
+    availableLanguages,
+    refreshLanguages: onLanguagesRefresh,
+    selectedTopic,
+    setSelectedTopic: onTopicSelect,
+    topicCollapsed,
+    setTopicCollapsed: onTopicCollapsedChange,
+    setPanelData: onDataChange,
+  } = useMeetingState();
   // Server-fetched data is only "initial" when it matches the URL locale.
   // After a language switch the panel falls back to the /check fast path,
   // and the initial value is no longer relevant.
   const hasMatchingInitial =
     !!initialTranscript && initialTranscript.language === selectedLanguage;
 
-  const [segments, setSegments] = useState<SpeakerSegment[] | null>(null);
   const [stage, setStage] = useState<Stage>(
     hasMatchingInitial ? "completed" : "idle",
   );
@@ -189,9 +181,6 @@ export function TranscriptionPanel({
   const [checking, setChecking] = useState(!hasMatchingInitial);
   const [speakerMappings, setSpeakerMappings] = useState<SpeakerMapping>(
     hasMatchingInitial ? initialTranscript!.speakerMappings : {},
-  );
-  const [countryNames, setCountryNames] = useState<Map<string, string>>(
-    new Map(),
   );
   const [topics, setTopics] = useState<
     Record<string, { key: string; label: string; description: string }>
@@ -245,6 +234,17 @@ export function TranscriptionPanel({
   // `setStatements` into the freshly-reset panel after the user switches to
   // `en`, so the new tab inherits the previous language's progress + preview.
   const pollAbortRef = useRef<AbortController | null>(null);
+
+  // Derived from statements + speakerMappings. Computed during render so
+  // it's part of the SSR output — without this, segments stays null until
+  // hydration, the panel renders empty markup server-side, and the user
+  // sees the skeleton swap to a near-blank panel for a frame before the
+  // transcript appears. Cheap enough to recompute (a single pass over
+  // statements grouping by speaker identity).
+  const segments = useMemo<SpeakerSegment[] | null>(() => {
+    if (!statements || Object.keys(speakerMappings).length === 0) return null;
+    return buildSpeakerSegments(statements, speakerMappings) as SpeakerSegment[];
+  }, [statements, speakerMappings]);
 
   const {
     activeSegmentIndex,
@@ -306,16 +306,6 @@ export function TranscriptionPanel({
     }
   };
 
-  const groupStatementsBySpeaker = useCallback(
-    (
-      statementsData: Statement[],
-      mappings: SpeakerMapping,
-    ): SpeakerSegment[] => {
-      return buildSpeakerSegments(statementsData, mappings) as SpeakerSegment[];
-    },
-    [],
-  );
-
   // Lazy word-level timestamps. The /api/transcripts/check fast path strips
   // words[] from its response (63% of payload) so first paint is fast; this
   // pulls them in once the transcript is on screen and merges by index so
@@ -373,28 +363,22 @@ export function TranscriptionPanel({
     [],
   );
 
-  const loadCountryNames = useCallback(
-    async (mapping: SpeakerMapping) => {
-      const names = new Map<string, string>();
-      const iso3Codes = new Set<string>();
-      Object.values(mapping).forEach((info) => {
-        if (info.affiliation && info.affiliation.length === 3)
-          iso3Codes.add(info.affiliation);
-      });
-      for (const code of iso3Codes) {
-        const name = getCountryName(code, locale);
-        if (name) names.set(code, name);
-      }
-      setCountryNames(names);
-    },
-    [locale],
-  );
-
-  useEffect(() => {
-    if (statements && Object.keys(speakerMappings).length > 0) {
-      setSegments(groupStatementsBySpeaker(statements, speakerMappings));
+  // Derived from speakerMappings + active UI locale. Computed during
+  // render so it's in the SSR output. getCountryName is a pure lookup
+  // against the vendored ISO snapshot (lib/country-lookup), no I/O.
+  const countryNames = useMemo<Map<string, string>>(() => {
+    const names = new Map<string, string>();
+    const iso3Codes = new Set<string>();
+    Object.values(speakerMappings).forEach((info) => {
+      if (info.affiliation && info.affiliation.length === 3)
+        iso3Codes.add(info.affiliation);
+    });
+    for (const code of iso3Codes) {
+      const name = getCountryName(code, locale);
+      if (name) names.set(code, name);
     }
-  }, [statements, speakerMappings, groupStatementsBySpeaker]);
+    return names;
+  }, [speakerMappings, locale]);
 
   useEffect(() => {
     onDataChange?.({
@@ -459,10 +443,7 @@ export function TranscriptionPanel({
         setStatements(data.statements);
         if (data.topics) setTopics(data.topics);
         if (data.propositions) setPropositions(data.propositions);
-        if (data.speakerMappings) {
-          setSpeakerMappings(data.speakerMappings);
-          await loadCountryNames(data.speakerMappings);
-        }
+        if (data.speakerMappings) setSpeakerMappings(data.speakerMappings);
         setStage("completed");
         onLanguagesRefresh?.();
         return;
@@ -552,8 +533,6 @@ export function TranscriptionPanel({
           Object.keys(data.speakerMappings).length > 0
         ) {
           setSpeakerMappings(data.speakerMappings);
-          await loadCountryNames(data.speakerMappings);
-          if (signal.aborted) return;
         }
       }
 
@@ -623,10 +602,7 @@ export function TranscriptionPanel({
         setStatements(data.statements);
         if (data.topics) setTopics(data.topics);
         if (data.propositions) setPropositions(data.propositions);
-        if (data.speakerMappings) {
-          setSpeakerMappings(data.speakerMappings);
-          await loadCountryNames(data.speakerMappings);
-        }
+        if (data.speakerMappings) setSpeakerMappings(data.speakerMappings);
         setTranscriptId(tid);
         setFlagged(false);
         setSourceDurationMs(null);
@@ -1012,30 +988,36 @@ export function TranscriptionPanel({
     triggerDownload(body, "vtt", "text/vtt;charset=utf-8");
   };
 
-  // True until the very first run of the check-cache effect. Lets us skip the
-  // /check round-trip on initial mount when the meeting page passed a server-
-  // fetched `initialTranscript`. Subsequent runs (the user changing language)
-  // always go through the normal reset + fetch flow.
-  const consumedInitialRef = useRef(false);
+  // Tracks the language we've already wired the panel for, so the effect
+  // is a no-op when it re-fires with the same (kalturaId, selectedLanguage).
+  // Critical for React Strict Mode dev double-invocation: a naive "consumed
+  // once" boolean ran the skip-branch on the first invoke then the reset+
+  // fetch branch on Strict Mode's second invoke, flipping `checking` true
+  // for a frame and producing a spurious "Checking for existing transcript"
+  // spinner even on pages whose SSR'd transcript was fully populated.
+  // Compare against the actual deps instead — only do work when they
+  // actually changed.
+  const wiredKeyRef = useRef<string | null>(null);
 
   // Check cache on mount and language change
   useEffect(() => {
-    if (!consumedInitialRef.current) {
-      consumedInitialRef.current = true;
-      if (hasMatchingInitial) {
-        // SSR pre-loaded statements, speakerMappings, topics, propositions.
-        // Fire only the side-effects that /check would have done:
-        // country-name lookup + lazy word-timing fetch.
-        const ctrl = new AbortController();
-        pollAbortRef.current = ctrl;
-        setChecking(false);
-        void loadCountryNames(initialTranscript!.speakerMappings);
-        void loadWords(initialTranscript!.transcriptId, ctrl.signal);
-        return () => ctrl.abort();
-      }
+    const key = `${kalturaId}|${selectedLanguage}`;
+    if (wiredKeyRef.current === key) return;
+    const firstWire = wiredKeyRef.current === null;
+    wiredKeyRef.current = key;
+
+    if (firstWire && hasMatchingInitial) {
+      // SSR pre-loaded statements, speakerMappings, topics, propositions
+      // (and segments + countryNames are computed inline via useMemo, so
+      // they're already in the SSR DOM). Only side-effect left to do is
+      // pulling word-level timestamps for karaoke/click-to-seek.
+      const ctrl = new AbortController();
+      pollAbortRef.current = ctrl;
+      setChecking(false);
+      void loadWords(initialTranscript!.transcriptId, ctrl.signal);
+      return () => ctrl.abort();
     }
 
-    setSegments(null);
     setStatements(null);
     setRawParagraphs(null);
     setTopics({});
@@ -1079,11 +1061,7 @@ export function TranscriptionPanel({
             }
             if (data.topics) setTopics(data.topics);
             if (data.propositions) setPropositions(data.propositions);
-            if (data.speakerMappings) {
-              setSpeakerMappings(data.speakerMappings);
-              await loadCountryNames(data.speakerMappings);
-              if (signal.aborted) return;
-            }
+            if (data.speakerMappings) setSpeakerMappings(data.speakerMappings);
             // Analysis runs on its own axis — surface in-progress analysis so a
             // viewer who loads mid-analysis sees "Analyzing…" rather than the
             // Run button (and the transcript itself stays visible).
@@ -1156,7 +1134,7 @@ export function TranscriptionPanel({
     checkCache();
     return () => ctrl.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kalturaId, selectedLanguage, loadCountryNames]);
+  }, [kalturaId, selectedLanguage]);
 
   // Auto-scroll to the active paragraph as playback advances. Respects manual
   // scrolling: won't yank the view if the user has scrolled the active

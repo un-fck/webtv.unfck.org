@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
@@ -87,6 +87,16 @@ export function TranscriptToolbar({
   const locale = useLocale();
   const [languageOpen, setLanguageOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
+  // Radix Popovers use React useId() for their content/trigger linkage.
+  // Inside our Suspense-streamed transcript section those IDs differ
+  // between server-render and client-hydrate (React 19 known issue:
+  // Suspense reveal opens a new id-allocation context), which throws a
+  // hydration mismatch error and forces a tree-recovery flash that the
+  // user perceives as an extra "loading" state. Defer the Radix popovers
+  // until after mount; render visually identical static buttons in the
+  // SSR pass so the layout is stable.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   // null when no toast is showing; "link" after Share copies the page URL;
   // "transcript" after the "Copy to clipboard" menu item copies the full text.
   // Two states + one shared 4s dismiss keeps the toast slot single while
@@ -138,7 +148,7 @@ export function TranscriptToolbar({
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className={typography.sectionTitle}>{t("transcript")}</h2>
-        {availableLanguages.length > 0 && (
+        {mounted && availableLanguages.length > 0 && (
           <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
             <PopoverTrigger
               className={cn(
@@ -357,6 +367,7 @@ export function TranscriptToolbar({
                 </div>
               )}
             </div>
+            {mounted && (
             <Popover open={downloadOpen} onOpenChange={setDownloadOpen}>
               <PopoverTrigger
                 aria-label={t("download")}
@@ -458,6 +469,7 @@ export function TranscriptToolbar({
                 </ul>
               </PopoverContent>
             </Popover>
+            )}
           </>
         )}
       </div>

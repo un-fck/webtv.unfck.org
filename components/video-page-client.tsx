@@ -1,15 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { VideoPlayer } from "./video-player";
 import {
-  TranscriptionPanel,
   getTopicColor,
-  type TranscriptionPanelData,
   type LanguageOption,
-  type InitialTranscript,
 } from "./transcription-panel";
+import { useMeetingState } from "./meeting-state/meeting-state";
 import { SpeakerToc, hasMeaningfulSpeakerInfo } from "./speaker-toc";
 import { PVSpeakerToc } from "./pv-panel";
 import { SiteHeader } from "./site-header";
@@ -32,13 +36,12 @@ interface VideoPageClientProps {
   metadata: VideoMetadata;
   isLoggedIn: boolean;
   /**
-   * Pre-fetched transcript for the URL locale. Server-rendered so a no-JS
-   * agent (Bing/Copilot snippet pipeline, etc.) sees the transcript text in
-   * the initial HTML payload. When supplied, the panel skips its on-mount
-   * /api/transcripts/check round-trip — the first paint matches the SSR
-   * output exactly, no re-fetch flash.
+   * The transcript section, rendered by an async server component sibling
+   * inside a Suspense boundary so the chrome (header / player / sidebar)
+   * can stream to the browser while the DB query is still running. See
+   * components/server-transcript.tsx + components/transcript-skeleton.tsx.
    */
-  initialTranscript?: InitialTranscript | null;
+  children: ReactNode;
 }
 
 export function VideoPageClient({
@@ -46,17 +49,27 @@ export function VideoPageClient({
   video,
   metadata,
   isLoggedIn,
-  initialTranscript,
+  children,
 }: VideoPageClientProps) {
   const { formatMeetingDate, formatMeetingTime } = useMeetingFormat();
   const t = useTranslations("transcript");
   const tVideo = useTranslations("video");
   const tCategory = useTranslations("schedule.categoryNames");
   const uiLocale = useLocale();
-  const [player, setPlayer] = useState<{
-    currentTime: number;
-    play: () => void;
-  }>();
+  // State shared with the (sibling-rendered) transcript panel lives in
+  // <MeetingStateProvider> above us — see components/meeting-state.
+  const {
+    player,
+    setPlayer,
+    selectedTopic,
+    setSelectedTopic,
+    topicCollapsed,
+    setTopicCollapsed,
+    panelData,
+    selectedLanguage,
+    availableLanguages,
+    setAvailableLanguages,
+  } = useMeetingState();
 
   // Back link: return to the last filtered schedule view if we have one,
   // otherwise the plain homepage. Read after mount to avoid SSR mismatch.
@@ -71,44 +84,8 @@ export function VideoPageClient({
   const landingZoneRef = useRef<HTMLDivElement>(null);
   const videoWrapperRef = useRef<HTMLDivElement>(null);
 
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [topicCollapsed, setTopicCollapsed] = useState(true);
-  const [panelData, setPanelData] = useState<TranscriptionPanelData | null>(
-    null,
-  );
   const [topicsOpen, setTopicsOpen] = useState(true);
   const [speakersOpen, setSpeakersOpen] = useState(true);
-  // Default to the user's UI locale — same language they chose for the site
-  // is the natural first guess for what they want to read/listen to. If that
-  // language isn't actually available for this meeting, the validation effect
-  // below falls back to floor (original audio) or the first available track.
-  // No localStorage: each new meeting starts from the UI-locale default and
-  // resets per-meeting picks.
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(uiLocale);
-  const [availableLanguages, setAvailableLanguages] = useState<
-    LanguageOption[]
-  >([]);
-
-  // Once we know what's actually available for this meeting, validate that
-  // `selectedLanguage` is one of the available codes. If not, fall back:
-  //   UI locale → floor (original audio) → first available track.
-  // Only fires when availableLanguages updates and the selection is invalid,
-  // so a user's manual pick of an available language is never overridden.
-  useEffect(() => {
-    if (availableLanguages.length === 0) return;
-    const currentIsAvailable = availableLanguages.some(
-      (l) => l.code === selectedLanguage && l.available,
-    );
-    if (currentIsAvailable) return;
-    const floor = availableLanguages.find(
-      (l) => l.code === "floor" && l.available,
-    );
-    const firstAvailable = availableLanguages.find((l) => l.available);
-    const fallback = floor?.code ?? firstAvailable?.code;
-    if (fallback && fallback !== selectedLanguage) {
-      setSelectedLanguage(fallback);
-    }
-  }, [availableLanguages, selectedLanguage]);
 
   // Update available languages based on tracks the player actually has
   const handleAudioTracksReady = useCallback(
@@ -147,22 +124,8 @@ export function VideoPageClient({
         }));
       });
     },
-    [],
+    [setAvailableLanguages],
   );
-
-  // Fetch available audio languages
-  const refreshLanguages = useCallback(() => {
-    fetch(`/api/languages?kalturaId=${encodeURIComponent(kalturaId)}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.languages) setAvailableLanguages(data.languages);
-      })
-      .catch(() => {});
-  }, [kalturaId]);
-
-  useEffect(() => {
-    refreshLanguages();
-  }, [refreshLanguages]);
 
   // IntersectionObserver: detect when the main video leaves viewport
   useEffect(() => {
@@ -447,28 +410,11 @@ export function VideoPageClient({
 
         {/* Two columns: transcript left, sticky sidebar right */}
         <div className="mt-6 flex flex-col gap-6 lg:flex-row">
-          {/* LEFT — transcript */}
-          <div className="min-w-0 lg:flex-[3]">
-            <TranscriptionPanel
-              kalturaId={kalturaId}
-              player={player}
-              video={video}
-              selectedLanguage={selectedLanguage}
-              onLanguageChange={setSelectedLanguage}
-              availableLanguages={availableLanguages}
-              onLanguagesRefresh={refreshLanguages}
-              selectedTopic={selectedTopic}
-              onTopicSelect={setSelectedTopic}
-              topicCollapsed={topicCollapsed}
-              onTopicCollapsedChange={setTopicCollapsed}
-              onDataChange={setPanelData}
-              isLoggedIn={isLoggedIn}
-              pvSymbol={
-                video.pvAvailable && video.pvSymbol ? video.pvSymbol : undefined
-              }
-              initialTranscript={initialTranscript}
-            />
-          </div>
+          {/* LEFT — transcript section. Streams from server inside a
+              Suspense boundary so the chrome (header, player, this two-
+              column layout) ships immediately while the transcript's DB
+              query is still running. See video-page.tsx for the boundary. */}
+          <div className="min-w-0 lg:flex-[3]">{children}</div>
 
           {/* RIGHT — sticky sidebar */}
           <div className="hidden lg:block lg:flex-[2]">
