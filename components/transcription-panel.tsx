@@ -9,6 +9,7 @@ import { useScrollToActive } from "@/lib/hooks/use-scroll-to-active";
 import { BarChart3 } from "lucide-react";
 import { PVPanel, type PVSpeakerEntry } from "@/components/pv-panel";
 import { useMeetingState } from "@/components/meeting-state/meeting-state";
+import { TranscriptSkeleton } from "@/components/transcript-skeleton";
 import ExcelJS from "exceljs";
 import type { Proposition } from "@/lib/pipeline";
 import { StageProgress, type Stage } from "@/components/stage-progress";
@@ -1205,10 +1206,10 @@ export function TranscriptionPanel({
         )}
 
       {checking && stage === "idle" && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          <span>{t("checkingForTranscript")}</span>
-        </div>
+        // No spinner: show the same shape the Suspense fallback uses so the
+        // transition from "panel mounted, still checking" to "panel has
+        // transcript" doesn't look like a different kind of loading state.
+        <TranscriptSkeleton />
       )}
 
       {stage === "scheduled" && (
