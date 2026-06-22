@@ -1,3 +1,4 @@
+// Returns word-level timestamps for a completed transcript.
 import { NextRequest } from "next/server";
 import { getTranscriptByIdForDisplay } from "@/lib/db";
 import { apiError } from "@/lib/api-error";

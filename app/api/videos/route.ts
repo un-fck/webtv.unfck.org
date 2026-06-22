@@ -1,3 +1,4 @@
+// Paginated video list with transcript availability flags.
 import { NextRequest, NextResponse } from "next/server";
 import { queryVideos, type VideosQueryParams } from "@/lib/db";
 import {

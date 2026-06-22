@@ -1,3 +1,4 @@
+// Adds or removes a per-video transcript subscription for the current user.
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/require-user";
 import { addVideoSubscription, removeVideoSubscription } from "@/lib/db";

@@ -1,30 +1,31 @@
+// Public data API: meeting list and single-meeting detail as JSON or plain text.
 import { routing } from "@/i18n/routing";
 import {
-    getCachedTranscriptedEntries,
-    getCachedTranscriptedEntriesByLanguage,
+  getCachedTranscriptedEntries,
+  getCachedTranscriptedEntriesByLanguage,
 } from "@/lib/cached-db";
 import { compressedJson, compressedText } from "@/lib/compressed-json";
 import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
 import { getCountryName } from "@/lib/country-lookup";
 import {
-    getTranscriptByKalturaId,
-    getVideoByAssetId,
-    getVideoByCitation,
-    queryVideos,
-    type VideoRecord,
-    type VideosQueryParams,
+  getTranscriptByKalturaId,
+  getVideoByAssetId,
+  getVideoByCitation,
+  queryVideos,
+  type VideoRecord,
+  type VideosQueryParams,
 } from "@/lib/db";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 import {
-    formatSpeakerInfo,
-    getSpeakerMapping,
-    SpeakerInfo,
+  formatSpeakerInfo,
+  getSpeakerMapping,
+  SpeakerInfo,
 } from "@/lib/speakers";
 import {
-    buildSpeakerSegments,
-    formatSpeakerText,
-    formatTimecode,
-    formatTranscriptAsPlainText,
+  buildSpeakerSegments,
+  formatSpeakerText,
+  formatTimecode,
+  formatTranscriptAsPlainText,
 } from "@/lib/transcript-formatting";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { videoUrl } from "@/lib/video-url";

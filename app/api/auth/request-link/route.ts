@@ -1,3 +1,4 @@
+// Sends a magic-link login email to the given address.
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { sendMagicLink } from "@/lib/auth/mail";

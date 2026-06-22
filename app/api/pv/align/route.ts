@@ -1,3 +1,4 @@
+// Aligns a parsed PV document with audio to produce per-turn timestamps.
 import { NextRequest, NextResponse } from "next/server";
 import { getPVContent, savePVContent } from "@/lib/db";
 import { getKalturaAudioUrl } from "@/lib/transcription";

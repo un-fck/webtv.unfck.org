@@ -1,3 +1,4 @@
+// Cron: starts transcription for scheduled and interrupted transcript rows.
 import { NextRequest, NextResponse } from "next/server";
 import { runProcessScheduled } from "@/lib/cron/process-scheduled";
 import { apiError } from "@/lib/api-error";

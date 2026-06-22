@@ -1,3 +1,4 @@
+// Returns paginated statements attributed to a speaker entity.
 import { NextRequest, NextResponse } from "next/server";
 import { requireExperimental } from "@/lib/auth/require-experimental";
 import { apiError } from "@/lib/api-error";

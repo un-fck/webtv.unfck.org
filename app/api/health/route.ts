@@ -1,3 +1,4 @@
+// Database ping; returns 200 ok or 503 error.
 import { pool } from "@/lib/db";
 
 export async function GET() {
