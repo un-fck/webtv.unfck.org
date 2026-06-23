@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "pnpm generate-openapi && next build",
+    "build": "next build",
     "generate-openapi": "tsx scripts/generate-openapi.ts",
+    "check-openapi": "tsx scripts/generate-openapi.ts && git diff --exit-code public/openapi.json",
     "typecheck": "tsc --noEmit",
     "start": "next start",
     "test": "vitest run",
