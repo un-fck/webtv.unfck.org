@@ -37,8 +37,7 @@ export function SubscriptionsManager() {
   const t = useTranslations("subscriptionsManager");
   const displayName = useLanguageDisplayName();
   const { formatMeetingDateTime } = useMeetingFormat();
-  const formatEmailedAt = (iso: string) =>
-    formatMeetingDateTime(iso, iso);
+  const formatEmailedAt = (iso: string) => formatMeetingDateTime(iso, iso);
 
   const load = useCallback(() => {
     fetch("/api/subscriptions")

@@ -57,7 +57,11 @@ function toOas30(schema: unknown): unknown {
       const others = (s.anyOf as unknown[]).filter((_, i) => i !== nullIdx);
       const { anyOf: _a, ...siblings } = s;
       if (others.length === 1) {
-        return { ...(toOas30(others[0]) as JsonObj), nullable: true, ...siblings };
+        return {
+          ...(toOas30(others[0]) as JsonObj),
+          nullable: true,
+          ...siblings,
+        };
       }
       return { anyOf: others.map(toOas30), nullable: true, ...siblings };
     }
@@ -163,10 +167,14 @@ export function buildSpec(): Record<string, unknown> {
             qp("category", "Filter by WebTV category name.", {
               type: "string",
             }),
-            qp("date", "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.", {
-              type: "string",
-              pattern: "^\\d{4}-\\d{2}-\\d{2}$",
-            }),
+            qp(
+              "date",
+              "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.",
+              {
+                type: "string",
+                pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+              },
+            ),
             qp("from", "Inclusive start of a date range (YYYY-MM-DD).", {
               type: "string",
               pattern: "^\\d{4}-\\d{2}-\\d{2}$",

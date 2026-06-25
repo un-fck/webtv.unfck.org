@@ -172,7 +172,8 @@ export function formatMeetingDate(
   let relativeLabel: string | null = null;
   if (relative !== "off") {
     if (dateStr === todayStr) relativeLabel = ctx.relative.today;
-    else if (dateStr === isoDay(tomorrow)) relativeLabel = ctx.relative.tomorrow;
+    else if (dateStr === isoDay(tomorrow))
+      relativeLabel = ctx.relative.tomorrow;
     else if (dateStr === isoDay(yesterday))
       relativeLabel = ctx.relative.yesterday;
   }
@@ -253,9 +254,10 @@ function formatAbsoluteDate(
       ...(showYear ? { year: "numeric" } : {}),
     });
     if (weekday === "none") return datePart;
-    const wd = new Intl.DateTimeFormat(locale, { timeZone: tz, weekday }).format(
-      date,
-    );
+    const wd = new Intl.DateTimeFormat(locale, {
+      timeZone: tz,
+      weekday,
+    }).format(date);
     return `${datePart} ${wd}`;
   }
 

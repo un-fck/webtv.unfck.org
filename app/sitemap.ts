@@ -53,10 +53,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // en+fr transcripts emits two URL entries (/en/… and /fr/…) and each entry
   // cross-references just those two — no /es alternate that would point to a
   // page without same-language content.
-  const bySlug = new Map<
-    string,
-    { languages: Record<string, Date> }
-  >();
+  const bySlug = new Map<string, { languages: Record<string, Date> }>();
   for (const row of rows) {
     const slug = videoUrl(row);
     let bucket = bySlug.get(slug);

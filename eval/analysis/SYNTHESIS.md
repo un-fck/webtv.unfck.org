@@ -228,7 +228,7 @@ Being on Azure is a real plus: no new vendor or billing relationship, and integr
 - **Genuinely novel for us: `phraseList` entity biasing** (1.5 only) — inject a roster of
   current officeholders / "UN80" / resolution symbols at transcription time, applied
   contextually (Microsoft claims up to 30% WER gain on keyword-heavy audio). This is
-  exactly the *external* hallucination mitigation §6.1 calls for, but inside the provider.
+  exactly the _external_ hallucination mitigation §6.1 calls for, but inside the provider.
   Worth a targeted test against the §9 entity criteria.
 - **Open questions for an eval run:** (a) `zh` is missing from the model's language table
   despite the "43 languages" claim — smoke-test before any Chinese conclusions; (b) it's

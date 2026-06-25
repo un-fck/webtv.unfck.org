@@ -176,7 +176,10 @@ export async function renderVideoPage({
     },
   };
 
-  const tFormats = await getTranslations({ locale, namespace: "video.formats" });
+  const tFormats = await getTranslations({
+    locale,
+    namespace: "video.formats",
+  });
   const textHref = `/${locale}/${canonicalPath}.txt`;
   const jsonHref = `/${locale}/${canonicalPath}.json`;
 

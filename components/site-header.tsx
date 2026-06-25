@@ -58,7 +58,9 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
   // - Wide container is max-w-7xl (1280px); we need ~1326px before the emblem
   //   even fits, so we wait for 1408px before folding outboard. Below that it
   //   stays inline next to the wordmark.
-  const outboardOnly = wide ? "hidden min-[1408px]:block" : "hidden min-[1152px]:block";
+  const outboardOnly = wide
+    ? "hidden min-[1408px]:block"
+    : "hidden min-[1152px]:block";
   const inlineOnly = wide ? "min-[1408px]:hidden" : "min-[1152px]:hidden";
   return (
     <header className="relative border-b border-border py-3">
@@ -88,7 +90,7 @@ export function SiteHeader({ wide = false }: { wide?: boolean }) {
           href="/"
           aria-label={t("logoAlt")}
           className={cn(
-            "absolute top-1/2 end-[calc(100%-24.74px)] h-10 w-[47.9px] -translate-y-1/2 transition-opacity hover:opacity-75",
+            "absolute end-[calc(100%-24.74px)] top-1/2 h-10 w-[47.9px] -translate-y-1/2 transition-opacity hover:opacity-75",
             outboardOnly,
           )}
         >

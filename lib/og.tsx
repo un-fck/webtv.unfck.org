@@ -34,7 +34,9 @@ async function fetchGoogleFont(weight: 300 | 400 | 700): Promise<ArrayBuffer> {
   const css = await cssRes.text();
   const match = css.match(/src:\s*url\((https:\/\/[^)]+)\)\s+format/);
   if (!match) {
-    throw new Error(`Could not extract font URL from Google Fonts CSS for Roboto@${weight}`);
+    throw new Error(
+      `Could not extract font URL from Google Fonts CSS for Roboto@${weight}`,
+    );
   }
   const fontRes = await fetch(match[1]);
   return fontRes.arrayBuffer();

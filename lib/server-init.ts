@@ -53,7 +53,11 @@ export function initWorker(): void {
     } catch (err) {
       console.warn("[server-init] heartbeat failed:", err);
       Sentry.captureException(err, {
-        tags: { pipeline: "worker", kind: "heartbeat_failed", worker_id: workerId },
+        tags: {
+          pipeline: "worker",
+          kind: "heartbeat_failed",
+          worker_id: workerId,
+        },
       });
     }
   };
@@ -103,7 +107,11 @@ export function initWorker(): void {
       .catch((err) => {
         console.error("[server-init] cleanup UPDATE failed:", err);
         Sentry.captureException(err, {
-          tags: { pipeline: "worker", kind: "shutdown_cleanup_failed", worker_id: workerId },
+          tags: {
+            pipeline: "worker",
+            kind: "shutdown_cleanup_failed",
+            worker_id: workerId,
+          },
         });
       });
     const timeout = new Promise<void>((resolve) =>

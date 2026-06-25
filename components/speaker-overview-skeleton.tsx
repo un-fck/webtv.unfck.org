@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export function SpeakerOverviewSkeleton() {
   return (
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">
-      <div className={cn("mx-auto px-4 sm:px-8 pt-8 pb-16", pageWidth)}>
+      <div className={cn("mx-auto px-4 pt-8 pb-16 sm:px-8", pageWidth)}>
         {/* Page heading */}
         <div className="mb-3 h-8 w-48 animate-pulse rounded bg-muted" />
         <div className="mb-8 h-4 w-2/3 animate-pulse rounded bg-muted/70" />

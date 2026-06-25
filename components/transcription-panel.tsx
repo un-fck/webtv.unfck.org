@@ -244,7 +244,10 @@ export function TranscriptionPanel({
   // statements grouping by speaker identity).
   const segments = useMemo<SpeakerSegment[] | null>(() => {
     if (!statements || Object.keys(speakerMappings).length === 0) return null;
-    return buildSpeakerSegments(statements, speakerMappings) as SpeakerSegment[];
+    return buildSpeakerSegments(
+      statements,
+      speakerMappings,
+    ) as SpeakerSegment[];
   }, [statements, speakerMappings]);
 
   const {
@@ -313,56 +316,53 @@ export function TranscriptionPanel({
   // sentence-level karaoke highlight + click-to-seek light up after a beat.
   // The polling paths (pollForCompletion / pollRetranscribeUntilDone) still
   // receive full word data, so we only fire this after the /check fast path.
-  const loadWords = useCallback(
-    async (tid: string, signal: AbortSignal) => {
-      try {
-        const res = await fetch(
-          `/api/transcripts/${encodeURIComponent(tid)}/words`,
-          { signal },
-        );
-        if (signal.aborted) return;
-        if (!res.ok) return;
-        const { statements: wordsByStatement } = (await res.json()) as {
-          statements: Array<{
+  const loadWords = useCallback(async (tid: string, signal: AbortSignal) => {
+    try {
+      const res = await fetch(
+        `/api/transcripts/${encodeURIComponent(tid)}/words`,
+        { signal },
+      );
+      if (signal.aborted) return;
+      if (!res.ok) return;
+      const { statements: wordsByStatement } = (await res.json()) as {
+        statements: Array<{
+          words?: Word[];
+          paragraphs: Array<{
             words?: Word[];
-            paragraphs: Array<{
-              words?: Word[];
-              sentences: Array<{ words?: Word[] }>;
-            }>;
+            sentences: Array<{ words?: Word[] }>;
           }>;
-        };
-        if (signal.aborted || !wordsByStatement) return;
-        setStatements((prev) => {
-          if (!prev) return prev;
-          return prev.map((stmt, si) => {
-            const wstmt = wordsByStatement[si];
-            if (!wstmt) return stmt;
-            return {
-              ...stmt,
-              ...(wstmt.words ? { words: wstmt.words } : {}),
-              paragraphs: stmt.paragraphs.map((para, pi) => {
-                const wpara = wstmt.paragraphs[pi];
-                if (!wpara) return para;
-                return {
-                  ...para,
-                  ...(wpara.words ? { words: wpara.words } : {}),
-                  sentences: para.sentences.map((sent, sei) => {
-                    const wsent = wpara.sentences[sei];
-                    if (!wsent?.words) return sent;
-                    return { ...sent, words: wsent.words };
-                  }),
-                };
-              }),
-            };
-          });
+        }>;
+      };
+      if (signal.aborted || !wordsByStatement) return;
+      setStatements((prev) => {
+        if (!prev) return prev;
+        return prev.map((stmt, si) => {
+          const wstmt = wordsByStatement[si];
+          if (!wstmt) return stmt;
+          return {
+            ...stmt,
+            ...(wstmt.words ? { words: wstmt.words } : {}),
+            paragraphs: stmt.paragraphs.map((para, pi) => {
+              const wpara = wstmt.paragraphs[pi];
+              if (!wpara) return para;
+              return {
+                ...para,
+                ...(wpara.words ? { words: wpara.words } : {}),
+                sentences: para.sentences.map((sent, sei) => {
+                  const wsent = wpara.sentences[sei];
+                  if (!wsent?.words) return sent;
+                  return { ...sent, words: wsent.words };
+                }),
+              };
+            }),
+          };
         });
-      } catch {
-        // Network error or aborted; the panel keeps working with
-        // sentence-level seeks only.
-      }
-    },
-    [],
-  );
+      });
+    } catch {
+      // Network error or aborted; the panel keeps working with
+      // sentence-level seeks only.
+    }
+  }, []);
 
   // Derived from speakerMappings + active UI locale. Computed during
   // render so it's in the SSR output. getCountryName is a pure lookup

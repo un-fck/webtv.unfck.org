@@ -18,12 +18,7 @@
  *   pnpm tsx scripts/backfill-pv-symbols.ts --limit=50  # cap rows visited
  */
 import "../lib/load-env";
-import {
-  pool,
-  q,
-  withTransaction,
-  assignPvSymbolAndPart,
-} from "../lib/db";
+import { pool, q, withTransaction, assignPvSymbolAndPart } from "../lib/db";
 import { parseMeetingSymbol } from "../lib/pv-documents";
 
 const args = process.argv.slice(2);
@@ -56,11 +51,7 @@ async function main() {
   for (const row of rows) {
     if (visited >= LIMIT) break;
     visited++;
-    const symbol = parseMeetingSymbol(
-      row.title,
-      row.category ?? "",
-      row.date,
-    );
+    const symbol = parseMeetingSymbol(row.title, row.category ?? "", row.date);
     if (!symbol) continue;
 
     // Cluster on the family prefix for the summary.

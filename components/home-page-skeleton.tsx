@@ -18,7 +18,7 @@ export function HomePageSkeleton() {
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">
       <div className={cn("mx-auto px-4 sm:px-8", pageWidth)}>
         {/* Hero: heading + lead */}
-        <div className="pt-8 pb-6 space-y-2">
+        <div className="space-y-2 pt-8 pb-6">
           <div className="h-9 w-5/6 animate-pulse rounded bg-muted" />
           <div className="h-5 w-3/4 animate-pulse rounded bg-muted/70" />
           <div className="h-5 w-2/3 animate-pulse rounded bg-muted/70" />

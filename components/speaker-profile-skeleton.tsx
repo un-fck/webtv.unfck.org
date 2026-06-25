@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export function SpeakerProfileSkeleton() {
   return (
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">
-      <div className={cn("mx-auto px-4 sm:px-8 pt-8 pb-16", pageWidth)}>
+      <div className={cn("mx-auto px-4 pt-8 pb-16 sm:px-8", pageWidth)}>
         <div className="mx-auto max-w-xl">
           {/* Profile header */}
           <header className="flex flex-col items-center pt-2 pb-8">
