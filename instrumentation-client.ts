@@ -35,9 +35,9 @@ if (
         themeLight: {
           accentBackground: "#009edb",
           accentForeground: "#ffffff",
-          // Soft white halo so the widget reads as elevated against the
-          // dark video player / page chrome behind it.
-          boxShadow: "0 2px 12px rgba(255, 255, 255, 0.85)",
+          // No box shadow — the previous soft white halo read as an odd glow
+          // around the trigger button and dialog.
+          boxShadow: "none",
           borderRadius: "0.5rem",
         },
         // `triggerLabel` (not `buttonLabel`) is the right key for the
@@ -48,6 +48,12 @@ if (
         submitButtonLabel: "Send",
         messagePlaceholder:
           "What's not working, confusing, or could be better?",
+        // Name and email are optional (Sentry's `isNameRequired` /
+        // `isEmailRequired` both default to false). Sentry only marks
+        // *required* fields — optional ones get no marker — so spell out
+        // "(optional)" in the labels to make it clear people can skip them.
+        nameLabel: "Name (optional)",
+        emailLabel: "Email (optional)",
       }),
     ],
   });
@@ -65,6 +71,11 @@ if (
       style.textContent =
         ".widget__actor { border-radius: 0.5rem; } " +
         ".widget__actor svg { display: none; } " +
+        // Sentry renders the "(required)" marker in a separate span shrunk to
+        // 0.85em, while our "(optional)" labels are plain full-size label
+        // text. Force the required marker back to 1em so both parentheticals
+        // render in the same font.
+        ".form__label__text--required { font-size: 1em; } " +
         // On small screens Sentry hides the label, leaving an empty button.
         // Hide the trigger entirely below the Tailwind `sm` breakpoint.
         "@media (max-width: 639px) { .widget__actor { display: none; } }";

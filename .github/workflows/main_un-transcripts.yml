@@ -35,6 +35,15 @@ jobs:
           push: true
           tags: transcripts.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_ECA1F648571042B1AE467ADD6BD1040A }}/transcripts:${{ github.sha }}
           file: ./Dockerfile
+          # NEXT_PUBLIC_SENTRY_DSN is inlined into the client bundle at build
+          # time, so it must be passed here (not just set in the Azure runtime
+          # env) or the browser Sentry SDK + feedback widget stay disabled. The
+          # SENTRY_* auth args enable source-map upload during the build.
+          build-args: |
+            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+            SENTRY_ORG=${{ secrets.SENTRY_ORG }}
+            SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT }}
 
   deploy:
     runs-on: ubuntu-latest
