@@ -20,41 +20,55 @@ Cron sidecar fires (must match `docker/crontab.template`): `process-scheduled`
 
 ## Resources (all in `eastus2`)
 
-| Resource                 | Name                                     | Resource group   | Notes                                                             |
-| ------------------------ | ---------------------------------------- | ---------------- | ----------------------------------------------------------------- |
-| App Service              | `un-transcripts`                         | `rg-transcripts` | Linux container, `WEBSITES_PORT=3000`, health probe `/api/health` |
-| App Service plan         | `transcripts-app-service-plan`           | `rg-transcripts` | Premium v3 (P1v3 = 2 vCPU / 8 GB)                                 |
-| Autoscale                | `transcripts-autoscale`                  | `rg-transcripts` | out @ CPU>65% / mem>75%, in @ CPU<30%                             |
-| Container registry       | `transcripts` (`transcripts.azurecr.io`) | `rg-transcripts` | image `transcripts/transcripts:<git-sha>`                         |
-| Postgres                 | `un80-dev-pg`                            | `UN80-DEV`       | **shared** flexible server (PG16) — see warning below             |
-| Key Vault (subscription) | `kv-admdpome…`                           | `UN80-DEV`       | not yet wired into `un-transcripts`                               |
+Concrete resource names and resource groups are kept out of this doc. The
+commands below reference them through shell variables — set these in your
+environment (the actual values live in the Azure portal / your secure notes):
+
+```bash
+export RESOURCE_GROUP=…        # main app resource group
+export DB_RESOURCE_GROUP=…     # shared DB / Key Vault resource group
+export APP_SERVICE=…           # App Service (web app) name
+export APP_SERVICE_PLAN=…      # App Service plan name
+export AUTOSCALE=…             # autoscale setting name
+export ACR=…                   # container registry name (login server: $ACR.azurecr.io)
+export PG_SERVER=…             # Postgres flexible server name
+export KEY_VAULT=…             # Key Vault name
+```
+
+| Resource                 | Variable             | Notes                                                             |
+| ------------------------ | -------------------- | ----------------------------------------------------------------- |
+| App Service              | `$APP_SERVICE`       | Linux container, `WEBSITES_PORT=3000`, health probe `/api/health` |
+| App Service plan         | `$APP_SERVICE_PLAN`  | Premium v3 (P1v3 = 2 vCPU / 8 GB)                                 |
+| Autoscale                | `$AUTOSCALE`         | out @ CPU>65% / mem>75%, in @ CPU<30%                             |
+| Container registry       | `$ACR`               | image `transcripts/transcripts:<git-sha>`                         |
+| Postgres                 | `$PG_SERVER`         | **shared** flexible server (PG16) — see warning below             |
+| Key Vault (subscription) | `$KEY_VAULT`         | not yet wired into the App Service                                |
 
 ## Deploy
 
-GitHub Actions `.github/workflows/main_un-transcripts.yml` on push to `main`:
-build the Docker image → push to ACR → deploy to the App Service **Production**
-slot. (CI currently authenticates with ACR admin creds + a publish profile;
-migrating to managed identity / OIDC is a tracked hardening item.)
+A GitHub Actions workflow on push to `main` builds the Docker image → pushes to
+ACR → deploys to the App Service **Production** slot. (Hardening CI auth to
+managed identity / OIDC is a tracked item.)
 
 ## Operating it from the CLI
 
 ```bash
 # Status
-az appservice plan show -g rg-transcripts -n transcripts-app-service-plan \
+az appservice plan show -g "$RESOURCE_GROUP" -n "$APP_SERVICE_PLAN" \
   --query "{sku:sku.name, instances:sku.capacity}" -o json
-az webapp list-instances -g rg-transcripts -n un-transcripts --query "length(@)" -o tsv
-az monitor autoscale show -g rg-transcripts -n transcripts-autoscale \
+az webapp list-instances -g "$RESOURCE_GROUP" -n "$APP_SERVICE" --query "length(@)" -o tsv
+az monitor autoscale show -g "$RESOURCE_GROUP" -n "$AUTOSCALE" \
   --query "{min:profiles[0].capacity.minimum, max:profiles[0].capacity.maximum}" -o json
 
 # Scale OUT (the right lever — see below). Floor for a known surge:
-az monitor autoscale update -g rg-transcripts -n transcripts-autoscale --min-count 4 --count 4
+az monitor autoscale update -g "$RESOURCE_GROUP" -n "$AUTOSCALE" --min-count 4 --count 4
 # Raise the ceiling (costs nothing until used):
-az monitor autoscale update -g rg-transcripts -n transcripts-autoscale --max-count 10
+az monitor autoscale update -g "$RESOURCE_GROUP" -n "$AUTOSCALE" --max-count 10
 # Back down afterwards:
-az monitor autoscale update -g rg-transcripts -n transcripts-autoscale --min-count 2 --count 2
+az monitor autoscale update -g "$RESOURCE_GROUP" -n "$AUTOSCALE" --min-count 2 --count 2
 
 # Always On (no cold starts; required for the cron sidecar to stay warm)
-az webapp config set -g rg-transcripts -n un-transcripts --always-on true
+az webapp config set -g "$RESOURCE_GROUP" -n "$APP_SERVICE" --always-on true
 ```
 
 ## Scale OUT, not UP
@@ -74,10 +88,10 @@ scales out cheaply.
   pre-averaged metric; its `Maximum` aggregation is meaningless (comes out
   _below_ the average). True tail latency (p95/p99) is not in platform metrics —
   it needs Application Insights (not currently configured).
-- **`connections_failed` on the DB** is a steady low trickle of internet
-  scanners hitting the permissive dev network rule — **not** app pool
-  exhaustion. Cross-check against `active_connections` (peak ~65 vs an ~859
-  ceiling) before concluding the DB is stressed.
+- **`connections_failed` on the DB** is a steady low trickle of unauthenticated
+  probe traffic, **not** app pool exhaustion. Cross-check against
+  `active_connections` (peak well below the ceiling) before concluding the DB is
+  stressed.
 
 ## Monitoring notebooks
 

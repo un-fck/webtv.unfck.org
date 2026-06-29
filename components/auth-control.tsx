@@ -13,7 +13,7 @@ import {
 import { useAuth } from "@/lib/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
-// "david.pomerenke@un.org" → "DP"
+// "user.name@example.org" → "UN"
 function initialsFromEmail(email: string): string {
   const local = email.split("@")[0] || email;
   const parts = local.split(/[.\-_]+/).filter(Boolean);
