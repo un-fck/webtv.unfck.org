@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { usePathname } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 
 const styles = `
@@ -22,22 +21,13 @@ const styles = `
 `;
 
 export function AnimatedCornerLogo() {
-  const pathname = usePathname();
   const t = useTranslations("corner");
   const tHeader = useTranslations("header");
 
-  const [visible, setVisible] = useState(false);
   const [cornerClass, setCornerClass] = useState("corner-slide-hidden");
   const [spriteClass, setSpriteClass] = useState("un-two-zero-roll-hidden");
 
   useEffect(() => {
-    if (pathname !== "/") {
-      setVisible(false);
-      return;
-    }
-
-    setVisible(true);
-
     const cornerTimer = setTimeout(
       () => setCornerClass("corner-slide-entrance"),
       1500,
@@ -51,9 +41,7 @@ export function AnimatedCornerLogo() {
       clearTimeout(cornerTimer);
       clearTimeout(spriteTimer);
     };
-  }, [pathname]);
-
-  if (!visible) return null;
+  }, []);
 
   return (
     <>
