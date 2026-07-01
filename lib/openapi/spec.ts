@@ -140,9 +140,12 @@ export function buildSpec(): Record<string, unknown> {
         "`ga/79/21`). Append `.json` or `.txt` to any meeting page URL to " +
         "get the same content as data. Videos without a document symbol are " +
         "addressable at `/{locale}/asset/{asset_id}`.\n\n" +
-        "Transcripts are produced by automatic speech recognition over real " +
-        "meeting audio — not official records. The authoritative record is " +
-        "the UN verbatim (PV) or summary (SR) document; see `GET /api/pv`.",
+        "Transcripts available through this API are created by using " +
+        "automatic speech recognition and are not official records nor " +
+        "official documents of the United Nations. Official records and " +
+        "official documents are available on the Official Document System " +
+        "of the United Nations; the verbatim (PV) or summary (SR) document " +
+        "for a meeting can be fetched via `GET /api/pv`.",
     },
     servers: [{ url: "/" }],
     tags: [

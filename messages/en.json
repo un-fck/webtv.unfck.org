@@ -35,7 +35,7 @@
   "home": {
     "headline": "Read what was said at the UN.",
     "lead": "Skim meeting transcripts, find speakers, jump to the moment in the video.",
-    "disclaimer": "Transcripts are generated automatically and are not official UN records.",
+    "disclaimer": "Transcripts available through this tool are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations.",
     "learnMore": "Learn more →",
     "backToHomepage": "← Back to homepage"
   },
@@ -267,8 +267,8 @@
       "audioOutOfSyncStarting": "Starting…",
       "audioOutOfSyncSignIn": "Sign in to request a fresh transcription",
       "audioOutOfSyncInProgress": "A fresh transcription is in progress.",
-      "transcriptDisclaimer": "Automatically generated transcript — may contain errors. Not an official United Nations record. <aboutLink>Learn more</aboutLink>",
-      "exportDisclaimer": "Automatically generated transcript — may contain errors. Not an official United Nations record."
+      "transcriptDisclaimer": "Transcripts available through this tool are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations. <aboutLink>Learn more</aboutLink>",
+      "exportDisclaimer": "Transcripts available through this tool are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations."
     },
     "highlightsOnly": "Highlights only",
     "allContent": "All content with highlights"

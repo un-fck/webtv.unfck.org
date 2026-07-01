@@ -35,7 +35,7 @@
   "home": {
     "headline": "Lisez ce qui a été dit à l'ONU.",
     "lead": "Parcourez les transcriptions de réunions, trouvez les intervenants, accédez au moment voulu dans la vidéo.",
-    "disclaimer": "Les transcriptions sont générées automatiquement et ne sont pas des comptes rendus officiels de l'ONU.",
+    "disclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU.",
     "learnMore": "En savoir plus →",
     "backToHomepage": "← Retour à l'accueil"
   },
@@ -284,8 +284,8 @@
       "audioOutOfSyncStarting": "Démarrage…",
       "audioOutOfSyncSignIn": "Connectez-vous pour demander une nouvelle transcription",
       "audioOutOfSyncInProgress": "Une nouvelle transcription est en cours.",
-      "transcriptDisclaimer": "Transcription générée automatiquement — peut contenir des erreurs. Ceci n'est pas un compte rendu officiel de l'Organisation des Nations Unies. <aboutLink>En savoir plus</aboutLink>",
-      "exportDisclaimer": "Transcription générée automatiquement — peut contenir des erreurs. Ceci n'est pas un compte rendu officiel de l'Organisation des Nations Unies."
+      "transcriptDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU. <aboutLink>En savoir plus</aboutLink>",
+      "exportDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU."
     },
     "highlightsOnly": "Faits saillants",
     "allContent": "Tout le contenu avec faits saillants"

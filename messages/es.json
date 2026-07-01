@@ -35,7 +35,7 @@
   "home": {
     "headline": "Lea lo que se dijo en la ONU.",
     "lead": "Recorra las transcripciones de las reuniones, encuentre oradores, vaya al momento en el vídeo.",
-    "disclaimer": "Las transcripciones se generan automáticamente y no son actas oficiales de las Naciones Unidas.",
+    "disclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU.",
     "learnMore": "Más información →",
     "backToHomepage": "← Volver al inicio"
   },
@@ -284,8 +284,8 @@
       "audioOutOfSyncStarting": "Iniciando…",
       "audioOutOfSyncSignIn": "Inicie sesión para solicitar una nueva transcripción",
       "audioOutOfSyncInProgress": "Una nueva transcripción está en curso.",
-      "transcriptDisclaimer": "Transcripción generada automáticamente — puede contener errores. No es un acta oficial de las Naciones Unidas. <aboutLink>Más información</aboutLink>",
-      "exportDisclaimer": "Transcripción generada automáticamente — puede contener errores. No es un acta oficial de las Naciones Unidas."
+      "transcriptDisclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU. <aboutLink>Más información</aboutLink>",
+      "exportDisclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU."
     },
     "highlightsOnly": "Solo destacados",
     "allContent": "Todo el contenido con destacados"

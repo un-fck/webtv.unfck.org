@@ -1,5 +1,4 @@
-const DISCLAIMER =
-  "Automatically generated transcript — may contain errors. Not an official United Nations record.";
+import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
 
 const CONTENT = `# UN Transcripts — Full API Reference
 
@@ -7,7 +6,7 @@ const CONTENT = `# UN Transcripts — Full API Reference
 
 UN Transcripts provides searchable, timestamped transcripts of public meetings from UN Web TV (webtv.un.org). Transcripts include speaker identification, topic analysis, and word-level timestamps synchronized to the video. Available in all six official UN languages: English, French, Spanish, Arabic, Chinese, Russian.
 
-Disclaimer: "${DISCLAIMER}"
+Disclaimer: "${TRANSCRIPT_DISCLAIMER}"
 
 ## The "append .json / .txt" rule
 
@@ -123,7 +122,7 @@ The locale selects the transcript language. Override with \`?language=XX\` (en, 
 UN Transcripts — https://transcripts.un.org/en/sc/10175
 {title} — {body} — {date}
 Language: en
-Automatically generated transcript — may contain errors. Not an official United Nations record.
+${TRANSCRIPT_DISCLAIMER}
 
 ---
 
@@ -144,7 +143,7 @@ Returns full structured data with timestamps, speaker mappings, topics, and word
 
 \`\`\`json
 {
-  "disclaimer": "Automatically generated transcript — ...",
+  "disclaimer": "Transcripts available through this tool are created by using automatic speech recognition ...",
   "video": {
     "id": "...",
     "kaltura_id": "...",
