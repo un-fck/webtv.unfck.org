@@ -188,6 +188,15 @@
       "odsLabel": "UN Official Document System",
       "odsBody": "— Official verbatim records (PV documents) retrieved from documents.un.org where available."
     },
+    "api": {
+      "heading": "Using this programmatically",
+      "intro": "Every meeting page has a matching data endpoint — append <code>.json</code> for structured data, or <code>.txt</code> for plain text, compact enough to use as LLM context.",
+      "search": "To search or list meetings across the archive, fetch <code>/{locale}/meetings.json</code> — filter with <code>?date=</code>, <code>?q=</code>, <code>?category=</code>, or <code>?from=</code>/<code>?to=</code> for a date range.",
+      "forAgents": {
+        "heading": "For AI agents",
+        "body": "If you are an LLM or autonomous agent, start at <llmsLink>llms.txt</llmsLink> for a structured guide to this API — the URL grammar, the search endpoint, and a recommended fetch workflow. A full machine-readable schema is available as an <openapiLink>OpenAPI reference</openapiLink>."
+      }
+    },
     "status": {
       "heading": "Status",
       "body": "This tool is in <publicPreview>Public Preview</publicPreview>. Features, coverage, and accuracy are actively being improved. Feedback is welcome."

@@ -150,6 +150,7 @@ async function handleMeeting(
   format: Format,
 ) {
   const video = recordToVideo(record, false, locale);
+  const url = videoUrl(record);
   // ?language=XX wins; otherwise default to the URL locale's transcript when
   // one exists, falling back to the most-recent transcript in any language.
   const requestedLanguage =
@@ -174,6 +175,7 @@ async function handleMeeting(
     const metadata = await getVideoMetadata(record.asset_id);
     return jsonResponse(request, {
       disclaimer: TRANSCRIPT_DISCLAIMER,
+      llms: buildLlmsPointer(locale, url),
       video: serializeVideo(video, record),
       metadata: serializeMetadata(metadata),
       transcript: null,
@@ -193,6 +195,7 @@ async function handleMeeting(
     const metadata = await getVideoMetadata(record.asset_id);
     return jsonResponse(request, {
       disclaimer: TRANSCRIPT_DISCLAIMER,
+      llms: buildLlmsPointer(locale, url),
       video: serializeVideo(video, record),
       metadata: serializeMetadata(metadata),
       transcript: {
@@ -272,6 +275,7 @@ async function handleMeeting(
   const metadata = await getVideoMetadata(record.asset_id);
   return jsonResponse(request, {
     disclaimer: TRANSCRIPT_DISCLAIMER,
+    llms: buildLlmsPointer(locale, url),
     video: serializeVideo(video, record),
     metadata: serializeMetadata(metadata),
     transcript: {
@@ -325,6 +329,18 @@ function serializeMetadata(
     corporate_name: metadata.corporateName,
     speaker_affiliation: metadata.speakerAffiliation,
     related_documents: metadata.relatedDocuments,
+  };
+}
+
+// Slim, English-only orientation block for agents that land on this JSON
+// directly (not via meetings.json). Not localized: llms.txt itself is
+// English-only regardless of locale, and the footer link to it follows the
+// same precedent (see components/site-footer.tsx).
+function buildLlmsPointer(locale: string, url: string) {
+  return {
+    note: "Plain-text sibling of this page, compact for LLM context. For the full API guide (search, listing, URL grammar) see /llms.txt.",
+    textUrl: `/${locale}/${url}.txt`,
+    guide: "/llms.txt",
   };
 }
 

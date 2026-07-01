@@ -205,6 +205,15 @@
       "odsLabel": "联合国正式文件系统",
       "odsBody": "— 从 documents.un.org 检索的正式逐字记录(PV 文件,凡可获取者)。"
     },
+    "api": {
+      "heading": "以编程方式使用",
+      "intro": "每个会议页面都有对应的数据接口——追加 <code>.json</code> 获取结构化数据,或追加 <code>.txt</code> 获取纯文本,足够精简,适合用作大语言模型(LLM)的上下文。",
+      "search": "如需在整个存档中搜索或列出会议,请获取 <code>/{locale}/meetings.json</code>——可使用 <code>?date=</code>、<code>?q=</code>、<code>?category=</code>,或 <code>?from=</code>/<code>?to=</code> 指定日期范围进行筛选。",
+      "forAgents": {
+        "heading": "面向 AI 代理",
+        "body": "如果您是大语言模型(LLM)或自主代理,请从 <llmsLink>llms.txt</llmsLink> 开始,获取本 API 的结构化指南——包括 URL 语法、搜索接口和推荐的抓取流程。完整的机器可读架构见 <openapiLink>OpenAPI 参考文档</openapiLink>。"
+      }
+    },
     "status": {
       "heading": "状态",
       "body": "本工具处于<publicPreview>公开预览阶段</publicPreview>。功能、覆盖范围和准确性正在持续改进。欢迎反馈。"
