@@ -252,8 +252,8 @@ export function PVPanel({
     // shape that's coming.
     return (
       <div
+        role="status"
         aria-busy
-        aria-live="polite"
         aria-label={
           pvSymbol.includes("/SR.") ? t("loadingSummary") : t("loadingVerbatim")
         }

@@ -25,8 +25,27 @@ The collection endpoint follows the same rule: \`/en/meetings.json\` is the JSON
 
 ## Quick start
 
-1. **Search** for meetings: \`GET /en/meetings.json?q={query}\`
-2. **Read** a transcript: \`GET /en/sc/10175.txt\`
+1. **List** meetings for a date: \`GET /en/meetings.json?date=2026-06-30\`
+2. **Read** each transcript by fetching the literal \`textUrl\` from that response, e.g. \`GET /en/sc/10189.txt\`
+
+## Recommended workflow (for agents)
+
+Prefer \`meetings.json\` (not \`meetings.txt\`) as your entry point: the JSON
+response carries ready-to-fetch \`pageUrl\` / \`jsonUrl\` / \`textUrl\` strings for
+every meeting. Fetch those URLs **verbatim from the response**.
+
+**Reporting what happened on a date (e.g. "summarize yesterday's meetings"):**
+call \`meetings.json?date=YYYY-MM-DD\` **without** \`text=transcript\`, so
+untranscribed meetings stay visible. Then do *both*:
+
+1. Summarize every meeting that has a transcript (fetch its \`textUrl\`).
+2. Still list every meeting where \`hasTranscript\` is \`false\` / \`textUrl\` is
+   \`null\`, flagged as "occurred; transcript not available".
+
+Do not silently drop untranscribed meetings from the agenda ("not transcribed"
+is not "did not happen"), and do not refuse the whole summary because some are
+missing. Add \`?text=transcript\` only when the task is explicitly to summarize
+the *transcripts* themselves (it filters out untranscribed meetings).
 
 ---
 
@@ -205,12 +224,14 @@ Slugs are derived from UN document symbols. Multi-part recordings of the same me
 | Security Council | S/PV.{n} | /{locale}/sc/{n}[/{p}] | /en/sc/10175 |
 | General Assembly | A/{s}/PV.{n} | /{locale}/ga/{s}/{n}[/{p}] | /en/ga/79/21 |
 | GA Emergency Session | A/ES-{s}/PV.{n} | /{locale}/ga/es{s}/{n}[/{p}] | /en/ga/es11/23 |
-| GA Committees | A/C.{c}/{s}/PV.{n} | /{locale}/ga/c{c}/{s}/{n}[/{p}] | /en/ga/c1/79/7 |
+| GA Committees | A/C.{c}/{s}/{PV|SR}.{n} | /{locale}/ga/c{c}/{s}/{n}[/{p}] | /en/ga/c1/79/7 |
 | Human Rights Council | A/HRC/{s}/SR.{n} | /{locale}/hrc/{s}/{n}[/{p}] | /en/hrc/58/59 |
 | ECOSOC | E/{y}/SR.{n} | /{locale}/ecosoc/{y}/{n}[/{p}] | /en/ecosoc/2024/10 |
 | Permalink (any meeting) | — | /{locale}/asset/{asset_id} | /en/asset/k1o/k1o43lgs4z |
 
 The \`asset/...\` form mirrors UN Web TV's URL grammar exactly — swap the host \`webtv.un.org\` → \`transcripts.un.org\` to find the corresponding transcript page.
+
+GA committee records use \`PV\` (verbatim) only for the 1st Committee; the 2nd–6th Committees use \`SR\` (summary). The \`/{locale}/ga/c{c}/…\` page URL is the same either way — only the underlying UN document symbol suffix differs.
 
 ---
 

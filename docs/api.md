@@ -6,28 +6,30 @@ All endpoints are public with no authentication required.
 
 Every meeting page URL has matching data URLs — just append `.json` or `.txt`:
 
-| Format | Example | Use for |
-|--------|---------|---------|
-| HTML page | `/en/sc/10175` | Humans, browsers |
+| Format          | Example             | Use for             |
+| --------------- | ------------------- | ------------------- |
+| HTML page       | `/en/sc/10175`      | Humans, browsers    |
 | Structured JSON | `/en/sc/10175.json` | Programmatic access |
-| Plain text | `/en/sc/10175.txt` | LLM context |
+| Plain text      | `/en/sc/10175.txt`  | LLM context         |
 
 The locale prefix selects the transcript language (`en`, `fr`, `es`, `ar`, `zh`, `ru`). Override with `?language=XX` if you want a language different from the URL locale.
 
-Internally the rewrite is handled by `proxy.ts`, which maps `/{locale}/{...path}.{json|txt}` to `app/api/data/[locale]/[...path]/route.ts` with `?format=` set. The catch-all handler dispatches on the first segment (`meetings` → list, `asset` → permalink, anything else → citation slug).
+Internally the rewrite is handled by `proxy.ts`, which maps `/{locale}/{...path}.{json|txt}` to `app/api/data/[locale]/[format]/[...path]/route.ts`, encoding the format as a **path segment** (`json`/`text`) rather than a query param — `NextResponse.rewrite` doesn't reliably surface added search params to the destination handler's `request.nextUrl`, but path segments survive via the route's params. The catch-all handler dispatches on the first path segment (`meetings` → list, `asset` → permalink, anything else → citation slug).
 
 ### Citation slugs
 
 Slugs are derived from UN document symbols. Multi-part recordings of the same meeting take a trailing `/N` (the unsuffixed form addresses part 1).
 
-| UN Body | Symbol Pattern | URL Pattern | Example |
-|---|---|---|---|
-| Security Council | `S/PV.{n}` | `/{locale}/sc/{n}[/{p}]` | `/en/sc/10175` |
-| General Assembly plenary | `A/{s}/PV.{n}` | `/{locale}/ga/{s}/{n}[/{p}]` | `/en/ga/79/21` |
-| GA Emergency Special Session | `A/ES-{s}/PV.{n}` | `/{locale}/ga/es{s}/{n}[/{p}]` | `/en/ga/es11/23` |
-| GA Committees | `A/C.{c}/{s}/SR.{n}` | `/{locale}/ga/c{c}/{s}/{n}[/{p}]` | `/en/ga/c1/79/7` |
-| Human Rights Council | `A/HRC/{s}/SR.{n}` | `/{locale}/hrc/{s}/{n}[/{p}]` | `/en/hrc/58/59` |
-| ECOSOC | `E/{y}/SR.{n}` | `/{locale}/ecosoc/{y}/{n}[/{p}]` | `/en/ecosoc/2024/10` |
+| UN Body                      | Symbol Pattern             | URL Pattern                       | Example              |
+| ---------------------------- | -------------------------- | --------------------------------- | -------------------- |
+| Security Council             | `S/PV.{n}`                 | `/{locale}/sc/{n}[/{p}]`          | `/en/sc/10175`       |
+| General Assembly plenary     | `A/{s}/PV.{n}`             | `/{locale}/ga/{s}/{n}[/{p}]`      | `/en/ga/79/21`       |
+| GA Emergency Special Session | `A/ES-{s}/PV.{n}`          | `/{locale}/ga/es{s}/{n}[/{p}]`    | `/en/ga/es11/23`     |
+| GA Committees                | `A/C.{c}/{s}/{PV\|SR}.{n}` | `/{locale}/ga/c{c}/{s}/{n}[/{p}]` | `/en/ga/c1/79/7`     |
+| Human Rights Council         | `A/HRC/{s}/SR.{n}`         | `/{locale}/hrc/{s}/{n}[/{p}]`     | `/en/hrc/58/59`      |
+| ECOSOC                       | `E/{y}/SR.{n}`             | `/{locale}/ecosoc/{y}/{n}[/{p}]`  | `/en/ecosoc/2024/10` |
+
+GA committees use `PV` (verbatim) only for the 1st Committee; the 2nd–6th Committees use `SR` (summary) — see `docs/official-transcripts.md`. The `/ga/c{c}/…` page URL is identical either way; only the underlying document symbol suffix differs.
 
 ### Permalink (any meeting by asset id)
 
@@ -49,15 +51,17 @@ Returns a paginated list of UN meetings matching the given filters. Covers the l
 
 ### Query parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `q` | string | Search meeting titles and metadata — not transcript content (FTS with trigram ILIKE fallback). Min 2 characters. |
-| `category` | string | Filter by meeting category. |
-| `date` | YYYY-MM-DD | Filter to a specific date. |
-| `sort` | enum | `date_desc` (default), `date_asc`, `title_asc`, `title_desc` |
-| `offset` | integer | Pagination offset. Results come in chunks of 250. |
-| `text` | string (multi) | Filter by available documents: `transcript`, `pv` (verbatim record), `sr` (summary record). |
-| `xlang` | `1` | Include meetings not yet available in the URL locale (default: hide them). |
+| Parameter  | Type           | Description                                                                                                      |
+| ---------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `q`        | string         | Search meeting titles and metadata — not transcript content (FTS with trigram ILIKE fallback). Min 2 characters. |
+| `category` | string         | Filter by meeting category.                                                                                      |
+| `date`     | YYYY-MM-DD     | Filter to a specific date. Mutually exclusive with `from`/`to`.                                                  |
+| `from`     | YYYY-MM-DD     | Inclusive start of a date range.                                                                                 |
+| `to`       | YYYY-MM-DD     | Inclusive end of a date range.                                                                                   |
+| `sort`     | enum           | `date_desc` (default), `date_asc`, `title_asc`, `title_desc`                                                     |
+| `offset`   | integer        | Pagination offset. Results come in chunks of 250.                                                                |
+| `text`     | string (multi) | Filter by available documents: `transcript`, `pv` (verbatim record), `sr` (summary record).                      |
+| `xlang`    | `1`            | Include meetings not yet available in the URL locale (default: hide them).                                       |
 
 ### Response
 
@@ -106,8 +110,8 @@ Returns the video object with full transcript data including statements, speaker
 
 ### Query parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter  | Type   | Description                                                                            |
+| ---------- | ------ | -------------------------------------------------------------------------------------- |
 | `language` | string | Language track to return (en, fr, es, ar, zh, ru). Overrides the URL locale's default. |
 
 ### Plain-text format
@@ -177,10 +181,10 @@ Automatically generated transcript — may contain errors. Not an official Unite
                 "text": "...",
                 "start": 12.0,
                 "end": 15.0,
-                "topics": [{ "key": "...", "label": "...", "description": "..." }],
-                "words": [
-                  { "text": "...", "start": 12.0, "end": 12.2 }
-                ]
+                "topics": [
+                  { "key": "...", "label": "...", "description": "..." }
+                ],
+                "words": [{ "text": "...", "start": 12.0, "end": 12.2 }]
               }
             ]
           }

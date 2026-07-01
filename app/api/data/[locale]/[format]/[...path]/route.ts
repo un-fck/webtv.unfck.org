@@ -444,13 +444,16 @@ async function handleList(
   const hasMore = offset + items.length < total;
 
   if (format === "text") {
-    const header = `# date        slug                  has_transcript  body — title
-# [T] = transcript available at /${locale}/{slug}.txt and .json
+    const header = `# UN meetings — one per line. Fetch each URL below verbatim; do not construct URLs.
+# [T] transcript available (URL is the .txt transcript; append .json for structured data).
+# [ ] occurred, no transcript yet (URL is the meeting page).
+# Format: {date}  {[T]|[ ]}  {url}  {body} — {title}
 \n`;
     const lines = items.map((m) => {
       const d = m.date ? new Date(m.date).toISOString().slice(0, 10) : "?";
       const t = m.hasTranscript ? "[T]" : "[ ]";
-      return `${d}  ${m.slug.padEnd(20)}  ${t}  ${m.body ?? ""} — ${m.title}`;
+      const url = m.textUrl ?? m.pageUrl;
+      return `${d}  ${t}  ${url}  ${m.body ?? ""} — ${m.title}`;
     });
     const tail = hasMore
       ? `\n... ${total - (offset + items.length)} more. Append ?offset=${offset + items.length} for the next page.\n`

@@ -2,50 +2,34 @@ const CONTENT = `# UN Transcripts
 
 > Automatically generated transcripts of public United Nations meetings — not official UN records.
 
-UN Transcripts provides searchable, timestamped transcripts of public meetings from UN Web TV (webtv.un.org), covering the Security Council, General Assembly, Human Rights Council, ECOSOC, and other inter-governmental bodies. Transcripts include speaker identification, topic analysis, and word-level timestamps synchronized to the video.
+UN Transcripts provides searchable, timestamped transcripts of public meetings from UN Web TV (webtv.un.org), covering the Security Council, General Assembly, Human Rights Council, ECOSOC, and other inter-governmental bodies. Transcripts include speaker identification, topic analysis, and word-level timestamps synchronized to the video. Available in all six official UN languages: English, French, Spanish, Arabic, Chinese, Russian.
 
-Available in all six official UN languages: English, French, Spanish, Arabic, Chinese, Russian.
+The append rule: every meeting page URL has matching data URLs — append \`.json\` for structured data or \`.txt\` for plain text (recommended for LLM context). Page \`/en/sc/10175\` → \`/en/sc/10175.json\` or \`/en/sc/10175.txt\`. The locale prefix (\`/en\`, \`/fr\`, \`/es\`, \`/ar\`, \`/zh\`, \`/ru\`) selects the transcript language; override with \`?language=XX\`.
 
-## The "append .json / .txt" rule
+Recommended workflow (do not construct or guess URLs, and do not scrape the rendered HTML page): start from the list endpoint and follow the literal URLs it returns.
 
-Every meeting page URL has matching data URLs — just append \`.json\` or \`.txt\`:
+- \`GET https://transcripts.un.org/en/meetings.json?date=2026-06-30\` lists every meeting on that date. Each item includes \`hasTranscript\` and, when a transcript exists, a ready-to-fetch \`textUrl\` (and \`jsonUrl\`). Filters: \`?date=YYYY-MM-DD\`, \`?from=…&to=…\` (range), \`?q={query}\` (titles/metadata only, min 2 chars), \`?category=…\`, \`?text=transcript|pv|sr\` (has that document type). Paginated 250/page over the last 365 days.
+- Then fetch each item's \`textUrl\` verbatim from that response, e.g. \`https://transcripts.un.org/en/sc/10189.txt\`.
 
-- Page (HTML): \`/en/sc/10175\`
-- Same content as JSON: \`/en/sc/10175.json\`
-- Same content as plain text: \`/en/sc/10175.txt\` (recommended for LLM context)
+Common task — "summarize a day's meetings": call \`meetings.json?date=…\` WITHOUT \`text=transcript\` so you see everything that happened, then (1) summarize each meeting that has a transcript by fetching its \`textUrl\`, and (2) still list every meeting that lacks one as "occurred; transcript not available". Do not silently drop untranscribed meetings, and do not refuse the whole summary because some are missing. Use \`?text=transcript\` only when the task is explicitly to summarize the transcripts themselves.
 
-The locale prefix in the URL (\`/en\`, \`/fr\`, \`/ar\`, \`/zh\`, \`/ru\`, \`/es\`) selects the transcript language; override with \`?language=XX\` if needed.
+Meeting slugs come from UN document symbols; multi-part recordings take a trailing \`/N\` (unsuffixed = part 1): Security Council \`/{locale}/sc/{n}\` (S/PV.{n}); General Assembly \`/{locale}/ga/{session}/{meeting}\`; GA committees \`/{locale}/ga/c{n}/{session}/{meeting}\`; Human Rights Council \`/{locale}/hrc/{session}/{meeting}\`; ECOSOC \`/{locale}/ecosoc/{year}/{meeting}\`; treaty bodies \`/{locale}/cat/{n}\`, \`/cerd/{n}\`, \`/ccpr/{n}\`, \`/cedaw/{n}\`, \`/crc/{n}\`, \`/crpd/{n}\`, \`/cescr/{n}\`, \`/cmw/{n}\`, \`/ced/{n}\`, \`/spt/{n}\`; daily briefings \`/{locale}/briefing/sg/{YYYY-MM-DD}\`, \`/briefing/pga/{YYYY-MM-DD}\`, \`/briefing/geneva/{YYYY-MM-DD}\`. Any meeting is also addressable by its UN Web TV asset id at \`/{locale}/asset/{asset_id}\` (e.g. /en/asset/k1o/k1o43lgs4z mirrors webtv.un.org/en/asset/k1o/k1o43lgs4z).
 
-## How to use (search → read)
+## API
 
-- Search meetings: \`GET /en/meetings.json?q={query}\` — search meeting titles and metadata with filters for body, category, date, and document type. Paginated (250 per page). Covers the last 365 days. Note: searches titles/metadata only, not transcript content.
-- Read transcript (text): \`GET /en/{slug}.txt\` — plain-text transcript with speaker labels, compact for LLM context.
-- Read transcript (JSON): \`GET /en/{slug}.json\` — structured JSON with timestamps, speakers, topics, and optional word-level timing.
-- [Full API reference](/llms-full.txt): detailed query parameters, response shapes, and known limitations.
-- [OpenAPI spec](/openapi.json): machine-readable OpenAPI 3.0 spec (interactive UI at /openapi).
-
-## Meeting URL scheme
-
-Meeting pages have two URL families:
-
-Citation URLs — derived from UN document symbols. Multi-part recordings of the same meeting (resumed, continued) take a trailing \`/N\` (e.g. \`/en/sc/10175/2\` for the resumed part). The unsuffixed form addresses part 1.
-
-- Security Council: \`/{locale}/sc/{n}[/{p}]\` (e.g. /en/sc/9748 for S/PV.9748)
-- General Assembly: \`/{locale}/ga/{session}/{meeting}[/{p}]\` (e.g. /en/ga/79/21)
-- GA Committees: \`/{locale}/ga/c{n}/{session}/{meeting}[/{p}]\`
-- Human Rights Council: \`/{locale}/hrc/{session}/{meeting}[/{p}]\`
-- ECOSOC: \`/{locale}/ecosoc/{year}/{meeting}[/{p}]\`
-- Human rights treaty bodies (cumulative SR numbering): \`/{locale}/cat/{n}[/{p}]\`, \`/{locale}/cerd/{n}\`, \`/{locale}/ccpr/{n}\`, \`/{locale}/cedaw/{n}\`, \`/{locale}/crc/{n}\`, \`/{locale}/crpd/{n}\`, \`/{locale}/cescr/{n}\`, \`/{locale}/cmw/{n}\`, \`/{locale}/ced/{n}\`, \`/{locale}/spt/{n}\`
-- Daily press briefings (host + date): \`/{locale}/briefing/sg/{YYYY-MM-DD}[/{p}]\`, \`/{locale}/briefing/pga/{YYYY-MM-DD}\`, \`/{locale}/briefing/geneva/{YYYY-MM-DD}\`
-
-Permalink URLs — mirror UN Web TV's asset URLs, so swapping the host gets you the corresponding transcript.
-
-- Any meeting by its asset id: \`/{locale}/asset/{asset_id}\` (e.g. /en/asset/k1o/k1o43lgs4z mirrors webtv.un.org/en/asset/k1o/k1o43lgs4z)
+- [Search / browse meetings](/en/meetings.json): \`GET /{locale}/meetings.json\` — filter by \`date\`, \`from\`/\`to\`, \`q\`, \`category\`, \`text\`; returns items with literal \`pageUrl\`, \`jsonUrl\`, \`textUrl\`. Plain-text sibling at \`/{locale}/meetings.txt\`.
+- [Read a transcript (plain text)](/en/sc/10175.txt): \`GET /{locale}/{slug}.txt\` — speaker labels, timestamps, compact for LLM context.
+- [Read a transcript (JSON)](/en/sc/10175.json): \`GET /{locale}/{slug}.json\` — statements, speakers, topics, optional word-level timing.
 
 ## Pages
 
-- [Home](/en)
-- [About](/en/about)
+- [Home](/en): browsable schedule of recent and upcoming meetings.
+- [About](/en/about): how the transcripts are produced and their limitations.
+
+## Optional
+
+- [Full API reference](/llms-full.txt): detailed query parameters, response shapes, and known limitations.
+- [OpenAPI spec](/openapi.json): machine-readable OpenAPI 3.0 spec (interactive UI at /openapi).
 `;
 
 export function GET() {
