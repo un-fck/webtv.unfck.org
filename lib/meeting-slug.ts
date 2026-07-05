@@ -116,7 +116,9 @@ export function slugFromSymbol(symbol: string): string | null {
   }
 
   // Daily briefings: BRIEFING/{HOST}/{YYYY-MM-DD}
-  const brief = symbol.match(/^BRIEFING\/(SG|PGA|GENEVA)\/(\d{4}-\d{2}-\d{2})$/);
+  const brief = symbol.match(
+    /^BRIEFING\/(SG|PGA|GENEVA)\/(\d{4}-\d{2}-\d{2})$/,
+  );
   if (brief) return `briefing/${brief[1].toLowerCase()}/${brief[2]}`;
 
   return null;

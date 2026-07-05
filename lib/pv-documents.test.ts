@@ -75,12 +75,18 @@ describe("parseMeetingSymbol (real titles from the metadata dump)", () => {
         "3225th Meeting, 117th Session, Committee on the Elimination of Racial Discrimination (CERD)",
         "CERD/C/SR.3225",
       ],
-      ["4100th Meeting, 140th Session, Human Rights Committee (CCPR)", "CCPR/C/SR.4100"],
+      [
+        "4100th Meeting, 140th Session, Human Rights Committee (CCPR)",
+        "CCPR/C/SR.4100",
+      ],
       [
         "1900th Meeting, 88th Session, Committee on the Elimination of Discrimination against Women (CEDAW)",
         "CEDAW/C/SR.1900",
       ],
-      ["2700th Meeting, 95th Session, Committee on the Rights of the Child (CRC)", "CRC/C/SR.2700"],
+      [
+        "2700th Meeting, 95th Session, Committee on the Rights of the Child (CRC)",
+        "CRC/C/SR.2700",
+      ],
       [
         "650th Meeting, 30th Session, Committee on the Rights of Persons with Disabilities (CRPD)",
         "CRPD/C/SR.650",

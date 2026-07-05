@@ -15,7 +15,7 @@ import type { VideoRecord } from "@/lib/db";
 import { videoUrl } from "@/lib/video-url";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { widePageWidth } from "@/lib/layout";
-import { cn } from "@/lib/utils";
+import { cn, jsonLdScript } from "@/lib/utils";
 import { ExternalLink } from "@/components/external-link";
 import { VideoPageClient } from "@/components/video-page-client";
 import { MeetingStateProvider } from "@/components/meeting-state/meeting-state";
@@ -176,7 +176,10 @@ export async function renderVideoPage({
     },
   };
 
-  const tFormats = await getTranslations({ locale, namespace: "video.formats" });
+  const tFormats = await getTranslations({
+    locale,
+    namespace: "video.formats",
+  });
   const textHref = `/${locale}/${canonicalPath}.txt`;
   const jsonHref = `/${locale}/${canonicalPath}.json`;
 
@@ -195,7 +198,9 @@ export async function renderVideoPage({
     <main id="main" tabIndex={-1} className="min-h-screen bg-background">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // Escape </script> and U+2028/2029 breakout: name/description derive
+        // from scraped WebTV titles + AI summaries, which are untrusted.
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
       <MeetingStateProvider kalturaId={kalturaId}>
         <VideoPageClient

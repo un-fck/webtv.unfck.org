@@ -421,7 +421,10 @@ export async function runSpeakerIdentification(
   } catch (error) {
     if (!isTransientPipelineError(error)) {
       Sentry.captureException(error, {
-        tags: { pipeline: "speaker_identification", transcript_id: transcriptId },
+        tags: {
+          pipeline: "speaker_identification",
+          transcript_id: transcriptId,
+        },
       });
     }
     await releaseTranscript(

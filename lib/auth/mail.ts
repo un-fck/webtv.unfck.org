@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { getTranslations } from "next-intl/server";
 
-import { getBaseUrl } from "@/lib/get-base-url";
+import { getTrustedBaseUrl } from "@/lib/get-base-url";
 
 export const SITE_TITLE = "UN Transcripts";
 
@@ -23,7 +23,9 @@ export async function sendMagicLink(
   // Locale embedded in the magic-link URL so the verify page (and the post-
   // verify navigation) lands in the same language the user requested. The
   // header/body of the email are pulled from the locale's catalog.
-  const link = `${await getBaseUrl()}/${locale}/verify?token=${token}`;
+  // Trusted (config-only) origin — never the request Host — so a forged Host
+  // on the sign-in request cannot redirect this token-bearing link.
+  const link = `${getTrustedBaseUrl()}/${locale}/verify?token=${token}`;
   const t = await getTranslations({
     locale,
     namespace: "email.magicLink",

@@ -45,6 +45,34 @@ export async function getBaseUrl(): Promise<string> {
   return `http://localhost:${port}`;
 }
 
+/**
+ * Trusted origin resolved from configuration only — it NEVER reads the request
+ * `Host` header. Use this for any URL we EMAIL to a user (magic-link sign-in,
+ * transcript notifications): a forged `Host` on the triggering request would
+ * otherwise become an attacker-controlled link in a genuine, trusted email
+ * (magic-link token theft → account takeover). It also avoids leaking the
+ * cron's `127.0.0.1` host into notification links.
+ *
+ * Priority: BASE_URL → VERCEL_PROJECT_PRODUCTION_URL → (dev only) localhost.
+ * Deliberately omits VERCEL_URL (deployment-specific preview host) and the
+ * request Host. Fails closed in production if no canonical origin is
+ * configured — better a 500 on send than a poisonable link.
+ */
+export function getTrustedBaseUrl(): string {
+  if (process.env.BASE_URL) {
+    return normalizeUrl(process.env.BASE_URL);
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.NODE_ENV !== "production") {
+    return `http://localhost:${process.env.PORT || "3000"}`;
+  }
+  throw new Error(
+    "BASE_URL must be set in production (required for links in outbound email)",
+  );
+}
+
 function normalizeUrl(url: string): string {
   return url.replace(/\/+$/, "");
 }

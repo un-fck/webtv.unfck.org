@@ -30,61 +30,59 @@ export default async function Image({
   ]);
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        background: "#fff",
+        color: "#1a1a1a",
+        // Teams (and iMessage's square thumbnail) crop the OG image with
+        // object-fit: cover to a near-square box, dropping the outer ~17%
+        // on each side. The horizontal safe-area padding here keeps the
+        // emblem, wordmark, headline, and titles inside that center band on
+        // those clients without making the wide-format unfurls look hollow.
+        padding: "72px 200px",
+        fontFamily: "Roboto",
+      }}
+    >
+      <OgHeader
+        brand={header("wordmarkBrand")}
+        descriptor={header("wordmarkDescriptor")}
+        badge={header("publicPreview")}
+      />
       <div
         style={{
-          width: "100%",
-          height: "100%",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
-          background: "#fff",
-          color: "#1a1a1a",
-          // Teams (and iMessage's square thumbnail) crop the OG image with
-          // object-fit: cover to a near-square box, dropping the outer ~17%
-          // on each side. The horizontal safe-area padding here keeps the
-          // emblem, wordmark, headline, and titles inside that center band on
-          // those clients without making the wide-format unfurls look hollow.
-          padding: "72px 200px",
-          fontFamily: "Roboto",
+          gap: 32,
+          paddingBottom: 24,
         }}
       >
-        <OgHeader
-          brand={header("wordmarkBrand")}
-          descriptor={header("wordmarkDescriptor")}
-          badge={header("publicPreview")}
-        />
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 32,
-            paddingBottom: 24,
+            fontSize: 88,
+            fontWeight: 700,
+            lineHeight: 1.05,
+            letterSpacing: "-0.02em",
           }}
         >
-          <div
-            style={{
-              fontSize: 88,
-              fontWeight: 700,
-              lineHeight: 1.05,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            {fixOrphan(home("headline"))}
-          </div>
-          <div
-            style={{
-              fontSize: 48,
-              fontWeight: 400,
-              lineHeight: 1.25,
-              color: "#444",
-            }}
-          >
-            {home("lead")}
-          </div>
+          {fixOrphan(home("headline"))}
+        </div>
+        <div
+          style={{
+            fontSize: 48,
+            fontWeight: 400,
+            lineHeight: 1.25,
+            color: "#444",
+          }}
+        >
+          {home("lead")}
         </div>
       </div>
-    ),
+    </div>,
     { ...size, fonts },
   );
 }

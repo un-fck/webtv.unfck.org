@@ -8,4 +8,4 @@ export const scheduleLookbackDays = 14;
 // `exportDisclaimer`), which carry this same wording per locale; the homepage
 // (`home.disclaimer`) is the only other phrasing variant.
 export const TRANSCRIPT_DISCLAIMER =
-  "Automatically generated transcript — may contain errors. Not an official United Nations record.";
+  "Transcripts available through this tool are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations.";

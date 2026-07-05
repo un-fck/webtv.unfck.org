@@ -1,7 +1,4 @@
-import {
-  getActiveTranscriptByKalturaId,
-  type VideoRecord,
-} from "@/lib/db";
+import { getActiveTranscriptByKalturaId, type VideoRecord } from "@/lib/db";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { stripWordsFromStatements } from "@/lib/strip-words";
 import type { Video } from "@/lib/un-api";

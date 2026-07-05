@@ -183,7 +183,8 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Production only:**
 
-- `CRON_SECRET` — Vercel cron job authorization (auto-set by Vercel)
+- `CRON_SECRET` — cron job authorization (Bearer token; on Azure it's baked into the container crontab, on Vercel it's auto-set). `initWorker()` throws at boot if it's unset in production.
+- `BASE_URL` — canonical public origin used for links in **outbound email** (magic-link sign-in, transcript notifications). Resolved via `getTrustedBaseUrl()` in `lib/get-base-url.ts`, which reads config only and **never** the request `Host` header — so a forged `Host` cannot poison an emailed magic-link (account-takeover class). Missing in production → `getTrustedBaseUrl()` throws (email send fails closed) rather than emitting a poisonable link. Distinct from `getBaseUrl()`, which still uses the request Host for rendering/SEO (sitemap, robots, OG, canonical) to support multi-domain.
 - `NEXT_PUBLIC_BASE_URL` — public base URL of the site. (No longer used for internal speaker-identification triggers — those now run in-process via `runSpeakerIdentification()` + `after()`, not an HTTP self-call.)
 
 **Optional:**
@@ -205,6 +206,7 @@ Detailed docs live in `docs/` — read these before working on the relevant subs
 - `docs/official-transcripts.md` — Which UN organs produce PV vs SR records, document symbol patterns
 - `docs/api.md` — Public API: URL scheme, JSON endpoints, response shapes
 - `docs/realignment.md` — Realigning transcript timestamps after WebTV re-cuts a video: detection (duration reduction), Gemini-computed front-shift offset, geometric validation, `source_duration_ms`/`time_offset_ms`/`aligned_duration_ms`, and where the offset is applied
+- `docs/feeds.md` — Curated feeds (`webtv.feeds`): matching rules that auto-transcribe newly-discovered videos and drive user email subscriptions, how the two consumers (`sync-videos` vs `send-transcript-notifications`) differ in whether they respect `enabled`, and how to add a feed (migration + `seed.sql`, no UI yet)
 
 ## Architecture
 
@@ -276,9 +278,9 @@ Historically the schema avoided FK constraints and enforced referential integrit
 | `/api/cron/process-scheduled`        | GET    | Cron: process scheduled transcripts (auth via `CRON_SECRET`)         |
 | `/api/cron/sync-videos`              | GET    | Cron: sync UN Web TV schedule (auth via `CRON_SECRET`)               |
 | `/api/cron/check-pv`                 | GET    | Cron: check PV document availability (auth via `CRON_SECRET`)        |
-| `/{locale}/meetings.json`            | GET    | Public list/search (rewritten by `proxy.ts` → `/api/data/[locale]/meetings`) |
-| `/{locale}/{slug}.json`              | GET    | Single meeting JSON (rewritten → `/api/data/[locale]/[...path]?format=json`) |
-| `/{locale}/{slug}.txt`               | GET    | Single meeting plain text (rewritten → `...?format=text`)            |
+| `/{locale}/meetings.json`            | GET    | Public list/search (rewritten by `proxy.ts` → `/api/data/[locale]/json/meetings`) |
+| `/{locale}/{slug}.json`              | GET    | Single meeting JSON (rewritten → `/api/data/[locale]/json/[...path]`) |
+| `/{locale}/{slug}.txt`               | GET    | Single meeting plain text (rewritten → `/api/data/[locale]/text/[...path]`) |
 
 Cron schedule (`docker/crontab.template`): `process-scheduled` every 5 min, `sync-videos` (near) every 15 min, `sync-videos?range=far` every 6 hours, `check-pv` every 6 hours, `send-transcript-notifications` every 5 min, `realign` hourly, `liveness-sweep` every 15 min (backstop that flips heartbeat-stale rows to `interrupted` — graceful shutdowns are handled directly by the worker's SIGTERM handler in `lib/server-init.ts`).
 

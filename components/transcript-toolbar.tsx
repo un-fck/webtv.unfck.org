@@ -368,107 +368,110 @@ export function TranscriptToolbar({
               )}
             </div>
             {mounted && (
-            <Popover open={downloadOpen} onOpenChange={setDownloadOpen}>
-              <PopoverTrigger
-                aria-label={t("download")}
-                className={cn(
-                  typography.label,
-                  "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                )}
-              >
-                <Download className="h-3.5 w-3.5 sm:hidden" />
-                <span className="hidden sm:inline">{t("download")}</span>
-                <ChevronDown className="h-3 w-3" />
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-44 overflow-hidden p-0">
-                <ul role="menu" className="flex flex-col">
-                  <li role="none">
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        handleCopyToClipboard();
-                        setDownloadOpen(false);
-                      }}
-                      className="w-full border-b border-border px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {t("copyToClipboard")}
-                    </button>
-                  </li>
-                  <li role="none">
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        onDownloadDocx();
-                        setDownloadOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {t("downloadDocx")}
-                    </button>
-                  </li>
-                  <li role="none">
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        onDownloadTxt();
-                        setDownloadOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {t("downloadTxt")}
-                    </button>
-                  </li>
-                  <li role="none">
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        onDownloadExcel();
-                        setDownloadOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {t("downloadExcel")}
-                    </button>
-                  </li>
-                  <li role="none">
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        onDownloadSrt();
-                        setDownloadOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {t("downloadSrt")}
-                    </button>
-                  </li>
-                  <li role="none">
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        onDownloadVtt();
-                        setDownloadOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {t("downloadVtt")}
-                    </button>
-                  </li>
-                  <li role="none">
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        window.open(`/${locale}/${videoSlug}.json`, "_blank");
-                        setDownloadOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {t("downloadJson")}
-                    </button>
-                  </li>
-                </ul>
-              </PopoverContent>
-            </Popover>
+              <Popover open={downloadOpen} onOpenChange={setDownloadOpen}>
+                <PopoverTrigger
+                  aria-label={t("download")}
+                  className={cn(
+                    typography.label,
+                    "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  )}
+                >
+                  <Download className="h-3.5 w-3.5 sm:hidden" />
+                  <span className="hidden sm:inline">{t("download")}</span>
+                  <ChevronDown className="h-3 w-3" />
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  className="w-44 overflow-hidden p-0"
+                >
+                  <ul role="menu" className="flex flex-col">
+                    <li role="none">
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          handleCopyToClipboard();
+                          setDownloadOpen(false);
+                        }}
+                        className="w-full border-b border-border px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {t("copyToClipboard")}
+                      </button>
+                    </li>
+                    <li role="none">
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          onDownloadDocx();
+                          setDownloadOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {t("downloadDocx")}
+                      </button>
+                    </li>
+                    <li role="none">
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          onDownloadTxt();
+                          setDownloadOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {t("downloadTxt")}
+                      </button>
+                    </li>
+                    <li role="none">
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          onDownloadExcel();
+                          setDownloadOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {t("downloadExcel")}
+                      </button>
+                    </li>
+                    <li role="none">
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          onDownloadSrt();
+                          setDownloadOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {t("downloadSrt")}
+                      </button>
+                    </li>
+                    <li role="none">
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          onDownloadVtt();
+                          setDownloadOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {t("downloadVtt")}
+                      </button>
+                    </li>
+                    <li role="none">
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          window.open(`/${locale}/${videoSlug}.json`, "_blank");
+                          setDownloadOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {t("downloadJson")}
+                      </button>
+                    </li>
+                  </ul>
+                </PopoverContent>
+              </Popover>
             )}
           </>
         )}

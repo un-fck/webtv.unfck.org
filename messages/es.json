@@ -35,7 +35,7 @@
   "home": {
     "headline": "Lea lo que se dijo en la ONU.",
     "lead": "Recorra las transcripciones de las reuniones, encuentre oradores, vaya al momento en el vídeo.",
-    "disclaimer": "Las transcripciones se generan automáticamente y no son actas oficiales de las Naciones Unidas.",
+    "disclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU.",
     "learnMore": "Más información →",
     "backToHomepage": "← Volver al inicio"
   },
@@ -205,6 +205,15 @@
       "odsLabel": "Sistema de Archivo de Documentos de la ONU",
       "odsBody": "— Actas oficiales (documentos PV) obtenidas de documents.un.org cuando están disponibles."
     },
+    "api": {
+      "heading": "Uso programático",
+      "intro": "Cada página de sesión tiene un endpoint de datos correspondiente — añada <code>.json</code> para datos estructurados, o <code>.txt</code> para texto sin formato, lo bastante compacto para usarse como contexto de un LLM.",
+      "search": "Para buscar o listar sesiones en todo el archivo, obtenga <code>/{locale}/meetings.json</code> — filtre con <code>?date=</code>, <code>?q=</code>, <code>?category=</code>, o <code>?from=</code>/<code>?to=</code> para un rango de fechas.",
+      "forAgents": {
+        "heading": "Para agentes de IA",
+        "body": "Si usted es un LLM o un agente autónomo, comience por <llmsLink>llms.txt</llmsLink> para una guía estructurada de esta API — la gramática de las URL, el endpoint de búsqueda y un flujo de trabajo de obtención recomendado. Hay un esquema completo legible por máquina disponible como <openapiLink>referencia OpenAPI</openapiLink>."
+      }
+    },
     "status": {
       "heading": "Estado",
       "body": "Esta herramienta está en <publicPreview>Vista previa pública</publicPreview>. Sus funciones, cobertura y precisión se mejoran de forma activa. Agradecemos sus comentarios."
@@ -284,8 +293,8 @@
       "audioOutOfSyncStarting": "Iniciando…",
       "audioOutOfSyncSignIn": "Inicie sesión para solicitar una nueva transcripción",
       "audioOutOfSyncInProgress": "Una nueva transcripción está en curso.",
-      "transcriptDisclaimer": "Transcripción generada automáticamente — puede contener errores. No es un acta oficial de las Naciones Unidas. <aboutLink>Más información</aboutLink>",
-      "exportDisclaimer": "Transcripción generada automáticamente — puede contener errores. No es un acta oficial de las Naciones Unidas."
+      "transcriptDisclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU. <aboutLink>Más información</aboutLink>",
+      "exportDisclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU."
     },
     "highlightsOnly": "Solo destacados",
     "allContent": "Todo el contenido con destacados"

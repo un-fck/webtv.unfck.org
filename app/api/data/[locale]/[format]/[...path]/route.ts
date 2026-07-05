@@ -150,6 +150,7 @@ async function handleMeeting(
   format: Format,
 ) {
   const video = recordToVideo(record, false, locale);
+  const url = videoUrl(record);
   // ?language=XX wins; otherwise default to the URL locale's transcript when
   // one exists, falling back to the most-recent transcript in any language.
   const requestedLanguage =
@@ -174,6 +175,7 @@ async function handleMeeting(
     const metadata = await getVideoMetadata(record.asset_id);
     return jsonResponse(request, {
       disclaimer: TRANSCRIPT_DISCLAIMER,
+      llms: buildLlmsPointer(locale, url),
       video: serializeVideo(video, record),
       metadata: serializeMetadata(metadata),
       transcript: null,
@@ -193,6 +195,7 @@ async function handleMeeting(
     const metadata = await getVideoMetadata(record.asset_id);
     return jsonResponse(request, {
       disclaimer: TRANSCRIPT_DISCLAIMER,
+      llms: buildLlmsPointer(locale, url),
       video: serializeVideo(video, record),
       metadata: serializeMetadata(metadata),
       transcript: {
@@ -272,6 +275,7 @@ async function handleMeeting(
   const metadata = await getVideoMetadata(record.asset_id);
   return jsonResponse(request, {
     disclaimer: TRANSCRIPT_DISCLAIMER,
+    llms: buildLlmsPointer(locale, url),
     video: serializeVideo(video, record),
     metadata: serializeMetadata(metadata),
     transcript: {
@@ -328,6 +332,18 @@ function serializeMetadata(
   };
 }
 
+// Slim, English-only orientation block for agents that land on this JSON
+// directly (not via meetings.json). Not localized: llms.txt itself is
+// English-only regardless of locale, and the footer link to it follows the
+// same precedent (see components/site-footer.tsx).
+function buildLlmsPointer(locale: string, url: string) {
+  return {
+    note: "Plain-text sibling of this page, compact for LLM context. For the full API guide (search, listing, URL grammar) see /llms.txt.",
+    textUrl: `/${locale}/${url}.txt`,
+    guide: "/llms.txt",
+  };
+}
+
 function buildHeader(
   locale: string,
   video: ReturnType<typeof recordToVideo>,
@@ -381,8 +397,7 @@ async function handleList(
   const dateFrom =
     fromRaw && /^\d{4}-\d{2}-\d{2}$/.test(fromRaw) ? fromRaw : undefined;
   const toRaw = sp.get("to");
-  const dateTo =
-    toRaw && /^\d{4}-\d{2}-\d{2}$/.test(toRaw) ? toRaw : undefined;
+  const dateTo = toRaw && /^\d{4}-\d{2}-\d{2}$/.test(toRaw) ? toRaw : undefined;
   const docs = sp
     .getAll("text")
     .filter((d) => ["transcript", "pv", "sr"].includes(d));
@@ -445,13 +460,16 @@ async function handleList(
   const hasMore = offset + items.length < total;
 
   if (format === "text") {
-    const header = `# date        slug                  has_transcript  body — title
-# [T] = transcript available at /${locale}/{slug}.txt and .json
+    const header = `# UN meetings — one per line. Fetch each URL below verbatim; do not construct URLs.
+# [T] transcript available (URL is the .txt transcript; append .json for structured data).
+# [ ] occurred, no transcript yet (URL is the meeting page).
+# Format: {date}  {[T]|[ ]}  {url}  {body} — {title}
 \n`;
     const lines = items.map((m) => {
       const d = m.date ? new Date(m.date).toISOString().slice(0, 10) : "?";
       const t = m.hasTranscript ? "[T]" : "[ ]";
-      return `${d}  ${m.slug.padEnd(20)}  ${t}  ${m.body ?? ""} — ${m.title}`;
+      const url = m.textUrl ?? m.pageUrl;
+      return `${d}  ${t}  ${url}  ${m.body ?? ""} — ${m.title}`;
     });
     const tail = hasMore
       ? `\n... ${total - (offset + items.length)} more. Append ?offset=${offset + items.length} for the next page.\n`

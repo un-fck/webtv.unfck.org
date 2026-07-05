@@ -1,13 +1,11 @@
 // Cron: scrapes UN Web TV and upserts meeting records.
 import { NextRequest, NextResponse } from "next/server";
 import { runSyncVideos } from "@/lib/cron/sync-videos";
-import { apiError } from "@/lib/api-error";
+import { checkCronAuth } from "@/lib/cron/auth";
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return apiError(401, "unauthorized", "Unauthorized");
-  }
+  const unauthorized = checkCronAuth(request);
+  if (unauthorized) return unauthorized;
   const range =
     request.nextUrl.searchParams.get("range") === "far" ? "far" : "near";
   const result = await runSyncVideos(range);

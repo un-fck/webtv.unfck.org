@@ -31,7 +31,9 @@ export const MeetingsQuerySchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
-    .describe("Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to."),
+    .describe(
+      "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.",
+    ),
   from: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)

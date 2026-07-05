@@ -9,10 +9,7 @@ import {
 } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { VideoPlayer } from "./video-player";
-import {
-  getTopicColor,
-  type LanguageOption,
-} from "./transcription-panel";
+import { getTopicColor, type LanguageOption } from "./transcription-panel";
 import { useMeetingState } from "./meeting-state/meeting-state";
 import { SpeakerToc, hasMeaningfulSpeakerInfo } from "./speaker-toc";
 import { PVSpeakerToc } from "./pv-panel";

@@ -285,6 +285,54 @@ export default async function AboutPage() {
 
             <section>
               <h2 className={cn(typography.sectionTitle, "mb-3")}>
+                {t("api.heading")}
+              </h2>
+              <p className="mb-4 text-foreground">
+                {t.rich("api.intro", {
+                  code: (chunks) => (
+                    <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                      {chunks}
+                    </code>
+                  ),
+                })}
+              </p>
+              <p className="mb-4 text-foreground">
+                {t.rich("api.search", {
+                  locale,
+                  code: (chunks) => (
+                    <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                      {chunks}
+                    </code>
+                  ),
+                })}
+              </p>
+              <h3 className={cn(typography.subTitle, "mb-1.5")}>
+                {t("api.forAgents.heading")}
+              </h3>
+              <p className="text-foreground">
+                {t.rich("api.forAgents.body", {
+                  llmsLink: (chunks) => (
+                    <ExternalLink
+                      href="/llms.txt"
+                      className="text-un-blue-text underline underline-offset-4 hover:opacity-75"
+                    >
+                      {chunks}
+                    </ExternalLink>
+                  ),
+                  openapiLink: (chunks) => (
+                    <ExternalLink
+                      href="/openapi"
+                      className="text-un-blue-text underline underline-offset-4 hover:opacity-75"
+                    >
+                      {chunks}
+                    </ExternalLink>
+                  ),
+                })}
+              </p>
+            </section>
+
+            <section>
+              <h2 className={cn(typography.sectionTitle, "mb-3")}>
                 {t("status.heading")}
               </h2>
               <p className="text-foreground">

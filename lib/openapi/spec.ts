@@ -57,7 +57,11 @@ function toOas30(schema: unknown): unknown {
       const others = (s.anyOf as unknown[]).filter((_, i) => i !== nullIdx);
       const { anyOf: _a, ...siblings } = s;
       if (others.length === 1) {
-        return { ...(toOas30(others[0]) as JsonObj), nullable: true, ...siblings };
+        return {
+          ...(toOas30(others[0]) as JsonObj),
+          nullable: true,
+          ...siblings,
+        };
       }
       return { anyOf: others.map(toOas30), nullable: true, ...siblings };
     }
@@ -136,9 +140,12 @@ export function buildSpec(): Record<string, unknown> {
         "`ga/79/21`). Append `.json` or `.txt` to any meeting page URL to " +
         "get the same content as data. Videos without a document symbol are " +
         "addressable at `/{locale}/asset/{asset_id}`.\n\n" +
-        "Transcripts are produced by automatic speech recognition over real " +
-        "meeting audio — not official records. The authoritative record is " +
-        "the UN verbatim (PV) or summary (SR) document; see `GET /api/pv`.",
+        "Transcripts available through this API are created by using " +
+        "automatic speech recognition and are not official records nor " +
+        "official documents of the United Nations. Official records and " +
+        "official documents are available on the Official Document System " +
+        "of the United Nations; the verbatim (PV) or summary (SR) document " +
+        "for a meeting can be fetched via `GET /api/pv`.",
     },
     servers: [{ url: "/" }],
     tags: [
@@ -163,10 +170,14 @@ export function buildSpec(): Record<string, unknown> {
             qp("category", "Filter by WebTV category name.", {
               type: "string",
             }),
-            qp("date", "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.", {
-              type: "string",
-              pattern: "^\\d{4}-\\d{2}-\\d{2}$",
-            }),
+            qp(
+              "date",
+              "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.",
+              {
+                type: "string",
+                pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+              },
+            ),
             qp("from", "Inclusive start of a date range (YYYY-MM-DD).", {
               type: "string",
               pattern: "^\\d{4}-\\d{2}-\\d{2}$",

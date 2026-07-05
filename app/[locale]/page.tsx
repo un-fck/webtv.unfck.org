@@ -12,7 +12,7 @@ import { VideoTable } from "@/components/transcript-table";
 import { SiteHeader } from "@/components/site-header";
 import { HomeHero } from "@/components/home-hero";
 import { pageWidth } from "@/lib/layout";
-import { cn } from "@/lib/utils";
+import { cn, jsonLdScript } from "@/lib/utils";
 import { parseScheduleParams } from "@/lib/schedule-params";
 import { getBaseUrl } from "@/lib/get-base-url";
 
@@ -212,10 +212,10 @@ function PageShell({
       {jsonLd && (
         <script
           type="application/ld+json"
-          // JSON.stringify escapes </ vectors; the payload is composed
-          // entirely from translation catalog values + the configured
-          // base URL, so no user input reaches this string.
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          // Payload is currently translation-catalog + base URL only, but use
+          // the escaping serializer for parity with the meeting page and to
+          // stay safe if a DB/scraped field is ever added here.
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
         />
       )}
       <SiteHeader />

@@ -73,7 +73,8 @@ See `.env.example` for all variables. Core ones:
 | `DASHSCOPE_API_KEY`     | Yes        | Chinese transcription (Fun-ASR)|
 | `AZURE_OPENAI_API_KEY`  | Yes        | fr/es/ar/ru transcription + speaker ID |
 | `AZURE_OPENAI_ENDPOINT` | Yes        | as above                       |
-| `CRON_SECRET`           | Production | Vercel cron job auth           |
+| `CRON_SECRET`           | Production | Cron job auth (Bearer token)   |
+| `BASE_URL`              | Production | Base URL for outbound email links |
 
 ## Tech Stack
 

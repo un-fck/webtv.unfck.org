@@ -40,6 +40,14 @@ export function initWorker(): void {
   if (initialised) return;
   initialised = true;
 
+  // Fail fast on a misconfigured deploy: without CRON_SECRET the cron routes'
+  // auth degrades to accepting `Bearer undefined`. `checkCronAuth` also throws
+  // lazily, but asserting here makes the misconfig a loud startup failure
+  // rather than a first-request 500. (This block is already production-gated.)
+  if (!process.env.CRON_SECRET) {
+    throw new Error("CRON_SECRET must be set in production");
+  }
+
   const workerId = currentWorkerId();
   console.log(`[server-init] worker ${workerId} starting`);
 
@@ -53,7 +61,11 @@ export function initWorker(): void {
     } catch (err) {
       console.warn("[server-init] heartbeat failed:", err);
       Sentry.captureException(err, {
-        tags: { pipeline: "worker", kind: "heartbeat_failed", worker_id: workerId },
+        tags: {
+          pipeline: "worker",
+          kind: "heartbeat_failed",
+          worker_id: workerId,
+        },
       });
     }
   };
@@ -103,7 +115,11 @@ export function initWorker(): void {
       .catch((err) => {
         console.error("[server-init] cleanup UPDATE failed:", err);
         Sentry.captureException(err, {
-          tags: { pipeline: "worker", kind: "shutdown_cleanup_failed", worker_id: workerId },
+          tags: {
+            pipeline: "worker",
+            kind: "shutdown_cleanup_failed",
+            worker_id: workerId,
+          },
         });
       });
     const timeout = new Promise<void>((resolve) =>

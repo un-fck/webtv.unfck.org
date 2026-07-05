@@ -75,6 +75,19 @@ function linkifyReferences(text: string): ReactNode[] {
   return result;
 }
 
+function PvParagraphSkeleton({ lineCount }: { lineCount: number }) {
+  return (
+    <div className="space-y-1.5">
+      {Array.from({ length: lineCount }).map((_, i) => (
+        <div
+          key={i}
+          className={`h-3 animate-pulse rounded bg-muted/60 ${i === lineCount - 1 ? "w-3/5" : "w-full"}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function PVPanel({
   pvSymbol,
   language = "en",
@@ -234,10 +247,22 @@ export function PVPanel({
   };
 
   if (loading) {
+    // Document-shape skeleton instead of a spinner — the PV/SR PDF is
+    // mostly text-on-text, so a stack of paragraph bars previews the
+    // shape that's coming.
     return (
-      <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        {pvSymbol.includes("/SR.") ? t("loadingSummary") : t("loadingVerbatim")}
+      <div
+        role="status"
+        aria-busy
+        aria-label={
+          pvSymbol.includes("/SR.") ? t("loadingSummary") : t("loadingVerbatim")
+        }
+        className="space-y-5 py-4"
+      >
+        <PvParagraphSkeleton lineCount={4} />
+        <PvParagraphSkeleton lineCount={6} />
+        <PvParagraphSkeleton lineCount={3} />
+        <PvParagraphSkeleton lineCount={5} />
       </div>
     );
   }

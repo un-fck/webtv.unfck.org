@@ -36,6 +36,15 @@ ARG SENTRY_PROJECT
 ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
 ENV SENTRY_ORG=${SENTRY_ORG}
 ENV SENTRY_PROJECT=${SENTRY_PROJECT}
+# The browser Sentry SDK (error capture + user-feedback widget) only
+# initialises when NEXT_PUBLIC_SENTRY_DSN is present. NEXT_PUBLIC_* vars are
+# inlined into the client bundle at build time, NOT read at runtime — so the
+# DSN MUST be available here, during `pnpm build`. Setting it only in the
+# runtime/Azure env is too late and leaves the bundle with the widget gated
+# off. The DSN is public (safe to expose in the client bundle); pass via
+# --build-arg in CI.
+ARG NEXT_PUBLIC_SENTRY_DSN
+ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
 ENV CI=1
 RUN pnpm build
 

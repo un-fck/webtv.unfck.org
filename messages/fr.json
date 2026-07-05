@@ -35,7 +35,7 @@
   "home": {
     "headline": "Lisez ce qui a été dit à l'ONU.",
     "lead": "Parcourez les transcriptions de réunions, trouvez les intervenants, accédez au moment voulu dans la vidéo.",
-    "disclaimer": "Les transcriptions sont générées automatiquement et ne sont pas des comptes rendus officiels de l'ONU.",
+    "disclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU.",
     "learnMore": "En savoir plus →",
     "backToHomepage": "← Retour à l'accueil"
   },
@@ -205,6 +205,15 @@
       "odsLabel": "Système de diffusion électronique des documents de l'ONU",
       "odsBody": "— Comptes rendus officiels (procès-verbaux) récupérés sur documents.un.org lorsqu'ils sont disponibles."
     },
+    "api": {
+      "heading": "Utilisation programmatique",
+      "intro": "Chaque page de séance a un point d'accès de données correspondant — ajoutez <code>.json</code> pour des données structurées, ou <code>.txt</code> pour du texte brut, assez compact pour servir de contexte à un LLM.",
+      "search": "Pour rechercher ou lister les séances dans les archives, récupérez <code>/{locale}/meetings.json</code> — filtrez avec <code>?date=</code>, <code>?q=</code>, <code>?category=</code>, ou <code>?from=</code>/<code>?to=</code> pour une plage de dates.",
+      "forAgents": {
+        "heading": "Pour les agents IA",
+        "body": "Si vous êtes un LLM ou un agent autonome, commencez par <llmsLink>llms.txt</llmsLink> pour un guide structuré de cette API — la grammaire des URL, le point d'accès de recherche et un flux de récupération recommandé. Un schéma lisible par machine complet est disponible sous forme de <openapiLink>référence OpenAPI</openapiLink>."
+      }
+    },
     "status": {
       "heading": "Statut",
       "body": "Cet outil est en <publicPreview>Aperçu public</publicPreview>. Les fonctionnalités, la couverture et la précision sont activement améliorées. Vos retours sont les bienvenus."
@@ -284,8 +293,8 @@
       "audioOutOfSyncStarting": "Démarrage…",
       "audioOutOfSyncSignIn": "Connectez-vous pour demander une nouvelle transcription",
       "audioOutOfSyncInProgress": "Une nouvelle transcription est en cours.",
-      "transcriptDisclaimer": "Transcription générée automatiquement — peut contenir des erreurs. Ceci n'est pas un compte rendu officiel de l'Organisation des Nations Unies. <aboutLink>En savoir plus</aboutLink>",
-      "exportDisclaimer": "Transcription générée automatiquement — peut contenir des erreurs. Ceci n'est pas un compte rendu officiel de l'Organisation des Nations Unies."
+      "transcriptDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU. <aboutLink>En savoir plus</aboutLink>",
+      "exportDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU."
     },
     "highlightsOnly": "Faits saillants",
     "allContent": "Tout le contenu avec faits saillants"

@@ -9,6 +9,7 @@ import { useScrollToActive } from "@/lib/hooks/use-scroll-to-active";
 import { BarChart3 } from "lucide-react";
 import { PVPanel, type PVSpeakerEntry } from "@/components/pv-panel";
 import { useMeetingState } from "@/components/meeting-state/meeting-state";
+import { TranscriptSkeleton } from "@/components/transcript-skeleton";
 import ExcelJS from "exceljs";
 import type { Proposition } from "@/lib/pipeline";
 import { StageProgress, type Stage } from "@/components/stage-progress";
@@ -243,7 +244,10 @@ export function TranscriptionPanel({
   // statements grouping by speaker identity).
   const segments = useMemo<SpeakerSegment[] | null>(() => {
     if (!statements || Object.keys(speakerMappings).length === 0) return null;
-    return buildSpeakerSegments(statements, speakerMappings) as SpeakerSegment[];
+    return buildSpeakerSegments(
+      statements,
+      speakerMappings,
+    ) as SpeakerSegment[];
   }, [statements, speakerMappings]);
 
   const {
@@ -312,56 +316,53 @@ export function TranscriptionPanel({
   // sentence-level karaoke highlight + click-to-seek light up after a beat.
   // The polling paths (pollForCompletion / pollRetranscribeUntilDone) still
   // receive full word data, so we only fire this after the /check fast path.
-  const loadWords = useCallback(
-    async (tid: string, signal: AbortSignal) => {
-      try {
-        const res = await fetch(
-          `/api/transcripts/${encodeURIComponent(tid)}/words`,
-          { signal },
-        );
-        if (signal.aborted) return;
-        if (!res.ok) return;
-        const { statements: wordsByStatement } = (await res.json()) as {
-          statements: Array<{
+  const loadWords = useCallback(async (tid: string, signal: AbortSignal) => {
+    try {
+      const res = await fetch(
+        `/api/transcripts/${encodeURIComponent(tid)}/words`,
+        { signal },
+      );
+      if (signal.aborted) return;
+      if (!res.ok) return;
+      const { statements: wordsByStatement } = (await res.json()) as {
+        statements: Array<{
+          words?: Word[];
+          paragraphs: Array<{
             words?: Word[];
-            paragraphs: Array<{
-              words?: Word[];
-              sentences: Array<{ words?: Word[] }>;
-            }>;
+            sentences: Array<{ words?: Word[] }>;
           }>;
-        };
-        if (signal.aborted || !wordsByStatement) return;
-        setStatements((prev) => {
-          if (!prev) return prev;
-          return prev.map((stmt, si) => {
-            const wstmt = wordsByStatement[si];
-            if (!wstmt) return stmt;
-            return {
-              ...stmt,
-              ...(wstmt.words ? { words: wstmt.words } : {}),
-              paragraphs: stmt.paragraphs.map((para, pi) => {
-                const wpara = wstmt.paragraphs[pi];
-                if (!wpara) return para;
-                return {
-                  ...para,
-                  ...(wpara.words ? { words: wpara.words } : {}),
-                  sentences: para.sentences.map((sent, sei) => {
-                    const wsent = wpara.sentences[sei];
-                    if (!wsent?.words) return sent;
-                    return { ...sent, words: wsent.words };
-                  }),
-                };
-              }),
-            };
-          });
+        }>;
+      };
+      if (signal.aborted || !wordsByStatement) return;
+      setStatements((prev) => {
+        if (!prev) return prev;
+        return prev.map((stmt, si) => {
+          const wstmt = wordsByStatement[si];
+          if (!wstmt) return stmt;
+          return {
+            ...stmt,
+            ...(wstmt.words ? { words: wstmt.words } : {}),
+            paragraphs: stmt.paragraphs.map((para, pi) => {
+              const wpara = wstmt.paragraphs[pi];
+              if (!wpara) return para;
+              return {
+                ...para,
+                ...(wpara.words ? { words: wpara.words } : {}),
+                sentences: para.sentences.map((sent, sei) => {
+                  const wsent = wpara.sentences[sei];
+                  if (!wsent?.words) return sent;
+                  return { ...sent, words: wsent.words };
+                }),
+              };
+            }),
+          };
         });
-      } catch {
-        // Network error or aborted; the panel keeps working with
-        // sentence-level seeks only.
-      }
-    },
-    [],
-  );
+      });
+    } catch {
+      // Network error or aborted; the panel keeps working with
+      // sentence-level seeks only.
+    }
+  }, []);
 
   // Derived from speakerMappings + active UI locale. Computed during
   // render so it's in the SSR output. getCountryName is a pure lookup
@@ -1205,10 +1206,10 @@ export function TranscriptionPanel({
         )}
 
       {checking && stage === "idle" && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          <span>{t("checkingForTranscript")}</span>
-        </div>
+        // No spinner: show the same shape the Suspense fallback uses so the
+        // transition from "panel mounted, still checking" to "panel has
+        // transcript" doesn't look like a different kind of loading state.
+        <TranscriptSkeleton />
       )}
 
       {stage === "scheduled" && (

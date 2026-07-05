@@ -1,7 +1,7 @@
 // Cron: starts transcription for scheduled and interrupted transcript rows.
 import { NextRequest, NextResponse } from "next/server";
 import { runProcessScheduled } from "@/lib/cron/process-scheduled";
-import { apiError } from "@/lib/api-error";
+import { checkCronAuth } from "@/lib/cron/auth";
 
 // `after()` in the pipeline keeps work alive past the response — keep this
 // function's keep-alive window long enough on platforms that enforce one.
@@ -10,10 +10,8 @@ import { apiError } from "@/lib/api-error";
 export const maxDuration = 800;
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return apiError(401, "unauthorized", "Unauthorized");
-  }
+  const unauthorized = checkCronAuth(request);
+  if (unauthorized) return unauthorized;
   const result = await runProcessScheduled();
   return NextResponse.json(result);
 }

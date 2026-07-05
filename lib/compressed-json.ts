@@ -44,12 +44,7 @@ export async function compressedText(
   body: string,
   init?: ResponseInit,
 ): Promise<Response> {
-  return compressedBody(
-    request,
-    body,
-    "text/plain; charset=utf-8",
-    init,
-  );
+  return compressedBody(request, body, "text/plain; charset=utf-8", init);
 }
 
 async function compressedBody(
@@ -82,7 +77,13 @@ function appendVary(headers: Headers, value: string) {
     headers.set("vary", value);
     return;
   }
-  if (existing.toLowerCase().split(",").map((s) => s.trim()).includes(value)) {
+  if (
+    existing
+      .toLowerCase()
+      .split(",")
+      .map((s) => s.trim())
+      .includes(value)
+  ) {
     return;
   }
   headers.set("vary", `${existing}, ${value}`);
