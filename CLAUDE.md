@@ -183,7 +183,8 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Production only:**
 
-- `CRON_SECRET` — Vercel cron job authorization (auto-set by Vercel)
+- `CRON_SECRET` — cron job authorization (Bearer token; on Azure it's baked into the container crontab, on Vercel it's auto-set). `initWorker()` throws at boot if it's unset in production.
+- `BASE_URL` — canonical public origin used for links in **outbound email** (magic-link sign-in, transcript notifications). Resolved via `getTrustedBaseUrl()` in `lib/get-base-url.ts`, which reads config only and **never** the request `Host` header — so a forged `Host` cannot poison an emailed magic-link (account-takeover class). Missing in production → `getTrustedBaseUrl()` throws (email send fails closed) rather than emitting a poisonable link. Distinct from `getBaseUrl()`, which still uses the request Host for rendering/SEO (sitemap, robots, OG, canonical) to support multi-domain.
 - `NEXT_PUBLIC_BASE_URL` — public base URL of the site. (No longer used for internal speaker-identification triggers — those now run in-process via `runSpeakerIdentification()` + `after()`, not an HTTP self-call.)
 
 **Optional:**

@@ -1,14 +1,14 @@
 import { SITE_TITLE, mailFrom, transporter } from "@/lib/auth/mail";
 import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
 import type { VideoRecord } from "@/lib/db";
-import { getBaseUrl } from "@/lib/get-base-url";
+import { getTrustedBaseUrl } from "@/lib/get-base-url";
 import { videoUrl } from "@/lib/video-url";
 
 /** Full URL (origin + path) for a video — used in transcript-ready emails. */
-async function videoFullUrl(
+function videoFullUrl(
   video: Pick<VideoRecord, "pv_symbol" | "pv_part" | "asset_id">,
-): Promise<string> {
-  return `${await getBaseUrl()}/${videoUrl(video)}`;
+): string {
+  return `${getTrustedBaseUrl()}/${videoUrl(video)}`;
 }
 
 /** Email a subscriber that a transcript they're waiting on is ready. */
@@ -19,8 +19,8 @@ export async function sendTranscriptReady(
     "pv_symbol" | "pv_part" | "asset_id" | "title" | "clean_title"
   >,
 ): Promise<void> {
-  const link = await videoFullUrl(video);
-  const baseUrl = await getBaseUrl();
+  const link = videoFullUrl(video);
+  const baseUrl = getTrustedBaseUrl();
   const title = video.clean_title || video.title || "A meeting you follow";
 
   await transporter.sendMail({
