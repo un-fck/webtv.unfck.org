@@ -40,6 +40,14 @@ export function initWorker(): void {
   if (initialised) return;
   initialised = true;
 
+  // Fail fast on a misconfigured deploy: without CRON_SECRET the cron routes'
+  // auth degrades to accepting `Bearer undefined`. `checkCronAuth` also throws
+  // lazily, but asserting here makes the misconfig a loud startup failure
+  // rather than a first-request 500. (This block is already production-gated.)
+  if (!process.env.CRON_SECRET) {
+    throw new Error("CRON_SECRET must be set in production");
+  }
+
   const workerId = currentWorkerId();
   console.log(`[server-init] worker ${workerId} starting`);
 
