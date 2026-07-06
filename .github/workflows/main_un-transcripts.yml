@@ -10,8 +10,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Gate: run the full CI suite (typecheck + test + lint) before building or
+  # deploying. A red gate skips build + deploy, so only green commits ship.
+  test:
+    uses: ./.github/workflows/test.yml
+
   build:
     runs-on: ubuntu-latest
+    needs: test
     permissions:
       contents: read #This is required for actions/checkout
 

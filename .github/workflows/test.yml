@@ -1,9 +1,12 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
+  # Called by the deploy workflow (main_un-transcripts.yml) on push to main so
+  # the same gate that protects PRs also blocks a bad deploy. Not triggered on
+  # `push` directly — that would run the suite twice per push (once standalone,
+  # once via the deploy call). The deploy call is the source of truth for main.
+  workflow_call:
 
 jobs:
   test:
