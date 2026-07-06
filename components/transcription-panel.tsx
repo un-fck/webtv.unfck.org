@@ -277,6 +277,26 @@ export function TranscriptionPanel({
   const { meetingIsoDay, formatMeetingDate, formatMeetingTime } =
     useMeetingFormat();
 
+  // Derived from speakerMappings + active UI locale. Computed during
+  // render so it's in the SSR output. getCountryName is a pure lookup
+  // against the vendored ISO snapshot (lib/country-lookup), no I/O.
+  // Declared before its first use (getSpeakerText, below) so the React
+  // Compiler can preserve this manual memoization — a useMemo referenced
+  // before its source-order declaration triggers a compile bailout.
+  const countryNames = useMemo<Map<string, string>>(() => {
+    const names = new Map<string, string>();
+    const iso3Codes = new Set<string>();
+    Object.values(speakerMappings).forEach((info) => {
+      if (info.affiliation && info.affiliation.length === 3)
+        iso3Codes.add(info.affiliation);
+    });
+    for (const code of iso3Codes) {
+      const name = getCountryName(code, locale);
+      if (name) names.set(code, name);
+    }
+    return names;
+  }, [speakerMappings, locale]);
+
   const getSpeakerText = (statementIndex: number | undefined): string =>
     formatSpeakerText(statementIndex, speakerMappings, countryNames);
 
@@ -363,23 +383,6 @@ export function TranscriptionPanel({
       // sentence-level seeks only.
     }
   }, []);
-
-  // Derived from speakerMappings + active UI locale. Computed during
-  // render so it's in the SSR output. getCountryName is a pure lookup
-  // against the vendored ISO snapshot (lib/country-lookup), no I/O.
-  const countryNames = useMemo<Map<string, string>>(() => {
-    const names = new Map<string, string>();
-    const iso3Codes = new Set<string>();
-    Object.values(speakerMappings).forEach((info) => {
-      if (info.affiliation && info.affiliation.length === 3)
-        iso3Codes.add(info.affiliation);
-    });
-    for (const code of iso3Codes) {
-      const name = getCountryName(code, locale);
-      if (name) names.set(code, name);
-    }
-    return names;
-  }, [speakerMappings, locale]);
 
   useEffect(() => {
     onDataChange?.({
