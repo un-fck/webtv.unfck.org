@@ -1,4 +1,4 @@
-import { SITE_TITLE, mailFrom, transporter } from "@/lib/auth/mail";
+import { SITE_TITLE, deliver } from "@/lib/email/transport";
 import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
 import type { VideoRecord } from "@/lib/db";
 import { getTrustedBaseUrl } from "@/lib/get-base-url";
@@ -23,8 +23,7 @@ export async function sendTranscriptReady(
   const baseUrl = getTrustedBaseUrl();
   const title = video.clean_title || video.title || "A meeting you follow";
 
-  await transporter.sendMail({
-    from: mailFrom(),
+  await deliver({
     to: email,
     subject: `Transcript ready: ${title}`,
     text: `${SITE_TITLE}\n\nThe transcript for "${title}" is now available.\n\nRead it here: ${link}\n\n${TRANSCRIPT_DISCLAIMER}\n\nYou are receiving this because you subscribed to transcript notifications. Manage your subscriptions: ${baseUrl}/subscriptions`,

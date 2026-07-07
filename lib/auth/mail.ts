@@ -1,19 +1,7 @@
-import nodemailer from "nodemailer";
 import { getTranslations } from "next-intl/server";
 
+import { deliver } from "@/lib/email/transport";
 import { getTrustedBaseUrl } from "@/lib/get-base-url";
-
-export const SITE_TITLE = "UN Transcripts";
-
-export const mailFrom = () =>
-  `"${SITE_TITLE}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`;
-
-export const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.mailbox.org",
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-});
 
 export async function sendMagicLink(
   email: string,
@@ -33,8 +21,7 @@ export async function sendMagicLink(
   const tMeta = await getTranslations({ locale, namespace: "metadata" });
   const siteTitle = tMeta("siteTitle");
 
-  await transporter.sendMail({
-    from: mailFrom(),
+  await deliver({
     to: email,
     subject: t("subject"),
     text: `${siteTitle}\n\n${t("body")}\n\n${link}\n\n${t("spamHint")}\n\n${t("ignoreNote")}`,
