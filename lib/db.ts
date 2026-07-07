@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 import { readFileSync } from "fs";
+import { randomUUID } from "crypto";
 import "@/lib/load-env";
 import { applyTimeOffset } from "./transcript-offset";
 
@@ -513,7 +514,12 @@ export async function scheduleTranscript(
         stage: existing.transcription_status,
       };
     }
-    const transcriptId = `scheduled-${assetId}-${Date.now()}`;
+    // Random UUID (not `${assetId}-${Date.now()}`): asset IDs can contain "/"
+    // (multi-segment WebTV asset paths), which breaks the single-segment
+    // `/api/transcripts/[id]` poll route. The `scheduled-` prefix is kept; the
+    // asset ID is preserved in the `audio_url` column below (`pending:...`) for
+    // the process-scheduled cron, so it need not live in the transcript ID.
+    const transcriptId = `scheduled-${randomUUID()}`;
     await client.query(
       q(
         `INSERT INTO webtv.transcripts (entry_id, kaltura_id, transcript_id, start_time, end_time, audio_url, transcription_status, language_code, content, created_by)
