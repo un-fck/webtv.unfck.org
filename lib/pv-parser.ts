@@ -1,3 +1,7 @@
+// Install DOMMatrix/ImageData/Path2D before pdfjs evaluates — pdf.mjs does a
+// top-level `new DOMMatrix()` and otherwise throws at import in the standalone
+// build (see lib/pdfjs-node-globals.ts). This import MUST stay first.
+import "@/lib/pdfjs-node-globals";
 // Pre-load the worker on the main thread to avoid worker file resolution issues
 // in Next.js/Turbopack. The fake-worker setup does `import(workerSrc)` which fails
 // when bundled, but if `globalThis.pdfjsWorker` is set, it uses that instead.

@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // Drop the `X-Powered-By: Next.js` framework-fingerprint header.
   poweredByHeader: false,
+  // Load pdfjs-dist and its Node canvas polyfill from node_modules at runtime
+  // instead of bundling them into a route chunk. `@napi-rs/canvas` ships a
+  // native `.node` binary that can't be bundled, and keeping pdfjs external
+  // makes ESM evaluation order deterministic so lib/pdfjs-node-globals.ts runs
+  // before pdf.mjs. See lib/pv-parser.ts for the full DOMMatrix crash writeup.
+  serverExternalPackages: ["pdfjs-dist", "@napi-rs/canvas"],
   // next-intl loads message catalogs at runtime via dynamic import — the
   // standalone tracer doesn't always pick them up. Be explicit.
   outputFileTracingIncludes: {
