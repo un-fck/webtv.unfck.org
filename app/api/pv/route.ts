@@ -4,8 +4,15 @@ import { getPVContent, savePVContent } from "@/lib/db";
 import { fetchPVDocument } from "@/lib/pv-documents";
 import { parsePVDocument } from "@/lib/pv-parser";
 import { apiError } from "@/lib/api-error";
+import { enforceIpLimit, enforceGlobalDailyLimit } from "@/lib/rate-limit";
+import { routing } from "@/i18n/routing";
 
 export const maxDuration = 25;
+
+// Only the six UN languages are valid PV document languages. Validating guards
+// the pv_contents cache table (composite PK (symbol, lang)) against an
+// arbitrary `lang` inflating it with junk rows.
+const VALID_LANGS = new Set<string>(routing.locales);
 
 export async function GET(request: NextRequest) {
   const symbol = request.nextUrl.searchParams.get("symbol");
@@ -18,13 +25,24 @@ export async function GET(request: NextRequest) {
       "Missing required parameter: symbol",
     );
   }
+  if (!VALID_LANGS.has(lang)) {
+    return apiError(400, "invalid_parameter", "Unsupported language");
+  }
 
-  // PV documents are public UN reference data, cached after first fetch. No
-  // rate limit — viewing/triggering a parse is part of the public-good surface.
+  // PV documents are public UN reference data. Cached reads are cheap, so serve
+  // them unmetered.
   const cached = await getPVContent(symbol, lang);
   if (cached) {
     return NextResponse.json(cached.content);
   }
+
+  // Cache miss = the expensive path (outbound PDF fetch + pdfjs parse). Gate it
+  // with a per-IP hourly cap and a global daily ceiling (the spoof-proof
+  // backstop) so anonymous callers can't drive unbounded fetch/parse cost.
+  const ipLimited = await enforceIpLimit(request, "pv", 30);
+  if (ipLimited) return ipLimited;
+  const globalLimited = await enforceGlobalDailyLimit("pv-parse", 1000);
+  if (globalLimited) return globalLimited;
 
   // Fetch and parse
   const pdfBuffer = await fetchPVDocument(symbol, lang);

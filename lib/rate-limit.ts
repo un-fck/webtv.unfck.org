@@ -164,3 +164,61 @@ export async function enforceGlobalDailyLimit(
     503,
   );
 }
+
+const HOUR_MS = 60 * 60 * 1000;
+
+function stripPort(ip: string): string {
+  // "1.2.3.4:5678" → "1.2.3.4"; bracketed IPv6 "[::1]:443" → "::1".
+  if (ip.startsWith("[")) {
+    const end = ip.indexOf("]");
+    return end > 0 ? ip.slice(1, end) : ip;
+  }
+  return /^\d{1,3}(\.\d{1,3}){3}:\d+$/.test(ip)
+    ? ip.slice(0, ip.lastIndexOf(":"))
+    : ip;
+}
+
+/**
+ * Best-effort client IP for anonymous rate limiting.
+ *
+ * Reads `X-Forwarded-For` (leftmost = conventional client position), falling
+ * back to `X-Real-IP`, then a shared `"unknown"` bucket. IMPORTANT: XFF is
+ * client-spoofable, so the per-IP bucket alone can be evaded by rotating the
+ * header — abusable endpoints therefore ALSO carry a global (non-IP) ceiling
+ * that a spoofed IP cannot bypass. If a trusted CDN/WAF is ever placed in front
+ * of the app, switch to its verified client-IP header here.
+ */
+export function getClientIp(req: { headers: Headers }): string {
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) {
+    const first = xff.split(",")[0]?.trim();
+    if (first) return stripPort(first);
+  }
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return stripPort(realIp.trim());
+  return "unknown";
+}
+
+/**
+ * Per-IP fixed-window limit for anonymous endpoints. Returns a ready 429 when
+ * exceeded, else `null`. Fails open on DB error (inherited from `rateLimit`).
+ */
+export async function enforceIpLimit(
+  req: { headers: Headers },
+  bucket: string,
+  limit: number,
+  windowMs: number = HOUR_MS,
+): Promise<NextResponse | null> {
+  const result = await rateLimit({
+    bucket: `${bucket}:ip`,
+    identifier: `ip:${getClientIp(req)}`,
+    limit,
+    windowMs,
+  });
+  if (result.allowed) return null;
+  return rateLimitedResponse(
+    result.resetMs,
+    "Too many requests. Please slow down and try again shortly.",
+    429,
+  );
+}

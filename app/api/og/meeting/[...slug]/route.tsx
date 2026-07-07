@@ -5,6 +5,7 @@ import { symbolFromSlug } from "@/lib/meeting-slug";
 import { OgHeader, getOgFonts } from "@/lib/og";
 import { getTranslations } from "next-intl/server";
 import { ImageResponse } from "next/og";
+import { enforceIpLimit } from "@/lib/rate-limit";
 
 async function resolveVideo(slug: string): Promise<VideoRecord | null> {
   if (slug.startsWith("asset/")) {
@@ -39,9 +40,14 @@ function formatDate(iso: string): string {
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
+  // Per-IP cap on the Satori render (force-dynamic, CPU per request). Generous,
+  // since legitimate social/crawler unfurls hit this from varied IPs.
+  const ipLimited = await enforceIpLimit(req, "og", 60);
+  if (ipLimited) return ipLimited;
+
   const { slug: slugParts } = await params;
   const slug = slugParts.map(decodeURIComponent).join("/");
 
