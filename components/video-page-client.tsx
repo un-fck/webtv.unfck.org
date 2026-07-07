@@ -198,7 +198,10 @@ export function VideoPageClient({
   );
 
   const topicPills = (() => {
-    if (panelData?.viewMode === "analysis") return null;
+    // Topics highlight/filter transcript paragraphs, so they only make sense in
+    // the transcript view — not in the analysis or PV/verbatim-record tabs,
+    // where the pills are inert.
+    if (panelData?.viewMode !== "transcript") return null;
     if (!panelData?.topics || Object.keys(panelData.topics).length === 0)
       return null;
 
