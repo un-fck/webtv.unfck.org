@@ -26,3 +26,12 @@ GRANT SELECT,
     DELETE ON ALL TABLES IN SCHEMA webtv TO webtv_app;
 GRANT USAGE,
     SELECT ON ALL SEQUENCES IN SCHEMA webtv TO webtv_app;
+-- Database-level: on the shared instance, revoke the PostgreSQL default that
+-- lets EVERY role CONNECT to this database (and read its catalog metadata —
+-- table/column/role names). Table data is already protected by the per-table
+-- GRANTs above; this closes cross-tenant metadata enumeration. The app role
+-- gets CONNECT explicitly; the database owner and superusers keep it
+-- implicitly. See migration 024. Idempotent. (Run while connected to the
+-- `webtv` database, as its owner or a superuser.)
+REVOKE CONNECT ON DATABASE webtv FROM PUBLIC;
+GRANT CONNECT ON DATABASE webtv TO webtv_app;
