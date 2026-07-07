@@ -12,10 +12,12 @@ import {
   type SetStateAction,
 } from "react";
 import { useLocale } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import type {
   LanguageOption,
   TranscriptionPanelData,
 } from "@/components/transcription-panel";
+import { setUrlParam } from "@/lib/url-params";
 
 /**
  * State shared between the meeting page's chrome (VideoPageClient: language
@@ -36,6 +38,13 @@ interface MeetingState {
   /** Audio language the user is currently viewing. Defaults to URL locale. */
   selectedLanguage: string;
   setSelectedLanguage: Dispatch<SetStateAction<string>>;
+
+  /** User-initiated audio-language change. Same as setSelectedLanguage but
+   *  also reflects the choice in the `?lang=` URL param (omitted when it
+   *  matches the page locale, so a plain shared link stays clean). Use this
+   *  for explicit picks in the switcher; the internal availability fallback
+   *  keeps using the raw setter so an automatic swap never writes the URL. */
+  selectLanguage: (code: string) => void;
 
   /** Language tracks the Kaltura entry exposes + their transcription status. */
   availableLanguages: LanguageOption[];
@@ -89,11 +98,20 @@ export function MeetingStateProvider({
   children,
 }: MeetingStateProviderProps) {
   // Default to the URL locale — same language the user picked for the site
-  // is the natural first guess for what they want to read/listen to. If the
+  // is the natural first guess for what they want to read/listen to. An
+  // explicit `?lang=` param (the user previously picked a different audio
+  // track and shared/reloaded the link) wins over the locale default. If the
   // chosen language isn't actually available for this meeting, a fallback
-  // effect in VideoPageClient swaps it to floor / first-available.
+  // effect below swaps it to floor / first-available.
   const uiLocale = useLocale();
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(uiLocale);
+  const searchParams = useSearchParams();
+  // Read the param once for the initial state; subsequent changes flow through
+  // selectLanguage, which writes the URL back. (Effect deps intentionally omit
+  // searchParams so a back/forward isn't wired up here — the toggle is
+  // replaceState, so there are no lang entries in history to navigate anyway.)
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(
+    () => searchParams.get("lang") || uiLocale,
+  );
   const [availableLanguages, setAvailableLanguages] = useState<
     LanguageOption[]
   >([]);
@@ -142,10 +160,23 @@ export function MeetingStateProvider({
     }
   }, [availableLanguages, selectedLanguage]);
 
+  // Explicit user pick from the language switcher: update state AND reflect it
+  // in `?lang=`, dropping the param when the pick matches the page locale (the
+  // default) so links stay clean. The availability fallback above deliberately
+  // does NOT go through here — an automatic swap must not write the URL.
+  const selectLanguage = useCallback(
+    (code: string) => {
+      setSelectedLanguage(code);
+      setUrlParam("lang", code === uiLocale ? undefined : code);
+    },
+    [uiLocale],
+  );
+
   const value = useMemo<MeetingState>(
     () => ({
       selectedLanguage,
       setSelectedLanguage,
+      selectLanguage,
       availableLanguages,
       setAvailableLanguages,
       selectedTopic,
@@ -160,6 +191,7 @@ export function MeetingStateProvider({
     }),
     [
       selectedLanguage,
+      selectLanguage,
       availableLanguages,
       selectedTopic,
       topicCollapsed,

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { setUrlParam } from "@/lib/url-params";
 import type { SpeakerMapping } from "@/lib/speakers";
 import type { Video } from "@/lib/un-api";
 import { getCountryName } from "@/lib/country-lookup";
@@ -160,7 +162,7 @@ export function TranscriptionPanel({
   const {
     player,
     selectedLanguage,
-    setSelectedLanguage: onLanguageChange,
+    selectLanguage: onLanguageChange,
     availableLanguages,
     refreshLanguages: onLanguagesRefresh,
     selectedTopic,
@@ -200,7 +202,25 @@ export function TranscriptionPanel({
   const [propositions, setPropositions] = useState<Proposition[]>(
     hasMatchingInitial ? initialTranscript!.propositions : [],
   );
-  const [viewMode, setViewMode] = useState<ViewMode>("transcript");
+  // Deep-linkable view: `?view=pv` / `?view=analysis` (transcript is the
+  // default and carries no param). Gate the initial read against what actually
+  // exists for this viewer — a `pv` link needs a PV symbol, an `analysis` link
+  // needs a signed-in user (the analysis tab isn't rendered otherwise) — so a
+  // stale/forged param falls back to the transcript rather than an empty tab.
+  const searchParams = useSearchParams();
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const v = searchParams.get("view");
+    if (v === "pv" && pvSymbol) return "pv";
+    if (v === "analysis" && isLoggedIn) return "analysis";
+    return "transcript";
+  });
+  // Wrap the setter so a tab switch reflects into `?view=`, dropping the param
+  // for the transcript default. Pure client state — replaceState only, no
+  // navigation (see lib/url-params.ts).
+  const changeViewMode = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    setUrlParam("view", mode === "transcript" ? undefined : mode);
+  }, []);
   const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
   // Realignment-flagged state — set when the displayed transcript is a
   // completed row whose audio was re-cut by WebTV in a way no single offset
@@ -1158,7 +1178,7 @@ export function TranscriptionPanel({
     <div>
       <TranscriptToolbar
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
+        onViewModeChange={changeViewMode}
         selectedLanguage={selectedLanguage}
         availableLanguages={availableLanguages}
         onLanguageChange={onLanguageChange}
