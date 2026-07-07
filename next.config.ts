@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import createNextIntlPlugin from "next-intl/plugin";
+import { securityHeaderList } from "./lib/security-headers";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
@@ -9,11 +10,19 @@ const nextConfig: NextConfig = {
   // `.next/standalone`, which is what the Azure container runs (`node
   // server.js`). Vercel ignores this and uses its own build pipeline.
   output: "standalone",
+  // Drop the `X-Powered-By: Next.js` framework-fingerprint header.
+  poweredByHeader: false,
   // next-intl loads message catalogs at runtime via dynamic import — the
   // standalone tracer doesn't always pick them up. Be explicit.
   outputFileTracingIncludes: {
     "/**/*": ["messages/**/*", "i18n/**/*"],
   },
+  // Baseline security headers for every response. Verified to reach all route
+  // types — locale-routed HTML pages, API routes, /openapi, and the middleware-
+  // rewritten .json/.txt data API — each exactly once, so proxy.ts does not
+  // re-apply them. See lib/security-headers.ts. (No CSP here: that is a staged,
+  // report-only-first effort tracked separately to avoid breaking the player.)
+  headers: async () => [{ source: "/(.*)", headers: securityHeaderList }],
   redirects: async () => [
     {
       source: "/:path*",
