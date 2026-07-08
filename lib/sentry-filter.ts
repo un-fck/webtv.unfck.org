@@ -13,6 +13,16 @@
 //   - TRANSCRIPTS-2F: `SecurityError: Failed to read the 'localStorage'
 //     property from 'Window': Access is denied for this document.` — fires in
 //     privacy/sandboxed browser contexts where storage is blocked.
+//   - TRANSCRIPTS-D / 29 / 2S / 2R / 2P: unhandled promise rejections raised
+//     *inside* the Kaltura player. Its `play()` wrapper is literally
+//     `function(){this._localPlayer.play()}` — it starts the underlying
+//     `HTMLMediaElement.play()` but neither returns nor catches the promise,
+//     so an autoplay-policy `NotAllowedError` or a transient Kaltura media
+//     error (a `{category, code, data, errorDetails, severity}` object, or a
+//     bare `CustomEvent`/empty object) surfaces as an unhandled rejection with
+//     no JS stack. Playback itself is unaffected (the player recovers on the
+//     next gesture/seek); these are pure noise we can't fix upstream and can't
+//     intercept in-app (our `player.play()` call returns `undefined`).
 //
 // Everything else passes through. We match on precise signatures, never on the
 // broad error *type* (a real `TypeError` from our own code must still report).
@@ -52,6 +62,24 @@ const LOCALSTORAGE_BLOCKED_MARKERS = [
   "Access is denied for this document",
 ];
 
+// Substrings unique to the Kaltura player's stackless unhandled rejections
+// (TRANSCRIPTS-D, 29, 2S, 2R, 2P). These carry no stack frames (so the
+// frame-based Kaltura match above can't catch them) — we key off Sentry's
+// synthetic description of the rejected non-Error value, or the DOMException
+// message for the autoplay-policy variants. Each string is specific enough not
+// to collide with a genuine app error.
+const KALTURA_REJECTION_MARKERS = [
+  // Rejected with a Kaltura error object (D).
+  "promise rejection with keys: category, code, data, errorDetails, severity",
+  // Rejected with an empty object — no actionable payload (2R).
+  "promise rejection with keys: [object has no keys]",
+  // Rejected with a Kaltura FakeEvent / CustomEvent (2S).
+  "CustomEvent` (type=unhandledrejection)",
+  // Autoplay-policy NotAllowedError from the media element's play() (29, 2P).
+  "play method is not allowed by the user agent",
+  "request is not allowed by the user agent or the platform",
+];
+
 function frameIsKaltura(frame: FilterableFrame): boolean {
   return [frame.filename, frame.abs_path, frame.module].some(
     (loc) =>
@@ -85,6 +113,16 @@ export function shouldDropClientEvent(event: FilterableEvent): boolean {
   if (
     messages.some((message) =>
       LOCALSTORAGE_BLOCKED_MARKERS.some((marker) => message.includes(marker)),
+    )
+  ) {
+    return true;
+  }
+
+  // 3. Kaltura player unhandled promise rejections (TRANSCRIPTS-D, 29, 2S, 2R,
+  //    2P). Stackless, so matched by their rejected-value / DOMException text.
+  if (
+    messages.some((message) =>
+      KALTURA_REJECTION_MARKERS.some((marker) => message.includes(marker)),
     )
   ) {
     return true;
