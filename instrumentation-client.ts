@@ -6,6 +6,8 @@
 // and speaker names, which is sensitive in a UN context.
 import * as Sentry from "@sentry/nextjs";
 
+import { shouldDropClientEvent } from "@/lib/sentry-filter";
+
 // Skip Sentry in dev: keeps the dev bundle smaller and avoids the feedback
 // widget showing up locally. Prod behaviour is unchanged.
 if (
@@ -25,6 +27,15 @@ if (
       /Object Not Found Matching Id:\d+, MethodName:/,
       /Server Action .* was not found on the server/,
     ],
+    // Drop a small set of known-unactionable client errors by *signature*
+    // (not by error type): exceptions thrown inside Kaltura's third-party
+    // player bundle (TRANSCRIPTS-2K `e.charAt`, 2A `e.ownerNode.id`) and the
+    // blocked-localStorage SecurityError in privacy/sandboxed contexts
+    // (TRANSCRIPTS-2F). The decision lives in `lib/sentry-filter.ts` so it
+    // can be unit-tested without a browser.
+    beforeSend(event) {
+      return shouldDropClientEvent(event) ? null : event;
+    },
     integrations: [
       Sentry.feedbackIntegration({
         colorScheme: "light",
