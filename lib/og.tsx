@@ -60,19 +60,25 @@ async function fetchGoogleArabicFont(
     { headers: { "User-Agent": GOOGLE_FONTS_UA } },
   );
   const css = await cssRes.text();
-  for (const block of css.split("@font-face")) {
-    // The Arabic subset's @font-face declares a unicode-range covering U+06xx.
-    if (/unicode-range:[^;]*U\+06/.test(block)) {
-      const match = block.match(/src:\s*url\((https:\/\/[^)]+)\)\s+format/);
-      if (match) {
-        const fontRes = await fetch(match[1]);
-        return fontRes.arrayBuffer();
-      }
-    }
-  }
-  throw new Error(
-    `Could not extract Arabic subset URL from Google Fonts CSS for Cairo@${weight}`,
+  // Google returns one of two CSS shapes depending on the User-Agent:
+  //  - modern/woff2: the family is split into per-script @font-face blocks,
+  //    each with a `unicode-range` (the Arabic subset covers U+06xx);
+  //  - this UA: a single full-charset @font-face (a .woff already covering
+  //    Arabic + Latin, with no unicode-range).
+  // Prefer the Arabic subset block when present; otherwise fall back to the
+  // single full-charset face — which still carries the Arabic glyphs.
+  const blocks = css.split("@font-face");
+  const arabicBlock = blocks.find((b) => /unicode-range:[^;]*U\+06/.test(b));
+  const match = (arabicBlock ?? css).match(
+    /src:\s*url\((https:\/\/[^)]+)\)\s+format/,
   );
+  if (!match) {
+    throw new Error(
+      `Could not extract Arabic font URL from Google Fonts CSS for Cairo@${weight}`,
+    );
+  }
+  const fontRes = await fetch(match[1]);
+  return fontRes.arrayBuffer();
 }
 
 async function getRobotoFonts(): Promise<OgFont[]> {
