@@ -1,6 +1,5 @@
-import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
-import { OgHeader, getOgFonts } from "@/lib/og";
+import { OgHeader, getOgFonts, renderOgImage } from "@/lib/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -26,10 +25,10 @@ export default async function Image({
   const [header, home, fonts] = await Promise.all([
     getTranslations({ locale, namespace: "header" }),
     getTranslations({ locale, namespace: "home" }),
-    getOgFonts(),
+    getOgFonts(locale),
   ]);
 
-  return new ImageResponse(
+  return renderOgImage(
     <div
       style={{
         width: "100%",

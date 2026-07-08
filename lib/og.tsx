@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { ImageResponse } from "next/og";
+import type { ReactElement } from "react";
 
 // Module-scope cache: the emblem SVG never changes at runtime.
 let cachedEmblemUri: string | null = null;
@@ -17,19 +19,18 @@ type OgFont = {
   style: "normal";
 };
 
-let cachedFontsPromise: Promise<OgFont[]> | null = null;
-
-async function fetchGoogleFont(weight: 300 | 400 | 700): Promise<ArrayBuffer> {
+const GOOGLE_FONTS_UA =
   // Setting a non-modern User-Agent makes Google Fonts return TTF, which
   // Satori parses natively. Without this it returns WOFF2 only.
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36";
+
+let cachedRobotoPromise: Promise<OgFont[]> | null = null;
+let cachedArabicPromise: Promise<OgFont[]> | null = null;
+
+async function fetchGoogleFont(weight: 300 | 400 | 700): Promise<ArrayBuffer> {
   const cssRes = await fetch(
     `https://fonts.googleapis.com/css2?family=Roboto:wght@${weight}&display=swap`,
-    {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-      },
-    },
+    { headers: { "User-Agent": GOOGLE_FONTS_UA } },
   );
   const css = await cssRes.text();
   const match = css.match(/src:\s*url\((https:\/\/[^)]+)\)\s+format/);
@@ -42,9 +43,41 @@ async function fetchGoogleFont(weight: 300 | 400 | 700): Promise<ArrayBuffer> {
   return fontRes.arrayBuffer();
 }
 
-export async function getOgFonts(): Promise<OgFont[]> {
-  if (!cachedFontsPromise) {
-    cachedFontsPromise = (async (): Promise<OgFont[]> => {
+// Roboto has no Arabic glyphs, so the Arabic OG card needs a dedicated Arabic
+// face. Satori chokes on many Arabic fonts — its OpenType parser throws
+// `lookupType: 5 - substFormat: 3 is not yet supported` on the GSUB tables of
+// the Noto Naskh/Sans/Kufi Arabic families, which is exactly what used to make
+// `/ar/opengraph-image` return a 500 (Sentry TRANSCRIPTS-1K). Cairo's GSUB
+// only uses substitution formats Satori can parse *and* still shapes Arabic
+// joining correctly, so we use it for the Arabic locale. We pull the Arabic
+// unicode subset specifically (Google splits each family into per-script
+// subsets and Cairo's default `latin` subset carries no Arabic glyphs).
+async function fetchGoogleArabicFont(
+  weight: 400 | 700,
+): Promise<ArrayBuffer> {
+  const cssRes = await fetch(
+    `https://fonts.googleapis.com/css2?family=Cairo:wght@${weight}&display=swap`,
+    { headers: { "User-Agent": GOOGLE_FONTS_UA } },
+  );
+  const css = await cssRes.text();
+  for (const block of css.split("@font-face")) {
+    // The Arabic subset's @font-face declares a unicode-range covering U+06xx.
+    if (/unicode-range:[^;]*U\+06/.test(block)) {
+      const match = block.match(/src:\s*url\((https:\/\/[^)]+)\)\s+format/);
+      if (match) {
+        const fontRes = await fetch(match[1]);
+        return fontRes.arrayBuffer();
+      }
+    }
+  }
+  throw new Error(
+    `Could not extract Arabic subset URL from Google Fonts CSS for Cairo@${weight}`,
+  );
+}
+
+async function getRobotoFonts(): Promise<OgFont[]> {
+  if (!cachedRobotoPromise) {
+    cachedRobotoPromise = (async (): Promise<OgFont[]> => {
       const [light, regular, bold] = await Promise.all([
         fetchGoogleFont(300),
         fetchGoogleFont(400),
@@ -58,11 +91,56 @@ export async function getOgFonts(): Promise<OgFont[]> {
     })().catch((err) => {
       // Don't trap a transient failure forever — clear the cache so the next
       // request can retry instead of forever serving a single-weight card.
-      cachedFontsPromise = null;
+      cachedRobotoPromise = null;
       throw err;
     });
   }
-  return cachedFontsPromise;
+  return cachedRobotoPromise;
+}
+
+async function getArabicFonts(): Promise<OgFont[]> {
+  if (!cachedArabicPromise) {
+    cachedArabicPromise = (async (): Promise<OgFont[]> => {
+      const [regular, bold] = await Promise.all([
+        fetchGoogleArabicFont(400),
+        fetchGoogleArabicFont(700),
+      ]);
+      return [
+        { name: "Cairo", data: regular, weight: 400, style: "normal" },
+        { name: "Cairo", data: bold, weight: 700, style: "normal" },
+      ];
+    })().catch((err) => {
+      cachedArabicPromise = null;
+      throw err;
+    });
+  }
+  return cachedArabicPromise;
+}
+
+/**
+ * Fonts for the OG card in the given locale. Always includes the three Roboto
+ * weights (Latin); for Arabic it additionally includes the Cairo Arabic face
+ * so Arabic headlines shape correctly. Satori picks the covering font per
+ * glyph across the whole list regardless of family, so the JSX can keep
+ * `fontFamily: "Roboto"` and Arabic runs still resolve to Cairo.
+ *
+ * If the Arabic face fails to load we degrade to Roboto-only rather than
+ * throwing; the render would then fail on Arabic glyphs and `renderOgImage`'s
+ * fallback card takes over — the route never 500s.
+ */
+export async function getOgFonts(locale?: string): Promise<OgFont[]> {
+  const roboto = await getRobotoFonts();
+  if (locale !== "ar") return roboto;
+  try {
+    const arabic = await getArabicFonts();
+    return [...roboto, ...arabic];
+  } catch (err) {
+    console.error(
+      "[og] failed to load Arabic font; Arabic card will use fallback",
+      err,
+    );
+    return roboto;
+  }
 }
 
 /**
@@ -155,4 +233,95 @@ export function OgHeader({
       </div>
     </div>
   );
+}
+
+type OgImageOptions = NonNullable<ConstructorParameters<typeof ImageResponse>[1]>;
+
+const OG_IMAGE_HEADERS: Record<string, string> = {
+  "content-type": "image/png",
+  // Mirror the cache-control ImageResponse sets itself, since we re-wrap the
+  // rendered bytes into a plain Response below.
+  "cache-control":
+    process.env.NODE_ENV === "development"
+      ? "no-cache, no-store"
+      : "public, immutable, no-transform, max-age=31536000",
+};
+
+// 1×1 transparent PNG — the absolute last resort so the route still yields a
+// 200 image/png even if both the primary and the fallback render throw.
+const TRANSPARENT_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/pLvAAAAAElFTkSuQmCC",
+  "base64",
+);
+
+// A minimal, Latin-only card used when the localized render fails. It uses
+// only Roboto and no locale text, so it cannot re-trigger the complex-script
+// shaping (e.g. Arabic GSUB) that broke the primary render.
+function OgFallbackCard(): ReactElement {
+  const emblem = getEmblemDataUri();
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 40,
+        background: "#fff",
+        color: "#0a0a0a",
+        fontFamily: "Roboto",
+      }}
+    >
+      <img src={emblem} width={144} height={120} alt="" />
+      <div style={{ display: "flex", fontSize: 64, letterSpacing: "-0.025em" }}>
+        <span style={{ fontWeight: 700 }}>{"United Nations "}</span>
+        <span style={{ fontWeight: 300 }}>Transcripts</span>
+      </div>
+    </div>
+  );
+}
+
+// ImageResponse renders lazily inside its body stream, so a Satori error only
+// surfaces when the body is consumed (and shows up as "failed to pipe
+// response" / a 500) — a `try { new ImageResponse() }` never catches it.
+// Reading the whole body here forces the render and lets us catch that
+// rejection.
+async function bufferImageResponse(image: ImageResponse): Promise<Response> {
+  const body = await image.arrayBuffer();
+  return new Response(body, { status: 200, headers: OG_IMAGE_HEADERS });
+}
+
+/**
+ * Render an OG image resiliently: it NEVER throws / 500s. On any render
+ * failure it falls back to a Latin-only card (and, if even that fails, a blank
+ * PNG), always returning a 200 `image/png`. See Sentry TRANSCRIPTS-1K: the
+ * Arabic locale used to 500 because Satori can't parse the Arabic font's GSUB.
+ */
+export async function renderOgImage(
+  element: ReactElement,
+  options: OgImageOptions,
+): Promise<Response> {
+  try {
+    return await bufferImageResponse(new ImageResponse(element, options));
+  } catch (err) {
+    console.error("[og] primary render failed; using Latin fallback card", err);
+    try {
+      // Keep only the Latin (Roboto) faces so the fallback can't hit the
+      // failing complex-script shaping.
+      const latinFonts = (options.fonts ?? []).filter(
+        (font) => font.name === "Roboto",
+      );
+      return await bufferImageResponse(
+        new ImageResponse(<OgFallbackCard />, { ...options, fonts: latinFonts }),
+      );
+    } catch (fallbackErr) {
+      console.error("[og] fallback render failed; serving blank PNG", fallbackErr);
+      return new Response(TRANSPARENT_PNG, {
+        status: 200,
+        headers: OG_IMAGE_HEADERS,
+      });
+    }
+  }
 }
