@@ -207,6 +207,7 @@ Detailed docs live in `docs/` — read these before working on the relevant subs
 - `docs/api.md` — Public API: URL scheme, JSON endpoints, response shapes
 - `docs/realignment.md` — Realigning transcript timestamps after WebTV re-cuts a video: detection (duration reduction), Gemini-computed front-shift offset, geometric validation, `source_duration_ms`/`time_offset_ms`/`aligned_duration_ms`, and where the offset is applied
 - `docs/feeds.md` — Curated feeds (`webtv.feeds`): matching rules that auto-transcribe newly-discovered videos and drive user email subscriptions, how the two consumers (`sync-videos` vs `send-transcript-notifications`) differ in whether they respect `enabled`, and how to add a feed (migration + `seed.sql`, no UI yet)
+- `docs/emails.md` — Outbound email: why mail sends from the `transcripts-app-noreply@un.org` shared mailbox via an **Azure Logic App relay** (spam/DMARC-alignment motivation), how to request/administer the shared mailbox in iNeed (the `SG-FullAccess`/`SG-SendAs` "admin ≠ member" gotcha), the Logic App build + security (secret gate, Secure Inputs/Outputs, inbound IP allowlist), and how `lib/email/transport.ts:deliver()` switches between the relay (`EMAIL_RELAY_URL` set) and the SMTP fallback
 
 ## Architecture
 

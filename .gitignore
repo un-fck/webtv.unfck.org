@@ -56,3 +56,6 @@ next-env.d.ts
 # Stray root-level screenshots written by playwright-mcp during dev.
 /*-header-*.png
 /page-*.png
+
+# Private security findings tracker — do not commit
+SECURITY.md
