@@ -1,16 +1,5 @@
-import * as Sentry from "@sentry/nextjs";
-import {
-  getRecentlyCompletedTranscripts,
-  getVideoByKalturaId,
-  getVideoSubscribers,
-  getFeedSubscribers,
-  getAllFeeds,
-  claimTranscriptNotification,
-  withJobLock,
-  type Recipient,
-} from "@/lib/db";
-import { matchFeeds } from "@/lib/feeds";
-import { sendTranscriptReady } from "@/lib/notifications/mail";
+import { getRecentlyCompletedTranscripts, getAllFeeds, withJobLock } from "@/lib/db";
+import { notifyTranscriptSubscribers } from "@/lib/notifications/notify";
 
 const ts = () => new Date().toTimeString().slice(0, 8);
 
@@ -35,75 +24,14 @@ export async function runSendTranscriptNotifications(): Promise<SendNotification
       let sent = 0;
       const errors: string[] = [];
 
+      // Per-transcript recipient resolution + dedup'd send lives in the shared
+      // helper (same code path the instant post-completion hook uses). The
+      // ledger claim inside makes this a backstop: transcripts already emailed
+      // by the instant hook are skipped here.
       for (const t of transcripts) {
-        const playerId = t.kaltura_id;
-        const language = t.language_code;
-        if (!language) {
-          // Defensive: schema allows NULL but every real row has a code. If a
-          // legacy NULL row sneaks through we can't tell who to notify, so skip.
-          console.warn(
-            `[notifications] Skipping ${t.transcript_id}: NULL language_code`,
-          );
-          continue;
-        }
-        try {
-          const video = await getVideoByKalturaId(playerId);
-          if (!video) continue;
-
-          // Recipients = per-video subscribers ∪ subscribers of any matching feed.
-          // Both filtered by the completing transcript's language — subscriptions
-          // are per-(video, language) and per-(feed, language).
-          const feedKeys = matchFeeds(video, allFeeds);
-          const [videoSubs, feedSubs] = await Promise.all([
-            getVideoSubscribers(playerId, language),
-            getFeedSubscribers(feedKeys, language),
-          ]);
-
-          const byUser = new Map<string, Recipient>();
-          for (const r of [...videoSubs, ...feedSubs]) byUser.set(r.user_id, r);
-          if (byUser.size === 0) continue;
-
-          for (const recipient of byUser.values()) {
-            // Atomically claim the ledger row first; only send if we won the
-            // claim. Trades a rare missed email on SMTP failure (logged +
-            // Sentry-reported) for guaranteed no-duplicates across replicas.
-            const claimed = await claimTranscriptNotification(
-              recipient.user_id,
-              t.transcript_id,
-            );
-            if (!claimed) continue;
-            try {
-              await sendTranscriptReady(recipient.email, video);
-              sent++;
-            } catch (err) {
-              const msg = err instanceof Error ? err.message : String(err);
-              console.error(
-                `[notifications] Failed to email ${recipient.email} for ${t.transcript_id}: ${msg}`,
-              );
-              Sentry.captureException(err, {
-                tags: {
-                  pipeline: "notifications",
-                  kind: "send_failed",
-                  transcript_id: t.transcript_id,
-                },
-              });
-              errors.push(`${t.transcript_id}/${recipient.email}: ${msg}`);
-            }
-          }
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.error(
-            `[notifications] Error processing ${t.transcript_id}: ${msg}`,
-          );
-          Sentry.captureException(err, {
-            tags: {
-              pipeline: "notifications",
-              kind: "process_failed",
-              transcript_id: t.transcript_id,
-            },
-          });
-          errors.push(`${t.transcript_id}: ${msg}`);
-        }
+        const res = await notifyTranscriptSubscribers(t, allFeeds);
+        sent += res.sent;
+        errors.push(...res.errors);
       }
 
       console.log(

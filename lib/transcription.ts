@@ -20,6 +20,7 @@ import {
 } from "./db";
 import { currentWorkerId } from "./worker-identity";
 import { identifySpeakers } from "./pipeline";
+import { notifyTranscriptSubscribersById } from "./notifications/notify";
 import type { SpeakerMapping } from "./speakers";
 import { trackTranscription, trackTranscriptionError } from "./usage-tracking";
 import { bcp47ToKalturaName } from "./languages";
@@ -346,6 +347,14 @@ async function runAnalysisPipeline(
     );
     throw err;
   }
+
+  // Fast-path notification: the transcript is durably `completed`. Notify
+  // subscribers now instead of waiting up to 5 min for the cron. Placed
+  // OUTSIDE the try/catch and awaited (not detached) so it runs to completion
+  // within this background pipeline's lifetime; the helper never throws, so it
+  // cannot flip the just-completed row to `error`. The cron remains the
+  // backstop and the ledger dedups the two triggers.
+  await notifyTranscriptSubscribersById(transcriptId);
 }
 
 export type SpeakerIdentificationResult =
@@ -410,6 +419,11 @@ export async function runSpeakerIdentification(
   try {
     const mapping = await identifySpeakers(paragraphs, transcriptId, undefined);
     await releaseTranscript(transcriptId, "completed");
+
+    // Fast-path notification for resumed/reidentified rows (see runAnalysisPipeline).
+    // Never throws; the ledger dedups against the cron and against prior runs
+    // (so a `reidentify` re-run won't re-email already-notified subscribers).
+    await notifyTranscriptSubscribersById(transcriptId);
 
     const updated = await getTranscriptById(transcriptId);
     return {
