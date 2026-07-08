@@ -164,6 +164,28 @@ function buildPrompt(
 
 // ---- Core Gemini API call ----
 
+/**
+ * Thrown when Gemini stops before finishing (finishReason !== "STOP", most
+ * commonly MAX_TOKENS) and the emitted JSON is therefore incomplete/unparseable.
+ * This is not an intrinsic failure — the audio slice was simply too dense for
+ * the output-token cap. The single-call path catches it and re-runs in chunked
+ * mode (the established recovery pattern); when no further chunking is possible
+ * it propagates, and the pipeline treats it as transient (see
+ * `isTransientPipelineError`) so the row is retried rather than hard-failing
+ * with an opaque "Unterminated JSON object" parse crash.
+ */
+export class GeminiTruncationError extends Error {
+  readonly finishReason: string | undefined;
+  constructor(finishReason: string | undefined) {
+    super(
+      `Gemini output truncated (finishReason: ${finishReason ?? "unknown"}): ` +
+        `response exceeded the output token limit and returned incomplete JSON`,
+    );
+    this.name = "GeminiTruncationError";
+    this.finishReason = finishReason;
+  }
+}
+
 interface GeminiCallResult {
   segments: GeminiSegment[];
   usageMetadata: GeminiUsageMetadata;
@@ -259,6 +281,13 @@ async function callGeminiOnFile(
       extractJsonObject(responseText),
     ) as GeminiTranscriptOutput;
   } catch (e) {
+    // A truncated response (MAX_TOKENS etc.) yields incomplete JSON that
+    // cannot be parsed. Surface this deterministically as a truncation error
+    // — the caller re-runs in chunked mode or the pipeline retries it as
+    // transient — instead of an opaque "Unterminated JSON object" crash.
+    if (truncated) {
+      throw new GeminiTruncationError(finishReason);
+    }
     throw new Error(
       `Failed to parse Gemini JSON: ${e instanceof Error ? e.message : e}`,
     );
@@ -333,19 +362,26 @@ export async function transcribeAudioWithGemini(
 
     if (!needsChunking) {
       // --- Single call ---
-      const result = await callGeminiOnFile(tmpPath, options);
-      if (!result.truncated) {
-        const paragraphs = segmentsToOutput(result.segments);
-        return {
-          paragraphs,
-          usageMetadata: result.usageMetadata,
-          audioSeconds,
-          chunked: false,
-          chunkCount: 1,
-        };
+      try {
+        const result = await callGeminiOnFile(tmpPath, options);
+        if (!result.truncated) {
+          const paragraphs = segmentsToOutput(result.segments);
+          return {
+            paragraphs,
+            usageMetadata: result.usageMetadata,
+            audioSeconds,
+            chunked: false,
+            chunkCount: 1,
+          };
+        }
+        // Truncated but still parseable — fall through to chunked mode.
+        console.log("  [Gemini] Truncated output, retrying in chunked mode...");
+      } catch (e) {
+        // Truncated and unparseable — same recovery: re-run chunked, where
+        // each 10-min slice comfortably fits under the output-token cap.
+        if (!(e instanceof GeminiTruncationError)) throw e;
+        console.log("  [Gemini] Truncated output, retrying in chunked mode...");
       }
-      // Truncated — fall through to chunked mode
-      console.log("  [Gemini] Truncated output, retrying in chunked mode...");
     }
 
     // --- Chunked mode (parallel) ---
