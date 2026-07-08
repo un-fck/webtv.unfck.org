@@ -28,6 +28,7 @@ import {
   formatTranscriptAsPlainText,
 } from "@/lib/transcript-formatting";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
+import { safeDecodePathSegmentsArray } from "@/lib/utils";
 import { videoUrl } from "@/lib/video-url";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -100,8 +101,16 @@ export async function GET(
     }
     const format = formatRaw as Format;
 
-    // Decode each segment (proxy.ts passes them through unchanged).
-    const segs = path.map(decodeURIComponent);
+    // Decode each segment (proxy.ts passes them through unchanged). Malformed
+    // percent-encoding from scanners/attack URLs would otherwise throw a
+    // URIError → 500; a clean 404 is the right answer for a bad path.
+    const segs = safeDecodePathSegmentsArray(path);
+    if (segs === null) {
+      return NextResponse.json(
+        { error: "Invalid meeting path" },
+        { status: 404 },
+      );
+    }
 
     // List / search endpoint: /{locale}/meetings.{json|txt}
     if (segs.length === 1 && segs[0] === "meetings") {

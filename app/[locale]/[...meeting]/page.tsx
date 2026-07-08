@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 
 import { getVideoByCitation } from "@/lib/db";
 import { symbolFromSlug } from "@/lib/meeting-slug";
+import { safeDecodePathSegments } from "@/lib/utils";
 import { buildVideoMetadata, renderVideoPage } from "@/components/video-page";
 
 export const dynamic = "force-dynamic";
 
 async function resolveCitation(meeting: string[]) {
-  const slug = meeting.map(decodeURIComponent).join("/");
+  const slug = safeDecodePathSegments(meeting);
+  if (slug === null) return null;
   const parsed = symbolFromSlug(slug);
   if (!parsed) return null;
   return getVideoByCitation(parsed);

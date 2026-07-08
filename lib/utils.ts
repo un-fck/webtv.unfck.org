@@ -22,3 +22,35 @@ export function jsonLdScript(data: unknown): string {
     .replace(/\u2028/g, "\\u2028")
     .replace(/\u2029/g, "\\u2029");
 }
+
+/**
+ * Decode catch-all route segments, returning `null` when any segment carries
+ * malformed percent-encoding. `decodeURIComponent` THROWS a `URIError` on
+ * invalid escapes (e.g. `%25u002e%25u002e` or a lone `%`), which scanners and
+ * attack URLs routinely supply. Callers use the `null` return to fall through
+ * to a clean 404 instead of surfacing an uncaught 500 from
+ * `generateMetadata`/the page component/the route handler.
+ */
+export function safeDecodePathSegmentsArray(
+  segments: string[],
+): string[] | null {
+  const decoded: string[] = [];
+  for (const segment of segments) {
+    try {
+      decoded.push(decodeURIComponent(segment));
+    } catch {
+      return null;
+    }
+  }
+  return decoded;
+}
+
+/**
+ * Like {@link safeDecodePathSegmentsArray} but joins the decoded segments into
+ * a single `/`-delimited path — the common case for slug/asset-id resolution.
+ * Returns `null` on any malformed segment.
+ */
+export function safeDecodePathSegments(segments: string[]): string | null {
+  const decoded = safeDecodePathSegmentsArray(segments);
+  return decoded === null ? null : decoded.join("/");
+}
