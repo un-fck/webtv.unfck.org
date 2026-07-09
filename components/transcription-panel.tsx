@@ -397,8 +397,9 @@ export function TranscriptionPanel({
   // words[] from its response (63% of payload) so first paint is fast; this
   // pulls them in once the transcript is on screen and merges by index so
   // sentence-level karaoke highlight + click-to-seek light up after a beat.
-  // The polling paths (pollForCompletion / pollRetranscribeUntilDone) still
-  // receive full word data, so we only fire this after the /check fast path.
+  // The polling paths (pollForCompletion / the retranscribe polling effect)
+  // still receive full word data, so we only fire this after the /check fast
+  // path.
   const loadWords = useCallback(async (tid: string, signal: AbortSignal) => {
     try {
       const res = await fetch(
@@ -619,83 +620,133 @@ export function TranscriptionPanel({
     }
   };
 
-  // Background poll for a fresh retranscribe kicked off against a flagged
-  // row. Updates only the banner's stage label until the new transcript
-  // completes; then swaps the main display state to the new content and
-  // clears the flagged banner. Errors surface as `retranscribeError` without
-  // touching the existing transcript display.
-  const pollRetranscribeUntilDone = async (
-    tid: string,
-    signal: AbortSignal,
-  ): Promise<void> => {
-    let pollCount = 0;
-    const maxPolls = 200;
-    while (true) {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      if (signal.aborted) return;
-      pollCount++;
-      let res: Response;
+  // Poll a pending fresh retranscription (of a realignment-flagged row) until
+  // it completes, then swap the displayed transcript in and clear the flagged
+  // banner. Errors surface as `retranscribeError` without touching the
+  // existing transcript display.
+  //
+  // Polling is a consequence of the PENDING STATE, not of the action that
+  // created it: whoever records meta.pendingRetranscribeId — the retranscribe
+  // click, the /check response, or the SSR initializer — gets exactly one
+  // polling loop, owned by this effect and cancelled when the pending id
+  // clears, the language switches (meta reset), or the panel unmounts. An
+  // earlier version threaded an imperative loop from each of those call sites
+  // with a borrowed AbortController; a single transient fetch failure (laptop
+  // sleep, dev-server recompile, offline blip) escaped its catch, was
+  // swallowed by the caller, and left the banner on "in progress" forever.
+  // Hence the rules here: network-level failures RETRY (the pipeline runs
+  // server-side and is unaffected), only explicit outcomes — completed, error
+  // stage, HTTP error, deadline — end the wait, and a visibilitychange nudge
+  // re-syncs immediately when the user returns to a timer-throttled
+  // background tab.
+  const retranscribePendingId = meta?.pendingRetranscribeId ?? null;
+  useEffect(() => {
+    if (!retranscribePendingId) return;
+    const tid = retranscribePendingId;
+    const ctrl = new AbortController();
+    const signal = ctrl.signal;
+    const POLL_MS = 3000;
+    // Wall-clock budget, not a poll count: throttled background-tab timers
+    // stretch the interval, and a 3h meeting's pipeline can run past an hour.
+    const DEADLINE_MS = 3 * 60 * 60 * 1000;
+    const startedAt = Date.now();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let inFlight = false;
+
+    const clearPending = () =>
+      setMeta((m) => ({
+        ...(m ?? EMPTY_META),
+        pendingRetranscribeId: null,
+        pendingRetranscribeStage: null,
+      }));
+
+    const tick = async () => {
+      if (inFlight || signal.aborted) return;
+      inFlight = true;
       try {
-        res = await fetch(`/api/transcripts/${encodeURIComponent(tid)}`, {
-          signal,
-        });
-      } catch (err) {
+        let res: Response;
+        try {
+          res = await fetch(`/api/transcripts/${encodeURIComponent(tid)}`, {
+            signal,
+          });
+        } catch {
+          // Network-level failure — transient by assumption; keep polling.
+          return;
+        }
         if (signal.aborted) return;
-        throw err;
+        if (!res.ok) {
+          setRetranscribeError("Failed to poll fresh transcription");
+          clearPending();
+          return;
+        }
+        const data = await res.json();
+        if (signal.aborted) return;
+        if (data.stage === "error") {
+          setRetranscribeError(
+            data.error_message || "Fresh transcription failed",
+          );
+          clearPending();
+          return;
+        }
+        if (data.stage === "completed" && data.statements?.length > 0) {
+          // Swap the displayed transcript to the freshly produced one and
+          // clear the flagged banner. (The new row was made from the current
+          // audio so its source_duration_ms matches; the cron won't re-flag
+          // it.)
+          setStatements(data.statements);
+          if (data.topics) setTopics(data.topics);
+          if (data.propositions) setPropositions(data.propositions);
+          if (data.speakerMappings) setSpeakerMappings(data.speakerMappings);
+          setTranscriptId(tid);
+          setRetranscribeError(null);
+          setMeta((m) => ({
+            ...(m ?? EMPTY_META),
+            flagged: false,
+            sourceDurationMs: null,
+            alignedDurationMs: null,
+            pendingRetranscribeId: null,
+            pendingRetranscribeStage: null,
+          }));
+          return;
+        }
+        if (data.stage && data.stage !== "completed") {
+          setMeta((m) => ({
+            ...(m ?? EMPTY_META),
+            pendingRetranscribeStage: data.stage,
+          }));
+        }
+        if (Date.now() - startedAt > DEADLINE_MS) {
+          setRetranscribeError("Fresh transcription timeout");
+          clearPending();
+        }
+      } finally {
+        inFlight = false;
       }
-      const clearPending = () =>
-        setMeta((m) => ({
-          ...(m ?? EMPTY_META),
-          pendingRetranscribeId: null,
-          pendingRetranscribeStage: null,
-        }));
-      if (!res.ok) {
-        setRetranscribeError("Failed to poll fresh transcription");
-        clearPending();
-        return;
-      }
-      const data = await res.json();
+    };
+
+    const schedule = () => {
       if (signal.aborted) return;
-      if (data.stage && data.stage !== "completed") {
-        setMeta((m) => ({
-          ...(m ?? EMPTY_META),
-          pendingRetranscribeStage: data.stage,
-        }));
-      }
-      if (data.stage === "error") {
-        setRetranscribeError(
-          data.error_message || "Fresh transcription failed",
-        );
-        clearPending();
-        return;
-      }
-      if (data.stage === "completed" && data.statements?.length > 0) {
-        // Swap the displayed transcript to the freshly produced one and clear
-        // the flagged banner. (The new row was made from the current audio so
-        // its source_duration_ms matches; the cron won't re-flag it.)
-        setStatements(data.statements);
-        if (data.topics) setTopics(data.topics);
-        if (data.propositions) setPropositions(data.propositions);
-        if (data.speakerMappings) setSpeakerMappings(data.speakerMappings);
-        setTranscriptId(tid);
-        setMeta((m) => ({
-          ...(m ?? EMPTY_META),
-          flagged: false,
-          sourceDurationMs: null,
-          alignedDurationMs: null,
-          pendingRetranscribeId: null,
-          pendingRetranscribeStage: null,
-        }));
-        setRetranscribeError(null);
-        return;
-      }
-      if (pollCount >= maxPolls) {
-        setRetranscribeError("Fresh transcription timeout");
-        clearPending();
-        return;
-      }
-    }
-  };
+      timer = setTimeout(async () => {
+        await tick();
+        schedule();
+      }, POLL_MS);
+    };
+    schedule();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void tick();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      ctrl.abort();
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+    // setX functions are stable; the polling lifecycle is keyed on the
+    // pending id alone.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [retranscribePendingId]);
 
   const handleRetranscribe = async () => {
     if (retranscribeStarting || pendingRetranscribeId) return;
@@ -721,16 +772,13 @@ export function TranscriptionPanel({
       }
       const data = await res.json();
       if (data.transcriptId) {
+        // Recording the pending id is all that's needed — the polling effect
+        // keyed on meta.pendingRetranscribeId takes it from here.
         setMeta((m) => ({
           ...(m ?? EMPTY_META),
           pendingRetranscribeId: data.transcriptId,
           pendingRetranscribeStage: data.stage || "transcribing",
         }));
-        const signal =
-          pollAbortRef.current?.signal ?? new AbortController().signal;
-        pollRetranscribeUntilDone(data.transcriptId, signal).catch(() => {
-          // handled inside
-        });
       }
     } catch (err) {
       setRetranscribeError(
@@ -1147,23 +1195,14 @@ export function TranscriptionPanel({
       // SSR pre-loaded the full TranscriptPayload (statements, speaker
       // mappings, topics, propositions, and the meta atom — all seeded in the
       // useState initializers above; segments + countryNames are computed
-      // inline via useMemo, so they're already in the SSR DOM). Side-effects
-      // left to do: pull word-level timestamps for karaoke/click-to-seek,
-      // and — exactly like the /check path below — start polling any fresh
-      // transcription already replacing a flagged row, so this viewer sees
-      // its progress and the swap-in when it completes.
+      // inline via useMemo, so they're already in the SSR DOM). The only
+      // side-effect left is pulling word-level timestamps for karaoke/
+      // click-to-seek — any pending retranscribe in the payload is picked up
+      // by the polling effect keyed on meta.pendingRetranscribeId.
       const ctrl = new AbortController();
       pollAbortRef.current = ctrl;
       setChecking(false);
       void loadWords(initialTranscript!.transcriptId, ctrl.signal);
-      if (initialTranscript!.pendingRetranscribeId) {
-        pollRetranscribeUntilDone(
-          initialTranscript!.pendingRetranscribeId,
-          ctrl.signal,
-        ).catch(() => {
-          // pollRetranscribeUntilDone manages its own error state.
-        });
-      }
       return () => ctrl.abort();
     }
 
@@ -1212,19 +1251,12 @@ export function TranscriptionPanel({
             // the SSR initializer, same TranscriptPayload shape. Covers:
             // a viewer who loads mid-analysis sees "Analyzing…" rather than
             // the Run button, and a flagged row shows the out-of-sync banner.
+            // If a fresh retranscribe is already in flight (any user kicked
+            // one off), the pendingRetranscribeId seeded here activates the
+            // polling effect, so this viewer sees stage progress and the new
+            // transcript swaps in automatically when it completes.
             setMeta(metaFromPayload(data as TranscriptPayload));
             setStage("completed");
-            // If a fresh retranscribe is already in flight (any user kicked
-            // one off), start polling so this viewer sees stage progress and
-            // the new transcript swaps in automatically when it completes.
-            if (data.pendingRetranscribeId) {
-              pollRetranscribeUntilDone(
-                data.pendingRetranscribeId,
-                signal,
-              ).catch(() => {
-                // pollRetranscribeUntilDone manages its own error state.
-              });
-            }
             onLanguagesRefresh?.();
           } else if (data.raw_paragraphs) {
             setRawParagraphs(data.raw_paragraphs);
