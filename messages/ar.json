@@ -400,6 +400,12 @@
       "title": "صيغ قابلة للقراءة آليًا",
       "text": "نص عادي",
       "json": "JSON"
+    },
+    "metadata": {
+      "description": "الوصف",
+      "relatedDocuments": "مواقع ووثائق ذات صلة",
+      "showMore": "عرض المزيد",
+      "showLess": "عرض أقل"
     }
   },
   "subscribeToggle": {

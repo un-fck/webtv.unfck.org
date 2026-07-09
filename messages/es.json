@@ -400,6 +400,12 @@
       "title": "Formatos legibles por máquina",
       "text": "Texto plano",
       "json": "JSON"
+    },
+    "metadata": {
+      "description": "Descripción",
+      "relatedDocuments": "Sitios Web y Documentos Relacionados",
+      "showMore": "Ver más",
+      "showLess": "Ver menos"
     }
   },
   "subscribeToggle": {

@@ -400,6 +400,12 @@
       "title": "机器可读格式",
       "text": "纯文本",
       "json": "JSON"
+    },
+    "metadata": {
+      "description": "描述",
+      "relatedDocuments": "相关网站和文件",
+      "showMore": "显示更多",
+      "showLess": "收起"
     }
   },
   "subscribeToggle": {

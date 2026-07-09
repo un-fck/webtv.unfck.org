@@ -298,6 +298,12 @@
       "title": "Machine-readable formats",
       "text": "Plain text",
       "json": "JSON"
+    },
+    "metadata": {
+      "description": "Description",
+      "relatedDocuments": "Related Sites and Documents",
+      "showMore": "Show more",
+      "showLess": "Show less"
     }
   },
   "pv": {
