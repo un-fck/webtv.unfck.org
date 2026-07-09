@@ -383,8 +383,18 @@ function OgFallbackCard(): ReactElement {
       }}
     >
       <img src={emblem} width={144} height={120} alt="" />
-      <div style={{ display: "flex", fontSize: 64, letterSpacing: "-0.025em" }}>
-        <span style={{ fontWeight: 700 }}>{"United Nations "}</span>
+      <div
+        style={{
+          display: "flex",
+          // Satori trims a trailing space on a flex item, so the two halves
+          // would render as "United NationsTranscripts". Space them with a
+          // gap instead, as `OgHeader` does.
+          columnGap: 64 * 0.26,
+          fontSize: 64,
+          letterSpacing: "-0.025em",
+        }}
+      >
+        <span style={{ fontWeight: 700 }}>United Nations</span>
         <span style={{ fontWeight: 300 }}>Transcripts</span>
       </div>
     </div>
