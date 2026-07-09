@@ -11,6 +11,7 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import os from "os";
+import { UnusableAudioError } from "./pipeline-errors";
 
 const execFileAsync = promisify(execFile);
 
@@ -199,9 +200,47 @@ export async function downloadAudioToTemp(
   const tag = label ? `[${label}] ` : "";
   console.log(`  ${tag}Downloading audio...`);
   const res = await fetch(audioUrl, { redirect: "follow" });
+  // A non-OK status (Kaltura still converting → 404, a 5xx, etc.), an
+  // error/HTML body, or an empty/truncated payload all mean the audio isn't
+  // usable *yet* — a retryable condition, not a permanent failure. Surface it
+  // as UnusableAudioError so the pipeline flips the row to `interrupted`
+  // (auto-retried) instead of hard `error`.
   if (!res.ok)
-    throw new Error(`Download failed: ${res.status} ${res.statusText}`);
+    throw new UnusableAudioError(
+      `Download failed: ${res.status} ${res.statusText} for ${audioUrl}`,
+    );
+  const contentType = res.headers.get("content-type") || "";
   const buffer = Buffer.from(await res.arrayBuffer());
+  if (buffer.length < 1024)
+    throw new UnusableAudioError(
+      `Downloaded audio is empty or too small (${buffer.length} bytes, ` +
+        `content-type "${contentType}") from ${audioUrl} — ` +
+        `not yet available or an error body`,
+    );
+  if (/^\s*(text\/|application\/(json|xml|xhtml))/i.test(contentType))
+    throw new UnusableAudioError(
+      `Downloaded a non-audio body (content-type "${contentType}", ` +
+        `${buffer.length} bytes) from ${audioUrl} — likely an error page, ` +
+        `not audio`,
+    );
+  // Integrity: a connection reset mid-body can hand back fewer bytes than the
+  // server promised without fetch() throwing. A truncated MP4 loses its moov
+  // atom (stored at the end of the file), so ffmpeg would later fail on it
+  // with an opaque decode error — catch the shortfall here, where we can
+  // still name the cause.
+  // (Skipped if the response was content-encoded: fetch() decompresses the
+  // body, so byte counts would legitimately differ from Content-Length.)
+  const contentLength = Number(res.headers.get("content-length"));
+  if (
+    !res.headers.get("content-encoding") &&
+    Number.isFinite(contentLength) &&
+    contentLength > 0 &&
+    buffer.length !== contentLength
+  )
+    throw new UnusableAudioError(
+      `Downloaded audio is truncated: got ${buffer.length} of ` +
+        `${contentLength} bytes from ${audioUrl}`,
+    );
   const tmpPath = path.join(os.tmpdir(), `un-audio-${Date.now()}.mp4`);
   fs.writeFileSync(tmpPath, buffer);
   console.log(

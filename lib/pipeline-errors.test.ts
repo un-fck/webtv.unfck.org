@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { isTransientPipelineError } from "@/lib/pipeline-errors";
+import {
+  isTransientPipelineError,
+  UnusableAudioError,
+} from "@/lib/pipeline-errors";
 
 describe("isTransientPipelineError", () => {
   // Verbatim error messages observed in production (webtv.transcripts
@@ -37,6 +40,23 @@ describe("isTransientPipelineError", () => {
   ];
   it.each(intrinsic)("terminal: %s", (msg) => {
     expect(isTransientPipelineError(new Error(msg))).toBe(false);
+  });
+
+  // Unusable/empty/undecodable audio downloads (missing file, HTML error body,
+  // ffmpeg decode failure) are retryable by construction — splitAudio and
+  // downloadAudioToTemp raise UnusableAudioError instead of an opaque
+  // "Command failed: ffmpeg …" (which stays terminal, see above).
+  it("classifies UnusableAudioError as retryable", () => {
+    expect(
+      isTransientPipelineError(
+        new UnusableAudioError("ffmpeg failed to split audio"),
+      ),
+    ).toBe(true);
+    expect(
+      isTransientPipelineError(
+        new UnusableAudioError("Audio input file is empty or too small"),
+      ),
+    ).toBe(true);
   });
 
   it("handles non-Error throwables", () => {
