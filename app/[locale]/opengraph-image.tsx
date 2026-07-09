@@ -1,10 +1,21 @@
-import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
-import { OgHeader, getOgFonts } from "@/lib/og";
+import { RTL_LOCALES } from "@/i18n/routing";
+import { OgHeader, OgText, getOgFonts, renderOgImage } from "@/lib/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "UN Transcripts";
+
+// Horizontal padding. Sized for the clients that actually matter — X, Slack,
+// Discord, LinkedIn, Facebook, WhatsApp, iMessage — all of which render the
+// full 1.91:1 frame (X trims ~15px off the top and bottom to reach 2:1). We
+// used to inset the content by 200px a side so it survived Microsoft Teams'
+// near-square centre crop, but that squeezed the content column down to 800px:
+// the Russian wordmark clipped off the right edge, its badge fell off canvas,
+// and every locale's card read as hollow at the edges. Teams is not a target.
+const PAD_X = 80;
+const PAD_Y = 64;
+const CONTENT_WIDTH = size.width - PAD_X * 2;
 
 // Classical typography trick: glue the last word to the previous one with a
 // non-breaking space so the headline never orphans a tiny word on its own line
@@ -26,10 +37,11 @@ export default async function Image({
   const [header, home, fonts] = await Promise.all([
     getTranslations({ locale, namespace: "header" }),
     getTranslations({ locale, namespace: "home" }),
-    getOgFonts(),
+    getOgFonts(locale),
   ]);
+  const rtl = RTL_LOCALES.has(locale);
 
-  return new ImageResponse(
+  return renderOgImage(
     <div
       style={{
         width: "100%",
@@ -37,14 +49,10 @@ export default async function Image({
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
+        alignItems: rtl ? "flex-end" : "flex-start",
         background: "#fff",
         color: "#1a1a1a",
-        // Teams (and iMessage's square thumbnail) crop the OG image with
-        // object-fit: cover to a near-square box, dropping the outer ~17%
-        // on each side. The horizontal safe-area padding here keeps the
-        // emblem, wordmark, headline, and titles inside that center band on
-        // those clients without making the wide-format unfurls look hollow.
-        padding: "72px 200px",
+        padding: `${PAD_Y}px ${PAD_X}px`,
         fontFamily: "Roboto",
       }}
     >
@@ -52,16 +60,21 @@ export default async function Image({
         brand={header("wordmarkBrand")}
         descriptor={header("wordmarkDescriptor")}
         badge={header("publicPreview")}
+        rtl={rtl}
+        maxWidth={CONTENT_WIDTH}
       />
       <div
         style={{
           display: "flex",
           flexDirection: "column",
+          alignItems: rtl ? "flex-end" : "flex-start",
+          width: CONTENT_WIDTH,
           gap: 32,
           paddingBottom: 24,
         }}
       >
-        <div
+        <OgText
+          rtl={rtl}
           style={{
             fontSize: 88,
             fontWeight: 700,
@@ -70,8 +83,9 @@ export default async function Image({
           }}
         >
           {fixOrphan(home("headline"))}
-        </div>
-        <div
+        </OgText>
+        <OgText
+          rtl={rtl}
           style={{
             fontSize: 48,
             fontWeight: 400,
@@ -80,7 +94,7 @@ export default async function Image({
           }}
         >
           {home("lead")}
-        </div>
+        </OgText>
       </div>
     </div>,
     { ...size, fonts },

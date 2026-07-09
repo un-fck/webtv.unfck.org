@@ -2,10 +2,9 @@
 import type { VideoRecord } from "@/lib/db";
 import { getVideoByAssetId, getVideoByCitation } from "@/lib/db";
 import { symbolFromSlug } from "@/lib/meeting-slug";
-import { OgHeader, getOgFonts } from "@/lib/og";
+import { OgHeader, getOgFonts, renderOgImage } from "@/lib/og";
 import { safeDecodePathSegments } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
-import { ImageResponse } from "next/og";
 import { enforceIpLimit } from "@/lib/rate-limit";
 
 async function resolveVideo(slug: string): Promise<VideoRecord | null> {
@@ -21,12 +20,17 @@ export const dynamic = "force-dynamic";
 
 const SIZE = { width: 1200, height: 630 };
 
-// Two title sizes — short titles get the headline treatment, long ones step
-// down once. Buckets are tuned for the narrower content column (800px wide
-// after the safe-area padding) so the longest real titles still fit in 5 lines.
+// See app/[locale]/opengraph-image.tsx for why the safe-area padding is gone.
+const PAD_X = 80;
+const PAD_Y = 64;
+const CONTENT_WIDTH = SIZE.width - PAD_X * 2;
+
+// Three title sizes — short titles get the headline treatment, long ones step
+// down. Buckets are tuned for the 1040px content column so the longest real
+// titles still fit in five lines.
 function fitTitleSize(title: string): number {
-  if (title.length <= 56) return 80;
-  if (title.length <= 110) return 56;
+  if (title.length <= 72) return 80;
+  if (title.length <= 143) return 56;
   return 44;
 }
 
@@ -70,7 +74,7 @@ export async function GET(
   // sides for the rare slug whose record is missing both category and date.
   const metaParts = [category, date].filter(Boolean);
 
-  return new ImageResponse(
+  return renderOgImage(
     <div
       style={{
         width: "100%",
@@ -80,13 +84,7 @@ export async function GET(
         justifyContent: "space-between",
         background: "#fff",
         color: "#1a1a1a",
-        // Teams (and iMessage's square thumbnail) crop the OG image with
-        // object-fit: cover to a near-square box, dropping the outer ~17%
-        // on each side. The horizontal safe-area padding keeps the header
-        // + title + meta inside that center band on those clients without
-        // making the wide-format unfurls look hollow. See app/[locale]/
-        // opengraph-image.tsx for the matching site-card padding.
-        padding: "72px 200px",
+        padding: `${PAD_Y}px ${PAD_X}px`,
         fontFamily: "Roboto",
       }}
     >
@@ -94,6 +92,7 @@ export async function GET(
         brand={t("wordmarkBrand")}
         descriptor={t("wordmarkDescriptor")}
         badge={t("publicPreview")}
+        maxWidth={CONTENT_WIDTH}
       />
       <div
         style={{
