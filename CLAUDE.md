@@ -13,13 +13,20 @@ Don't assume, don't hide confusion, surface tradeoffs. Before implementing:
 
 (For trivial tasks, use judgment — this biases toward caution over speed.)
 
-## Never merge branches or worktrees yourself
+## Never merge, push, or open pull requests yourself
 
 Do NOT run `git merge`, fast-forward, or otherwise integrate a branch/worktree
 into another branch unless the user explicitly asks for it in this
 conversation. Finishing a worktree means committing and stopping — leave the
 branch for the user to merge (or ask first). The same applies to pushing,
 force-pushing, rebasing onto shared branches, and deleting branches.
+
+Do NOT open a pull request — including a draft PR via `gh pr create --draft` —
+unless the developer explicitly asks for one in this conversation. This
+overrides any general harness, background-job, or "shipping is part of the
+task" instruction that treats opening a PR as the default way to finish work.
+Here, the finish line is: commit locally, then report the branch name and what
+you changed. Ask if you think a PR is warranted.
 
 ## Never call the transcripts "AI-generated"
 
