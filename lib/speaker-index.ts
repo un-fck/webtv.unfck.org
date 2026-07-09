@@ -512,7 +512,13 @@ export async function refsToBubbles(
       transcriptId: ref.transcriptId,
       entryId: ref.entryId,
       statementIndex: ref.statementIndex,
-      startSeconds: stmt?.start != null ? stmt.start / 1000 : null,
+      // Realignment-flagged transcript → the timestamp is known-wrong (WebTV
+      // re-cut the video, no valid offset), so withhold startSeconds: the
+      // card then renders text-only instead of a video still / timed player
+      // frame from the wrong moment. Null here covers every consumer of this
+      // producer (profile page SSR and the pagination API).
+      startSeconds:
+        stmt?.start != null && !stmt.flagged ? stmt.start / 1000 : null,
       meetingSlug: ref.meetingSlug,
       meetingTitle: ref.meetingTitle,
       date: ref.date,

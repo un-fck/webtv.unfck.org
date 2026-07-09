@@ -207,8 +207,20 @@ export interface Transcript {
  * front-shift (typically content removed mid- or end-of-video). The cron sets
  * `aligned_duration_ms` to the current length and leaves `time_offset_ms` NULL
  * to mark this state — see lib/realignment.ts:328-336.
+ *
+ * Takes only the columns it reads, so partial row projections (e.g.
+ * getStatementsForRefs) can reuse the one predicate instead of re-encoding
+ * the rule in SQL.
  */
-export function isTranscriptFlagged(t: Transcript): boolean {
+export function isTranscriptFlagged(
+  t: Pick<
+    Transcript,
+    | "transcription_status"
+    | "time_offset_ms"
+    | "aligned_duration_ms"
+    | "source_duration_ms"
+  >,
+): boolean {
   return (
     t.transcription_status === "completed" &&
     t.time_offset_ms == null &&
@@ -2158,6 +2170,13 @@ export async function getSpeakerMappingsWithMeta(): Promise<
 export interface ExtractedStatement {
   start: number | null;
   text: string;
+  /**
+   * True when the owning transcript is realignment-flagged (see
+   * isTranscriptFlagged): WebTV re-cut the audio and no valid offset exists,
+   * so `start` is known-wrong. Consumers deriving anything time-anchored from
+   * it (video stills, timed playback links) must skip those affordances.
+   */
+  flagged: boolean;
 }
 
 /**
@@ -2183,6 +2202,12 @@ export async function getStatementsForRefs(
             -- display getters. COALESCE: most rows have no offset.
             ((t.content->'statements'->p.idx->>'start')::float8
                + COALESCE(t.time_offset_ms, 0)) AS start,
+            -- The columns isTranscriptFlagged reads — the flag itself is
+            -- computed in TS below so the rule stays defined in one place.
+            t.transcription_status,
+            t.time_offset_ms,
+            t.aligned_duration_ms,
+            t.source_duration_ms,
             (
               SELECT string_agg(sent->>'text', ' ')
                 FROM jsonb_array_elements(
@@ -2199,6 +2224,7 @@ export async function getStatementsForRefs(
     out.set(`${row.transcript_id}:${row.statement_index}`, {
       start: row.start != null ? Number(row.start) : null,
       text: (row.text as string | null)?.trim() ?? "",
+      flagged: isTranscriptFlagged(row),
     });
   }
   return out;
