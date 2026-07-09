@@ -1,0 +1,51 @@
+# Dependabot configuration.
+#
+# IMPORTANT: this file controls Dependabot *pull requests* only. It has no
+# effect on the alerts listed under Security -> Dependabot. Silencing an alert
+# requires an auto-triage rule (Settings -> Advanced Security -> Dependabot ->
+# auto-triage rules) or a manual/API dismissal.
+#
+# Two axes exist and they are independent:
+#   * version updates  — routine "a new release exists" PRs. Only run for
+#     ecosystems declared below; `open-pull-requests-limit: 0` disables them.
+#   * security updates — "this version is vulnerable" PRs. Driven by a repo
+#     setting, NOT by presence in this file, so an ecosystem omitted here still
+#     gets them. `ignore: dependency-name: "*"` is what actually suppresses them.
+
+version: 2
+updates:
+  # The production Next.js app. Both axes on, grouped so we get one PR rather
+  # than a dozen.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      npm-minor-and-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # Standalone Vite eval dashboard — dev tooling, never deployed. No PRs.
+  - package-ecosystem: "npm"
+    directory: "/eval/dashboard"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: "*"
+
+  # jupyter/pandas for local eval notebooks — never deployed. No PRs.
+  # Ecosystem key is "uv" (uv.lock); "pip" covers requirements.txt/poetry/pipenv
+  # and would not match this project.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: "*"
