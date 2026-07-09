@@ -393,6 +393,12 @@
       "title": "Машиночитаемые форматы",
       "text": "Простой текст",
       "json": "JSON"
+    },
+    "metadata": {
+      "description": "Описание",
+      "relatedDocuments": "Веб-сайты и документы по теме",
+      "showMore": "Показать больше",
+      "showLess": "Показать меньше"
     }
   },
   "subscribeToggle": {
