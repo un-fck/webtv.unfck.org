@@ -11,6 +11,7 @@ import {
   getTranscriptByKalturaId,
   getVideoByAssetId,
   getVideoByCitation,
+  isTranscriptFlagged,
   queryVideos,
   type VideoRecord,
   type VideosQueryParams,
@@ -342,6 +343,23 @@ async function handleMeeting(
     transcript: {
       transcript_id: transcript.transcript_id,
       language: transcript.language_code,
+      // Realignment-flagged (lib/db.ts isTranscriptFlagged): UN Web TV re-cut
+      // the video after transcription in a way no single offset could fix, so
+      // the timestamps below may not match the current video. Additive and
+      // only present when flagged — unflagged responses are unchanged.
+      ...(isTranscriptFlagged(transcript)
+        ? {
+            timestamps_flagged: true,
+            timestamps_note:
+              "UN Web TV re-edited this video after the transcript was created; timestamps may no longer match the current video.",
+            original_duration_seconds: Math.round(
+              (transcript.source_duration_ms as number) / 1000,
+            ),
+            current_duration_seconds: Math.round(
+              (transcript.aligned_duration_ms as number) / 1000,
+            ),
+          }
+        : {}),
       data: transcriptData,
       topics: Object.values(topics).map((t) => ({
         key: t.key,

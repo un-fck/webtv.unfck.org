@@ -34,8 +34,10 @@ import {
   fmtHHMMSS,
 } from "./gemini-utils";
 
+import { REDUCTION_TRIGGER_S } from "./realignment-constants";
+export { REDUCTION_TRIGGER_S };
+
 export const CLIP_MS = 5 * 60 * 1000; // 5-min front clip — reliable margin over observed trims
-export const REDUCTION_TRIGGER_S = 30; // current must be > this shorter than baseline to act
 export const OVERSHOOT_TOL_S = 45; // after shifting, content may not exceed audio by > this
 export const START_TOL_S = 30; // after shifting, content may not start before -this
 

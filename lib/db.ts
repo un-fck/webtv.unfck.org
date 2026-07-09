@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { randomUUID } from "crypto";
 import "@/lib/load-env";
 import { applyTimeOffset } from "./transcript-offset";
+import { REDUCTION_TRIGGER_MS } from "./realignment-constants";
 
 // Transcript production lifecycle. Proposition analysis is a separate axis
 // (`AnalysisStatus`) and intentionally not part of this enum.
@@ -200,12 +201,6 @@ export interface Transcript {
   updated_at: Date;
 }
 
-// Reduction threshold (ms) below which the realignment cron treats current
-// audio as "shrunk" vs. the length we last reconciled to. Kept in sync with
-// REDUCTION_TRIGGER_S in lib/realignment.ts. Exported so API responses can
-// derive `flagged` from the same threshold without importing realignment.
-const REALIGN_REDUCTION_TRIGGER_MS = 30_000;
-
 /**
  * "Flagged" = completed transcript whose audio was shrunk by WebTV after
  * transcription in a way the realignment cron couldn't resolve with a single
@@ -219,7 +214,7 @@ export function isTranscriptFlagged(t: Transcript): boolean {
     t.time_offset_ms == null &&
     t.aligned_duration_ms != null &&
     t.source_duration_ms != null &&
-    t.aligned_duration_ms < t.source_duration_ms - REALIGN_REDUCTION_TRIGGER_MS
+    t.aligned_duration_ms < t.source_duration_ms - REDUCTION_TRIGGER_MS
   );
 }
 
