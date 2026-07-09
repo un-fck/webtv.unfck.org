@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ImageResponse } from "next/og";
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 
 // Module-scope cache: the emblem SVG never changes at runtime.
 let cachedEmblemUri: string | null = null;
@@ -52,9 +52,7 @@ async function fetchGoogleFont(weight: 300 | 400 | 700): Promise<ArrayBuffer> {
 // joining correctly, so we use it for the Arabic locale. We pull the Arabic
 // unicode subset specifically (Google splits each family into per-script
 // subsets and Cairo's default `latin` subset carries no Arabic glyphs).
-async function fetchGoogleArabicFont(
-  weight: 400 | 700,
-): Promise<ArrayBuffer> {
+async function fetchGoogleArabicFont(weight: 400 | 700): Promise<ArrayBuffer> {
   const cssRes = await fetch(
     `https://fonts.googleapis.com/css2?family=Cairo:wght@${weight}&display=swap`,
     { headers: { "User-Agent": GOOGLE_FONTS_UA } },
@@ -166,56 +164,158 @@ export function getEmblemDataUri(): string {
 }
 
 /**
+ * Satori performs no bidirectional reordering: it lays every word out in
+ * logical order, left to right, and only the font's own cursive shaping runs
+ * right-to-left. An Arabic sentence therefore comes out with its words in
+ * reverse reading order. Setting `direction: "rtl"` does not help — Satori
+ * ignores it for text layout.
+ *
+ * The workaround: hand Satori one flex item per word and let flexbox do the
+ * line flow. `row-reverse` + `wrap` fills each line from the right edge and
+ * wraps downward, which is exactly RTL line flow, while each word is still
+ * shaped correctly on its own. Word gaps become a uniform `columnGap` rather
+ * than a rendered space glyph.
+ *
+ * Split on plain spaces only, so the NBSP that `fixOrphan()` inserts keeps its
+ * two words glued into one flex item.
+ */
+function ogWords(text: string): ReactElement[] {
+  return text.split(/ +/).map((word, i) => <span key={i}>{word}</span>);
+}
+
+/**
+ * A block of card copy. LTR locales get a plain text node — Satori's own line
+ * breaking, real space glyphs. RTL locales get the per-word flex treatment
+ * described on `ogWords`.
+ */
+export function OgText({
+  children,
+  rtl,
+  style,
+}: {
+  children: string;
+  rtl: boolean;
+  style: CSSProperties & { fontSize: number };
+}) {
+  if (!rtl) return <div style={style}>{children}</div>;
+  return (
+    <div
+      style={{
+        ...style,
+        display: "flex",
+        flexDirection: "row-reverse",
+        flexWrap: "wrap",
+        justifyContent: "flex-start",
+        // Satori measures a word from its letters' *isolated* advances but
+        // renders their narrower joined forms, so every Arabic word box
+        // carries a variable amount of trailing slack. Word gaps come out
+        // somewhat uneven no matter what we do here, and at columnGap 0 the
+        // zero-slack words collide outright ("اقرأ ما" → "اقرأما"). 0.26em —
+        // the width of a space — is the floor that keeps every pair apart.
+        columnGap: style.fontSize * 0.26,
+      }}
+    >
+      {ogWords(children)}
+    </div>
+  );
+}
+
+// Rough advance-width estimate in ems. Satori exposes no way to measure text,
+// and the header is a single unwrappable row whose overflow silently clips, so
+// we approximate — erring slightly wide — purely to decide how far the header
+// has to shrink to fit.
+function estimateEm(text: string, weight: number): number {
+  let em = 0;
+  for (const ch of text) {
+    const cp = ch.codePointAt(0)!;
+    // CJK ideographs, kana, and fullwidth forms occupy a full em square.
+    if ((cp >= 0x2e80 && cp <= 0x9fff) || (cp >= 0xff00 && cp <= 0xff60))
+      em += 1;
+    else if (ch === " ") em += 0.26;
+    else em += weight >= 700 ? 0.53 : 0.5;
+  }
+  return em;
+}
+
+/**
  * Shared header for every OG card: emblem + "United Nations Transcripts"
  * split-weight wordmark + "Public Preview" pill. Mirrors `site-header.tsx`
- * exactly so that share cards visually match the live page — same emblem-to-
- * wordmark ratio, same `bold + " " + light` typography, same `bg-un-blue/10`
- * badge in `text-un-blue` on `rounded-md` corners.
+ * so that share cards visually match the live page — same emblem-to-wordmark
+ * ratio, same `bold + " " + light` typography, same `bg-un-blue/10` badge in
+ * `text-un-blue` on `rounded-md` corners.
  *
- * Sizes are 2× the live page values (emblem 40 → 80, wordmark 23.83 → 48,
- * badge 12 → 24) so the OG card reads at small unfurl scales.
+ * Base sizes are 2× the live page values (emblem 40 → 80, wordmark 23.83 → 48,
+ * badge 12 → 24) so the card reads at small unfurl scales. But locales with a
+ * much longer wordmark than English — Russian's "Организация Объединённых
+ * Наций Расшифровки" runs 42 characters against English's 26 — overflow the
+ * card's right edge at 2×, clipping the wordmark and pushing the badge off
+ * canvas. So the whole header (emblem, wordmark, badge, gaps) scales down
+ * proportionally by whatever factor makes the estimated row width fit
+ * `maxWidth`. English, French, Spanish, and Chinese need no shrinking and
+ * render at exactly 1×.
  */
 export function OgHeader({
   brand,
   descriptor,
   badge,
+  rtl = false,
+  maxWidth,
 }: {
   brand: string;
   descriptor: string;
   badge: string;
+  rtl?: boolean;
+  maxWidth: number;
 }) {
   const emblem = getEmblemDataUri();
+
+  const EMBLEM_W = 96;
+  const EMBLEM_H = 80;
+  const GAP = 20;
+  const WORDMARK = 48;
+  const BADGE = 24;
+  const BADGE_PAD_X = 16;
+
+  const estimated =
+    EMBLEM_W +
+    GAP * 2 +
+    (estimateEm(brand + " ", 700) + estimateEm(descriptor, 300)) * WORDMARK +
+    estimateEm(badge, 600) * BADGE +
+    BADGE_PAD_X * 2;
+  const scale = Math.min(1, maxWidth / estimated);
+  const px = (n: number) => Math.round(n * scale);
+
   return (
     <div
       style={{
         display: "flex",
+        // In RTL the emblem leads from the right, so the row itself reverses.
+        flexDirection: rtl ? "row-reverse" : "row",
         alignItems: "center",
         // Matches `gap-2.5` (10px) on the live header, scaled 2×.
-        gap: 20,
+        gap: px(GAP),
       }}
     >
       {/* Emblem intrinsic is 152×127; site-header renders it h-10 w-[47.9px].
-          Scaled 2× for OG: h-80 w-[95.8]. */}
-      <img src={emblem} width={96} height={80} alt="" />
+          Scaled 2× for OG: 96×80. */}
+      <img src={emblem} width={px(EMBLEM_W)} height={px(EMBLEM_H)} alt="" />
       <div
         style={{
-          // The two-weight wordmark renders as one inline run — bold "United
-          // Nations" followed by a normal space, then light "Transcripts" —
-          // exactly like the live header (single span, child spans for weight).
+          // The two-weight wordmark: bold brand then light descriptor, exactly
+          // like the live header. Rendered as two flex items rather than one
+          // inline run so the halves can reverse together under RTL.
           display: "flex",
-          fontSize: 48,
+          flexDirection: rtl ? "row-reverse" : "row",
+          columnGap: px(WORDMARK) * 0.26,
+          fontSize: px(WORDMARK),
           lineHeight: 1,
           letterSpacing: "-0.025em",
           color: "#0a0a0a",
+          whiteSpace: "nowrap",
         }}
       >
-        <span>
-          {/* Satori trims literal whitespace between adjacent <span> nodes,
-              so we glue the bold half to the trailing space with NBSP — the
-              two halves stay on one inline run, like the live header. */}
-          <span style={{ fontWeight: 700 }}>{brand + " "}</span>
-          <span style={{ fontWeight: 300 }}>{descriptor}</span>
-        </span>
+        <span style={{ fontWeight: 700 }}>{brand}</span>
+        <span style={{ fontWeight: 300 }}>{descriptor}</span>
       </div>
       <div
         style={{
@@ -225,23 +325,25 @@ export function OgHeader({
           // + `text-xs font-semibold`, scaled 2× for the OG layout.
           background: "rgba(0, 158, 219, 0.1)",
           color: "#009edb",
-          padding: "8px 16px",
-          borderRadius: 12,
-          fontSize: 24,
+          padding: `${px(8)}px ${px(BADGE_PAD_X)}px`,
+          borderRadius: px(12),
           fontWeight: 600,
-          // The tighter safe-area padding squeezes the row; pin the badge
-          // to a single line so "Public Preview" never breaks into two.
+          // Pin the badge to a single line so "Public Preview" never breaks.
           whiteSpace: "nowrap",
           flexShrink: 0,
         }}
       >
-        {badge}
+        <OgText rtl={rtl} style={{ fontSize: px(BADGE), lineHeight: 1.2 }}>
+          {badge}
+        </OgText>
       </div>
     </div>
   );
 }
 
-type OgImageOptions = NonNullable<ConstructorParameters<typeof ImageResponse>[1]>;
+type OgImageOptions = NonNullable<
+  ConstructorParameters<typeof ImageResponse>[1]
+>;
 
 const OG_IMAGE_HEADERS: Record<string, string> = {
   "content-type": "image/png",
@@ -320,10 +422,16 @@ export async function renderOgImage(
         (font) => font.name === "Roboto",
       );
       return await bufferImageResponse(
-        new ImageResponse(<OgFallbackCard />, { ...options, fonts: latinFonts }),
+        new ImageResponse(<OgFallbackCard />, {
+          ...options,
+          fonts: latinFonts,
+        }),
       );
     } catch (fallbackErr) {
-      console.error("[og] fallback render failed; serving blank PNG", fallbackErr);
+      console.error(
+        "[og] fallback render failed; serving blank PNG",
+        fallbackErr,
+      );
       return new Response(TRANSPARENT_PNG, {
         status: 200,
         headers: OG_IMAGE_HEADERS,
