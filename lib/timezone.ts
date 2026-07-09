@@ -294,6 +294,31 @@ function formatAbsoluteDate(
   return formatted;
 }
 
+/**
+ * Absolute date for page metadata — meta descriptions, OG tags, JSON-LD. No
+ * weekday, always a year, never a relative "Today", and no user timezone (a
+ * crawler has none; the server's zone is used, which is where `videos.date`
+ * was parsed to local midnight).
+ *
+ * Shares `formatAbsoluteDate` rather than calling `toLocaleDateString` again,
+ * so metadata inherits UN house style: en-GB day-month-year ("8 July 2026",
+ * not "July 8, 2026"), the UN dual Arabic month names ("تموز/يوليه"), and the
+ * strip of Russian Intl's trailing " г." — which otherwise collides with the
+ * period ending the sentence it's interpolated into.
+ */
+export function formatDateForMetadata(iso: string, locale: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return formatAbsoluteDate(
+    date,
+    getBrowserTimezone(),
+    locale,
+    "none",
+    new Date(),
+    "always",
+  );
+}
+
 // True when the given date/timestamp falls strictly after "today" in the
 // given timezone (i.e. tomorrow or later). Locale-agnostic.
 export function isFutureDay(
