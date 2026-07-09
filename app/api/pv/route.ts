@@ -1,7 +1,7 @@
 // Fetches and parses a UN PV or SR document PDF to structured JSON.
 import { NextRequest, NextResponse } from "next/server";
 import { getPVContent, savePVContent } from "@/lib/db";
-import { fetchPVDocument } from "@/lib/pv-documents";
+import { fetchPVDocument, isValidPVSymbol } from "@/lib/pv-documents";
 import { parsePVDocument } from "@/lib/pv-parser";
 import { apiError } from "@/lib/api-error";
 import { enforceIpLimit, enforceGlobalDailyLimit } from "@/lib/rate-limit";
@@ -27,6 +27,12 @@ export async function GET(request: NextRequest) {
   }
   if (!VALID_LANGS.has(lang)) {
     return apiError(400, "invalid_parameter", "Unsupported language");
+  }
+  // Same reasoning as VALID_LANGS above, for the other half of the
+  // (symbol, lang) composite key — and it keeps unbounded input out of the
+  // cache read below, which runs before the rate limiter.
+  if (!isValidPVSymbol(symbol)) {
+    return apiError(400, "invalid_parameter", "Malformed document symbol");
   }
 
   // PV documents are public UN reference data. Cached reads are cheap, so serve

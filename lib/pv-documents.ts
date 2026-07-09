@@ -155,6 +155,35 @@ export function parseMeetingSymbol(
   return null;
 }
 
+/**
+ * Longest symbol this codebase produces is `BRIEFING/GENEVA/YYYY-MM-DD` (26
+ * chars); 64 leaves generous headroom for symbols we don't generate ourselves.
+ */
+export const MAX_PV_SYMBOL_LENGTH = 64;
+
+/**
+ * Whether `symbol` is shaped like a UN document symbol.
+ *
+ * Every symbol `parseMeetingSymbol` emits draws from `[A-Z0-9]` plus `/`, `.`
+ * and `-` (`S/PV.10100`, `A/ES-11/PV.5`, `E/C.12/SR.42`, `BRIEFING/SG/…`).
+ * Spaces are tolerated because callers may pass `"S/PV. 10100"`; `fetchPVDocument`
+ * strips them before use.
+ *
+ * This is a validator, not a sanitizer: reject, never repair. The length bound
+ * is the load-bearing part — it keeps unbounded input away from the `/\d+$/`
+ * match in `fetchPVDocument`, which backtracks quadratically on a long digit
+ * run that fails to match (~68s of blocked event loop at 160k chars). Today an
+ * overlong symbol never gets that far, because documents.un.org rejects the
+ * absurd URL before we ever inspect the response — but that is an external
+ * server's behaviour, not a boundary we control.
+ */
+export function isValidPVSymbol(symbol: string): boolean {
+  return (
+    symbol.length <= MAX_PV_SYMBOL_LENGTH &&
+    /^[A-Za-z0-9][A-Za-z0-9/.\- ]*$/.test(symbol)
+  );
+}
+
 /** Build a URL to access the PV document PDF from documents.un.org. */
 export function getPVDocumentUrl(symbol: string, lang?: string): string {
   const base = `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}`;
@@ -175,6 +204,10 @@ export async function fetchPVDocument(
   symbol: string,
   lang: string = "en",
 ): Promise<Buffer | null> {
+  // Guard here, not only at the call site: this function owns the quadratic
+  // `/\d+$/` match below, so the bound belongs where the hazard is.
+  if (!isValidPVSymbol(symbol)) return null;
+
   try {
     const url = `https://documents.un.org/api/symbol/access?s=${encodeURIComponent(symbol)}&l=${encodeURIComponent(lang)}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(20000) });

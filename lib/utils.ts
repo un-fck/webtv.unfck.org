@@ -6,6 +6,18 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Escape every regex metacharacter in `text` so it matches literally when
+ * interpolated into a `new RegExp(...)` source.
+ *
+ * Hand-rolled escaping tends to cover only the characters the author happened
+ * to think of, which fails two ways: an unescaped `(` throws a SyntaxError at
+ * construction, and an unescaped `.` or `*` silently matches the wrong thing.
+ */
+export function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
  * Serialize a value for safe embedding inside an inline `<script>` element
  * (e.g. a JSON-LD structured-data island). `JSON.stringify` does NOT escape
  * `<`, `>`, `&`, or U+2028/U+2029, so a string value containing `</script>`

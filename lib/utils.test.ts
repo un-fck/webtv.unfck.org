@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { jsonLdScript } from "./utils";
+import { jsonLdScript, escapeRegExp } from "./utils";
 
 const LS = String.fromCodePoint(0x2028); // line separator
 const PS = String.fromCodePoint(0x2029); // paragraph separator
@@ -28,5 +28,22 @@ describe("jsonLdScript", () => {
       nested: { a: 1, b: ["<x>", "&"] },
     };
     expect(JSON.parse(jsonLdScript(data))).toEqual(data);
+  });
+});
+
+describe("escapeRegExp", () => {
+  it("lets a paren-bearing input compile instead of throwing", () => {
+    expect(() => new RegExp(`asset/${escapeRegExp("a(b")}"`)).not.toThrow();
+  });
+
+  it("escapes a trailing backslash", () => {
+    expect(() => new RegExp(escapeRegExp("a\\"))).not.toThrow();
+  });
+
+  it("matches metacharacters literally", () => {
+    expect(new RegExp(escapeRegExp("a.b")).test("axb")).toBe(false);
+    expect(new RegExp(escapeRegExp("a.b")).test("a.b")).toBe(true);
+    expect(new RegExp(escapeRegExp("a*")).test("aaa")).toBe(false);
+    expect(new RegExp(escapeRegExp("a*")).test("a*")).toBe(true);
   });
 });

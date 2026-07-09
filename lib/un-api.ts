@@ -7,6 +7,7 @@ import {
   type VideoRecord,
 } from "./db";
 import { parseMeetingSymbol } from "./pv-documents";
+import { escapeRegExp } from "./utils";
 import { videoUrl } from "./video-url";
 import { extractKalturaId } from "./kaltura";
 
@@ -369,9 +370,11 @@ export async function fetchVideosForDate(
       contextWindow,
     );
 
-    // Extract duration
+    // Extract duration. `assetId` is scraped from WebTV's markup, so it must be
+    // escaped before interpolation: an id containing `(` would otherwise throw
+    // out of this function and take the whole schedule sweep down with it.
     const durationPattern = new RegExp(
-      `<span class="badge[^"]*">(\\d{2}:\\d{2}:\\d{2})<\\/span>[\\s\\S]{0,500}?href="\\/${locale}\\/asset\\/${assetId.replace(/\//g, "\\/")}"`,
+      `<span class="badge[^"]*">(\\d{2}:\\d{2}:\\d{2})<\\/span>[\\s\\S]{0,500}?href="\\/${locale}\\/asset\\/${escapeRegExp(assetId)}"`,
     );
     const durationMatch = html.match(durationPattern);
 
