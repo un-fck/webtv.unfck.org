@@ -39,5 +39,9 @@ export function isTransientPipelineError(err: unknown): boolean {
     // The "timeout" patterns above already cover "Connection terminated due
     // to connection timeout", but the bare "unexpectedly" wording does not.
     "connection terminated unexpectedly",
+    // Gemini hit the output-token cap (finishReason MAX_TOKENS) and returned
+    // incomplete JSON — a chunk was too dense. Retrying (chunked/sub-sliced)
+    // can succeed, so treat it as transient rather than an intrinsic failure.
+    "output truncated",
   ].some((pattern) => msg.includes(pattern));
 }
