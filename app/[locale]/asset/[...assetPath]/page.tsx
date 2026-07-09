@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getVideoByAssetId } from "@/lib/db";
+import { safeDecodePathSegments } from "@/lib/utils";
 import { buildVideoMetadata, renderVideoPage } from "@/components/video-page";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +20,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string; assetPath: string[] }>;
 }): Promise<Metadata> {
   const { locale, assetPath } = await params;
-  const assetId = assetPath.map(decodeURIComponent).join("/");
-  const record = await getVideoByAssetId(assetId);
+  const assetId = safeDecodePathSegments(assetPath);
+  const record = assetId === null ? null : await getVideoByAssetId(assetId);
   if (!record) return {};
   return buildVideoMetadata({ record, locale });
 }
@@ -31,8 +32,8 @@ export default async function AssetPage({
   params: Promise<{ locale: string; assetPath: string[] }>;
 }) {
   const { locale, assetPath } = await params;
-  const assetId = assetPath.map(decodeURIComponent).join("/");
-  const record = await getVideoByAssetId(assetId);
+  const assetId = safeDecodePathSegments(assetPath);
+  const record = assetId === null ? null : await getVideoByAssetId(assetId);
   if (!record) notFound();
   return renderVideoPage({ record, locale });
 }

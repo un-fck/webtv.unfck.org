@@ -3,6 +3,7 @@ import type { VideoRecord } from "@/lib/db";
 import { getVideoByAssetId, getVideoByCitation } from "@/lib/db";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 import { OgHeader, getOgFonts } from "@/lib/og";
+import { safeDecodePathSegments } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
 import { ImageResponse } from "next/og";
 import { enforceIpLimit } from "@/lib/rate-limit";
@@ -49,12 +50,13 @@ export async function GET(
   if (ipLimited) return ipLimited;
 
   const { slug: slugParts } = await params;
-  const slug = slugParts.map(decodeURIComponent).join("/");
+  const slug = safeDecodePathSegments(slugParts);
 
   // OG image is locale-agnostic v1 — title and meta show in English (matches
   // the WebTV source language) regardless of which locale page links to it.
+  // A malformed slug (bad percent-encoding) yields no record → generic image.
   const [record, t, fonts] = await Promise.all([
-    resolveVideo(slug),
+    slug === null ? Promise.resolve(null) : resolveVideo(slug),
     getTranslations({ locale: "en", namespace: "header" }),
     getOgFonts(),
   ]);
