@@ -66,6 +66,17 @@ RUN apt-get update \
       cron curl gettext-base ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
+# ffmpeg + ffprobe, required by the transcription pipeline: every provider
+# except AssemblyAI downloads the Kaltura audio locally and chunks it with
+# `ffmpeg` when it exceeds the provider's upload cap (24 MB for Azure), and
+# Gemini decides whether to chunk at all via `ffprobe`. These binaries were
+# missing from this image for its entire history, which silently failed all
+# non-English transcriptions of meetings longer than ~40 minutes (the ffmpeg
+# spawn died with exit 127, reported only as an opaque "Command failed").
+# Static, dependency-free builds from the pinned multi-arch image — a few
+# hundred MB smaller than apt's ffmpeg with its full library tree.
+COPY --from=mwader/static-ffmpeg:8.1.2 /ffmpeg /ffprobe /usr/local/bin/
+
 # Create a non-root user for the Next runtime. The cron daemon needs root
 # (to read /etc/cron.d and switch to the user listed per line), so the
 # CMD entrypoint runs as root and the crontab itself targets `nextjs` for

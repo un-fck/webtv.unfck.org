@@ -18,6 +18,7 @@
  *      start running immediately, without waiting for the next cron tick.
  *      Detached via `setImmediate` so it never blocks server readiness.
  */
+import { execFileSync } from "child_process";
 import * as Sentry from "@sentry/nextjs";
 import { heartbeatOwnRows, markOwnRowsInterrupted } from "@/lib/db";
 import { currentWorkerId } from "@/lib/worker-identity";
@@ -46,6 +47,23 @@ export function initWorker(): void {
   // rather than a first-request 500. (This block is already production-gated.)
   if (!process.env.CRON_SECRET) {
     throw new Error("CRON_SECRET must be set in production");
+  }
+
+  // Assert the transcription pipeline's binary dependencies exist. ffmpeg
+  // chunks any audio over the provider upload cap; ffprobe drives Gemini's
+  // chunking decision. These were missing from the production image for its
+  // entire history, silently failing every long non-English transcription
+  // (exit 127 surfaced only as an opaque "Command failed: ffmpeg ...").
+  // Loud log + Sentry event rather than a boot failure: the server can still
+  // serve pages and run AssemblyAI/short-file transcriptions without them.
+  for (const bin of ["ffmpeg", "ffprobe"] as const) {
+    try {
+      execFileSync(bin, ["-version"], { stdio: "ignore" });
+    } catch {
+      const msg = `[server-init] ${bin} not found on PATH — chunked transcription (all non-English audio over the provider upload cap) WILL FAIL`;
+      console.error(msg);
+      Sentry.captureMessage(msg, "error");
+    }
   }
 
   const workerId = currentWorkerId();
