@@ -271,7 +271,15 @@
       "downloadExcel": "Tableur (.xlsx)",
       "downloadSrt": "Sous-titres (.srt)",
       "downloadVtt": "Sous-titres web (.vtt)",
-      "downloadJson": "API JSON"
+      "downloadJson": "Données brutes (.json)"
+    },
+    "export": {
+      "disclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU.",
+      "date": "Date",
+      "language": "Langue",
+      "transcript": "Transcription",
+      "json": "JSON",
+      "aiAgents": "Informations pour les agents d'IA"
     },
     "view": {
       "speaker": "Intervenant",
@@ -293,8 +301,7 @@
       "audioOutOfSyncStarting": "Démarrage…",
       "audioOutOfSyncSignIn": "Connectez-vous pour demander une nouvelle transcription",
       "audioOutOfSyncInProgress": "Une nouvelle transcription est en cours.",
-      "transcriptDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU. <aboutLink>En savoir plus</aboutLink>",
-      "exportDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU."
+      "transcriptDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU. <aboutLink>En savoir plus</aboutLink>"
     },
     "highlightsOnly": "Faits saillants",
     "allContent": "Tout le contenu avec faits saillants"

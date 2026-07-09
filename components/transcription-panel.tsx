@@ -25,6 +25,16 @@ import {
   buildSpeakerSegments,
 } from "@/lib/transcript-formatting";
 import {
+  buildExportHeaderRtf,
+  buildExportHeaderText,
+  buildExportHeaderVtt,
+  buildExportMetaFields,
+  escapeRtf,
+  type ExportMetaInput,
+} from "@/lib/transcript-export";
+import { useLanguageDisplayName } from "@/lib/hooks/use-language-display-name";
+import { localeComma } from "@/lib/timezone";
+import {
   TranscriptToolbar,
   type ViewMode,
 } from "@/components/transcript-toolbar";
@@ -244,7 +254,9 @@ export function TranscriptionPanel({
     null,
   );
   const t = useTranslations("transcript.panel");
+  const tExport = useTranslations("transcript.export");
   const locale = useLocale();
+  const languageDisplayName = useLanguageDisplayName();
   // Covers the POST round-trip (click → response) so the Generate button can
   // show instant feedback before the server resolves Kaltura and starts polling.
   const [starting, setStarting] = useState(false);
@@ -734,21 +746,63 @@ export function TranscriptionPanel({
     }
   };
 
-  const escapeRtf = (text: string): string => {
-    return text
-      .replace(/\\/g, "\\\\")
-      .replace(/{/g, "\\{")
-      .replace(/}/g, "\\}")
-      .replace(/[\u0080-\uffff]/g, (char) => {
-        const code = char.charCodeAt(0);
-        return `\\u${code}?`;
-      });
+  // Canonical URLs for the export header. Built from `locale` + `video.slug`
+  // rather than `window.location.href` so an exported file always names the
+  // transcript the reader is actually looking at: the language picker falls
+  // back to floor / first-available without writing `?lang=` to the URL (see
+  // meeting-state.tsx), so the address bar can silently disagree with the
+  // rendered transcript. The `?lang=` / `?language=` suffix mirrors the rule in
+  // `selectLanguage` \u2014 omitted when the track matches the page locale.
+  const exportUrls = () => {
+    const origin = window.location.origin;
+    const langSuffix = (param: "lang" | "language") =>
+      selectedLanguage === locale ? "" : `?${param}=${selectedLanguage}`;
+    return {
+      transcriptUrl: `${origin}/${locale}/${video.slug}${langSuffix("lang")}`,
+      jsonUrl: `${origin}/${locale}/${video.slug}.json${langSuffix("language")}`,
+      llmsUrl: `${origin}/llms.txt`,
+    };
+  };
+
+  // `withAgentLinks` is true only for the clipboard: the JSON and llms.txt
+  // pointers exist to help someone hand a meeting to an LLM, which is not what
+  // a downloaded .rtf or .xlsx is for.
+  const exportMeta = (withAgentLinks = false): ExportMetaInput => {
+    const { transcriptUrl, jsonUrl, llmsUrl } = exportUrls();
+    // Absolute date only ("15 June 2026") \u2014 an export carries no schedule
+    // context, so a weekday or a relative "Today" would be meaningless later,
+    // and the year must be present even for a meeting held this year.
+    const dateDisplay = formatMeetingDate(video.scheduledTime ?? video.date, {
+      weekday: "none",
+      relative: "off",
+      year: "always",
+    });
+    const timeDisplay = video.scheduledTime
+      ? formatMeetingTime(video.scheduledTime)
+      : null;
+    return {
+      title: video.cleanTitle,
+      body: video.body,
+      date: timeDisplay
+        ? `${dateDisplay}${localeComma(locale)}${timeDisplay}`
+        : dateDisplay,
+      language: languageDisplayName(selectedLanguage),
+      transcriptUrl,
+      jsonUrl: withAgentLinks ? jsonUrl : null,
+      llmsUrl: withAgentLinks ? llmsUrl : null,
+      labels: {
+        date: tExport("date"),
+        language: tExport("language"),
+        transcript: tExport("transcript"),
+        json: tExport("json"),
+        aiAgents: tExport("aiAgents"),
+      },
+    };
   };
 
   const downloadDocx = () => {
     if (!segments || !statements) return;
-    let rtf = "{\\rtf1\\ansi\\deff0\n";
-    rtf += `{\\i ${escapeRtf(t("exportDisclaimer"))}}\\line\\line\n`;
+    let rtf = buildExportHeaderRtf(exportMeta(), tExport("disclaimer"));
     segments.forEach((segment) => {
       const firstStmtIndex = segment.statementIndices[0] ?? 0;
       rtf += `{\\b ${escapeRtf(getSpeakerText(firstStmtIndex))}`;
@@ -777,6 +831,7 @@ export function TranscriptionPanel({
 
   const downloadExcel = async () => {
     if (!segments) return;
+    const meta = exportMeta();
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Transcript");
     const topicList = Object.values(topics);
@@ -823,7 +878,7 @@ export function TranscriptionPanel({
               date: video.date,
               source_type: "WebTV",
               title: video.cleanTitle,
-              url: video.url,
+              url: meta.transcriptUrl,
               paragraph_number: paragraphNumber++,
               speaker_affiliation: info?.affiliation
                 ? countryNames.get(info.affiliation) || info.affiliation
@@ -850,12 +905,34 @@ export function TranscriptionPanel({
       });
     });
 
-    // Keep the disclaimer off the data sheet (row 1 stays the header for
-    // anyone piping the file into pandas etc.) — it gets its own sheet.
-    const notesSheet = workbook.addWorksheet("Notes");
-    notesSheet.getColumn(1).width = 110;
-    notesSheet.getCell("A1").value = t("exportDisclaimer");
-    notesSheet.getCell("A2").value = window.location.href;
+    // Keep the metadata off the data sheet (row 1 stays the header for anyone
+    // piping the file into pandas etc.) — it gets its own sheet. "Transcript"
+    // stays first so `pd.read_excel(path)`, which defaults to sheet 0, still
+    // lands on the data.
+    const infoSheet = workbook.addWorksheet("Info");
+    infoSheet.getColumn(1).width = 16;
+    infoSheet.getColumn(2).width = 100;
+    infoSheet.getCell("A1").value = meta.title;
+    infoSheet.getCell("A1").font = { bold: true, size: 14 };
+    if (meta.body) infoSheet.getCell("A2").value = meta.body;
+
+    let infoRow = 4;
+    for (const field of buildExportMetaFields(meta)) {
+      infoSheet.getCell(`A${infoRow}`).value = field.label;
+      infoSheet.getCell(`A${infoRow}`).font = { bold: true };
+      const valueCell = infoSheet.getCell(`B${infoRow}`);
+      valueCell.value = field.href
+        ? { text: field.value, hyperlink: field.href }
+        : field.value;
+      if (field.href) valueCell.font = { color: { argb: "FF0066CC" } };
+      infoRow++;
+    }
+
+    const disclaimerCell = infoSheet.getCell(`A${infoRow + 1}`);
+    disclaimerCell.value = tExport("disclaimer");
+    disclaimerCell.alignment = { vertical: "top", wrapText: true };
+    infoSheet.mergeCells(`A${infoRow + 1}:B${infoRow + 1}`);
+    infoSheet.getRow(infoRow + 1).height = 60;
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
@@ -867,6 +944,17 @@ export function TranscriptionPanel({
     a.download = `${baseFileName()}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // The `.json` export is the server's, not a client rebuild: that response
+  // already carries the disclaimer, the llms pointer and the video metadata,
+  // so the downloaded file is byte-identical to what an agent fetches from
+  // `/{locale}/{slug}.json`. Same-origin, so `download` names the file.
+  const downloadJson = () => {
+    const a = document.createElement("a");
+    a.href = exportUrls().jsonUrl;
+    a.download = `${baseFileName()}.json`;
+    a.click();
   };
 
   const triggerDownload = (
@@ -896,11 +984,8 @@ export function TranscriptionPanel({
   const downloadTxt = () => {
     const body = buildPlainTextBody();
     if (body === null) return;
-    triggerDownload(
-      `${t("exportDisclaimer")}\n\n---\n\n${body}`,
-      "txt",
-      "text/plain;charset=utf-8",
-    );
+    const header = buildExportHeaderText(exportMeta(), tExport("disclaimer"));
+    triggerDownload(`${header}${body}`, "txt", "text/plain;charset=utf-8");
   };
 
   // Returns true on a successful clipboard write so the toolbar can decide
@@ -908,29 +993,11 @@ export function TranscriptionPanel({
   const copyToClipboard = async (): Promise<boolean> => {
     const body = buildPlainTextBody();
     if (body === null) return false;
-    const pageUrl = window.location.href;
-    const jsonUrl = `${window.location.origin}/${locale}/${video.slug}.json`;
-    // Clipboard line is plain text, no schedule context — show the absolute
-    // date only ("15 June 2026"), no weekday, no "Today" relative label.
-    const dateDisplay = formatMeetingDate(video.scheduledTime ?? video.date, {
-      weekday: "none",
-      relative: "off",
-    });
-    const timeDisplay = video.scheduledTime
-      ? formatMeetingTime(video.scheduledTime)
-      : null;
-    const whenLine = timeDisplay
-      ? `Date: ${dateDisplay}, ${timeDisplay}`
-      : `Date: ${dateDisplay}`;
-    const header = [
-      video.cleanTitle,
-      whenLine,
-      `Language: ${selectedLanguage}`,
-      `Transcript: ${pageUrl}`,
-      `JSON API: ${jsonUrl}`,
-      t("exportDisclaimer"),
-    ].join("\n");
-    const text = `${header}\n\n---\n\n${body}`;
+    const header = buildExportHeaderText(
+      exportMeta(true),
+      tExport("disclaimer"),
+    );
+    const text = `${header}${body}`;
     try {
       await navigator.clipboard.writeText(text);
       return true;
@@ -986,7 +1053,7 @@ export function TranscriptionPanel({
     // SRT has no comment syntax, so the disclaimer rides as a short cue at
     // the very start (briefly visible in the player).
     const disclaimerEnd = Math.max(1000, Math.min(2000, cues[0].start));
-    const disclaimerCue = `1\n${formatCueTime(0, ",")} --> ${formatCueTime(disclaimerEnd, ",")}\n[${t("exportDisclaimer")}]\n`;
+    const disclaimerCue = `1\n${formatCueTime(0, ",")} --> ${formatCueTime(disclaimerEnd, ",")}\n[${tExport("disclaimer")}]\n`;
     const body = [
       disclaimerCue,
       ...cues.map(
@@ -1001,8 +1068,7 @@ export function TranscriptionPanel({
     const cues = buildCaptionCues();
     if (cues.length === 0) return;
     const body =
-      "WEBVTT\n\n" +
-      `NOTE ${t("exportDisclaimer")}\n\n` +
+      buildExportHeaderVtt(exportMeta(), tExport("disclaimer")) +
       cues
         .map(
           (cue) =>
@@ -1193,7 +1259,6 @@ export function TranscriptionPanel({
         starting={starting}
         kalturaId={kalturaId}
         videoStatus={video.status}
-        videoSlug={video.slug}
         onTranscribe={() => handleTranscribe()}
         onSchedule={handleSchedule}
         onShare={handleShare}
@@ -1202,6 +1267,7 @@ export function TranscriptionPanel({
         onDownloadTxt={downloadTxt}
         onDownloadSrt={downloadSrt}
         onDownloadVtt={downloadVtt}
+        onDownloadJson={downloadJson}
         onCopyToClipboard={copyToClipboard}
       />
 

@@ -124,8 +124,9 @@ const UN_ARABIC_MONTHS = [
   "كانون الأول/ديسمبر",
 ];
 
-// Locale-appropriate comma between relative label and absolute date.
-function relativeComma(locale: string): string {
+// Locale-appropriate comma: between a relative label and an absolute date, or
+// between a date and a time. Arabic and CJK have their own comma codepoints.
+export function localeComma(locale: string): string {
   if (locale.startsWith("ar")) return "، ";
   if (locale.startsWith("zh") || locale.startsWith("ja")) return "，";
   return ", ";
@@ -140,9 +141,13 @@ export function formatMeetingDate(
     // "prefix" → return "Today, 15 June" for today/±1, else absolute alone
     // "off"    → never use relative; always return the absolute date
     relative?: "alone" | "prefix" | "off";
+    // "auto"   → omit the year for dates in the current year (schedule UI)
+    // "always" → always show it; use for anything that outlives the session,
+    //            such as an exported file's metadata header
+    year?: "auto" | "always";
   } = {},
 ): string {
-  const { weekday = "long", relative = "alone" } = options;
+  const { weekday = "long", relative = "alone", year = "auto" } = options;
   const tz = resolveTimezone(ctx.timezone);
   const date =
     dateOrTimestamp.length > 10
@@ -190,11 +195,12 @@ export function formatMeetingDate(
       ctx.locale,
       "none",
       now,
+      year,
     );
-    return `${relativeLabel}${relativeComma(ctx.locale)}${absoluteNoWeekday}`;
+    return `${relativeLabel}${localeComma(ctx.locale)}${absoluteNoWeekday}`;
   }
 
-  const absolute = formatAbsoluteDate(date, tz, ctx.locale, weekday, now);
+  const absolute = formatAbsoluteDate(date, tz, ctx.locale, weekday, now, year);
 
   // Intl emits lowercase weekday names in French/Spanish/Italian by spec
   // (`mardi 2 juin`); in day-section headings we want sentence case
@@ -209,6 +215,7 @@ function formatAbsoluteDate(
   locale: string,
   weekday: "long" | "short" | "none",
   now: Date,
+  year: "auto" | "always" = "auto",
 ): string {
   const currentYear = now.toLocaleDateString("en-CA", {
     timeZone: tz,
@@ -218,7 +225,7 @@ function formatAbsoluteDate(
     timeZone: tz,
     year: "numeric",
   });
-  const showYear = dateYear !== currentYear;
+  const showYear = year === "always" || dateYear !== currentYear;
 
   // Arabic uses UN dual-named months; Intl can't produce that form.
   if (locale.startsWith("ar")) {
@@ -314,5 +321,5 @@ export function formatMeetingDateTime(
   ctx: MeetingFormatContext,
 ): string {
   if (!scheduledTime) return formatMeetingDate(date, ctx);
-  return `${formatMeetingDate(scheduledTime, ctx)}${relativeComma(ctx.locale)}${formatMeetingTime(scheduledTime, ctx)}`;
+  return `${formatMeetingDate(scheduledTime, ctx)}${localeComma(ctx.locale)}${formatMeetingTime(scheduledTime, ctx)}`;
 }

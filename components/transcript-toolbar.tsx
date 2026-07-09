@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
   Check,
@@ -44,7 +44,6 @@ interface TranscriptToolbarProps {
   starting: boolean;
   kalturaId: string;
   videoStatus?: string;
-  videoSlug?: string;
   onTranscribe: () => void;
   onSchedule: () => void;
   onShare: () => void;
@@ -53,6 +52,7 @@ interface TranscriptToolbarProps {
   onDownloadTxt: () => void;
   onDownloadSrt: () => void;
   onDownloadVtt: () => void;
+  onDownloadJson: () => void;
   onCopyToClipboard: () => Promise<boolean>;
 }
 
@@ -73,7 +73,6 @@ export function TranscriptToolbar({
   starting,
   kalturaId,
   videoStatus,
-  videoSlug,
   onTranscribe,
   onSchedule,
   onShare,
@@ -82,9 +81,9 @@ export function TranscriptToolbar({
   onDownloadTxt,
   onDownloadSrt,
   onDownloadVtt,
+  onDownloadJson,
   onCopyToClipboard,
 }: TranscriptToolbarProps) {
-  const locale = useLocale();
   const [languageOpen, setLanguageOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
   // Radix Popovers use React useId() for their content/trigger linkage.
@@ -461,7 +460,7 @@ export function TranscriptToolbar({
                       <button
                         role="menuitem"
                         onClick={() => {
-                          window.open(`/${locale}/${videoSlug}.json`, "_blank");
+                          onDownloadJson();
                           setDownloadOpen(false);
                         }}
                         className="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"

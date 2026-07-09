@@ -254,7 +254,15 @@
       "downloadExcel": "Spreadsheet (.xlsx)",
       "downloadSrt": "Subtitles (.srt)",
       "downloadVtt": "Captions (.vtt)",
-      "downloadJson": "JSON API"
+      "downloadJson": "Raw data (.json)"
+    },
+    "export": {
+      "disclaimer": "Transcripts available through this tool are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations.",
+      "date": "Date",
+      "language": "Language",
+      "transcript": "Transcript",
+      "json": "JSON",
+      "aiAgents": "Information for AI Agents"
     },
     "view": {
       "speaker": "Speaker",
@@ -276,8 +284,7 @@
       "audioOutOfSyncStarting": "Starting…",
       "audioOutOfSyncSignIn": "Sign in to request a fresh transcription",
       "audioOutOfSyncInProgress": "A fresh transcription is in progress.",
-      "transcriptDisclaimer": "Transcripts available through this tool are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations. <aboutLink>Learn more</aboutLink>",
-      "exportDisclaimer": "Transcripts available through this tool are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations."
+      "transcriptDisclaimer": "Transcripts available through this tool are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations. <aboutLink>Learn more</aboutLink>"
     },
     "highlightsOnly": "Highlights only",
     "allContent": "All content with highlights"
