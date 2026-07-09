@@ -5,15 +5,19 @@ import { pool, q } from "../lib/db";
 import { resolveEntryId as resolveEntryIdHelper } from "../lib/kaltura-helpers";
 
 const usage = `Usage:
-  npm run reidentify -- <asset|entry-id>
-  npm run reidentify -- all`;
+  pnpm reidentify -- <asset|entry-id>
+  pnpm reidentify -- all`;
 
-const rawArg = process.argv[2];
+// npm consumes the `--` separator, pnpm forwards it verbatim. Drop it so the
+// documented `pnpm reidentify -- <id>` form doesn't parse `--` as the target.
+const parsedArg = process.argv.slice(2).find((arg) => arg !== "--");
 
-if (!rawArg) {
+if (!parsedArg) {
   console.error(usage);
   process.exit(1);
 }
+
+const rawArg: string = parsedArg;
 
 type TranscriptRow = {
   transcript_id: string;
@@ -23,9 +27,9 @@ type TranscriptRow = {
 
 const SINGLE_QUERY = `
   SELECT transcript_id, entry_id, content
-  FROM transcripts
+  FROM webtv.transcripts
   WHERE entry_id = ?
-    AND status = 'completed'
+    AND transcription_status = 'completed'
     AND start_time IS NULL
     AND end_time IS NULL
   ORDER BY updated_at DESC
@@ -34,8 +38,8 @@ const SINGLE_QUERY = `
 
 const ALL_QUERY = `
   SELECT transcript_id, entry_id, content
-  FROM transcripts
-  WHERE status = 'completed'
+  FROM webtv.transcripts
+  WHERE transcription_status = 'completed'
     AND start_time IS NULL
     AND end_time IS NULL
   ORDER BY updated_at DESC
@@ -64,7 +68,7 @@ function parseParagraphs(row: TranscriptRow) {
 async function loadTargets(arg: string) {
   if (arg.toLowerCase() === "all") {
     const result = await pool.query(
-      "SELECT DISTINCT entry_id FROM transcripts WHERE status = 'completed' AND start_time IS NULL AND end_time IS NULL",
+      "SELECT DISTINCT entry_id FROM webtv.transcripts WHERE transcription_status = 'completed' AND start_time IS NULL AND end_time IS NULL",
     );
     return result.rows.map((row) => row.entry_id as string);
   }
