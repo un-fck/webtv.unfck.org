@@ -223,6 +223,24 @@ export async function downloadAudioToTemp(
         `${buffer.length} bytes) from ${audioUrl} — likely an error page, ` +
         `not audio`,
     );
+  // Integrity: a connection reset mid-body can hand back fewer bytes than the
+  // server promised without fetch() throwing. A truncated MP4 loses its moov
+  // atom (stored at the end of the file), so ffmpeg would later fail on it
+  // with an opaque decode error — catch the shortfall here, where we can
+  // still name the cause.
+  // (Skipped if the response was content-encoded: fetch() decompresses the
+  // body, so byte counts would legitimately differ from Content-Length.)
+  const contentLength = Number(res.headers.get("content-length"));
+  if (
+    !res.headers.get("content-encoding") &&
+    Number.isFinite(contentLength) &&
+    contentLength > 0 &&
+    buffer.length !== contentLength
+  )
+    throw new UnusableAudioError(
+      `Downloaded audio is truncated: got ${buffer.length} of ` +
+        `${contentLength} bytes from ${audioUrl}`,
+    );
   const tmpPath = path.join(os.tmpdir(), `un-audio-${Date.now()}.mp4`);
   fs.writeFileSync(tmpPath, buffer);
   console.log(

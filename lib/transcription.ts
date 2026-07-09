@@ -123,7 +123,17 @@ export async function getKalturaAudioUrl(
     );
   }
   const flavorParamId =
-    readyFlavor?.flavorParamsId ?? candidates[0]?.flavorParamsId ?? 100;
+    readyFlavor?.flavorParamsId ?? candidates[0]?.flavorParamsId;
+  // No flavor for the requested language at all (only reachable for live
+  // entries — the guard above already threw for VOD). This used to fall back
+  // to flavor 100, which is ENGLISH: a wrong-language-audio risk on the
+  // submitTranscription path, which uses the URL without checking
+  // `isLiveStream`. Throw instead — same load-bearing "no flavors" wording.
+  if (flavorParamId === undefined) {
+    throw new Error(
+      `Audio for entry ${entryId} has no flavors ready for language "${language}" (still converting or unavailable)`,
+    );
+  }
 
   return {
     entryId,
