@@ -123,10 +123,12 @@ GET /{locale}/{slug}.txt
 Returns the transcript as plain text with speaker labels, compact for LLM context:
 
 ```
-UN Transcripts — https://transcripts.un.org/en/sc/10175
-{title} — {body} — {date}
-Language: en
-Automatically generated transcript — may contain errors. Not an official United Nations record.
+{title}
+{category}
+Date: 8 July 2026
+Language: English
+Transcript: https://transcripts.un.org/en/sc/10175
+Transcripts available through this tool are created by using automatic speech recognition and are not official records nor official documents of the United Nations. ...
 
 ---
 
@@ -135,11 +137,20 @@ Automatically generated transcript — may contain errors. Not an official Unite
 {transcript text...}
 ```
 
+The header comes from the shared builder in `lib/transcript-export.ts`, so it
+matches the header of the `.txt` file the site's Download menu produces (the
+downloaded one is localized and carries a clock time; this one is English and
+date-only, since the server has no user timezone). A field is omitted when it
+has no value — a meeting with no transcript has no `Language:` line. The
+`Transcript:` URL carries `?lang=XX` whenever the returned transcript's
+language differs from the URL locale.
+
 ### JSON response shape
 
 ```json
 {
   "disclaimer": "Automatically generated transcript — ...",
+  "url": "https://transcripts.un.org/en/sc/10175",
   "video": {
     "id": "...",
     "kaltura_id": "...",

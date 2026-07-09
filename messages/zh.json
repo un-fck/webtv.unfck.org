@@ -10,8 +10,8 @@
     "speakersDescription": "按国家、集团和机构,浏览在已转录的联合国会议上发言过的所有人。",
     "subscriptionsTitle": "订阅 — 联合国转录",
     "subscriptionsDescription": "管理您的转录电子邮件通知。",
-    "meetingDescription": "{body}会议,{date}。阅读自动转录及发言者识别 — 每一次发言均与视频时间戳对齐。",
-    "meetingDescriptionNoBody": "联合国会议,{date}。阅读自动转录及发言者识别 — 每一次发言均与视频时间戳对齐。"
+    "meetingDescription": "{category}会议,{date}。阅读自动转录及发言者识别 — 每一次发言均与视频时间戳对齐。",
+    "meetingDescriptionNoCategory": "联合国会议,{date}。阅读自动转录及发言者识别 — 每一次发言均与视频时间戳对齐。"
   },
   "header": {
     "about": "关于",
@@ -271,7 +271,15 @@
       "downloadExcel": "电子表格 (.xlsx)",
       "downloadSrt": "字幕 (.srt)",
       "downloadVtt": "网页字幕 (.vtt)",
-      "downloadJson": "JSON API"
+      "downloadJson": "原始数据 (.json)"
+    },
+    "export": {
+      "disclaimer": "本工具提供的转录文本通过自动语音识别生成，并非联合国正式记录或正式文件。正式记录和正式文件可在联合国正式文件系统中查阅。",
+      "date": "日期",
+      "language": "语言",
+      "transcript": "转录",
+      "json": "JSON",
+      "aiAgents": "面向 AI 代理的信息"
     },
     "view": {
       "speaker": "发言者",
@@ -293,8 +301,7 @@
       "audioOutOfSyncStarting": "正在启动…",
       "audioOutOfSyncSignIn": "登录以请求重新转录",
       "audioOutOfSyncInProgress": "正在生成新的转录。",
-      "transcriptDisclaimer": "本工具提供的转录文本通过自动语音识别生成，并非联合国正式记录或正式文件。正式记录和正式文件可在联合国正式文件系统中查阅。<aboutLink>了解更多</aboutLink>",
-      "exportDisclaimer": "本工具提供的转录文本通过自动语音识别生成，并非联合国正式记录或正式文件。正式记录和正式文件可在联合国正式文件系统中查阅。"
+      "transcriptDisclaimer": "本工具提供的转录文本通过自动语音识别生成，并非联合国正式记录或正式文件。正式记录和正式文件可在联合国正式文件系统中查阅。<aboutLink>了解更多</aboutLink>"
     },
     "highlightsOnly": "仅显示要点",
     "allContent": "全部内容（含要点）"

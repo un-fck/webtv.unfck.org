@@ -15,7 +15,10 @@ import {
   type VideoRecord,
   type VideosQueryParams,
 } from "@/lib/db";
+import { getBaseUrl } from "@/lib/get-base-url";
+import { getLanguageDisplayName } from "@/lib/languages";
 import { symbolFromSlug } from "@/lib/meeting-slug";
+import { buildExportHeaderText } from "@/lib/transcript-export";
 import {
   formatSpeakerInfo,
   getSpeakerMapping,
@@ -160,6 +163,7 @@ async function handleMeeting(
 ) {
   const video = recordToVideo(record, false, locale);
   const url = videoUrl(record);
+  const baseUrl = await getBaseUrl();
   // ?language=XX wins; otherwise default to the URL locale's transcript when
   // one exists, falling back to the most-recent transcript in any language.
   const requestedLanguage =
@@ -178,12 +182,14 @@ async function handleMeeting(
     if (format === "text") {
       return textResponse(
         request,
-        buildHeader(locale, video, record, null) + "No transcript available.\n",
+        buildHeader(baseUrl, locale, video, record, null) +
+          "No transcript available.\n",
       );
     }
     const metadata = await getVideoMetadata(record.asset_id);
     return jsonResponse(request, {
       disclaimer: TRANSCRIPT_DISCLAIMER,
+      url: canonicalTranscriptUrl(baseUrl, locale, record, null),
       llms: buildLlmsPointer(locale, url),
       video: serializeVideo(video, record),
       metadata: serializeMetadata(metadata),
@@ -197,13 +203,19 @@ async function handleMeeting(
     if (format === "text") {
       return textResponse(
         request,
-        buildHeader(locale, video, record, transcript.language_code) +
+        buildHeader(baseUrl, locale, video, record, transcript.language_code) +
           `Transcript not yet available (status: ${transcript.transcription_status}).\n`,
       );
     }
     const metadata = await getVideoMetadata(record.asset_id);
     return jsonResponse(request, {
       disclaimer: TRANSCRIPT_DISCLAIMER,
+      url: canonicalTranscriptUrl(
+        baseUrl,
+        locale,
+        record,
+        transcript.language_code,
+      ),
       llms: buildLlmsPointer(locale, url),
       video: serializeVideo(video, record),
       metadata: serializeMetadata(metadata),
@@ -245,7 +257,8 @@ async function handleMeeting(
     );
     return textResponse(
       request,
-      buildHeader(locale, video, record, transcript.language_code) + body,
+      buildHeader(baseUrl, locale, video, record, transcript.language_code) +
+        body,
     );
   }
 
@@ -284,6 +297,12 @@ async function handleMeeting(
   const metadata = await getVideoMetadata(record.asset_id);
   return jsonResponse(request, {
     disclaimer: TRANSCRIPT_DISCLAIMER,
+    url: canonicalTranscriptUrl(
+      baseUrl,
+      locale,
+      record,
+      transcript.language_code,
+    ),
     llms: buildLlmsPointer(locale, url),
     video: serializeVideo(video, record),
     metadata: serializeMetadata(metadata),
@@ -353,31 +372,57 @@ function buildLlmsPointer(locale: string, url: string) {
   };
 }
 
+// English labels, matching the rest of this endpoint's chrome (disclaimer,
+// speaker names, llms pointer). The client passes localized labels to the same
+// builder, so a downloaded `.txt` and this response differ only in language —
+// and, because the server has no user timezone, in whether the date carries a
+// clock time.
+const EXPORT_LABELS = {
+  date: "Date",
+  language: "Language",
+  transcript: "Transcript",
+  json: "JSON",
+  aiAgents: "Information for AI Agents",
+};
+
+/** Absolute, language-qualified URL of the page this data mirrors. */
+function canonicalTranscriptUrl(
+  baseUrl: string,
+  locale: string,
+  record: VideoRecord,
+  language: string | null,
+) {
+  const suffix = language && language !== locale ? `?lang=${language}` : "";
+  return `${baseUrl}/${locale}/${videoUrl(record)}${suffix}`;
+}
+
 function buildHeader(
+  baseUrl: string,
   locale: string,
   video: ReturnType<typeof recordToVideo>,
   record: VideoRecord,
   language: string | null,
 ) {
-  const title = video.cleanTitle || video.title;
-  const date = video.date
-    ? new Date(video.date).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : "";
-  return [
-    `UN Transcripts — https://transcripts.un.org/${locale}/${videoUrl(record)}`,
-    [title, video.body, date].filter(Boolean).join(" — "),
-    language ? `Language: ${language}` : null,
+  return buildExportHeaderText(
+    {
+      title: video.cleanTitle || video.title,
+      // `recordToVideo` already resolved the locale variant of `category`,
+      // matching the meeting page's pill. Not `video.body`, which is
+      // English-only and diverges for GA Main Committee meetings.
+      category: video.category,
+      date: video.date
+        ? new Date(video.date).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })
+        : "",
+      language: language ? getLanguageDisplayName(language) : "",
+      transcriptUrl: canonicalTranscriptUrl(baseUrl, locale, record, language),
+      labels: EXPORT_LABELS,
+    },
     TRANSCRIPT_DISCLAIMER,
-    "",
-    "---",
-    "",
-  ]
-    .filter((line) => line !== null)
-    .join("\n");
+  );
 }
 
 // -- meeting list / search -------------------------------------------------

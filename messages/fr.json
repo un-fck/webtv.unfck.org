@@ -10,8 +10,8 @@
     "speakersDescription": "Parcourir toutes les personnes ayant pris la parole dans les réunions transcrites de l'ONU, par pays, groupe et organe.",
     "subscriptionsTitle": "Abonnements — Transcriptions de l'ONU",
     "subscriptionsDescription": "Gérer vos notifications par courriel pour les transcriptions.",
-    "meetingDescription": "Réunion ({body}), {date}. Lisez la transcription automatique avec identification des intervenants — chaque intervention, horodatée sur la vidéo.",
-    "meetingDescriptionNoBody": "Réunion des Nations Unies, {date}. Lisez la transcription automatique avec identification des intervenants — chaque intervention, horodatée sur la vidéo."
+    "meetingDescription": "Réunion ({category}), {date}. Lisez la transcription automatique avec identification des intervenants — chaque intervention, horodatée sur la vidéo.",
+    "meetingDescriptionNoCategory": "Réunion des Nations Unies, {date}. Lisez la transcription automatique avec identification des intervenants — chaque intervention, horodatée sur la vidéo."
   },
   "header": {
     "about": "À propos",
@@ -271,7 +271,15 @@
       "downloadExcel": "Tableur (.xlsx)",
       "downloadSrt": "Sous-titres (.srt)",
       "downloadVtt": "Sous-titres web (.vtt)",
-      "downloadJson": "API JSON"
+      "downloadJson": "Données brutes (.json)"
+    },
+    "export": {
+      "disclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU.",
+      "date": "Date",
+      "language": "Langue",
+      "transcript": "Transcription",
+      "json": "JSON",
+      "aiAgents": "Informations pour les agents d'IA"
     },
     "view": {
       "speaker": "Intervenant",
@@ -293,8 +301,7 @@
       "audioOutOfSyncStarting": "Démarrage…",
       "audioOutOfSyncSignIn": "Connectez-vous pour demander une nouvelle transcription",
       "audioOutOfSyncInProgress": "Une nouvelle transcription est en cours.",
-      "transcriptDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU. <aboutLink>En savoir plus</aboutLink>",
-      "exportDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU."
+      "transcriptDisclaimer": "Les transcriptions disponibles sur cet outil sont créées par reconnaissance vocale automatique et ne constituent ni des comptes rendus officiels ni des documents officiels de l'ONU. Les comptes rendus officiels et les documents officiels sont disponibles sur le Système de diffusion électronique des documents de l'ONU. <aboutLink>En savoir plus</aboutLink>"
     },
     "highlightsOnly": "Faits saillants",
     "allContent": "Tout le contenu avec faits saillants"

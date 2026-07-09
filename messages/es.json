@@ -10,8 +10,8 @@
     "speakersDescription": "Consulte a todas las personas que han hablado en las reuniones transcritas de la ONU, por país, grupo y órgano.",
     "subscriptionsTitle": "Suscripciones — Transcripciones de la ONU",
     "subscriptionsDescription": "Gestione sus notificaciones por correo electrónico de transcripciones.",
-    "meetingDescription": "Reunión ({body}), {date}. Lea la transcripción automática con identificación de oradores — cada intervención, sincronizada con el vídeo.",
-    "meetingDescriptionNoBody": "Reunión de las Naciones Unidas, {date}. Lea la transcripción automática con identificación de oradores — cada intervención, sincronizada con el vídeo."
+    "meetingDescription": "Reunión ({category}), {date}. Lea la transcripción automática con identificación de oradores — cada intervención, sincronizada con el vídeo.",
+    "meetingDescriptionNoCategory": "Reunión de las Naciones Unidas, {date}. Lea la transcripción automática con identificación de oradores — cada intervención, sincronizada con el vídeo."
   },
   "header": {
     "about": "Acerca de",
@@ -271,7 +271,15 @@
       "downloadExcel": "Hoja de cálculo (.xlsx)",
       "downloadSrt": "Subtítulos (.srt)",
       "downloadVtt": "Subtítulos web (.vtt)",
-      "downloadJson": "API JSON"
+      "downloadJson": "Datos sin procesar (.json)"
+    },
+    "export": {
+      "disclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU.",
+      "date": "Fecha",
+      "language": "Idioma",
+      "transcript": "Transcripción",
+      "json": "JSON",
+      "aiAgents": "Información para agentes de IA"
     },
     "view": {
       "speaker": "Orador",
@@ -293,8 +301,7 @@
       "audioOutOfSyncStarting": "Iniciando…",
       "audioOutOfSyncSignIn": "Inicie sesión para solicitar una nueva transcripción",
       "audioOutOfSyncInProgress": "Una nueva transcripción está en curso.",
-      "transcriptDisclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU. <aboutLink>Más información</aboutLink>",
-      "exportDisclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU."
+      "transcriptDisclaimer": "Las transcripciones disponibles en esta herramienta se generan mediante reconocimiento automático del habla y no son actas oficiales ni documentos oficiales de las Naciones Unidas. Las actas oficiales y los documentos oficiales están disponibles en el Sistema de Archivo de Documentos de la ONU. <aboutLink>Más información</aboutLink>"
     },
     "highlightsOnly": "Solo destacados",
     "allContent": "Todo el contenido con destacados"

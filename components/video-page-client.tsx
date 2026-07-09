@@ -18,6 +18,7 @@ import { ExternalLink } from "./external-link";
 import { CategoryPill } from "./category-pill";
 import { FoldVertical, UnfoldVertical, ChevronDown } from "lucide-react";
 import type { Video, VideoMetadata } from "@/lib/un-api";
+import { useCategoryName } from "@/lib/hooks/use-category-name";
 import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { getPVDocumentUrl } from "@/lib/pv-documents";
 import { UN_LANGUAGES } from "@/lib/languages";
@@ -51,7 +52,7 @@ export function VideoPageClient({
   const { formatMeetingDate, formatMeetingTime } = useMeetingFormat();
   const t = useTranslations("transcript");
   const tVideo = useTranslations("video");
-  const tCategory = useTranslations("schedule.categoryNames");
+  const tCategory = useCategoryName();
   const uiLocale = useLocale();
   // State shared with the (sibling-rendered) transcript panel lives in
   // <MeetingStateProvider> above us — see components/meeting-state.
@@ -369,11 +370,7 @@ export function VideoPageClient({
                       <span className="ml-1">
                         <CategoryPill
                           category={video.category}
-                          label={
-                            tCategory.has(video.category)
-                              ? tCategory(video.category)
-                              : video.category
-                          }
+                          label={tCategory(video.category)}
                           href={`/?category=${encodeURIComponent(video.category)}`}
                         />
                       </span>

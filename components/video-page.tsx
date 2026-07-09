@@ -12,6 +12,7 @@ import { getBaseUrl } from "@/lib/get-base-url";
 import { getCurrentUser } from "@/lib/auth/service";
 import { localizeWebtvAssetUrl } from "@/lib/un-links";
 import type { VideoRecord } from "@/lib/db";
+import { formatDateForMetadata } from "@/lib/timezone";
 import { videoUrl } from "@/lib/video-url";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { widePageWidth } from "@/lib/layout";
@@ -23,14 +24,26 @@ import { ServerTranscript } from "@/components/server-transcript";
 import { TranscriptSkeleton } from "@/components/transcript-skeleton";
 import { Suspense } from "react";
 
-function formatMetaDate(iso: string, locale: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+/**
+ * A WebTV category in the active locale, for the meta description and
+ * `og:section`. Server-side twin of the `useCategoryName()` hook: same catalog,
+ * same `has()` fallback for categories we haven't catalogued.
+ *
+ * Callers pass `recordToVideo(...).category`, never `record.body` — body has no
+ * per-locale variant, so it drops an English "Security Council" into a
+ * translated sentence. Returns "" for an uncategorized meeting, which selects
+ * the category-less description variant.
+ */
+async function localizedCategoryName(
+  category: string,
+  locale: string,
+): Promise<string> {
+  if (!category) return "";
+  const t = await getTranslations({
+    locale,
+    namespace: "schedule.categoryNames",
   });
+  return t.has(category) ? t(category) : category;
 }
 
 /**
@@ -46,14 +59,20 @@ export async function buildVideoMetadata({
   record: VideoRecord;
   locale: string;
 }): Promise<Metadata> {
-  const title = record.clean_title || record.title;
+  // The locale-resolved view, so <title> and og:title match the <h1> the page
+  // actually renders. `record.clean_title` is the English canonical (kept as
+  // the FTS source); reading it here shipped an identical English <title> to
+  // all six hreflang alternates.
+  const video = recordToVideo(record, false, locale);
+  const title = video.cleanTitle || video.title;
   const t = await getTranslations({ locale, namespace: "metadata" });
   const siteTitle = t("siteTitle");
   const pageTitle = `${title} — ${siteTitle}`;
-  const dateLabel = formatMetaDate(record.date, locale);
-  const description = record.body
-    ? t("meetingDescription", { body: record.body, date: dateLabel })
-    : t("meetingDescriptionNoBody", { date: dateLabel });
+  const dateLabel = formatDateForMetadata(record.date, locale);
+  const category = await localizedCategoryName(video.category, locale);
+  const description = category
+    ? t("meetingDescription", { category, date: dateLabel })
+    : t("meetingDescriptionNoCategory", { date: dateLabel });
 
   const canonicalPath = videoUrl(record);
   const ogImage = `/api/og/meeting/${canonicalPath}`;
@@ -81,7 +100,7 @@ export async function buildVideoMetadata({
       description,
       url: `/${locale}/${canonicalPath}`,
       publishedTime: record.date,
-      section: record.body ?? undefined,
+      section: category || undefined,
       images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
     },
     twitter: {
@@ -147,17 +166,18 @@ export async function renderVideoPage({
   const isLoggedIn = !!(await getCurrentUser());
 
   const tMeta = await getTranslations({ locale, namespace: "metadata" });
-  const dateLabel = formatMetaDate(record.date, locale);
-  const fallbackDescription = record.body
-    ? tMeta("meetingDescription", { body: record.body, date: dateLabel })
-    : tMeta("meetingDescriptionNoBody", { date: dateLabel });
+  const dateLabel = formatDateForMetadata(record.date, locale);
+  const category = await localizedCategoryName(video.category, locale);
+  const fallbackDescription = category
+    ? tMeta("meetingDescription", { category, date: dateLabel })
+    : tMeta("meetingDescriptionNoCategory", { date: dateLabel });
   const baseUrl = await getBaseUrl();
   const canonicalPath = videoUrl(record);
   const embedUrl = `https://cdnapisec.kaltura.com/p/${KALTURA_PARTNER_ID}/sp/${KALTURA_PARTNER_ID}00/embedIframeJs/uiconf_id/${KALTURA_UICONF_ID}/partner_id/${KALTURA_PARTNER_ID}?iframeembed=true&entry_id=${record.entry_id ?? kalturaId}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "VideoObject",
-    name: record.clean_title || record.title,
+    name: video.cleanTitle || video.title,
     description:
       metadata.description || metadata.summary || fallbackDescription,
     thumbnailUrl: `${baseUrl}/api/og/meeting/${canonicalPath}`,

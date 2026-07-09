@@ -40,6 +40,7 @@ export function useMeetingFormat() {
         options?: {
           weekday?: "long" | "short" | "none";
           relative?: "alone" | "prefix" | "off";
+          year?: "auto" | "always";
         },
       ) => formatMeetingDateCore(dateOrTimestamp, ctx, options),
       formatMeetingTime: (timestamp: string) =>
