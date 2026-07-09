@@ -1,5 +1,9 @@
 import type { TranscriptionProvider } from "./types";
-import { assemblyaiUniversal2, assemblyaiUniversal3Pro } from "./assemblyai";
+import {
+  assemblyaiUniversal2,
+  assemblyaiUniversal3Pro,
+  assemblyaiUniversal35Pro,
+} from "./assemblyai";
 import { azureOpenai } from "./azure-openai";
 import { elevenlabs } from "./elevenlabs";
 import { azureSpeech } from "./azure-speech";
@@ -25,6 +29,7 @@ import { voxtralSmall } from "./voxtral-small";
 const ALL: TranscriptionProvider[] = [
   gemini3Flash, // production default + multilingual floor
   gemini35Flash,
+  assemblyaiUniversal35Pro, // production English
   assemblyaiUniversal2,
   assemblyaiUniversal3Pro,
   azureOpenai,

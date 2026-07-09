@@ -20,7 +20,7 @@ export {
  */
 export const STT_ROUTING: Record<string, string> = {
   floor: "gemini-3-flash", // multilingual original audio
-  en: "assemblyai-universal-3-pro",
+  en: "assemblyai-universal-3-5-pro",
   fr: "azure-gpt-4o-transcribe",
   es: "azure-gpt-4o-transcribe",
   ar: "azure-gpt-4o-transcribe",

@@ -22,6 +22,7 @@ The eval system benchmarks the providers registered in `lib/providers/registry.t
 |---|---|---|---|
 | AssemblyAI Universal-2 | `assemblyai-universal-2` | universal-2 | URL submission, polling |
 | AssemblyAI Universal-3 Pro | `assemblyai-universal-3-pro` | universal-3-pro | URL submission, polling |
+| AssemblyAI Universal-3.5 Pro | `assemblyai-universal-3-5-pro` | universal-3-5-pro | URL submission, polling |
 | Azure OpenAI | `azure-gpt-4o-transcribe` | gpt-4o-transcribe-diarize | File upload |
 | Azure Speech | `azure-speech-batch` | Cognitive Services Batch | Batch job submission, polling |
 | Deepgram | `deepgram-nova-3` | Nova-3 | File upload |

@@ -112,6 +112,14 @@ export const PROVIDER_PRICING: Record<string, Pricing> = {
   },
 
   // ── AssemblyAI (per-hour async pricing) ──
+  // Base rates only. We send `speaker_labels: true`, which AssemblyAI bills at
+  // +$0.02/hr on top of every rate below; that surcharge is not modelled here,
+  // so AssemblyAI rows under-report by ~10%.
+  "assemblyai/universal-3-5-pro": {
+    kind: "audio_hours",
+    perHourUsd: 0.21,
+    rateCardVersion: "2026-07-09",
+  },
   "assemblyai/universal-3-pro": {
     kind: "audio_hours",
     perHourUsd: 0.21,

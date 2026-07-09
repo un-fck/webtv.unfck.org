@@ -5,10 +5,18 @@ const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;
 
 /**
  * AssemblyAI provider, parameterized by speech model so we can benchmark the
- * legacy default (Universal-2) against Universal-3 Pro. When `speechModels` is
- * set it is sent as the `speech_models` array (Universal-3 Pro requires it and
- * has no default); the array form also enables per-language fallback, since
- * universal-3-pro only covers en/es/pt/fr/de/it and falls back to universal-2.
+ * legacy default (Universal-2) against the Pro line. When `speechModels` is set
+ * it is sent as the `speech_models` array (the Pro models require it and have no
+ * default); the array form also enables per-language fallback, since the Pro
+ * models cover only a subset of AssemblyAI's ~99 languages and fall back to
+ * universal-2 for the rest. Universal-3 Pro covers en/es/pt/fr/de/it;
+ * Universal-3.5 Pro widens that to 18 languages (adds ar/zh/ja/hi/he/tr/vi/nl/
+ * da/fi/no/sv) — but **not Russian**, which still falls back to universal-2.
+ *
+ * Fallback is decided per *request*, from the dominant detected language — not
+ * per segment. So a single file mixing a supported and an unsupported language
+ * is served entirely by whichever model the dominant language selects. This is
+ * why the multilingual "floor" track stays on Gemini rather than AssemblyAI.
  */
 function makeAssemblyai(
   name: string,
@@ -104,4 +112,10 @@ export const assemblyaiUniversal3Pro = makeAssemblyai(
   "AssemblyAI Universal-3 Pro",
   "universal-3-pro",
   ["universal-3-pro", "universal-2"],
+);
+export const assemblyaiUniversal35Pro = makeAssemblyai(
+  "assemblyai-universal-3-5-pro",
+  "AssemblyAI Universal-3.5 Pro",
+  "universal-3-5-pro",
+  ["universal-3-5-pro", "universal-2"],
 );

@@ -14,7 +14,7 @@ Uses UN Web TV audio + documents.un.org ground truth across all 6 UN official la
 npm run eval
 
 # Single session, single provider, single language
-npm run eval -- --symbol=S/PV.9826 --providers=assemblyai-universal-3-pro --languages=en
+npm run eval -- --symbol=S/PV.9826 --providers=assemblyai-universal-3-5-pro --languages=en
 
 # All sessions, English only
 npm run eval -- --languages=en
@@ -81,6 +81,7 @@ Provider implementations live in `lib/providers/` (shared with the main app). Th
 | -------------------------- | ---------------------------- | ------------------------- | ----------- |
 | AssemblyAI Universal-2     | `assemblyai-universal-2`     | universal-2               | ~$0.27/hr   |
 | AssemblyAI Universal-3 Pro | `assemblyai-universal-3-pro` | universal-3-pro           | ~$0.21/hr   |
+| AssemblyAI Universal-3.5 Pro | `assemblyai-universal-3-5-pro` | universal-3-5-pro     | ~$0.21/hr   |
 | Azure OpenAI               | `azure-gpt-4o-transcribe`    | gpt-4o-transcribe         | ~$0.06/hr   |
 | ElevenLabs                 | `elevenlabs-scribe-v2`       | Scribe v2                 | ~$0.40/hr   |
 | Azure Speech               | `azure-speech-batch`         | Cognitive Services Batch  | ~$0.36/hr   |

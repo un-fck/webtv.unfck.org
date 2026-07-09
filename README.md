@@ -84,7 +84,7 @@ See `.env.example` for all variables. Core ones:
 - **UI**: shadcn/ui, Lucide icons, Radix UI primitives
 - **Table**: TanStack Table v8
 - **Database**: PostgreSQL via `pg` connection pool
-- **Transcription**: per-language STT routing (AssemblyAI Universal-3 Pro, Azure gpt-4o-transcribe, Alibaba Fun-ASR, Gemini 3 Flash) — see `lib/providers/config.ts`
+- **Transcription**: per-language STT routing (AssemblyAI Universal-3.5 Pro, Azure gpt-4o-transcribe, Alibaba Fun-ASR, Gemini 3 Flash) — see `lib/providers/config.ts`
 - **Speaker ID**: Azure OpenAI (structured output via Zod)
 - **Video hosting**: Kaltura (partner ID: 2503451)
 - **Deployment**: Vercel — three cron jobs: `process-scheduled` every 5 min, `sync-videos` every 15 min, `check-pv` every 6 hours
