@@ -42,6 +42,7 @@ import {
 import { TranscriptView } from "@/components/transcript-view";
 import { RawTranscriptView } from "@/components/raw-transcript-view";
 import { FlaggedTranscriptBanner } from "@/components/flagged-transcript-banner";
+import type { TranscriptPayload } from "@/lib/transcript-payload";
 import { Link } from "@/i18n/navigation";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
@@ -98,32 +99,63 @@ export interface TranscriptionPanelData {
   viewMode?: string;
 }
 
-/**
- * Pre-loaded transcript data the meeting page can pass when it was already
- * fetched server-side. When this is supplied, the panel skips its first
- * /api/transcripts/check round-trip on mount; the transcript is in the
- * initial HTML payload (visible to no-JS crawlers) and the first paint
- * happens at hydration instead of after a network call.
- *
- * Word-level timing is intentionally absent — the panel fetches it lazily
- * from /api/transcripts/[id]/words, same as the /check fast path.
- */
-export interface InitialTranscript {
-  statements: Statement[];
-  speakerMappings: SpeakerMapping;
-  topics: Record<string, { key: string; label: string; description: string }>;
-  propositions: Proposition[];
-  transcriptId: string;
-  language: string;
-  analysisStatus: "none" | "analyzing" | "completed" | "error" | "interrupted";
-}
-
 interface TranscriptionPanelProps {
   kalturaId: string;
   video: Video;
   isLoggedIn: boolean;
   pvSymbol?: string;
-  initialTranscript?: InitialTranscript | null;
+  /**
+   * Pre-loaded transcript data the meeting page can pass when it was already
+   * fetched server-side (the same TranscriptPayload shape /api/transcripts/check
+   * returns — built by the shared lib/transcript-payload builder). When this is
+   * supplied, the panel skips its first /check round-trip on mount; the
+   * transcript is in the initial HTML payload (visible to no-JS crawlers) and
+   * the first paint happens at hydration instead of after a network call.
+   *
+   * Word-level timing is intentionally absent — the panel fetches it lazily
+   * from /api/transcripts/[id]/words, same as the /check fast path.
+   */
+  initialTranscript?: TranscriptPayload | null;
+}
+
+/**
+ * Transcript-row metadata the panel must learn on BOTH delivery paths (SSR
+ * pre-load and /check fetch): the realignment-flagged state and its
+ * durations, the analysis-axis status, and any in-flight fresh transcription
+ * replacing a flagged row. Kept as ONE state atom seeded by metaFromPayload()
+ * at both entry points, so a field added to TranscriptPayload cannot reach
+ * the fetch path and silently miss the server-rendered one (which is exactly
+ * how the flagged banner and the "Analyzing…" state were lost on SSR'd pages).
+ */
+interface TranscriptMeta {
+  analysisStatus: TranscriptPayload["analysisStatus"];
+  flagged: boolean;
+  sourceDurationMs: number | null;
+  alignedDurationMs: number | null;
+  pendingRetranscribeId: string | null;
+  pendingRetranscribeStage: Stage | null;
+}
+
+const EMPTY_META: TranscriptMeta = {
+  analysisStatus: "none",
+  flagged: false,
+  sourceDurationMs: null,
+  alignedDurationMs: null,
+  pendingRetranscribeId: null,
+  pendingRetranscribeStage: null,
+};
+
+function metaFromPayload(p: TranscriptPayload): TranscriptMeta {
+  return {
+    analysisStatus: p.analysisStatus,
+    flagged: p.flagged,
+    sourceDurationMs: p.sourceDurationMs,
+    alignedDurationMs: p.alignedDurationMs,
+    pendingRetranscribeId: p.pendingRetranscribeId,
+    pendingRetranscribeStage: p.pendingRetranscribeId
+      ? ((p.pendingRetranscribeStage ?? "transcribing") as Stage)
+      : null,
+  };
 }
 
 interface Word {
@@ -232,24 +264,21 @@ export function TranscriptionPanel({
     setViewMode(mode);
     setUrlParam("view", mode === "transcript" ? undefined : mode);
   }, []);
-  const [analyzingPropositions, setAnalyzingPropositions] = useState(false);
-  // Realignment-flagged state — set when the displayed transcript is a
-  // completed row whose audio was re-cut by WebTV in a way no single offset
-  // could fix. Drives the disclaimer banner above the transcript.
-  const [flagged, setFlagged] = useState(false);
-  const [sourceDurationMs, setSourceDurationMs] = useState<number | null>(null);
-  const [alignedDurationMs, setAlignedDurationMs] = useState<number | null>(
-    null,
+  // One atom for the transcript-row metadata (see TranscriptMeta) — seeded
+  // here for the SSR path and via metaFromPayload(data) in checkCache for the
+  // fetch path; the shared function is what keeps the two paths identical.
+  // Post-mount transitions (run analysis, retranscribe lifecycle) update it
+  // functionally. The old completed content stays visible while a pending
+  // retranscribe runs; only the banner reflects its progress.
+  const [meta, setMeta] = useState<TranscriptMeta | null>(
+    hasMatchingInitial ? metaFromPayload(initialTranscript!) : null,
   );
-  // When a fresh transcription has been requested for this flagged row, the
-  // in-flight transcript id + its stage label drive the banner's "in progress"
-  // state. Polling for this id runs separately from the main display state so
-  // the old completed content stays visible until the new run finishes.
-  const [pendingRetranscribeId, setPendingRetranscribeId] = useState<
-    string | null
-  >(null);
-  const [pendingRetranscribeStage, setPendingRetranscribeStage] =
-    useState<Stage | null>(null);
+  const analyzingPropositions = meta?.analysisStatus === "analyzing";
+  const flagged = meta?.flagged ?? false;
+  const sourceDurationMs = meta?.sourceDurationMs ?? null;
+  const alignedDurationMs = meta?.alignedDurationMs ?? null;
+  const pendingRetranscribeId = meta?.pendingRetranscribeId ?? null;
+  const pendingRetranscribeStage = meta?.pendingRetranscribeStage ?? null;
   const [retranscribeStarting, setRetranscribeStarting] = useState(false);
   const [retranscribeError, setRetranscribeError] = useState<string | null>(
     null,
@@ -614,23 +643,30 @@ export function TranscriptionPanel({
         if (signal.aborted) return;
         throw err;
       }
+      const clearPending = () =>
+        setMeta((m) => ({
+          ...(m ?? EMPTY_META),
+          pendingRetranscribeId: null,
+          pendingRetranscribeStage: null,
+        }));
       if (!res.ok) {
         setRetranscribeError("Failed to poll fresh transcription");
-        setPendingRetranscribeId(null);
-        setPendingRetranscribeStage(null);
+        clearPending();
         return;
       }
       const data = await res.json();
       if (signal.aborted) return;
       if (data.stage && data.stage !== "completed") {
-        setPendingRetranscribeStage(data.stage);
+        setMeta((m) => ({
+          ...(m ?? EMPTY_META),
+          pendingRetranscribeStage: data.stage,
+        }));
       }
       if (data.stage === "error") {
         setRetranscribeError(
           data.error_message || "Fresh transcription failed",
         );
-        setPendingRetranscribeId(null);
-        setPendingRetranscribeStage(null);
+        clearPending();
         return;
       }
       if (data.stage === "completed" && data.statements?.length > 0) {
@@ -642,18 +678,20 @@ export function TranscriptionPanel({
         if (data.propositions) setPropositions(data.propositions);
         if (data.speakerMappings) setSpeakerMappings(data.speakerMappings);
         setTranscriptId(tid);
-        setFlagged(false);
-        setSourceDurationMs(null);
-        setAlignedDurationMs(null);
-        setPendingRetranscribeId(null);
-        setPendingRetranscribeStage(null);
+        setMeta((m) => ({
+          ...(m ?? EMPTY_META),
+          flagged: false,
+          sourceDurationMs: null,
+          alignedDurationMs: null,
+          pendingRetranscribeId: null,
+          pendingRetranscribeStage: null,
+        }));
         setRetranscribeError(null);
         return;
       }
       if (pollCount >= maxPolls) {
         setRetranscribeError("Fresh transcription timeout");
-        setPendingRetranscribeId(null);
-        setPendingRetranscribeStage(null);
+        clearPending();
         return;
       }
     }
@@ -683,8 +721,11 @@ export function TranscriptionPanel({
       }
       const data = await res.json();
       if (data.transcriptId) {
-        setPendingRetranscribeId(data.transcriptId);
-        setPendingRetranscribeStage(data.stage || "transcribing");
+        setMeta((m) => ({
+          ...(m ?? EMPTY_META),
+          pendingRetranscribeId: data.transcriptId,
+          pendingRetranscribeStage: data.stage || "transcribing",
+        }));
         const signal =
           pollAbortRef.current?.signal ?? new AbortController().signal;
         pollRetranscribeUntilDone(data.transcriptId, signal).catch(() => {
@@ -720,7 +761,9 @@ export function TranscriptionPanel({
 
   const handleRunAnalysis = async () => {
     if (!transcriptId) return;
-    setAnalyzingPropositions(true);
+    const setAnalysisStatus = (s: TranscriptMeta["analysisStatus"]) =>
+      setMeta((m) => ({ ...(m ?? EMPTY_META), analysisStatus: s }));
+    setAnalysisStatus("analyzing");
     try {
       const response = await fetch(
         `/api/transcripts/${encodeURIComponent(transcriptId)}/analysis`,
@@ -732,11 +775,11 @@ export function TranscriptionPanel({
       }
       const data = await response.json();
       if (data.propositions) setPropositions(data.propositions);
+      setAnalysisStatus("completed");
     } catch (err) {
       console.error("Analysis failed:", err);
       setErrorMessage(err instanceof Error ? err.message : "Analysis failed");
-    } finally {
-      setAnalyzingPropositions(false);
+      setAnalysisStatus("error");
     }
   };
 
@@ -1101,14 +1144,26 @@ export function TranscriptionPanel({
     wiredKeyRef.current = key;
 
     if (firstWire && hasMatchingInitial) {
-      // SSR pre-loaded statements, speakerMappings, topics, propositions
-      // (and segments + countryNames are computed inline via useMemo, so
-      // they're already in the SSR DOM). Only side-effect left to do is
-      // pulling word-level timestamps for karaoke/click-to-seek.
+      // SSR pre-loaded the full TranscriptPayload (statements, speaker
+      // mappings, topics, propositions, and the meta atom — all seeded in the
+      // useState initializers above; segments + countryNames are computed
+      // inline via useMemo, so they're already in the SSR DOM). Side-effects
+      // left to do: pull word-level timestamps for karaoke/click-to-seek,
+      // and — exactly like the /check path below — start polling any fresh
+      // transcription already replacing a flagged row, so this viewer sees
+      // its progress and the swap-in when it completes.
       const ctrl = new AbortController();
       pollAbortRef.current = ctrl;
       setChecking(false);
       void loadWords(initialTranscript!.transcriptId, ctrl.signal);
+      if (initialTranscript!.pendingRetranscribeId) {
+        pollRetranscribeUntilDone(
+          initialTranscript!.pendingRetranscribeId,
+          ctrl.signal,
+        ).catch(() => {
+          // pollRetranscribeUntilDone manages its own error state.
+        });
+      }
       return () => ctrl.abort();
     }
 
@@ -1121,11 +1176,7 @@ export function TranscriptionPanel({
     setErrorMessage(null);
     setStage("idle");
     setChecking(true);
-    setFlagged(false);
-    setSourceDurationMs(null);
-    setAlignedDurationMs(null);
-    setPendingRetranscribeId(null);
-    setPendingRetranscribeStage(null);
+    setMeta(null);
     setRetranscribeStarting(false);
     setRetranscribeError(null);
 
@@ -1156,32 +1207,23 @@ export function TranscriptionPanel({
             if (data.topics) setTopics(data.topics);
             if (data.propositions) setPropositions(data.propositions);
             if (data.speakerMappings) setSpeakerMappings(data.speakerMappings);
-            // Analysis runs on its own axis — surface in-progress analysis so a
-            // viewer who loads mid-analysis sees "Analyzing…" rather than the
-            // Run button (and the transcript itself stays visible).
-            setAnalyzingPropositions(data.analysis_status === "analyzing");
+            // Transcript-row metadata (analysis-axis status, realignment-
+            // flagged state, pending retranscribe) — same seeding function as
+            // the SSR initializer, same TranscriptPayload shape. Covers:
+            // a viewer who loads mid-analysis sees "Analyzing…" rather than
+            // the Run button, and a flagged row shows the out-of-sync banner.
+            setMeta(metaFromPayload(data as TranscriptPayload));
             setStage("completed");
-            // Realignment-flagged state from the server (see lib/db.ts
-            // isTranscriptFlagged). If a fresh retranscribe is already in
-            // flight (any user kicked one off), surface that and start polling
-            // so this viewer sees stage progress and the new transcript swaps
-            // in automatically when it completes.
-            if (data.flagged) {
-              setFlagged(true);
-              setSourceDurationMs(data.sourceDurationMs ?? null);
-              setAlignedDurationMs(data.alignedDurationMs ?? null);
-              if (data.pendingRetranscribeId) {
-                setPendingRetranscribeId(data.pendingRetranscribeId);
-                setPendingRetranscribeStage(
-                  data.pendingRetranscribeStage ?? "transcribing",
-                );
-                pollRetranscribeUntilDone(
-                  data.pendingRetranscribeId,
-                  signal,
-                ).catch(() => {
-                  // pollRetranscribeUntilDone manages its own error state.
-                });
-              }
+            // If a fresh retranscribe is already in flight (any user kicked
+            // one off), start polling so this viewer sees stage progress and
+            // the new transcript swaps in automatically when it completes.
+            if (data.pendingRetranscribeId) {
+              pollRetranscribeUntilDone(
+                data.pendingRetranscribeId,
+                signal,
+              ).catch(() => {
+                // pollRetranscribeUntilDone manages its own error state.
+              });
             }
             onLanguagesRefresh?.();
           } else if (data.raw_paragraphs) {

@@ -1,11 +1,10 @@
 import { getActiveTranscriptByKalturaId, type VideoRecord } from "@/lib/db";
-import { getSpeakerMapping } from "@/lib/speakers";
-import { stripWordsFromStatements } from "@/lib/strip-words";
-import type { Video } from "@/lib/un-api";
 import {
-  TranscriptionPanel,
-  type InitialTranscript,
-} from "@/components/transcription-panel";
+  buildTranscriptPayload,
+  type TranscriptPayload,
+} from "@/lib/transcript-payload";
+import type { Video } from "@/lib/un-api";
+import { TranscriptionPanel } from "@/components/transcription-panel";
 
 /**
  * Server async component that resolves the transcript for the URL locale
@@ -65,7 +64,7 @@ async function loadInitialTranscript({
   kalturaId: string;
   locale: string;
   isLoggedIn: boolean;
-}): Promise<InitialTranscript | null> {
+}): Promise<TranscriptPayload | null> {
   const transcript = await getActiveTranscriptByKalturaId(kalturaId, locale);
   if (
     !transcript ||
@@ -74,18 +73,9 @@ async function loadInitialTranscript({
   ) {
     return null;
   }
-  const speakerMappings =
-    (await getSpeakerMapping(transcript.transcript_id)) || {};
-  return {
-    statements: stripWordsFromStatements(transcript.content.statements),
-    speakerMappings,
-    topics: transcript.content.topics || {},
-    // Propositions are gated on login in /api/transcripts/check — mirror
-    // that here so signed-out viewers don't see private analysis in the SSR
-    // payload (and anonymous Bing/Copilot snippet pipelines never see it).
-    propositions: isLoggedIn ? transcript.content.propositions || [] : [],
-    transcriptId: transcript.transcript_id,
-    language: transcript.language_code ?? locale,
-    analysisStatus: transcript.analysis_status,
-  };
+  // Same builder as /api/transcripts/check — the two delivery paths must
+  // serve the identical package (login-gated propositions, word-stripping,
+  // flagged/realignment state) or panel state silently diverges between
+  // server-rendered and fetched loads.
+  return buildTranscriptPayload(transcript, { isLoggedIn });
 }

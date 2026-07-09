@@ -1,14 +1,9 @@
 // Checks for an existing transcript by Kaltura ID and language.
 import { NextRequest } from "next/server";
-import {
-  getActiveTranscriptByKalturaId,
-  getPendingTranscriptByKalturaId,
-  isTranscriptFlagged,
-} from "@/lib/db";
-import { getSpeakerMapping } from "@/lib/speakers";
+import { getActiveTranscriptByKalturaId } from "@/lib/db";
+import { buildTranscriptPayload } from "@/lib/transcript-payload";
 import { apiError } from "@/lib/api-error";
 import { compressedJson } from "@/lib/compressed-json";
-import { stripWordsFromStatements } from "@/lib/strip-words";
 import { getCurrentUser } from "@/lib/auth/service";
 
 export async function GET(request: NextRequest) {
@@ -39,37 +34,19 @@ export async function GET(request: NextRequest) {
     // Timestamps are already realignment-shifted by the display getter above.
     const statements = cached.content.statements;
     if (statements && statements.length > 0) {
-      const speakerMappings = await getSpeakerMapping(cached.transcript_id);
-      // Propositions ("analysis") are private — only return them to signed-in users.
-      const user = await getCurrentUser();
-      const flagged = isTranscriptFlagged(cached);
-      const pending =
-        flagged && cached.language_code
-          ? await getPendingTranscriptByKalturaId(
-              cached.kaltura_id,
-              cached.language_code,
-            )
-          : null;
-      // Word-level timestamps are 63% of the raw payload (3 MB of 4.4 MB on a
-      // typical SC meeting) and aren't needed for first paint — sentence-level
-      // text + start/end are enough to render the transcript and seek to
-      // sentences. The panel fetches words separately via
+      // Propositions ("analysis") are private — only returned to signed-in
+      // users (gated inside buildTranscriptPayload). Word-level timestamps are
+      // stripped there too (63% of the raw payload — 3 MB of 4.4 MB on a
+      // typical SC meeting); the panel fetches words separately via
       // /api/transcripts/[id]/words once the transcript is on screen.
+      const user = await getCurrentUser();
+      const payload = await buildTranscriptPayload(cached, {
+        isLoggedIn: !!user,
+      });
       return compressedJson(request, {
-        statements: stripWordsFromStatements(statements),
-        language: cached.language_code,
+        ...payload,
         cached: true,
-        transcriptId: cached.transcript_id,
         stage: "completed",
-        analysis_status: cached.analysis_status,
-        topics: cached.content.topics || {},
-        propositions: user ? cached.content.propositions || [] : [],
-        speakerMappings: speakerMappings || {},
-        flagged,
-        sourceDurationMs: cached.source_duration_ms,
-        alignedDurationMs: cached.aligned_duration_ms,
-        pendingRetranscribeId: pending?.transcript_id ?? null,
-        pendingRetranscribeStage: pending?.transcription_status ?? null,
       });
     }
 
