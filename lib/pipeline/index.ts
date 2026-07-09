@@ -262,9 +262,11 @@ ${transcriptParts.join("\n\n")}`,
     // Collect paragraphs needing resegmentation. Splitting a paragraph into
     // sub-segments requires per-word timing to place the split boundary in
     // time; without words a paragraph is already the smallest honest unit, so
-    // skip it (no fabricated sub-timing).
+    // skip it (no fabricated sub-timing). Off-record paragraphs are discarded
+    // further down, so resegmenting them would spend an LLM call on content
+    // nobody will ever see.
     const toResegment = parsed.paragraphs
-      .filter((p) => p.has_multiple_speakers)
+      .filter((p) => p.has_multiple_speakers && !p.is_off_record)
       .map((p) => p.index)
       .filter((idx) => (paragraphs[idx]?.words?.length ?? 0) > 0);
 
@@ -366,10 +368,16 @@ ${transcriptParts.join("\n\n")}`,
         const reseg = resegmented.find((r) => r.index === i);
 
         if (reseg) {
-          // Replace with segments
+          // Replace with segments. `resegmentParagraph` rebuilds SpeakerInfo
+          // from its own schema, which has no `is_off_record` — so the parent's
+          // flag has to be carried across explicitly or a split off-record
+          // paragraph survives the filter below.
+          const parentOffRecord = finalMapping[i.toString()]?.is_off_record;
           for (let j = 0; j < reseg.segments.length; j++) {
             newParagraphs.push(reseg.segments[j]);
-            newMapping[currentNewIndex.toString()] = reseg.speakers[j];
+            newMapping[currentNewIndex.toString()] = parentOffRecord
+              ? { ...reseg.speakers[j], is_off_record: true }
+              : reseg.speakers[j];
             currentNewIndex++;
           }
         } else {
