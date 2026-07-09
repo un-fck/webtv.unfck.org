@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
+import { isKalturaPlayerRejection } from "@/lib/kaltura-rejection";
+
 interface AudioTrack {
   id: number;
   language: string;
@@ -57,6 +59,23 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<KalturaPlayer | null>(null);
+
+  // The player's `play()` starts `HTMLMediaElement.play()` without returning or
+  // catching its promise, so an autoplay block or a transient media error while
+  // seeking escapes as an unhandled rejection that we cannot `.catch()` at the
+  // call site. Claim it here for the player's lifetime: `preventDefault()` marks
+  // it handled (no console error), and it is logged like every other Kaltura
+  // error. See `lib/kaltura-rejection.ts`.
+  useEffect(() => {
+    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (!isKalturaPlayerRejection(event.reason)) return;
+      event.preventDefault();
+      reportKalturaError("unhandled-rejection", event.reason);
+    };
+    window.addEventListener("unhandledrejection", onUnhandledRejection);
+    return () =>
+      window.removeEventListener("unhandledrejection", onUnhandledRejection);
+  }, []);
 
   // Map our language codes to Kaltura player audio track language codes.
   // Kaltura uses "ia" (Interlingua) for the floor/original audio channel.
