@@ -1,3 +1,5 @@
+import { PUBLIC_CORS_HEADERS } from "@/lib/security-headers";
+
 const CONTENT = `# UN Transcripts
 
 > Automatically generated transcripts of public United Nations meetings — not official UN records.
@@ -37,6 +39,7 @@ export function GET() {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "s-maxage=86400, stale-while-revalidate=604800",
+      ...PUBLIC_CORS_HEADERS,
     },
   });
 }
