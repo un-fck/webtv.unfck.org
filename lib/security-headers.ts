@@ -33,3 +33,26 @@ export const SECURITY_HEADERS: Record<string, string> = {
 export const securityHeaderList = Object.entries(SECURITY_HEADERS).map(
   ([key, value]) => ({ key, value }),
 );
+
+// CORS for the public, unauthenticated data surface (the .json/.txt data API,
+// /llms*.txt, /openapi.json) so browser code on other origins — e.g. a static
+// GitHub Pages site — can fetch it directly instead of proxying through a
+// server. Safe because these endpoints read no cookies and return identical
+// bytes for every requester; with a wildcard origin, browsers never attach
+// credentials. Deliberately a static `*` rather than reflecting the request
+// Origin: responses are CDN-cached without Origin in the cache key, so a
+// reflected value could be cached and served to the wrong origin (and `Vary:
+// Origin` would just fragment the cache for no benefit here).
+//
+// NOT part of SECURITY_HEADERS / the global `headers()` source: the
+// authenticated routes (/api/transcripts POST, /api/subscriptions, …) must not
+// advertise cross-origin readability, even though the wildcard-vs-credentials
+// rule would make it inert there.
+export const PUBLIC_CORS_HEADERS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+};
+
+/** Shape expected by `next.config.ts` `headers()`. */
+export const publicCorsHeaderList = Object.entries(PUBLIC_CORS_HEADERS).map(
+  ([key, value]) => ({ key, value }),
+);

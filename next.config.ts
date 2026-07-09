@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import createNextIntlPlugin from "next-intl/plugin";
-import { securityHeaderList } from "./lib/security-headers";
+import {
+  publicCorsHeaderList,
+  securityHeaderList,
+} from "./lib/security-headers";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
@@ -28,7 +31,15 @@ const nextConfig: NextConfig = {
   // rewritten .json/.txt data API — each exactly once, so proxy.ts does not
   // re-apply them. See lib/security-headers.ts. (No CSP here: that is a staged,
   // report-only-first effort tracked separately to avoid breaking the player.)
-  headers: async () => [{ source: "/(.*)", headers: securityHeaderList }],
+  headers: async () => [
+    { source: "/(.*)", headers: securityHeaderList },
+    // CORS for the static OpenAPI spec in public/. The rest of the public
+    // data surface (.json/.txt data API, /llms*.txt) sets the same header in
+    // its route handlers instead: config `headers()` match the *incoming*
+    // request path, so a source scoped to /api/data would never match the
+    // pretty /{locale}/{slug}.json URLs that proxy.ts rewrites there.
+    { source: "/openapi.json", headers: publicCorsHeaderList },
+  ],
   redirects: async () => [
     {
       source: "/:path*",

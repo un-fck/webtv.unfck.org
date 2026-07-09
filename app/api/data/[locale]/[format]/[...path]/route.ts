@@ -30,6 +30,7 @@ import {
   formatTimecode,
   formatTranscriptAsPlainText,
 } from "@/lib/transcript-formatting";
+import { PUBLIC_CORS_HEADERS } from "@/lib/security-headers";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { safeDecodePathSegmentsArray } from "@/lib/utils";
 import { videoUrl } from "@/lib/video-url";
@@ -86,12 +87,44 @@ async function textResponse(
   });
 }
 
+// CORS is applied to every response — success and error alike — in the GET
+// wrapper below, so a browser client can read a 404/400 body instead of
+// getting an opaque CORS failure. See PUBLIC_CORS_HEADERS for why the value
+// is a static `*`.
 export async function GET(
   request: NextRequest,
   context: {
     params: Promise<{ locale: string; format: string; path: string[] }>;
   },
 ) {
+  const response = await handleRequest(request, context);
+  for (const [key, value] of Object.entries(PUBLIC_CORS_HEADERS)) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
+
+// Plain cross-origin GETs are "simple requests" and skip preflight, but a
+// fetch with custom headers triggers an OPTIONS preflight, which would
+// otherwise 405 (this route only exports GET).
+export function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      ...PUBLIC_CORS_HEADERS,
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "*",
+      "Access-Control-Max-Age": "86400",
+    },
+  });
+}
+
+async function handleRequest(
+  request: NextRequest,
+  context: {
+    params: Promise<{ locale: string; format: string; path: string[] }>;
+  },
+): Promise<Response> {
   try {
     const { locale, format: formatRaw, path } = await context.params;
     if (!SUPPORTED_LOCALES.includes(locale)) {

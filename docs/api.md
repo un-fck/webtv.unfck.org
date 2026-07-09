@@ -2,6 +2,8 @@
 
 All endpoints are public with no authentication required.
 
+All data endpoints (`.json`/`.txt`, `/llms.txt`, `/llms-full.txt`, `/openapi.json`) are CORS-enabled (`Access-Control-Allow-Origin: *`), so browser code on any origin — e.g. a static site — can `fetch()` them directly without a proxy server.
+
 ## URL Scheme
 
 Every meeting page URL has matching data URLs — just append `.json` or `.txt`:

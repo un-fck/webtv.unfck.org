@@ -1,4 +1,5 @@
 import { TRANSCRIPT_DISCLAIMER } from "@/lib/config";
+import { PUBLIC_CORS_HEADERS } from "@/lib/security-headers";
 
 const CONTENT = `# UN Transcripts — Full API Reference
 
@@ -269,6 +270,7 @@ export function GET() {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "s-maxage=86400, stale-while-revalidate=604800",
+      ...PUBLIC_CORS_HEADERS,
     },
   });
 }
