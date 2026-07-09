@@ -124,7 +124,7 @@ Returns the transcript as plain text with speaker labels, compact for LLM contex
 
 ```
 {title}
-{body}
+{category}
 Date: 8 July 2026
 Language: English
 Transcript: https://transcripts.un.org/en/sc/10175

@@ -28,8 +28,12 @@ export interface ExportMetaLabels {
 export interface ExportMetaInput {
   /** Meeting title, e.g. "The situation in the Middle East". */
   title: string;
-  /** Organ, e.g. "Security Council". Rendered as an unlabelled subtitle. */
-  body?: string | null;
+  /**
+   * Localized WebTV category, e.g. "Conseil economique et social". Rendered as
+   * an unlabelled subtitle. This is the same string the meeting page shows in
+   * its category pill; it is not `video.body`, which is English-only.
+   */
+  category?: string | null;
   /** Pre-formatted, timezone-resolved, e.g. "15 June 2026, 10:00". */
   date: string;
   /** Display name, not a code: "English", "Floor (Original)". */
@@ -88,13 +92,13 @@ export function buildExportMetaFields(
   return fields.filter((f) => f.value !== "");
 }
 
-/** Title, optional organ, `Label: value` lines, disclaimer, then a `---` rule. */
+/** Title, optional category, `Label: value` lines, disclaimer, then a `---` rule. */
 export function buildExportHeaderText(
   input: ExportMetaInput,
   disclaimer: string,
 ): string {
   const lines = [input.title];
-  if (input.body) lines.push(input.body);
+  if (input.category) lines.push(input.category);
   for (const f of buildExportMetaFields(input)) {
     lines.push(`${f.label}: ${f.value}`);
   }
@@ -113,7 +117,7 @@ export function buildExportHeaderVtt(
 ): string {
   const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
   const noteLines = [collapse(input.title)];
-  if (input.body) noteLines.push(collapse(input.body));
+  if (input.category) noteLines.push(collapse(input.category));
   for (const f of buildExportMetaFields(input)) {
     noteLines.push(`${collapse(f.label)}: ${collapse(f.value)}`);
   }
@@ -165,8 +169,8 @@ export function buildExportHeaderRtf(
   rtf +=
     "{\\colortbl;\\red0\\green0\\blue0;\\red89\\green89\\blue89;\\red0\\green102\\blue204;}\n";
   rtf += `\\pard\\sa120\\f0\\fs32\\b ${escapeRtf(input.title)}\\b0\\par\n`;
-  if (input.body) {
-    rtf += `\\pard\\sa120\\fs22\\i\\cf2 ${escapeRtf(input.body)}\\i0\\cf1\\par\n`;
+  if (input.category) {
+    rtf += `\\pard\\sa120\\fs22\\i\\cf2 ${escapeRtf(input.category)}\\i0\\cf1\\par\n`;
   }
   for (const f of buildExportMetaFields(input)) {
     const value = f.href ? rtfHyperlink(f.href, f.value) : escapeRtf(f.value);

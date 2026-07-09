@@ -20,7 +20,7 @@ const DISCLAIMER = "Not an official record of the United Nations.";
 
 const base: ExportMetaInput = {
   title: "The situation in the Middle East",
-  body: "Security Council",
+  category: "Security Council",
   date: "15 June 2026, 10:00",
   language: "English",
   transcriptUrl: "https://transcripts.un.org/en/sc/9748",
@@ -67,7 +67,7 @@ describe("buildExportMetaFields", () => {
 });
 
 describe("buildExportHeaderText", () => {
-  it("renders title, organ, fields, disclaimer, then a rule", () => {
+  it("renders title, category, fields, disclaimer, then a rule", () => {
     expect(buildExportHeaderText(base, DISCLAIMER)).toBe(
       "The situation in the Middle East\n" +
         "Security Council\n" +
@@ -78,8 +78,8 @@ describe("buildExportHeaderText", () => {
     );
   });
 
-  it("omits the organ line when the meeting has no body", () => {
-    const text = buildExportHeaderText({ ...base, body: null }, DISCLAIMER);
+  it("omits the subtitle line when the meeting has no category", () => {
+    const text = buildExportHeaderText({ ...base, category: null }, DISCLAIMER);
     expect(text.split("\n")[1]).toBe("Date: 15 June 2026, 10:00");
   });
 

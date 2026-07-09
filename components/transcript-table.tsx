@@ -37,6 +37,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { useCategoryName } from "@/lib/hooks/use-category-name";
 import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { rememberScheduleUrl } from "@/lib/schedule-return";
 import { CategoryPill } from "@/components/category-pill";
@@ -88,16 +89,10 @@ function useT() {
 }
 
 // Categories come from WebTV as raw strings (English, because our scraper
-// hits /en/schedule/). Display them in the active locale via a hand-built
-// lookup table seeded from per-locale WebTV scrapes; fall back to the raw
-// string when no translation exists (e.g. WebTV-only branded events like
-// "Goals Lounge", "SDG Studio", or future categories we haven't catalogued
-// yet). `t.has(key)` avoids next-intl throwing for missing keys.
-function useCategoryName(): (category: string) => string {
-  const t = useTranslations("schedule.categoryNames");
-  return (category: string): string =>
-    category && t.has(category) ? t(category) : category;
-}
+// hits /en/schedule/). `useCategoryName` displays them in the active locale via
+// a lookup table seeded from per-locale WebTV scrapes, falling back to the raw
+// string for WebTV-only branded events ("Goals Lounge", "SDG Studio") and any
+// category we haven't catalogued yet.
 
 function DateFilterPopover({
   availableDates,

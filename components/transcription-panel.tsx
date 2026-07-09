@@ -32,6 +32,7 @@ import {
   escapeRtf,
   type ExportMetaInput,
 } from "@/lib/transcript-export";
+import { useCategoryName } from "@/lib/hooks/use-category-name";
 import { useLanguageDisplayName } from "@/lib/hooks/use-language-display-name";
 import { localeComma } from "@/lib/timezone";
 import {
@@ -257,6 +258,7 @@ export function TranscriptionPanel({
   const tExport = useTranslations("transcript.export");
   const locale = useLocale();
   const languageDisplayName = useLanguageDisplayName();
+  const categoryName = useCategoryName();
   // Covers the POST round-trip (click → response) so the Generate button can
   // show instant feedback before the server resolves Kaltura and starts polling.
   const [starting, setStarting] = useState(false);
@@ -782,7 +784,9 @@ export function TranscriptionPanel({
       : null;
     return {
       title: video.cleanTitle,
-      body: video.body,
+      // The category pill's text, not `video.body` — body has no per-locale
+      // variant, so it would print "Security Council" on a French export.
+      category: categoryName(video.category),
       date: timeDisplay
         ? `${dateDisplay}${localeComma(locale)}${timeDisplay}`
         : dateDisplay,
@@ -914,7 +918,7 @@ export function TranscriptionPanel({
     infoSheet.getColumn(2).width = 100;
     infoSheet.getCell("A1").value = meta.title;
     infoSheet.getCell("A1").font = { bold: true, size: 14 };
-    if (meta.body) infoSheet.getCell("A2").value = meta.body;
+    if (meta.category) infoSheet.getCell("A2").value = meta.category;
 
     let infoRow = 4;
     for (const field of buildExportMetaFields(meta)) {

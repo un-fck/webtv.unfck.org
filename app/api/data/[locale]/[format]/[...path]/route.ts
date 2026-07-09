@@ -397,7 +397,10 @@ function buildHeader(
   return buildExportHeaderText(
     {
       title: video.cleanTitle || video.title,
-      body: video.body,
+      // `recordToVideo` already resolved the locale variant of `category`,
+      // matching the meeting page's pill. Not `video.body`, which is
+      // English-only and diverges for GA Main Committee meetings.
+      category: video.category,
       date: video.date
         ? new Date(video.date).toLocaleDateString("en-GB", {
             day: "numeric",
