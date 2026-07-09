@@ -59,15 +59,17 @@ export async function buildVideoMetadata({
   record: VideoRecord;
   locale: string;
 }): Promise<Metadata> {
-  const title = record.clean_title || record.title;
+  // The locale-resolved view, so <title> and og:title match the <h1> the page
+  // actually renders. `record.clean_title` is the English canonical (kept as
+  // the FTS source); reading it here shipped an identical English <title> to
+  // all six hreflang alternates.
+  const video = recordToVideo(record, false, locale);
+  const title = video.cleanTitle || video.title;
   const t = await getTranslations({ locale, namespace: "metadata" });
   const siteTitle = t("siteTitle");
   const pageTitle = `${title} — ${siteTitle}`;
   const dateLabel = formatDateForMetadata(record.date, locale);
-  const category = await localizedCategoryName(
-    recordToVideo(record, false, locale).category,
-    locale,
-  );
+  const category = await localizedCategoryName(video.category, locale);
   const description = category
     ? t("meetingDescription", { category, date: dateLabel })
     : t("meetingDescriptionNoCategory", { date: dateLabel });
@@ -175,7 +177,7 @@ export async function renderVideoPage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "VideoObject",
-    name: record.clean_title || record.title,
+    name: video.cleanTitle || video.title,
     description:
       metadata.description || metadata.summary || fallbackDescription,
     thumbnailUrl: `${baseUrl}/api/og/meeting/${canonicalPath}`,
