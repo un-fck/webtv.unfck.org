@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { parseMeetingSymbol, getPVDocumentUrl } from "@/lib/pv-documents";
+import {
+  parseMeetingSymbol,
+  getPVDocumentUrl,
+  isValidPVSymbol,
+  MAX_PV_SYMBOL_LENGTH,
+} from "@/lib/pv-documents";
 
 interface VideoFixture {
   title: string;
@@ -217,5 +222,50 @@ describe("getPVDocumentUrl", () => {
     const url = getPVDocumentUrl("S/PV.10100");
     expect(url).toContain("documents.un.org");
     expect(url).toContain(encodeURIComponent("S/PV.10100"));
+  });
+});
+
+describe("isValidPVSymbol", () => {
+  // The validator guards the `/\d+$/` match inside fetchPVDocument, which
+  // backtracks quadratically on a long non-matching digit run.
+  it("rejects an unbounded digit run", () => {
+    expect(isValidPVSymbol("0".repeat(160_000) + "x")).toBe(false);
+  });
+
+  it("bounds length at MAX_PV_SYMBOL_LENGTH", () => {
+    expect(isValidPVSymbol("S".repeat(MAX_PV_SYMBOL_LENGTH))).toBe(true);
+    expect(isValidPVSymbol("S".repeat(MAX_PV_SYMBOL_LENGTH + 1))).toBe(false);
+  });
+
+  it.each([
+    "S/PV.10100",
+    "A/C.1/79/PV.7",
+    "A/79/PV.21",
+    "A/ES-11/PV.5",
+    "A/HRC/61/SR.29",
+    "E/2024/SR.12",
+    "E/C.12/SR.42",
+    "CAT/OP/SR.9",
+    "BRIEFING/GENEVA/2026-07-09",
+    "S/PV. 10100", // callers may pass spacing; fetchPVDocument strips it
+  ])("accepts the real symbol %s", (symbol) => {
+    expect(isValidPVSymbol(symbol)).toBe(true);
+  });
+
+  it.each(["", "../../etc/passwd", "S/PV.1?x=1", "<script>", "S/PV.1&l=fr"])(
+    "rejects %j",
+    (symbol) => {
+      expect(isValidPVSymbol(symbol)).toBe(false);
+    },
+  );
+
+  // The load-bearing coupling: tightening the validator must never silently
+  // start rejecting symbols the parser still emits.
+  it("accepts every symbol parseMeetingSymbol derives from the sample", () => {
+    const symbols = fixtures
+      .map((f) => f.expected.pvSymbol)
+      .filter((s): s is string => s != null);
+    expect(symbols.length).toBeGreaterThan(0);
+    expect(symbols.filter((s) => !isValidPVSymbol(s))).toEqual([]);
   });
 });

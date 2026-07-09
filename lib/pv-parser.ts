@@ -9,6 +9,7 @@ import "@/lib/pdfjs-node-globals";
 import * as pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.mjs";
 (globalThis as Record<string, unknown>).pdfjsWorker = pdfjsWorker;
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import { escapeRegExp } from "@/lib/utils";
 import {
   type LangCode,
   LANG_HINTS,
@@ -750,9 +751,7 @@ function extractOnBehalfOf(paragraphs: string[]): string | undefined {
     "приветствует",
     "призывает",
   ];
-  const verbPattern = verbs
-    .map((v) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join("|");
+  const verbPattern = verbs.map(escapeRegExp).join("|");
   const preambleMatch = first.match(
     new RegExp(`^,\\s*(.+?),?\\s+(?=${verbPattern})\\s*`, "i"),
   );

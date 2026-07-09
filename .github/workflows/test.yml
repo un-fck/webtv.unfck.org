@@ -8,6 +8,11 @@ on:
   # once via the deploy call). The deploy call is the source of truth for main.
   workflow_call:
 
+# The repo default is already read-only, but that is a settings checkbox someone
+# can flip. Pinning it here makes the grant explicit and non-negotiable.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
