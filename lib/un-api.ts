@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 import {
   getVideoByAssetId,
   saveVideo,
@@ -48,12 +50,7 @@ export interface Video {
   i18n: Record<string, VideoI18n>;
 }
 
-function extractTextContent(html: string): string {
-  const text = html
-    .replace(/<[^>]*>/g, "")
-    .trim()
-    .replace(/\s+/g, " ");
-  // Decode HTML entities
+function decodeEntities(text: string): string {
   return text
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
@@ -61,6 +58,33 @@ function extractTextContent(html: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'")
     .replace(/&nbsp;/g, " ");
+}
+
+function extractTextContent(html: string): string {
+  const text = html
+    .replace(/<[^>]*>/g, "")
+    .trim()
+    .replace(/\s+/g, " ");
+  return decodeEntities(text);
+}
+
+/**
+ * Like extractTextContent, but keeps block boundaries as newlines.
+ *
+ * WebTV descriptions are rich text — bullet lists and paragraphs. Stripping
+ * every tag runs adjacent blocks together, so two list items collapse into
+ * "...Production Patterns SDG 9 and interlinkages...". Callers render the
+ * result with `whitespace-pre-line`.
+ */
+function extractRichText(html: string): string {
+  const withBreaks = html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(?:p|li|h[1-6]|div|tr)>/gi, "\n");
+  return decodeEntities(withBreaks.replace(/<[^>]*>/g, ""))
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/[ \t]*\n[ \t]*/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 export function formatDate(date: Date): string {
@@ -575,31 +599,74 @@ export interface VideoMetadata {
   speakerAffiliation: string[];
 }
 
+/** Parse the metadata block out of a WebTV asset page. Pure; see getVideoMetadata. */
+export function parseVideoMetadata(html: string): VideoMetadata {
+  return {
+    summary: extractSummary(html),
+    description: extractDescription(html),
+    categories: extractCategories(html),
+    relatedDocuments: extractRelatedDocuments(html),
+    geographicSubject: extractFieldItems(html, "Geographic Subject"),
+    subjectTopical: extractFieldItems(html, "Subject Topical"),
+    corporateName: extractFieldItems(html, "Corporate Name"),
+    speakerAffiliation: extractFieldItems(html, "Speaker Affiliation"),
+  };
+}
+
+function isEmptyMetadata(metadata: VideoMetadata): boolean {
+  return (
+    metadata.summary === null &&
+    metadata.description === null &&
+    metadata.categories.length === 0 &&
+    metadata.relatedDocuments.length === 0 &&
+    metadata.geographicSubject.length === 0 &&
+    metadata.subjectTopical.length === 0 &&
+    metadata.corporateName.length === 0 &&
+    metadata.speakerAffiliation.length === 0
+  );
+}
+
 export async function getVideoMetadata(
   assetId: string,
 ): Promise<VideoMetadata> {
+  // The `/en/` here is load-bearing, not an oversight. WebTV localizes the
+  // *labels* this parser keys on ("Summary" -> "Résumé", "Subject Topical" ->
+  // "Sujets"), and not every asset has a translated page (some 404). Pointing
+  // this at the request locale would silently return empty metadata. Localizing
+  // properly needs a per-locale label map plus an /en/ fallback.
+  const url = `https://webtv.un.org/en/asset/${assetId}`;
   try {
-    const response = await fetch(`https://webtv.un.org/en/asset/${assetId}`, {
+    const response = await fetch(url, {
       next: { revalidate: 3600 }, // 1 hour cache
     });
 
     if (!response.ok) {
+      Sentry.captureMessage("WebTV asset metadata fetch failed", {
+        level: "warning",
+        extra: { assetId, url, status: response.status },
+      });
       return createEmptyMetadata();
     }
 
     const html = await response.text();
+    const metadata = parseVideoMetadata(html);
 
-    return {
-      summary: extractSummary(html),
-      description: extractDescription(html),
-      categories: extractCategories(html),
-      relatedDocuments: extractRelatedDocuments(html),
-      geographicSubject: extractFieldItems(html, "Geographic Subject"),
-      subjectTopical: extractFieldItems(html, "Subject Topical"),
-      corporateName: extractFieldItems(html, "Corporate Name"),
-      speakerAffiliation: extractFieldItems(html, "Speaker Affiliation"),
-    };
-  } catch {
+    // Assets with no metadata block at all (live feeds, b-roll) contain no
+    // `field__label` markup and legitimately parse empty. If the block is there
+    // but nothing came out, the markup drifted and the extractors need updating.
+    if (isEmptyMetadata(metadata) && html.includes("field__label")) {
+      Sentry.captureMessage(
+        "WebTV metadata parsed empty despite metadata block",
+        {
+          level: "warning",
+          extra: { assetId, url, htmlLength: html.length },
+        },
+      );
+    }
+
+    return metadata;
+  } catch (error) {
+    Sentry.captureException(error, { extra: { assetId, url } });
     return createEmptyMetadata();
   }
 }
@@ -630,7 +697,7 @@ function extractDescription(html: string): string | null {
     /<div class="h4 field__label">Description<\/div>[\s\S]*?<div class="smt-content"[^>]*>([\s\S]*?)<\/div>/,
   );
   if (!match) return null;
-  return extractTextContent(match[1]);
+  return extractRichText(match[1]) || null;
 }
 
 function extractCategories(html: string): string[] {
@@ -652,7 +719,11 @@ function extractRelatedDocuments(
   );
   if (!match) return [];
 
-  const links = [...match[1].matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)];
+  // Anchors carry attributes after the href (`target="_blank"`), so the href
+  // is not the last thing before the closing angle bracket.
+  const links = [
+    ...match[1].matchAll(/<a\s[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g),
+  ];
   return links.map(([, url, title]) => ({
     title: extractTextContent(title),
     url,

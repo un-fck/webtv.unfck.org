@@ -7,6 +7,7 @@ import {
   calculateStatus,
   decodeEventCode,
   videoToRecord,
+  parseVideoMetadata,
   type Video,
 } from "@/lib/un-api";
 
@@ -115,5 +116,76 @@ describe("decodeEventCode", () => {
     expect(decodeEventCode("GO16")).toBe("Global Occasion");
     expect(decodeEventCode("EM07")).toBe("Event - Ministerial");
     expect(decodeEventCode("ZZ99")).toBe("Event ZZ99");
+  });
+});
+
+const webtvFixture = (name: string) =>
+  readFileSync(
+    join(__dirname, "__fixtures__", "webtv", `${name}.html`),
+    "utf8",
+  );
+
+describe("parseVideoMetadata (real WebTV asset markup)", () => {
+  it("extracts related documents whose anchors carry attributes after href", () => {
+    // Regression: the old regex required `<a href="...">` with the closing
+    // bracket right after the href, so `target="_blank"` made every asset
+    // return zero related documents.
+    const { relatedDocuments } = parseVideoMetadata(webtvFixture("c24"));
+
+    expect(relatedDocuments).toEqual([
+      {
+        title: "Special Committee on Decolonization website",
+        url: "https://www.un.org/dppa/decolonization/en/c24/about",
+      },
+      {
+        title: "Organization of Work",
+        url: "https://docs.un.org/A/AC.109/2026/L.2/Rev.1",
+      },
+    ]);
+  });
+
+  it("keeps block boundaries in the description instead of running them together", () => {
+    const { description } = parseVideoMetadata(webtvFixture("hlpf"));
+
+    // The two leading <li> items must not fuse into one sentence.
+    expect(description).not.toContain("Production Patterns SDG 9");
+    expect(description).toContain("Production Patterns\nSDG 9");
+    expect(description).toContain("SDG 6 - Ensure availability");
+  });
+
+  it("reads the full category path, topical subjects and corporate name", () => {
+    const metadata = parseVideoMetadata(webtvFixture("c24"));
+
+    expect(metadata.categories).toEqual([
+      "Meetings & Events",
+      "General Assembly",
+      "Subsidiary organs of the General Assembly",
+      "Special Committee on Decolonization (C-24)",
+      "2026 Session",
+    ]);
+    expect(metadata.subjectTopical).toEqual([
+      "DECOLONIZATION",
+      "NON-SELF-GOVERNING TERRITORIES",
+      "SOVEREIGNTY",
+    ]);
+    expect(metadata.corporateName).toEqual([
+      "SPECIAL COMMITTEE ON DECOLONIZATION - C24",
+    ]);
+    expect(metadata.summary).toMatch(/^The Special Committee on the Situation/);
+  });
+
+  it("returns empty metadata for an asset with no metadata block", () => {
+    const html = webtvFixture("no-metadata");
+    const metadata = parseVideoMetadata(html);
+
+    expect(metadata.summary).toBeNull();
+    expect(metadata.description).toBeNull();
+    expect(metadata.categories).toEqual([]);
+    expect(metadata.relatedDocuments).toEqual([]);
+    expect(metadata.subjectTopical).toEqual([]);
+
+    // getVideoMetadata distinguishes this from markup drift by the absence of
+    // any `field__label`; keep that assumption honest.
+    expect(html).not.toContain("field__label");
   });
 });
