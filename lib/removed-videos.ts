@@ -213,8 +213,11 @@ export async function reapRemovedVideos(
   return result;
 }
 
-/** Dry-run equivalent of applyRemoval: what would change, without writing. */
-function predictRemoval(
+/**
+ * Dry-run equivalent of applyRemoval: what would change, without writing. Kept
+ * in lock-step with applyRemoval's decision logic (exported for tests).
+ */
+export function predictRemoval(
   row: { kaltura_deleted_at: Date | null; webtv_unpublished_at: Date | null },
   signals: { kaltura: Liveness; webtv: Liveness },
 ): "removed" | "restored" | "noop" {
