@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@huggingface/hub": "^2.13.3",
-    "@napi-rs/canvas": "^0.1.100",
+    "@napi-rs/canvas": "^1.0.2",
     "@sentry/nextjs": "^10.64.0",
     "@tanstack/react-table": "^8.21.3",
     "bottleneck": "^2.19.5",
