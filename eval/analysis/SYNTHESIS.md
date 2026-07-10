@@ -447,10 +447,55 @@ challengers now pass the script test, each with a different weak axis (Soniox:
 diarization; Melia: ru orthography bleed; ElevenLabs: en WER + coarse turns;
 azure-llm-speech: boundary language leakage + LLM class). The three **non-LLM** arms are
 the strategically interesting ones; azure-llm-speech is the accuracy benchmark to beat
-but carries the hallucination-family risk. Before any routing flip, run the §9-style
-hallucination probes (V1 Keita/UN80 entity test, V4 accented English) and a paired
-multi-session floor sweep; the decision axis is now *accuracy*, not capability.
-Analyzer: `eval/analysis/bakeoff-floor.py`; raw arms under `eval/results/raw/S_PV.10153/`.
+but carries the hallucination-family risk. §13.2 runs the §9 anecdotal battery on all
+four. Analyzer: `eval/analysis/bakeoff-floor.py`; raw arms under
+`eval/results/raw/S_PV.10153/`.
+
+### 13.2 Anecdotal battery on the challengers (run 2026-07-10, floor tracks of V1/V3/V4)
+
+Ran V1 (Keita entity trap, 171 m), V3 (timestamps/structure, 171 m), V4 (accented
+English, 40 m) — **floor tracks** rather than the study's original `en` tracks, so the
+arms are tested in their exact floor configuration (Melia `multi` is a different model
+than Speechmatics' monolingual `en`). `gemini-3-flash` ran as a paired incumbent arm on
+the same audio. Scorer: `eval/analysis/bakeoff-entities.py`.
+
+**Headline: the Kanem hallucination reproduced on the incumbent and on none of the
+challengers.** On V1, gemini-3-flash wrote "Kanem" ×6 — including *"I give now the floor
+to Ms. Diane Kanem, Executive Director of the United Nations Population Fund"* — plus
+"UN 2.0"-class UN80 misses ×57 and heavy fragmentation (2,076 utterances, ~12% fewer
+chars on V4). All four challengers: **Kanem ×0**; their entity errors are misses or
+acoustic mishears, never substitutions of a different real person.
+
+| probe (V1, floor) | melia | soniox | 11labs-tuned | azure-llm | gemini |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Keita (good) | 6 | 7 | 4 | 5 | 4 |
+| **Kanem (hallucination)** | **0** | **0** | **0** | **0** | **6** ⚠️ |
+| UN80 correct / miss-form | 3 / 19† | **27 / 1** | 16 / 4 | 4 / 1 | 2 / 57 |
+| speakers (≈8 true) | 46 ⚠️ | **8** | 44 ⚠️ | 19 | 10 |
+
+† Melia's miss-form is "Eighty Initiative" — §6.6 number-spelling drift, not invention.
+
+V4 (accented English): **all five arms** got the historical probe words right
+("appalling" not "polling", "cold blood") — the U-2-era acoustic weakness is gone across
+the board. Soniox writes "Starobilsk" (the standard Ukrainian transliteration, ×14 —
+counted as correct); only ElevenLabs and gemini caught the patronymic "Alexeyevich".
+One Soniox mishear worth remembering: "UNFPA–UN Women **merger** assessment" →
+"UN Women **Murder** Assessment" — classic-ASR class, loud but not a fabrication.
+
+V3/V1 structure: challenger coverage is uniformly ~97–98% vs gemini's 79–82% (gemini's
+coverage metric is deflated by timestamp compression per §6.8, but its char counts also
+run ~5–12% short). **Long-audio diarization re-shuffles the §13.1 ranking**: Soniox —
+5 speakers on the 80-min V5 — hit **exactly 8 on the 171-min V1** and 18 on V3, while
+Melia (46/39) and tuned ElevenLabs (44/39) both **over-split at 171 min** (the
+`diarization_threshold: 0.35` fix does not hold at that length). Azure-llm stayed ~19.
+No knob is length-aware; whichever arm wins needs a per-duration diarization check.
+
+**Bottom line:** the challengers clear the hallucination gate that keeps Gemini confined
+to the floor slot. Remaining decision inputs: a paired multi-session floor sweep and a
+diarization-vs-length characterization for the chosen arm. On today's evidence Soniox
+has the best overall profile (entities, coverage, V1 diarization, price) with Melia
+second (labels, speed) — both strictly better than Gemini on the error class that
+matters most.
 
 ## Implementation notes
 
