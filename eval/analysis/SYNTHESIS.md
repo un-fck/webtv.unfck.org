@@ -352,6 +352,37 @@ either way it cannot be trusted on multilingual floor audio. Floor stays `gemini
 the floor now has three distinct architecture-level failure modes on record (AssemblyAI
 whole-file routing §11.3, Chirp deletion/translation, azure gavel-leak §4).
 
+## 13. Watchlist — floor-slot challengers (researched 2026-07-10, none yet evaluated)
+
+Web research for "handles mixed-language audio like Gemini, hallucinates less". Requirements:
+per-segment code-switching across all six UN languages (not whole-file routing — §11.3),
+diarization + timestamps, classic-ASR error family, 80–180 min files. Ranked:
+
+| candidate | code-switching | six langs | diarization | price | risk / unknown |
+| --- | --- | --- | --- | --- | --- |
+| **Speechmatics Melia** (melia-1, 2026-06-17) | documented, per-word lang labels, batch `language: "multi"` | ✅ all six | ✅ (no speaker-count hint) | $0.129/hr | 3 weeks old, "production preview"; accuracy pegged to their *Standard* (not Enhanced) tier; mixed-script fidelity undocumented |
+| **Soniox v5** (stt-async-v5, 2026-06-11) | documented mid-sentence, per-**token** `language` + `speaker` | ✅ (60+) | ✅ | $0.10/hr | architecture undisclosed; zero non-English public benchmarks; 300-min cap is fine |
+| **Azure LLM Speech enhanced mode** (non-MAI; same `AZURE_SPEECH_*` creds as azure-speech-batch) | docs *demonstrate* en→zh→fr mixed-script sample with per-phrase `locale` | ✅ | ✅ with `maxSpeakers` + word timestamps | ~gpt-4o-transcribe class | LLM-family (unnamed Microsoft multimodal) → hallucination risk unquantified; `confidence` always 0; preview rate limits; 5 h/500 MB cap is ample |
+| **ElevenLabs Scribe v2 re-test** | already proven faithful on V5 (§4 consensus row) | ✅ (90+) | ✅ — and the §3 over-split (34–41 spk) has two documented knobs we never used: `diarization_threshold` (default ~0.22) and `num_speakers` (PV gives the true count) | $0.22/hr (2026-05 price cut) | en WER still worst of serious set; language labels only chunk-level |
+| **Qwen3-ASR-1.7B open stack** (2026-01, Apache 2.0) + pyannote community-1 | per-utterance LID; unproven mid-sentence | ✅ (30) | via pyannote (3-component pipeline) | GPU self-host | best anti-hallucination evidence of any candidate (38× fewer insertions than whisper-small, defined empty-on-non-speech); but 20-min chunks, aligner lacks Arabic, real infra lift. API cousin = our `alibaba-qwen3-asr` (floor-faithful, no diarization) |
+
+Ruled out: **Deepgram** (Nova-3/Flux `multi` = 10 langs, still no ar/zh), **OpenAI**
+(gpt-4o-transcribe-diarize: 25-min/25 MB cap, documented language-leaking, no
+prompt/logprobs on the diarize variant; no Whisper v4 exists), **Gladia Solaria-1**
+(real per-utterance switching but Whisper-family, 135-min cap, ~$0.61/hr — only if the
+above fail), **MAI-Transcribe-1.5** (§10: diarization *still* "What's next" as of
+2026-07; re-check when it ships), **NVIDIA Canary/Parakeet open checkpoints** (no ar/zh),
+**Meta Omnilingual ASR** (no code-switching, 40 s chunks), **vanilla Whisper**
+(romanizes/translates off-window).
+
+Pattern worth noting: every proprietary candidate that *documents* per-segment
+code-switching (Melia, Soniox, Gladia) shipped it in 2025–2026 — the capability barely
+existed when §7 was decided. Suggested experiment: a 4-arm V5 floor bake-off
+(melia-1, soniox-v5, azure-llm-speech, scribe-v2 with `diarization_threshold`≈0.35 +
+`num_speakers` from PV), scored on script mix vs the ~75/10/13/3 consensus, a read of the
+Nebenzia (ru) and Bahrain (ar) passages, and speaker count vs the PV's 17 — total cost
+<$2, ~4 new provider entries in `lib/providers/`.
+
 ## Implementation notes
 
 - Shared async helper `lib/providers/dashscope-asr.ts` backs fun-asr + alibaba. Request shapes
