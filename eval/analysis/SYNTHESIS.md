@@ -385,16 +385,21 @@ Nebenzia (ru) and Bahrain (ar) passages, and speaker count vs the PV's 17 — to
 
 ### 13.1 Bake-off results (run 2026-07-10, V5 floor, 80 min) — two viable challengers
 
-Three of the four arms ran (Soniox after the account was funded on 2026-07-10);
-**Azure LLM Speech** remains blocked — our `un80-foundry-project-resource` Speech
-resource is not in a supported region (`400: Enhanced mode is currently not supported
-yet`; needs eastus / northeurope / southeastasia / westus / westus2 / centralindia).
-The provider is implemented and registered (`azure-llm-speech`) — unblocking is a
-console action, not code.
+All four arms ran (Soniox after the account was funded; Azure LLM Speech after a new
+Foundry resource `foundry-transcripts-notheurope` was deployed in northeurope — tenant
+policy `DenyNotAllowedLocations` allows northeurope/centralus/eastus2/southeastasia/
+eastasia/westeurope, and of those only northeurope + southeastasia have enhanced mode).
+Two gotchas cost real time and look like other errors: **enhanced mode only answers on
+the `<resource>.services.ai.azure.com` hostname** — the same request on the same
+resource's `cognitiveservices.azure.com` hostname returns the *same* "Enhanced mode is
+currently not supported yet" 400 as a wrong region does; and `lib/load-env` uses
+`override: true`, so `.env` silently beats CLI-provided env vars (`AZURE_SPEECH_*`
+overrides on the command line do nothing).
 
 | arm | script mix L/A/C/CJK (target 75/10/13/3) | speakers (≈15–16 true) | coverage | Nebenzia (ru) passage |
 | --- | --- | ---: | ---: | --- |
 | **soniox-stt-async-v5** (six-language `language_hints`) | **73.6 / 10.1 / 13.1 / 3.2** | **5** ⚠️ | **98.3%** | near-verbatim vs the PV, correct "Гросси"; per-token labels clean (ru 12.9, no uk) |
+| **azure-llm-speech** (enhanced mode, northeurope) | **74.8 / 10.0 / 12.5 / 2.6** | **14** | **98.4%** | body is PV-grade Russian — but the opening sentence leaked into **Spanish**, and Bahrain's Arabic opens in **English**: statement-boundary language leakage, the §5 azure class in mild form |
 | **speechmatics-melia-1** (+ six-language `language_hints`) | **73.6 / 10.3 / 13.0 / 3.0** | **17** | 97.4% | correct Russian tracking the PV; residual Ukrainian-tinged spellings ("апарата", "енергии") + acoustic slips (МГАТЭ, "Гроссе") |
 | **elevenlabs-scribe-v2-tuned** (`diarization_threshold: 0.35`) | **73.1 / 10.9 / 12.7 / 3.3** | **14** | 93.2% | **flawless Russian**, near-verbatim vs the PV, correct МАГАТЭ |
 | gemini-3-flash (incumbent, §4) | 75.3 / 9.5 / 12.1 / 3.1 | — | 75.7% | good; name-hallucination class remains |
@@ -426,16 +431,26 @@ Findings that change standing judgments:
   under-diarization matters less for us than over-splitting since the downstream
   speaker-ID stage re-derives named speakers from context, but it is the weakest hint
   quality of the three.
-- On V2's 9-min floor all three arms matched or beat the leaders (32.0–33.5 norm WER vs
+- **Azure LLM Speech is the accuracy leader with the LLM-family asterisk.** Best V2-floor
+  WER ever measured (**30.9** norm, ahead of Soniox 32.0), fastest wall-clock (80 min in
+  58 s), 14 speakers, 98.4% coverage, clean per-phrase locale labels (ru-RU 12.4, no uk).
+  But both sampled non-Latin statements open with **cross-language leakage** — Nebenzia's
+  first sentence in Spanish, Bahrain's in English — before snapping into the correct
+  language. That is the §5 azure-openai fingerprint (milder), i.e. exactly the error
+  family the floor slot is trying to leave; the three classic-ASR arms showed nothing
+  comparable. Also note `confidence` is always 0 and the model is an unnamed preview.
+- On V2's 9-min floor all four arms matched or beat the leaders (30.9–33.5 norm WER vs
   English PV).
 
-**Floor verdict update:** Gemini is no longer the only clean all-script option — three
-non-LLM challengers now pass the script test, each with a different weak axis
-(Soniox: diarization; Melia: ru orthography bleed; ElevenLabs: en WER + coarse turns).
-Before any routing flip, run the §9-style hallucination probes on them (V1 Keita/UN80
-entity test, V4 accented English) and a paired multi-session floor sweep; the decision
-axis is now *accuracy*, not capability. Analyzer: `eval/analysis/bakeoff-floor.py`;
-raw arms under `eval/results/raw/S_PV.10153/`.
+**Floor verdict update:** Gemini is no longer the only clean all-script option — four
+challengers now pass the script test, each with a different weak axis (Soniox:
+diarization; Melia: ru orthography bleed; ElevenLabs: en WER + coarse turns;
+azure-llm-speech: boundary language leakage + LLM class). The three **non-LLM** arms are
+the strategically interesting ones; azure-llm-speech is the accuracy benchmark to beat
+but carries the hallucination-family risk. Before any routing flip, run the §9-style
+hallucination probes (V1 Keita/UN80 entity test, V4 accented English) and a paired
+multi-session floor sweep; the decision axis is now *accuracy*, not capability.
+Analyzer: `eval/analysis/bakeoff-floor.py`; raw arms under `eval/results/raw/S_PV.10153/`.
 
 ## Implementation notes
 

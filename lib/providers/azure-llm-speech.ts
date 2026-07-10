@@ -18,6 +18,12 @@ const AZURE_SPEECH_ENDPOINT = process.env.AZURE_SPEECH_ENDPOINT!;
  * this arm is being evaluated FOR; `confidence` is documented as always 0.
  * Audio is converted to mono MP3 first (m4a/mp4 containers are not in the
  * documented format list).
+ *
+ * IMPORTANT: enhanced mode only works on the `<resource>.services.ai.azure.com`
+ * hostname. The same request against the `<resource>.cognitiveservices.azure.com`
+ * hostname of the SAME resource returns `400 "Enhanced mode is currently not
+ * supported yet"` (which reads like a region problem but isn't). Plain fast
+ * transcription works on either hostname. Set AZURE_SPEECH_ENDPOINT accordingly.
  */
 export const azureLlmSpeech: TranscriptionProvider = {
   name: "azure-llm-speech",
