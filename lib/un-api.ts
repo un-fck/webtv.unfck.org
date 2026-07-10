@@ -61,11 +61,25 @@ function decodeEntities(text: string): string {
     .replace(/&nbsp;/g, " ");
 }
 
+// Strip HTML tags. A single `.replace(/<[^>]*>/g, "")` pass is unsafe: deleting
+// one match can splice two fragments into a fresh tag (`<scr<x>ipt>` becomes
+// `<script>`), so a lone pass leaves reconstructed tags behind — which is why
+// CodeQL flags it (js/incomplete-multi-character-sanitization). Re-apply to a
+// fixpoint so nothing tag-shaped survives. Real WebTV markup never nests like
+// this, so on actual input the loop runs exactly once; it only hardens the
+// adversarial case.
+export function stripTags(html: string): string {
+  let out = html;
+  let prev: string;
+  do {
+    prev = out;
+    out = out.replace(/<[^>]*>/g, "");
+  } while (out !== prev);
+  return out;
+}
+
 function extractTextContent(html: string): string {
-  const text = html
-    .replace(/<[^>]*>/g, "")
-    .trim()
-    .replace(/\s+/g, " ");
+  const text = stripTags(html).trim().replace(/\s+/g, " ");
   return decodeEntities(text);
 }
 
@@ -81,7 +95,7 @@ function extractRichText(html: string): string {
   const withBreaks = html
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/(?:p|li|h[1-6]|div|tr)>/gi, "\n");
-  return decodeEntities(withBreaks.replace(/<[^>]*>/g, ""))
+  return decodeEntities(stripTags(withBreaks))
     .replace(/[^\S\n]+/g, " ")
     .replace(/[ \t]*\n[ \t]*/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
