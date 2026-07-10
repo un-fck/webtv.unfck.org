@@ -385,17 +385,16 @@ Nebenzia (ru) and Bahrain (ar) passages, and speaker count vs the PV's 17 — to
 
 ### 13.1 Bake-off results (run 2026-07-10, V5 floor, 80 min) — two viable challengers
 
-Two of the four arms ran; two were blocked before spending a cent:
-**Soniox** — the account behind the key has no credits ("Organization balance exhausted.
-Please either add funds manually or enable autopay"); **Azure LLM Speech** — our
-`un80-foundry-project-resource` Speech resource is not in a supported region
-(`400: Enhanced mode is currently not supported yet`; needs eastus / northeurope /
-southeastasia / westus / westus2 / centralindia). Both providers are implemented and
-registered (`soniox-stt-async-v5`, `azure-llm-speech`) — unblocking is a console action,
-not code.
+Three of the four arms ran (Soniox after the account was funded on 2026-07-10);
+**Azure LLM Speech** remains blocked — our `un80-foundry-project-resource` Speech
+resource is not in a supported region (`400: Enhanced mode is currently not supported
+yet`; needs eastus / northeurope / southeastasia / westus / westus2 / centralindia).
+The provider is implemented and registered (`azure-llm-speech`) — unblocking is a
+console action, not code.
 
 | arm | script mix L/A/C/CJK (target 75/10/13/3) | speakers (≈15–16 true) | coverage | Nebenzia (ru) passage |
 | --- | --- | ---: | ---: | --- |
+| **soniox-stt-async-v5** (six-language `language_hints`) | **73.6 / 10.1 / 13.1 / 3.2** | **5** ⚠️ | **98.3%** | near-verbatim vs the PV, correct "Гросси"; per-token labels clean (ru 12.9, no uk) |
 | **speechmatics-melia-1** (+ six-language `language_hints`) | **73.6 / 10.3 / 13.0 / 3.0** | **17** | 97.4% | correct Russian tracking the PV; residual Ukrainian-tinged spellings ("апарата", "енергии") + acoustic slips (МГАТЭ, "Гроссе") |
 | **elevenlabs-scribe-v2-tuned** (`diarization_threshold: 0.35`) | **73.1 / 10.9 / 12.7 / 3.3** | **14** | 93.2% | **flawless Russian**, near-verbatim vs the PV, correct МАГАТЭ |
 | gemini-3-flash (incumbent, §4) | 75.3 / 9.5 / 12.1 / 3.1 | — | 75.7% | good; name-hallucination class remains |
@@ -417,14 +416,26 @@ Findings that change standing judgments:
   Six-language `language_hints` (now the provider default; unhinted run preserved as
   `speechmatics-melia-1-nohints`) eliminate the uk labels and most, not all, of the
   orthography bleed. Melia smoke WER on V2 floor: 33.5 norm (leaders 32.3–32.9).
-- On V2's 9-min floor both arms also matched the leaders (32.9–33.5 norm WER vs English PV).
+- **Soniox has the best text, worst diarization.** Cleanest per-token language labels
+  (ru 12.9%, no uk confusion — unlike unhinted Melia), highest coverage (98.3%),
+  PV-grade Russian and Arabic, native zh with real punctuation, and the best V2-floor
+  WER **of any provider ever run on that track** (32.0 norm vs u3.5-pro's 32.3, gemini's
+  32.9). But it merged the meeting into **5 speakers** (truth ≈15–16) — the inverse of
+  ElevenLabs' old failure. French had one notable acoustic slip ("l'Agence internationale
+  de la **détermination** atomique"). No speaker-count/threshold knob is documented;
+  under-diarization matters less for us than over-splitting since the downstream
+  speaker-ID stage re-derives named speakers from context, but it is the weakest hint
+  quality of the three.
+- On V2's 9-min floor all three arms matched or beat the leaders (32.0–33.5 norm WER vs
+  English PV).
 
-**Floor verdict update:** Gemini is no longer the only clean all-script option — for the
-first time there are two non-LLM challengers that pass the script test with usable
-diarization. Before any routing flip, run the §9-style hallucination probes on them
-(V1 Keita/UN80 entity test, V4 accented English) and a paired multi-session floor sweep;
-the decision axis is now *accuracy*, not capability. Analyzer:
-`eval/analysis/bakeoff-floor.py`; raw arms under `eval/results/raw/S_PV.10153/`.
+**Floor verdict update:** Gemini is no longer the only clean all-script option — three
+non-LLM challengers now pass the script test, each with a different weak axis
+(Soniox: diarization; Melia: ru orthography bleed; ElevenLabs: en WER + coarse turns).
+Before any routing flip, run the §9-style hallucination probes on them (V1 Keita/UN80
+entity test, V4 accented English) and a paired multi-session floor sweep; the decision
+axis is now *accuracy*, not capability. Analyzer: `eval/analysis/bakeoff-floor.py`;
+raw arms under `eval/results/raw/S_PV.10153/`.
 
 ## Implementation notes
 
