@@ -8,6 +8,7 @@ import {
   decodeEventCode,
   videoToRecord,
   parseVideoMetadata,
+  stripTags,
   type Video,
 } from "@/lib/un-api";
 
@@ -187,5 +188,34 @@ describe("parseVideoMetadata (real WebTV asset markup)", () => {
     // getVideoMetadata distinguishes this from markup drift by the absence of
     // any `field__label`; keep that assumption honest.
     expect(html).not.toContain("field__label");
+  });
+});
+
+describe("stripTags", () => {
+  it("strips ordinary tags from real markup", () => {
+    expect(stripTags("<p>Security <strong>Council</strong></p>")).toBe(
+      "Security Council",
+    );
+  });
+
+  it("leaves tag-free text untouched", () => {
+    expect(stripTags("Human Rights Council, 58th session")).toBe(
+      "Human Rights Council, 58th session",
+    );
+  });
+
+  it("leaves no complete tag in the output, even for nested/malformed markup", () => {
+    // The security invariant CodeQL wants (js/incomplete-multi-character-
+    // sanitization): after stripping, nothing matching `<…>` may remain — so a
+    // tag can't be reconstructed by the removal of an inner one. (Dangling `<`
+    // or `>` without a partner is not a tag and may remain.)
+    for (const input of [
+      "<scr<x>ipt>alert(1)</scr<x>ipt>",
+      "<<div>script>evil</<div>script>",
+      "a<b<c>d>e",
+      "<img src=x onerror=alert(1)>",
+    ]) {
+      expect(stripTags(input)).not.toMatch(/<[^>]*>/);
+    }
   });
 });
