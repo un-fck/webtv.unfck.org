@@ -629,52 +629,66 @@ function isEmptyMetadata(metadata: VideoMetadata): boolean {
   );
 }
 
-export async function getVideoMetadata(
+/**
+ * Fetch a WebTV asset page. Returns the HTTP status plus the body (null on any
+ * non-2xx or network error, where `status` is 0). Shared by `getVideoMetadata`
+ * (which parses the body) and the removal detectors (which read the status as a
+ * liveness signal — a 404 means the asset was unpublished). Never throws.
+ *
+ * The `/en/` is load-bearing: WebTV localizes the labels the parser keys on, and
+ * not every asset has a translated page — pointing this at the request locale
+ * would silently return empty metadata.
+ */
+export async function fetchAssetPage(
   assetId: string,
-): Promise<VideoMetadata> {
-  // The `/en/` here is load-bearing, not an oversight. WebTV localizes the
-  // *labels* this parser keys on ("Summary" -> "Résumé", "Subject Topical" ->
-  // "Sujets"), and not every asset has a translated page (some 404). Pointing
-  // this at the request locale would silently return empty metadata. Localizing
-  // properly needs a per-locale label map plus an /en/ fallback.
+): Promise<{ status: number; html: string | null }> {
   const url = `https://webtv.un.org/en/asset/${assetId}`;
   try {
     const response = await fetch(url, {
       next: { revalidate: 3600 }, // 1 hour cache
     });
-
-    if (!response.ok) {
-      Sentry.captureMessage("WebTV asset metadata fetch failed", {
-        level: "warning",
-        extra: { assetId, url, status: response.status },
-      });
-      return createEmptyMetadata();
-    }
-
-    const html = await response.text();
-    const metadata = parseVideoMetadata(html);
-
-    // Assets with no metadata block at all (live feeds, b-roll) contain no
-    // `field__label` markup and legitimately parse empty. If the block is there
-    // but nothing came out, the markup drifted and the extractors need updating.
-    if (isEmptyMetadata(metadata) && html.includes("field__label")) {
-      Sentry.captureMessage(
-        "WebTV metadata parsed empty despite metadata block",
-        {
-          level: "warning",
-          extra: { assetId, url, htmlLength: html.length },
-        },
-      );
-    }
-
-    return metadata;
-  } catch (error) {
-    Sentry.captureException(error, { extra: { assetId, url } });
-    return createEmptyMetadata();
+    if (!response.ok) return { status: response.status, html: null };
+    return { status: response.status, html: await response.text() };
+  } catch {
+    return { status: 0, html: null }; // network error → unknown liveness
   }
 }
 
-function createEmptyMetadata(): VideoMetadata {
+export async function getVideoMetadata(
+  assetId: string,
+): Promise<VideoMetadata> {
+  const url = `https://webtv.un.org/en/asset/${assetId}`;
+  const { status, html } = await fetchAssetPage(assetId);
+
+  if (html === null) {
+    // A 404 means the asset was unpublished — an expected outcome the removal
+    // detectors act on, not something to alert on. Only a non-404 failure
+    // (403/5xx, or 0 for a network error) points at a genuine upstream problem.
+    if (status !== 404) {
+      Sentry.captureMessage("WebTV asset metadata fetch failed", {
+        level: "warning",
+        extra: { assetId, url, status },
+      });
+    }
+    return createEmptyMetadata();
+  }
+
+  const metadata = parseVideoMetadata(html);
+
+  // Assets with no metadata block at all (live feeds, b-roll) contain no
+  // `field__label` markup and legitimately parse empty. If the block is there
+  // but nothing came out, the markup drifted and the extractors need updating.
+  if (isEmptyMetadata(metadata) && html.includes("field__label")) {
+    Sentry.captureMessage("WebTV metadata parsed empty despite metadata block", {
+      level: "warning",
+      extra: { assetId, url, htmlLength: html.length },
+    });
+  }
+
+  return metadata;
+}
+
+export function createEmptyMetadata(): VideoMetadata {
   return {
     summary: null,
     description: null,

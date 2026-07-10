@@ -7,6 +7,65 @@ import {
   markVideoRemoved,
   clearVideoRemoved,
 } from "./db";
+import { fetchAssetPage } from "./un-api";
+
+// ── Shared removal core ──────────────────────────────────────────────────────
+// One vocabulary and one writer, reused by both detectors: the lazy check on
+// the detail-page render and the periodic reaper. Each keeps its own fetching
+// (single vs batched) but funnels the verdict through `applyRemoval`.
+
+/** Upstream liveness for one source. `unknown` = ambiguous → never act. */
+export type Liveness = "gone" | "live" | "unknown";
+
+/** WebTV asset-page HTTP status → liveness. Only an explicit 404 is "gone". */
+export function classifyWebtv(status: number): Liveness {
+  if (status === 404) return "gone";
+  if (status >= 200 && status < 300) return "live";
+  return "unknown"; // 403/5xx, or 0 for a network error
+}
+
+/** Kaltura entry status → liveness. `undefined` = entry not returned. */
+export function classifyKaltura(status: number | undefined): Liveness {
+  if (status === KALTURA_STATUS_DELETED) return "gone";
+  if (status === undefined) return "unknown";
+  return "live";
+}
+
+/** Probe a single asset's WebTV liveness (used by the reaper, one GET/asset). */
+export async function probeWebtvLiveness(assetId: string): Promise<Liveness> {
+  const { status } = await fetchAssetPage(assetId);
+  return classifyWebtv(status);
+}
+
+/**
+ * The single writer of removal state. Applies each source's verdict to its own
+ * column via `markVideoRemoved`/`clearVideoRemoved`, so the two sources never
+ * race. `unknown` verdicts (and omitted sources) are left untouched. Returns
+ * what changed, preferring `removed` over `restored` when both moved.
+ */
+export async function applyRemoval(
+  assetId: string,
+  signals: { webtv?: Liveness; kaltura?: Liveness },
+): Promise<"removed" | "restored" | "noop"> {
+  let removed = false;
+  let restored = false;
+
+  if (signals.kaltura === "gone") {
+    await markVideoRemoved(assetId, "kaltura");
+    removed = true;
+  } else if (signals.kaltura === "live") {
+    if (await clearVideoRemoved(assetId, "kaltura")) restored = true;
+  }
+
+  if (signals.webtv === "gone") {
+    await markVideoRemoved(assetId, "webtv");
+    removed = true;
+  } else if (signals.webtv === "live") {
+    if (await clearVideoRemoved(assetId, "webtv")) restored = true;
+  }
+
+  return removed ? "removed" : restored ? "restored" : "noop";
+}
 
 export interface ReapRemovedOptions {
   /** Write changes. When false, computes counts without mutating. */
@@ -64,14 +123,14 @@ export async function reapRemovedVideos(
       if (status === undefined) continue;
 
       const isDeleted = status === KALTURA_STATUS_DELETED;
-      const wasRemoved = row.removed_at !== null;
+      const wasRemoved = row.kaltura_deleted_at !== null;
 
       if (isDeleted && !wasRemoved) {
-        if (apply) await markVideoRemoved(row.asset_id);
+        if (apply) await markVideoRemoved(row.asset_id, "kaltura");
         result.removed++;
         onChange?.(row.asset_id, true);
       } else if (!isDeleted && wasRemoved) {
-        if (apply) await clearVideoRemoved(row.asset_id);
+        if (apply) await clearVideoRemoved(row.asset_id, "kaltura");
         result.restored++;
         onChange?.(row.asset_id, false);
       }
