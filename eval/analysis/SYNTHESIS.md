@@ -321,6 +321,37 @@ trusted at all.
 - **Full 20-session metric sweep** (§4 of the plan) — only worth it to contest `ar`
   (83.9 vs azure 84.3 is within single-meeting noise) or to CI-confirm the `en` win.
 
+## 12. Google Chirp 3 floor probe (evaluated 2026-07-10)
+
+Chirp 3 (`google-chirp-3`) was in the original standing-corpus metric sweep (mid-pack on
+every language, best on none, second-worst `ar`) but was never floor-tested and dropped out
+of the 2026-05 manual study. Its docs say `languageCodes: ["auto"]` transcribes "in the
+dominant language" — probed on V5 (S/PV.10153) to see what that means in practice.
+**Disqualified for the floor slot; four independent reasons:**
+
+1. **60-minute hard cap.** `BatchRecognize` rejects the 80-min floor file outright
+   ("Only audio files up to 60 minutes long are supported"). Many SC meetings run longer;
+   any production use would need a chunking layer. The probe split the file into two
+   <60-min halves.
+2. **Silent whole-statement deletion.** On the halves, Nebenzia's 5-min Russian statement
+   and Bahrain's Arabic statement are **completely absent** — the transcript jumps from
+   "…the Russian Federation to make his statement." straight to "I thank the representative
+   of the Russian Federation for his statement." Combined output is 38k chars vs the ~57k
+   six-provider consensus: roughly a third of the meeting is gone, with no error or marker.
+3. **Cross-language rendering.** The President's *Chinese* opening comes out as fluent
+   **English** ("I announce the Security Council's 10,153rd meeting is now open…") —
+   translation/hallucination, not transcription. French statements, by contrast, survive
+   natively. Script mix on the halves: **100.0% Latin** (consensus: ~75/10/13/3).
+4. **No diarization with `auto`** — each half returns a single utterance.
+
+Inconsistent with length: on the 9-min V2 floor (S/PV.10156) Chirp *did* keep the Chinese
+opening in native script (8.6% CJK — with per-character spacing artifacts and a garbled
+meeting number, normalized WER 44.0 vs 32.3 for u3.5-pro on the same track). So short files
+get per-segment behavior, long files get dominant-language flattening plus deletions —
+either way it cannot be trusted on multilingual floor audio. Floor stays `gemini-3-flash`;
+the floor now has three distinct architecture-level failure modes on record (AssemblyAI
+whole-file routing §11.3, Chirp deletion/translation, azure gavel-leak §4).
+
 ## Implementation notes
 
 - Shared async helper `lib/providers/dashscope-asr.ts` backs fun-asr + alibaba. Request shapes
