@@ -313,25 +313,14 @@ export function VideoPageClient({
             className="aspect-video min-w-0 bg-black lg:flex-3"
           >
             <div ref={videoWrapperRef} className="h-full w-full">
-              {video.removed ? (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-6 text-center text-white">
-                  <p className={typography.body}>{tVideo("removed")}</p>
-                  <p className={cn(typography.caption, "text-white/70")}>
-                    {video.hasTranscript
-                      ? tVideo("removedHadTranscript")
-                      : tVideo("removedNoTranscript")}
-                  </p>
-                </div>
-              ) : (
-                <VideoPlayer
-                  kalturaId={kalturaId}
-                  partnerId={2503451}
-                  uiConfId={49754663}
-                  audioLanguage={selectedLanguage}
-                  onPlayerReady={setPlayer}
-                  onAudioTracksReady={handleAudioTracksReady}
-                />
-              )}
+              <VideoPlayer
+                kalturaId={kalturaId}
+                partnerId={2503451}
+                uiConfId={49754663}
+                audioLanguage={selectedLanguage}
+                onPlayerReady={setPlayer}
+                onAudioTracksReady={handleAudioTracksReady}
+              />
             </div>
           </div>
 

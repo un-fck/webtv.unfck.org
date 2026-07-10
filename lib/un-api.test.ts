@@ -75,7 +75,6 @@ describe("videoToRecord (real rows)", () => {
       slug: "",
       hasTranscript: false,
       hasTranscriptInLocale: false,
-      removed: false,
       i18n: {},
     };
   }

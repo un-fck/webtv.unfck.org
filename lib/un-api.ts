@@ -44,7 +44,6 @@ export interface Video {
   // mirrors `hasTranscript`.
   hasTranscript: boolean;
   hasTranscriptInLocale: boolean;
-  removed: boolean; // Kaltura entry deleted — source video no longer available
   // Per-locale variants of title/cleanTitle/category harvested from the
   // ar/zh/fr/ru/es WebTV schedule pages. Empty when the asset wasn't scraped
   // for that locale; render-time helpers fall back to English.
@@ -198,7 +197,6 @@ export function recordToVideo(
     slug: videoUrl(record),
     hasTranscript,
     hasTranscriptInLocale: hasTranscriptInLocale ?? hasTranscript,
-    removed: record.removed_at !== null,
     i18n,
   };
 }
@@ -437,7 +435,6 @@ export async function fetchVideosForDate(
       }),
       hasTranscript: false, // Will be updated later
       hasTranscriptInLocale: false,
-      removed: false, // Freshly scraped from the live schedule
       i18n: {},
     });
   }
