@@ -38,9 +38,13 @@ CREATE TABLE IF NOT EXISTS videos (
     pv_part SMALLINT,
     pv_available BOOLEAN,
     pv_checked_at TIMESTAMPTZ,
-    -- Set when the underlying Kaltura entry reports status 3 (DELETED); such
-    -- rows are hidden from listings (see migration 006_removed_videos.sql).
-    removed_at TIMESTAMPTZ,
+    -- Independent removal signals, one per source (migration 025):
+    --   kaltura_deleted_at   — Kaltura entry reports status 3 (DELETED)
+    --   webtv_unpublished_at — WebTV asset page 404s (unpublished)
+    -- Each detector only ever touches its own column, so clearing one can't
+    -- un-hide a removal the other made. `removed_at` below is derived from both.
+    kaltura_deleted_at TIMESTAMPTZ,
+    webtv_unpublished_at TIMESTAMPTZ,
     last_seen DATE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -49,6 +53,11 @@ CREATE TABLE IF NOT EXISTS videos (
     -- columns (migration 019). Shape: { [locale]: { title, clean_title,
     -- category } }. Missing keys fall back to English at render time.
     i18n JSONB NOT NULL DEFAULT '{}'::jsonb,
+    -- Derived removal flag: set iff either source column is (migration 025).
+    -- LEAST() ignores NULLs, so this is NULL only when both sources are NULL.
+    -- Every `removed_at IS NULL` check in the app reads this transparently.
+    removed_at TIMESTAMPTZ
+        GENERATED ALWAYS AS (LEAST(kaltura_deleted_at, webtv_unpublished_at)) STORED,
     -- Generated column for full-text search (auto-maintained by PG)
     fts_vec tsvector GENERATED ALWAYS AS (
         to_tsvector('english', COALESCE(clean_title, title))
