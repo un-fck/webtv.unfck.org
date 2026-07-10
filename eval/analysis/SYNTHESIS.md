@@ -114,6 +114,18 @@ independent providers** is a reliable estimate of the floor's true language mix.
 because AssemblyAI is otherwise a top pick (U3-pro fixed the accent errors) — **but for
 multilingual floor audio it's disqualified.**
 
+> **Correction (2026-07-10):** the 0%-non-Latin measurement above was **confounded**. Our
+> request sent neither `language_code` nor `language_detection`, so the API silently defaulted
+> to `language_code: "en_us"` — 100% Latin was the correct behavior for the request we sent,
+> not evidence about the model (see `PLAN-universal-3.5-pro.md` §1; the provider now sends
+> `language_detection: true` when no language is given). The re-test with detection enabled
+> (§11) does **not** rescue AssemblyAI — it fails differently and worse: detection picks one
+> dominant language for the whole file and misfired to "ru" (confidence 0.33) on V5,
+> routing the entire 80-min six-language floor to universal-2-as-Russian, which emitted
+> **98.7% Cyrillic** — fluent hallucinated Russian over the French/English/Arabic/Chinese
+> statements. The **conclusion stands, for a corrected reason**: whole-file dominant-language
+> routing (plus no Russian in the Pro models), not Latin-collapse.
+
 ---
 
 ## 5. Per-provider profiles (all 10)
@@ -174,6 +186,10 @@ A 4-provider stack, each role justified by the evidence above:
 | **fr / es / ar / ru**    | **azure-openai**           | one provider for all four; best-calibrated diarization; solid WER; handles every script. Its instability (gavel-leak, cross-lang hallucination) only shows on the _mixed floor_ — single-language interpretation tracks are clean                                                                                                                         |
 | **zh**                   | **fun-asr**                | best Chinese WER of all providers (94.6) + real diarization + word/sentence timestamps; Mandarin-first. _(Alternative if dropping fun-asr: **alibaba** / qwen3-asr-flash-filetrans — ~equal WER 96.4, clean CJK, timestamps, but no diarization; or **paraformer-v2** for diarization. Off-DashScope alternative: gemini, with name-hallucination risk.)_ |
 | **floor (multilingual)** | **gemini-3-flash-preview** | the only clean all-script option with reasonable diarization (AssemblyAI Latin-collapses; azure leaks; fun-asr's English suffers). See Gemini caveats below                                                                                                                                                                                               |
+
+> **Update (2026-07-10):** `en` now runs on **assemblyai-universal-3-5-pro** (see §11 —
+> best measured en WER, 15.5). All other slots unchanged; the floor re-test in §11.3
+> re-confirms Gemini for the floor.
 
 **Gemini version — use `gemini-3-flash-preview`, not 3.5-flash.** Accuracy is a wash and mixed
 (3-flash better en/fr, 3.5 marginally better ar/zh/ru, all within noise); **name hallucination is
@@ -238,6 +254,72 @@ Being on Azure is a real plus: no new vendor or billing relationship, and integr
   floor slot for now.
 - Docs: <https://learn.microsoft.com/en-us/azure/ai-services/speech-service/mai-transcribe>
   (model page) and `.../llm-speech` (API + feature matrix).
+
+## 11. AssemblyAI Universal-3.5 Pro (evaluated 2026-07-10)
+
+Ran phases 0–1 of [`PLAN-universal-3.5-pro.md`](PLAN-universal-3.5-pro.md) plus a full
+S/PV.10156 metric pass. Production `en` had already been flipped to 3.5 Pro on 2026-07-09;
+this eval confirms that flip and settles the floor question. **18 native languages** — five
+of the six UN languages; **Russian is not among them** (confirmed against the current
+supported-languages docs) and falls back to universal-2.
+
+**Verdict per slot: keep `en` on 3.5 Pro (best en WER measured); everything else stays.
+The floor stays Gemini — hard disqualify, two distinct failure modes (11.3).**
+
+### 11.1 Pinned-model probe (§5.2c): you cannot pin
+
+`speech_models: ["universal-3-5-pro"]` (no fallback) + `language_code: "ru"` is **not
+rejected**: HTTP 200, a `metadata.warnings` note ("'ru' is not supported in universal-3-pro
+— transcription is handled by universal-2"), and the job is silently served by
+`universal-2` (`speech_model_used` confirms; it is populated on every response and is the
+only reliable signal of which model ran). Routing can never rely on pinning; the fallback
+happens with or without universal-2 in the array.
+
+### 11.2 WER, S/PV.10156 (normalized WER %, paired with the §2 table)
+
+| track | u3.5-pro | best in §2 | reading |
+| ----- | -------: | ---------------- | ------- |
+| en    | **15.5** | gemini 15.7      | **new best**; beats u3-pro (16.3) — confirms the prod flip |
+| fr    | **52.7** | gemini 52.7      | ties best (u3-pro was 54.2) |
+| es    | **59.2** | u3-pro/alibaba 59.5 | new best by a hair |
+| ar    | 83.9     | gemini-3.5 81.8  | mid-pack (azure 84.3); newly-native ar does not win |
+| zh    | 97.0     | fun-asr 94.6     | behind; no reason to touch `zh` |
+| ru    | 62.7     | gemini-3.5 61.7  | **served by universal-2** (fallback), ≈ azure 62.8 |
+| floor | **32.3** | gemini 32.9      | 9-min mostly-English floor; detection picked en → 3.5 Pro, and it **code-switched the Chinese passages natively** (9.5% CJK) — vs 0% under the old bugged request |
+
+Single 9-min meeting — same caveats as §2. `ru` at 62.7 means U-2-via-fallback is
+*competitive* with azure on the interpretation track (a mild vendor-consolidation option,
+**not** a 3.5 Pro win), and the Russian text reads as fluent, correct Russian.
+
+### 11.3 The floor experiment (V5, S/PV.10153) — hard disqualify
+
+The §4 correction re-run, with `language_detection: true` now actually sent. Consensus
+target: ~75% Latin / ~10% Arabic / ~13% Cyrillic / ~3% CJK.
+
+| arm | request | result |
+| --- | ------- | ------ |
+| A. detection on, `[u3.5-pro, u2]` | detection → **"ru"** (confidence 0.33) → whole file to **universal-2** | **98.7% Cyrillic**: the entire 80-min floor rendered as Russian. France's *French* statement becomes fluent-but-wrong Russian ("его выставку" for his briefing, "Агенции Национальной Атомности" for the IAEA), with looping artifacts over the Chinese opening |
+| B. same, u3-pro (control) | identical route | **byte-identical output** to arm A — the model version never mattered; routing decides everything |
+| A′. `language_code: "en"` forced (true dominant language), pinned u3.5-pro | file actually reaches 3.5 Pro | script mix **86.2 / 11.0 / 0.0 / 2.9** — zh/ar/fr transcribed natively and well (code-switching is real for the 18 languages), but **Cyrillic 0%**: Nebenzia's Russian statement comes out as **hallucinated English** ("NATO and Pony was a very global chase… he addressed Brazil's Barack Obama") — not dropped, not romanized: invented content |
+
+Both routes hit the §6.1 hallucination class, at larger scale than Gemini ever showed:
+arm A hallucinates over *the whole file*, arm A′ over *every Russian statement*. Per the
+plan's pre-registered decision rules ("emits plausible-but-wrong text → hard disqualify"):
+**the floor slot stays `gemini-3-flash`**, now for a precise, understood reason — one-model-
+per-file routing + no Russian — rather than the confounded §4 one. Also note the floor's
+"ground truth" here is the English PV (documents.un.org ignores the unknown `l=floor`
+param), so floor WER *penalizes* faithful as-spoken transcription — script mix plus reading
+the passages is the metric that decides, and WER on multilingual floors should not be
+trusted at all.
+
+### 11.4 Not yet run (from the plan)
+
+- **`keyterms_prompt` entity probe** (§5.4, the UN80/Keita roster test) — the one genuinely
+  novel capability still untested; would also validate the external-roster idea for other slots.
+- **Diarization calibration** (§5.3, V1/V3) — 3.5 Pro claims its best diarization yet;
+  u3-pro was erratic (30 spurious speakers on V1).
+- **Full 20-session metric sweep** (§4 of the plan) — only worth it to contest `ar`
+  (83.9 vs azure 84.3 is within single-meeting noise) or to CI-confirm the `en` win.
 
 ## Implementation notes
 
