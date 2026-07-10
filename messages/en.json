@@ -290,9 +290,6 @@
     "allContent": "All content with highlights"
   },
   "video": {
-    "removed": "This video has been removed from UN Web TV.",
-    "removedHadTranscript": "The transcript below was generated while the recording was still available.",
-    "removedNoTranscript": "The recording is no longer available to play or transcribe.",
     "backToHomepage": "← Back to homepage",
     "formats": {
       "title": "Machine-readable formats",

@@ -392,9 +392,6 @@
     }
   },
   "video": {
-    "removed": "Este vídeo se ha retirado de UN Web TV.",
-    "removedHadTranscript": "La transcripción siguiente se generó mientras la grabación aún estaba disponible.",
-    "removedNoTranscript": "La grabación ya no está disponible para reproducirse ni transcribirse.",
     "backToHomepage": "← Volver al inicio",
     "formats": {
       "title": "Formatos legibles por máquina",

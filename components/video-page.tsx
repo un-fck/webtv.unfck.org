@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { alternatesFor } from "@/i18n/routing";
@@ -14,7 +16,19 @@ import { localizeWebtvAssetUrl } from "@/lib/un-links";
 import type { VideoRecord } from "@/lib/db";
 import { formatDateForMetadata } from "@/lib/timezone";
 import { videoUrl } from "@/lib/video-url";
-import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
+import {
+  fetchAssetPage,
+  parseVideoMetadata,
+  createEmptyMetadata,
+  recordToVideo,
+} from "@/lib/un-api";
+import { fetchKalturaEntryStatuses } from "@/lib/kaltura-helpers";
+import {
+  applyRemoval,
+  classifyKaltura,
+  classifyWebtv,
+  type Liveness,
+} from "@/lib/removed-videos";
 import { widePageWidth } from "@/lib/layout";
 import { cn, jsonLdScript } from "@/lib/utils";
 import { ExternalLink } from "@/components/external-link";
@@ -124,6 +138,10 @@ export async function renderVideoPage({
   record: VideoRecord;
   locale: string;
 }) {
+  // Already-removed videos are gone from our site, transcript or not. (Newly
+  // removed ones are caught below by the lazy probe on this same render.)
+  if (record.removed_at) notFound();
+
   const kalturaId = extractKalturaId(record.asset_id);
 
   if (!kalturaId) {
@@ -162,7 +180,26 @@ export async function renderVideoPage({
     record.entry_id !== null && transcriptedEntries.includes(record.entry_id);
 
   const video = recordToVideo(record, hasTranscript, locale);
-  const metadata = await getVideoMetadata(record.asset_id);
+
+  // Lazy removal detection. The render already fetches the WebTV asset page for
+  // metadata, so reuse that response as a liveness signal: a 404 means the asset
+  // was unpublished. Probe Kaltura only when WebTV is still live (a WebTV 404
+  // alone already settles it). If either upstream is gone, persist the removal
+  // off the response path via after() and 404 this render. Already-removed rows
+  // never reach here — getVideoBy* filters them (they 404 upstream in the route).
+  const { status, html } = await fetchAssetPage(record.asset_id);
+  const webtv = classifyWebtv(status);
+  let kaltura: Liveness = "unknown";
+  if (webtv === "live" && record.entry_id) {
+    const statuses = await fetchKalturaEntryStatuses([record.entry_id]);
+    kaltura = classifyKaltura(statuses.get(record.entry_id));
+  }
+  if (webtv === "gone" || kaltura === "gone") {
+    after(() => applyRemoval(record.asset_id, { webtv, kaltura }));
+    notFound();
+  }
+
+  const metadata = html ? parseVideoMetadata(html) : createEmptyMetadata();
   const isLoggedIn = !!(await getCurrentUser());
 
   const tMeta = await getTranslations({ locale, namespace: "metadata" });

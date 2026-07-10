@@ -604,6 +604,7 @@ export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
        FROM webtv.transcripts t
        JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
       WHERE t.transcription_status IN ('scheduled', 'interrupted')
+        AND v.removed_at IS NULL
       ORDER BY t.created_at ASC`,
   );
   return result.rows.map((row) => ({
@@ -1543,18 +1544,11 @@ export async function getVideoByCitation(parsed: {
   return mapVideoRow(result.rows[0]);
 }
 
-// Listing visibility: a video whose Kaltura entry was deleted (`removed_at`)
-// is hidden — UNLESS we already produced a completed transcript from it, in
-// which case the page stays valuable even though the source video is gone.
-// References the unaliased `videos` table, matching the listing queries below.
-const VISIBLE_VIDEO = `(
-  videos.removed_at IS NULL
-  OR EXISTS (
-    SELECT 1 FROM webtv.transcripts t
-    WHERE t.transcription_status = 'completed'
-      AND t.kaltura_id = videos.kaltura_id
-  )
-)`;
+// Listing visibility: a video that's gone upstream (`removed_at` — Kaltura
+// entry deleted or WebTV asset unpublished) is hidden, transcript or not.
+// If it's no longer on UN Web TV it's no longer on ours. References the
+// unaliased `videos` table, matching the listing queries below.
+const VISIBLE_VIDEO = `(videos.removed_at IS NULL)`;
 
 /**
  * Per-(meeting, language) entries for the sitemap. We only list pairs where a
@@ -1585,6 +1579,7 @@ export async function getSitemapMeetingLanguages(
          FROM webtv.videos v
          JOIN webtv.transcripts t ON t.kaltura_id = v.kaltura_id
         WHERE t.transcription_status = 'completed'
+          AND v.removed_at IS NULL
           AND t.language_code = ANY(?::text[])
         ORDER BY v.date DESC`,
       [supportedLocales as unknown as string[]],
@@ -1613,19 +1608,33 @@ export async function getRecentVideos(
 }
 
 /**
- * Rows to reconcile against Kaltura entry status during sync: those with a
- * resolved entry_id seen within `lookbackDays`. Returns both currently-removed
- * and not-yet-removed rows so the reaper can both flag deletions and clear
- * false positives. `removed_at` lets the caller skip no-op updates.
+ * Which detector owns a removal. Each maps to its own timestamp column
+ * (migration 025) so clearing one source never un-hides the other's removal.
  */
-export async function getRemovalCandidates(
-  lookbackDays: number,
-): Promise<
-  Array<{ asset_id: string; entry_id: string; removed_at: Date | null }>
+export type RemovalSource = "kaltura" | "webtv";
+
+const REMOVAL_COLUMN: Record<RemovalSource, string> = {
+  kaltura: "kaltura_deleted_at",
+  webtv: "webtv_unpublished_at",
+};
+
+/**
+ * Rows to reconcile against their upstream status: those with a resolved
+ * entry_id seen within `lookbackDays`. Returns both currently-removed and
+ * not-yet-removed rows so the reaper can both flag removals and clear false
+ * positives. The per-source timestamps let the caller skip no-op updates.
+ */
+export async function getRemovalCandidates(lookbackDays: number): Promise<
+  Array<{
+    asset_id: string;
+    entry_id: string;
+    kaltura_deleted_at: Date | null;
+    webtv_unpublished_at: Date | null;
+  }>
 > {
   const result = await pool.query(
     q(
-      `SELECT asset_id, entry_id, removed_at
+      `SELECT asset_id, entry_id, kaltura_deleted_at, webtv_unpublished_at
          FROM webtv.videos
         WHERE entry_id IS NOT NULL
           AND last_seen >= CURRENT_DATE - ?::int
@@ -1636,30 +1645,47 @@ export async function getRemovalCandidates(
   return result.rows as Array<{
     asset_id: string;
     entry_id: string;
-    removed_at: Date | null;
+    kaltura_deleted_at: Date | null;
+    webtv_unpublished_at: Date | null;
   }>;
 }
 
-/** Soft-disable a video (Kaltura entry deleted). No-op if already removed. */
-export async function markVideoRemoved(assetId: string): Promise<void> {
+/**
+ * Soft-disable a video for one removal source. No-op if already flagged for
+ * that source. `source` is a fixed enum (not user input) so interpolating its
+ * column name is injection-safe.
+ */
+export async function markVideoRemoved(
+  assetId: string,
+  source: RemovalSource,
+): Promise<void> {
+  const col = REMOVAL_COLUMN[source];
   await pool.query(
     q(
-      `UPDATE webtv.videos SET removed_at = NOW(), updated_at = NOW()
-       WHERE asset_id = ? AND removed_at IS NULL`,
+      `UPDATE webtv.videos SET ${col} = NOW(), updated_at = NOW()
+       WHERE asset_id = ? AND ${col} IS NULL`,
       [assetId],
     ),
   );
 }
 
-/** Clear a removal flag (entry came back / was a false positive). */
-export async function clearVideoRemoved(assetId: string): Promise<void> {
-  await pool.query(
+/**
+ * Clear one source's removal flag (upstream came back / false positive).
+ * Returns true iff a row was actually un-flagged.
+ */
+export async function clearVideoRemoved(
+  assetId: string,
+  source: RemovalSource,
+): Promise<boolean> {
+  const col = REMOVAL_COLUMN[source];
+  const result = await pool.query(
     q(
-      `UPDATE webtv.videos SET removed_at = NULL, updated_at = NOW()
-       WHERE asset_id = ? AND removed_at IS NOT NULL`,
+      `UPDATE webtv.videos SET ${col} = NULL, updated_at = NOW()
+       WHERE asset_id = ? AND ${col} IS NOT NULL`,
       [assetId],
     ),
   );
+  return (result.rowCount ?? 0) > 0;
 }
 
 export async function updateVideoEntryId(
@@ -1984,7 +2010,7 @@ export async function getAvailableDates(
 ): Promise<string[]> {
   const result = await pool.query(
     q(
-      "SELECT DISTINCT TO_CHAR(date, 'YYYY-MM-DD') AS date FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC",
+      "SELECT DISTINCT TO_CHAR(date, 'YYYY-MM-DD') AS date FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND removed_at IS NULL ORDER BY date DESC",
       [daysBack],
     ),
   );
@@ -1997,7 +2023,7 @@ export async function getFilterOptions(daysBack: number = 365): Promise<{
 }> {
   const categoriesResult = await pool.query(
     q(
-      "SELECT category, COUNT(*) as cnt FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND category IS NOT NULL GROUP BY category ORDER BY category",
+      "SELECT category, COUNT(*) as cnt FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND removed_at IS NULL AND category IS NOT NULL GROUP BY category ORDER BY category",
       [daysBack],
     ),
   );
@@ -2032,6 +2058,7 @@ export async function getVideosNeedingPVCheck(
     q(
       `SELECT asset_id, pv_symbol FROM webtv.videos
        WHERE pv_symbol IS NOT NULL
+         AND removed_at IS NULL
          AND date >= CURRENT_DATE - ?::int
          AND (
            pv_checked_at IS NULL
