@@ -383,6 +383,49 @@ existed when §7 was decided. Suggested experiment: a 4-arm V5 floor bake-off
 Nebenzia (ru) and Bahrain (ar) passages, and speaker count vs the PV's 17 — total cost
 <$2, ~4 new provider entries in `lib/providers/`.
 
+### 13.1 Bake-off results (run 2026-07-10, V5 floor, 80 min) — two viable challengers
+
+Two of the four arms ran; two were blocked before spending a cent:
+**Soniox** — the account behind the key has no credits ("Organization balance exhausted.
+Please either add funds manually or enable autopay"); **Azure LLM Speech** — our
+`un80-foundry-project-resource` Speech resource is not in a supported region
+(`400: Enhanced mode is currently not supported yet`; needs eastus / northeurope /
+southeastasia / westus / westus2 / centralindia). Both providers are implemented and
+registered (`soniox-stt-async-v5`, `azure-llm-speech`) — unblocking is a console action,
+not code.
+
+| arm | script mix L/A/C/CJK (target 75/10/13/3) | speakers (≈15–16 true) | coverage | Nebenzia (ru) passage |
+| --- | --- | ---: | ---: | --- |
+| **speechmatics-melia-1** (+ six-language `language_hints`) | **73.6 / 10.3 / 13.0 / 3.0** | **17** | 97.4% | correct Russian tracking the PV; residual Ukrainian-tinged spellings ("апарата", "енергии") + acoustic slips (МГАТЭ, "Гроссе") |
+| **elevenlabs-scribe-v2-tuned** (`diarization_threshold: 0.35`) | **73.1 / 10.9 / 12.7 / 3.3** | **14** | 93.2% | **flawless Russian**, near-verbatim vs the PV, correct МАГАТЭ |
+| gemini-3-flash (incumbent, §4) | 75.3 / 9.5 / 12.1 / 3.1 | — | 75.7% | good; name-hallucination class remains |
+
+Both challengers transcribe all six languages natively in-script (President's Chinese
+opening, Bahrain's Arabic, France's French all read correctly against the PV), and both
+fail in the **classic-ASR family** — no invented content observed in any sampled passage.
+Findings that change standing judgments:
+
+- **ElevenLabs' §3/§8 disqualification is fixed by one parameter.** `diarization_threshold`
+  0.35 → **14 speakers** where the default gave 34–41. (The two knobs are mutually
+  exclusive — the API rejects `num_speakers` + `diarization_threshold` together.) Its
+  Russian was the cleanest of any provider we have ever run on this file. Remaining
+  weaknesses: coarse utterances (25 for 80 min; one spans ~8 min) and the known en-WER gap.
+- **Melia is the structural best-fit**: per-word language labels, 17 well-calibrated
+  speakers, 80 min processed in ~40 s, $0.129/hr (free 10 h/mo). One real defect found:
+  **unhinted**, it rendered the first ~half of the Russian statement in **Ukrainian**
+  (labels split uk 6.4 / ru 6.3) — correctly-heard content, wrong East-Slavic orthography.
+  Six-language `language_hints` (now the provider default; unhinted run preserved as
+  `speechmatics-melia-1-nohints`) eliminate the uk labels and most, not all, of the
+  orthography bleed. Melia smoke WER on V2 floor: 33.5 norm (leaders 32.3–32.9).
+- On V2's 9-min floor both arms also matched the leaders (32.9–33.5 norm WER vs English PV).
+
+**Floor verdict update:** Gemini is no longer the only clean all-script option — for the
+first time there are two non-LLM challengers that pass the script test with usable
+diarization. Before any routing flip, run the §9-style hallucination probes on them
+(V1 Keita/UN80 entity test, V4 accented English) and a paired multi-session floor sweep;
+the decision axis is now *accuracy*, not capability. Analyzer:
+`eval/analysis/bakeoff-floor.py`; raw arms under `eval/results/raw/S_PV.10153/`.
+
 ## Implementation notes
 
 - Shared async helper `lib/providers/dashscope-asr.ts` backs fun-asr + alibaba. Request shapes

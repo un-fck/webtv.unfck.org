@@ -5,8 +5,11 @@ import {
   assemblyaiUniversal35Pro,
 } from "./assemblyai";
 import { azureOpenai } from "./azure-openai";
-import { elevenlabs } from "./elevenlabs";
+import { elevenlabs, elevenlabsTuned } from "./elevenlabs";
 import { azureSpeech } from "./azure-speech";
+import { azureLlmSpeech } from "./azure-llm-speech";
+import { sonioxV5 } from "./soniox";
+import { speechmaticsMelia } from "./speechmatics";
 import { googleChirp } from "./google-chirp";
 import { gemini3Flash, gemini35Flash } from "./gemini";
 import { groqWhisper } from "./groq-whisper";
@@ -39,6 +42,10 @@ const ALL: TranscriptionProvider[] = [
   mistral,
   voxtralSmall,
   elevenlabs,
+  elevenlabsTuned, // floor bake-off arm: diarization_threshold/num_speakers
+  sonioxV5, // floor bake-off arm (SYNTHESIS §13)
+  speechmaticsMelia, // floor bake-off arm (SYNTHESIS §13)
+  azureLlmSpeech, // floor bake-off arm (SYNTHESIS §13)
   azureSpeech,
   googleChirp,
   groqWhisper,
