@@ -1,11 +1,13 @@
-analysis/video-metadata.json
+/analysis/video-metadata.json
 /transcription-comparisons
 /eval/results
 /eval/corpus-data
 .claude/
 gcloud_credentials.json
 
-analysis/
+# root-level video-metadata dump dir only — an unanchored "analysis/" also
+# swallowed eval/analysis/, silently un-tracking new eval docs
+/analysis/
 
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 

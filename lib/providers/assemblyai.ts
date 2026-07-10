@@ -35,11 +35,21 @@ function makeAssemblyai(
     },
 
     async transcribe(audioUrl, opts) {
+      const language = apiLanguage(opts?.language);
       const body: Record<string, unknown> = {
         audio_url: audioUrl,
         speaker_labels: true,
-        language_code: apiLanguage(opts?.language),
       };
+      if (language) {
+        body.language_code = language;
+      } else {
+        // Multilingual "floor" track: no fixed language. Without this flag the
+        // API defaults to language_code "en_us" (JSON.stringify drops the
+        // undefined language_code, and language_detection defaults to false),
+        // which silently transcribed the floor as US English — see
+        // eval/analysis/PLAN-universal-3.5-pro.md §1.
+        body.language_detection = true;
+      }
       if (speechModels) body.speech_models = speechModels;
 
       const submitRes = await fetch(
@@ -71,6 +81,14 @@ function makeAssemblyai(
         if (i % 6 === 5)
           console.log(`  [${name}] Still processing... (${(i + 1) * 5}s)`);
       }
+
+      // Which model actually served the request — with a speech_models array
+      // the API may fall back (e.g. ru → universal-2); this is the only signal.
+      if (result.speech_model_used || result.speech_model)
+        console.log(
+          `  [${name}] speech_model_used: ${result.speech_model_used ?? result.speech_model}` +
+            (result.language_code ? ` (language: ${result.language_code})` : ""),
+        );
 
       const utterances = (result.utterances || []).map((u: any) => ({
         speaker: u.speaker,
