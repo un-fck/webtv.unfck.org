@@ -571,6 +571,11 @@ export interface RunnableTranscript {
   // picker skip Kaltura probes for meetings that haven't started and age out
   // bookings whose recording never materialized.
   scheduled_time: Date | null;
+  // For `interrupted` rows: the most recent failure reason (claimTranscript
+  // clears it on every resume, so it never goes stale). The picker's retry-cap
+  // guard folds it into the final "Abandoned after N retries" message —
+  // without it the escalation destroys the diagnostic trail.
+  error_message: string | null;
 }
 
 /**
@@ -594,7 +599,8 @@ export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
             jsonb_array_length(COALESCE(t.content->'raw_paragraphs', '[]'::jsonb)) > 0
               AS has_raw_paragraphs,
             t.created_at,
-            v.scheduled_time
+            v.scheduled_time,
+            t.error_message
        FROM webtv.transcripts t
        JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
       WHERE t.transcription_status IN ('scheduled', 'interrupted')
@@ -613,6 +619,7 @@ export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
     has_raw_paragraphs: row.has_raw_paragraphs as boolean,
     created_at: row.created_at as Date,
     scheduled_time: row.scheduled_time as Date | null,
+    error_message: row.error_message as string | null,
   }));
 }
 
@@ -624,13 +631,15 @@ export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
 export interface RunnableAnalysis {
   transcript_id: string;
   retry_count: number;
+  // Most recent failure reason — see RunnableTranscript.error_message.
+  error_message: string | null;
 }
 
 export async function getRunnableAnalyses(): Promise<RunnableAnalysis[]> {
   // No retry_count filter — capped rows must reach the picker's escalation
   // guard (see getRunnableTranscripts).
   const result = await pool.query(
-    `SELECT transcript_id, retry_count
+    `SELECT transcript_id, retry_count, error_message
        FROM webtv.transcripts
       WHERE analysis_status = 'interrupted'
       ORDER BY updated_at ASC`,
@@ -638,6 +647,7 @@ export async function getRunnableAnalyses(): Promise<RunnableAnalysis[]> {
   return result.rows.map((row) => ({
     transcript_id: row.transcript_id as string,
     retry_count: Number(row.retry_count ?? 0),
+    error_message: row.error_message as string | null,
   }));
 }
 

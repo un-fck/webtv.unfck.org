@@ -24,6 +24,18 @@ const ts = () => new Date().toTimeString().slice(0, 8);
 // waiting for audio before it is abandoned as "recording never materialized".
 const SCHEDULED_AGE_OUT_MS = 48 * 60 * 60 * 1000;
 
+// The final `error` row is the only durable record of why a transcript kept
+// failing — claimTranscript wipes error_message on every resume, so the
+// message present at escalation time is the *last* attempt's failure reason.
+// Fold it into the abandonment message instead of overwriting it (during the
+// 2026-07 missing-ffmpeg investigation, 11 abandoned rows had lost what they
+// had been retrying and needed Sentry archaeology to reconstruct).
+function lastErrorSuffix(lastError: string | null): string {
+  return lastError
+    ? `; last error: ${lastError.slice(0, 500)}`
+    : " (no failure reason recorded)";
+}
+
 // Detaching strategy for the long-running per-row work. From a cron HTTP
 // handler we pass Next's `after()` so the work outlives the response on
 // platforms (Vercel) that freeze the function after responding; from the
@@ -122,7 +134,7 @@ export async function runProcessScheduled(
             await releaseTranscript(
               item.transcript_id,
               "error",
-              `Abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries`,
+              `Abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries${lastErrorSuffix(item.error_message)}`,
             );
             Sentry.captureMessage(
               `Transcript abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries`,
@@ -133,7 +145,10 @@ export async function runProcessScheduled(
                   kind: "abandoned",
                   transcript_id: item.transcript_id,
                 },
-                extra: { language: item.language_code },
+                extra: {
+                  language: item.language_code,
+                  last_error: item.error_message,
+                },
               },
             );
             abandoned++;
@@ -271,7 +286,7 @@ export async function runProcessScheduled(
           await releaseAnalysis(
             item.transcript_id,
             "error",
-            `Analysis abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries`,
+            `Analysis abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries${lastErrorSuffix(item.error_message)}`,
           );
           Sentry.captureMessage(
             `Proposition analysis abandoned after ${MAX_INTERRUPTED_RETRIES} interruption-retries`,
@@ -282,6 +297,7 @@ export async function runProcessScheduled(
                 kind: "abandoned",
                 transcript_id: item.transcript_id,
               },
+              extra: { last_error: item.error_message },
             },
           );
           abandoned++;
