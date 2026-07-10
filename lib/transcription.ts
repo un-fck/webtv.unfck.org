@@ -284,6 +284,32 @@ async function runTranscriptionPipeline(
       `[Pipeline] Transcription complete: ${paragraphs.length} segments (${provider.name}, ${durationMs}ms)`,
     );
 
+    // Coverage sanity check, provider-agnostic: a transcript whose last
+    // paragraph ends far short of the audio length usually means truncated
+    // provider output — e.g. Gemini exhausting its output-token budget on
+    // audio that skipped chunking can return parseable JSON that silently
+    // covers only half the meeting. Warn (console + Sentry) rather than
+    // fail: a meeting that adjourns early while the recording keeps rolling
+    // is legitimate, so a hard error here would destroy valid transcripts.
+    const lastEndMs = paragraphs.length
+      ? paragraphs[paragraphs.length - 1].end
+      : 0;
+    if (
+      transcript.durationMs != null &&
+      transcript.durationMs > 0 &&
+      lastEndMs < transcript.durationMs * 0.85 &&
+      transcript.durationMs - lastEndMs > 10 * 60 * 1000
+    ) {
+      const coverageMsg =
+        `[Pipeline] Transcript ${transcriptId} may be truncated: last paragraph ` +
+        `ends at ${Math.round(lastEndMs / 60_000)} min of ${Math.round(
+          transcript.durationMs / 60_000,
+        )} min audio (${Math.round((100 * lastEndMs) / transcript.durationMs)}% ` +
+        `coverage, ${provider.name})`;
+      perr(coverageMsg);
+      Sentry.captureMessage(coverageMsg, "warning");
+    }
+
     const content: TranscriptContent = {
       raw_paragraphs: paragraphs,
       statements: [],

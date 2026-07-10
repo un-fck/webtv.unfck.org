@@ -43,5 +43,11 @@ export function isTransientPipelineError(err: unknown): boolean {
     // incomplete JSON — a chunk was too dense. Retrying (chunked/sub-sliced)
     // can succeed, so treat it as transient rather than an intrinsic failure.
     "output truncated",
+    // getAudioDurationSeconds (gemini-utils.ts) fails closed rather than
+    // silently disabling chunking. A probe failure is usually a truncated /
+    // not-yet-converted download that a later re-download fixes; if it is a
+    // missing ffprobe binary instead, the retry cap escalates to `error`
+    // and the boot check in server-init.ts has already raised a Sentry event.
+    "audio duration probe failed",
   ].some((pattern) => msg.includes(pattern));
 }

@@ -249,12 +249,26 @@ export async function downloadAudioToTemp(
   return tmpPath;
 }
 
-/** Returns 0 if ffprobe is unavailable. */
+/**
+ * Duration of an audio file in seconds, via ffprobe. Fails CLOSED: throws
+ * instead of returning a fallback. Both callers use the result to decide
+ * whether the audio needs chunking, so a silent fallback of 0 reads as
+ * "short file" and disables chunking entirely — sending arbitrarily long
+ * audio to Gemini in one call, which degrades timestamps past ~10 minutes
+ * and can truncate at the output-token cap while still parsing as valid
+ * JSON (a transcript marked completed with its tail missing). That is
+ * exactly what the ffprobe binary being absent from the production image
+ * caused. The "Audio duration probe failed" prefix is matched by
+ * isTransientPipelineError, so the row retries as `interrupted` (a
+ * truncated download that ffprobe rejects is genuinely transient) instead
+ * of hard-failing.
+ */
 export async function getAudioDurationSeconds(
   filePath: string,
 ): Promise<number> {
+  let stdout: string;
   try {
-    const { stdout } = await execFileAsync("ffprobe", [
+    ({ stdout } = await execFileAsync("ffprobe", [
       "-v",
       "quiet",
       "-show_entries",
@@ -262,14 +276,23 @@ export async function getAudioDurationSeconds(
       "-of",
       "default=noprint_wrappers=1:nokey=1",
       filePath,
-    ]);
-    return parseFloat(stdout.trim()) || 0;
-  } catch {
-    console.warn(
-      "  [Audio] ffprobe unavailable — cannot determine audio duration",
+    ]));
+  } catch (err) {
+    throw new Error(
+      `Audio duration probe failed: ffprobe error on ${path.basename(filePath)}: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
     );
-    return 0;
   }
+  const seconds = parseFloat(stdout.trim());
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    throw new Error(
+      `Audio duration probe failed: ffprobe reported ${JSON.stringify(
+        stdout.trim(),
+      )} for ${path.basename(filePath)}`,
+    );
+  }
+  return seconds;
 }
 
 /** Extract a time slice of audio using ffmpeg. Returns path to chunk file. */
