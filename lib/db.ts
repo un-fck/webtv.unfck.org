@@ -598,6 +598,7 @@ export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
        FROM webtv.transcripts t
        JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
       WHERE t.transcription_status IN ('scheduled', 'interrupted')
+        AND v.removed_at IS NULL
       ORDER BY t.created_at ASC`,
   );
   return result.rows.map((row) => ({
@@ -1533,18 +1534,11 @@ export async function getVideoByCitation(parsed: {
   return mapVideoRow(result.rows[0]);
 }
 
-// Listing visibility: a video whose Kaltura entry was deleted (`removed_at`)
-// is hidden — UNLESS we already produced a completed transcript from it, in
-// which case the page stays valuable even though the source video is gone.
-// References the unaliased `videos` table, matching the listing queries below.
-const VISIBLE_VIDEO = `(
-  videos.removed_at IS NULL
-  OR EXISTS (
-    SELECT 1 FROM webtv.transcripts t
-    WHERE t.transcription_status = 'completed'
-      AND t.kaltura_id = videos.kaltura_id
-  )
-)`;
+// Listing visibility: a video that's gone upstream (`removed_at` — Kaltura
+// entry deleted or WebTV asset unpublished) is hidden, transcript or not.
+// If it's no longer on UN Web TV it's no longer on ours. References the
+// unaliased `videos` table, matching the listing queries below.
+const VISIBLE_VIDEO = `(videos.removed_at IS NULL)`;
 
 /**
  * Per-(meeting, language) entries for the sitemap. We only list pairs where a
@@ -1575,6 +1569,7 @@ export async function getSitemapMeetingLanguages(
          FROM webtv.videos v
          JOIN webtv.transcripts t ON t.kaltura_id = v.kaltura_id
         WHERE t.transcription_status = 'completed'
+          AND v.removed_at IS NULL
           AND t.language_code = ANY(?::text[])
         ORDER BY v.date DESC`,
       [supportedLocales as unknown as string[]],
@@ -2005,7 +2000,7 @@ export async function getAvailableDates(
 ): Promise<string[]> {
   const result = await pool.query(
     q(
-      "SELECT DISTINCT TO_CHAR(date, 'YYYY-MM-DD') AS date FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int ORDER BY date DESC",
+      "SELECT DISTINCT TO_CHAR(date, 'YYYY-MM-DD') AS date FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND removed_at IS NULL ORDER BY date DESC",
       [daysBack],
     ),
   );
@@ -2018,7 +2013,7 @@ export async function getFilterOptions(daysBack: number = 365): Promise<{
 }> {
   const categoriesResult = await pool.query(
     q(
-      "SELECT category, COUNT(*) as cnt FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND category IS NOT NULL GROUP BY category ORDER BY category",
+      "SELECT category, COUNT(*) as cnt FROM webtv.videos WHERE last_seen >= CURRENT_DATE - ?::int AND removed_at IS NULL AND category IS NOT NULL GROUP BY category ORDER BY category",
       [daysBack],
     ),
   );
@@ -2053,6 +2048,7 @@ export async function getVideosNeedingPVCheck(
     q(
       `SELECT asset_id, pv_symbol FROM webtv.videos
        WHERE pv_symbol IS NOT NULL
+         AND removed_at IS NULL
          AND date >= CURRENT_DATE - ?::int
          AND (
            pv_checked_at IS NULL

@@ -158,7 +158,7 @@ async function handleRequest(
     if (segs[0] === "asset" && segs.length >= 2) {
       const assetId = segs.slice(1).join("/");
       const record = await getVideoByAssetId(assetId);
-      if (!record) {
+      if (!record || record.removed_at) {
         return NextResponse.json({ error: "Video not found" }, { status: 404 });
       }
       return handleMeeting(request, locale, record, format);
@@ -174,7 +174,7 @@ async function handleRequest(
       );
     }
     const record = await getVideoByCitation(parsed);
-    if (!record) {
+    if (!record || record.removed_at) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
     return handleMeeting(request, locale, record, format);

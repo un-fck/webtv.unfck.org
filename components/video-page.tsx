@@ -138,6 +138,10 @@ export async function renderVideoPage({
   record: VideoRecord;
   locale: string;
 }) {
+  // Already-removed videos are gone from our site, transcript or not. (Newly
+  // removed ones are caught below by the lazy probe on this same render.)
+  if (record.removed_at) notFound();
+
   const kalturaId = extractKalturaId(record.asset_id);
 
   if (!kalturaId) {

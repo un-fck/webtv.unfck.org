@@ -8,12 +8,15 @@ import { getTranslations } from "next-intl/server";
 import { enforceIpLimit } from "@/lib/rate-limit";
 
 async function resolveVideo(slug: string): Promise<VideoRecord | null> {
-  if (slug.startsWith("asset/")) {
-    return getVideoByAssetId(slug.slice("asset/".length));
-  }
-  const parsed = symbolFromSlug(slug);
-  if (!parsed) return null;
-  return getVideoByCitation(parsed);
+  const record = slug.startsWith("asset/")
+    ? await getVideoByAssetId(slug.slice("asset/".length))
+    : await (async () => {
+        const parsed = symbolFromSlug(slug);
+        return parsed ? getVideoByCitation(parsed) : null;
+      })();
+  // A removed video's page 404s, so its social card falls back to the generic
+  // image rather than advertising a dead link.
+  return record?.removed_at ? null : record;
 }
 
 export const dynamic = "force-dynamic";
