@@ -495,7 +495,73 @@ to the floor slot. Remaining decision inputs: a paired multi-session floor sweep
 diarization-vs-length characterization for the chosen arm. On today's evidence Soniox
 has the best overall profile (entities, coverage, V1 diarization, price) with Melia
 second (labels, speed) — both strictly better than Gemini on the error class that
-matters most.
+matters most. *(§13.3's sweep partially revises this: Soniox's V1 "exactly 8" was its
+under-diarization ceiling, not calibration.)*
+
+### 13.3 Multi-session floor sweep + diarization-vs-length (run 2026-07-10)
+
+Seven standing-corpus SC/GA sessions stratified by duration (4/13/22/36/62/114/192 min),
+floor tracks, 5 arms (4 challengers + gemini incumbent), paired. WER is floor-vs-English-
+PV — absolutes are only meaningful when the floor is mostly English and the PV matches
+the video; S/PV.9606 (46% non-Latin), 9614 and 9686 (resumed/continued meetings, PV↔video
+mismatch, >94% for every arm) carry no absolute meaning but stay valid as paired deltas.
+Roll-up: `eval/analysis/bakeoff-sweep.py`.
+
+**Paired mean normalized WER over all 7 sessions — the incumbent comes last:**
+
+| azure-llm | soniox | elevenlabs-tuned | melia | **gemini-3-flash** |
+| ---: | ---: | ---: | ---: | ---: |
+| **66.5** | 67.3 | 69.1 | 69.8 | **71.5** |
+
+Gemini loses the paired comparison to every challenger, and by the most on the sessions
+with real interpretation-style content: 9578 (Ukraine, 114 m) gemini 60.5 vs azure 45.1 /
+soniox 45.4; 9532 (62 m) gemini 83.0 vs azure 74.5. Two structural gemini findings:
+coverage 56–94% across the sweep (timestamp compression §6.8 at scale) while its char
+counts run ~10% *over* the challengers on long sessions (102k vs ~92k on 9578; 155k vs
+~136k on 9686) — over-generation, consistent with its worst-of-all 113.9 on 9686. Script
+mix stays consistent across all five arms on every session (e.g. 9578: 14.2–17.0%
+non-Latin) — nobody Latin-collapses.
+
+**Diarization vs length (detected / PV-truth), the decisive axis:**
+
+| session (min) | melia | soniox | 11labs | azure | gemini | true |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 10100 (4) | 1 | 2 | 2 | 1 | 1 | 1 |
+| 9722 (13) | 4 | 5 | 4 | 4 | 4 | 4 |
+| 9606 (22, rapid votes) | 5 | 4 | 5 | 5 | 4 | 25 |
+| 9614 (35) | 9 | 6 | 9 | 9 | 5 | 24 |
+| 9532 (62) | **16** | 3 | 15 | **16** | 6 | 16 |
+| 10153 (80) | 17 | 5 | 14 | 14 | 5 | 15 |
+| 9578 (114) | **22** | 7 | 21 | 20 | 9 | 22 |
+| 9686 (191) | **26** | 6 | **26** | 20 | 12 | 26 |
+
+- **Melia and tuned ElevenLabs are near-perfectly calibrated on formal SC meetings at
+  every length ≥60 min** (melia: 16/16, 22/22, 26/26). §13.2's "over-split at 171 min"
+  needs re-reading: the UN80 videos are informal briefings with member-state Q&A, and
+  the "≈8" truth there was an estimate — 39–46 labels may be closer to the real speaker
+  count than 8. Treat the §3-era over-split verdicts with suspicion generally.
+- **Soniox under-diarizes systematically**: ≤8 labels regardless of truth (3/16, 5/15,
+  7/22, 6/26). §13.2's "exactly 8 on V1" was this ceiling coinciding with the estimate,
+  not calibration. Best-in-class text, worst-in-class speaker signal — and no knob.
+- Everyone collapses on rapid-fire procedural turns (9606: 25 one-liner speakers → 4–5
+  labels for all arms; 9614 similar). Vote-heavy meetings are diarization-hostile.
+- Gemini under-diarizes at length too (6/16, 9/22, 12/26).
+
+**Sweep verdict:** every challenger beats the incumbent on paired floor WER; the
+non-LLM pick is between **Melia** (calibrated diarization at all lengths, per-word
+language labels, ~40 s per 80 min, $0.129/hr paid tier — ru-orthography bleed §13.1 is
+its known defect, mostly fixed by hints) and **ElevenLabs tuned** (equally calibrated,
+cleanest Russian, but no per-word language labels, ~5× slower, $0.22/hr, historical en
+WER gap). Soniox drops to "best raw text, unusable speaker hints"; azure-llm-speech
+wins raw WER but stays in the LLM/leakage class (§13.1). A routing flip to Melia (with
+`language_hints`) is now defensible on the evidence; the remaining honest gap is a
+verbatim-reference WER comparison (interpretation tracks, not floor-vs-English-PV) if
+we want a number the §2 table can absorb.
+
+**Harness lessons from this sweep:** sessions serialize (only providers parallelize),
+audio downloads dominate wall-clock on long sessions, and the Gemini provider re-downloads
+audio the harness already fetched — three cheap fixes before the next big sweep.
+Free-tier note: Melia's 10 h/month cap 403s mid-sweep (billing added 2026-07-10).
 
 ## Implementation notes
 
