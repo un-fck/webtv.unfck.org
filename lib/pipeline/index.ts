@@ -232,18 +232,25 @@ TRANSCRIPT-LEVEL ASSESSMENT:
 Separately from the per-paragraph flags, assess the transcript AS A WHOLE and
 report it in transcript_assessment.
 
-Set is_substantive = false ONLY when it is VERY CLEAR that the ENTIRE
-recording contains no formal proceedings, statements, or press remarks —
-for example:
+Substantive means FORMAL CONTENT: official proceedings, statements,
+briefings, Q&A sessions, or press encounters. Genuine-but-incidental speech
+does NOT make a transcript substantive — visitor tours, waiting-room or
+corridor conversations, private small talk between individuals, and other
+real speech captured by an open microphone are all non-substantive.
+
+Set is_substantive = false when the ENTIRE recording contains no formal
+content — for example:
   - Ambient noise, music, or background audio transcribed as words
   - Repetition loops, fragments, or gibberish throughout
-  - Nothing but waiting-room chatter, mic checks, or technical audio
+  - Only incidental speech: tour groups, corridor chatter, mic checks,
+    private conversations — real voices, but no proceedings
   - Text that reads as speech-recognition artifacts rather than real speech
 
 If ANY portion of the transcript is a genuine statement, briefing, Q&A, or
-press remark — even a short one at the very end of a long recording — set
-is_substantive = true. When uncertain, set true: hiding real proceedings is
-far worse than showing a poor transcript.
+press encounter — even a short one at the very end of a long recording — set
+is_substantive = true. When uncertain whether some portion is formal content,
+set true: hiding real proceedings is far worse than showing a poor
+transcript. But do not treat mere incidental conversation as that portion.
 
 In the reason field, give one short English sentence explaining the verdict
 (internal diagnostics only — never shown to users).
