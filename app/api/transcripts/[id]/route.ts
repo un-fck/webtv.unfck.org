@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { pollTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
+import { filterOffRecord } from "@/lib/off-record";
 import { apiError } from "@/lib/api-error";
 import { compressedJson } from "@/lib/compressed-json";
 
@@ -19,10 +20,15 @@ export async function GET(
 
     const result = await pollTranscription(transcriptId);
 
-    // If completed or has statements, include speaker mappings
+    // If completed or has statements, include speaker mappings — with
+    // off-record statements hidden (kept in DB, filtered at the serving
+    // boundary; see lib/off-record.ts).
     let speakerMappings = {};
     if (result.statements && result.statements.length > 0) {
-      speakerMappings = (await getSpeakerMapping(transcriptId)) || {};
+      const fullMapping = (await getSpeakerMapping(transcriptId)) || {};
+      const visible = filterOffRecord(result.statements, fullMapping);
+      result.statements = visible.statements;
+      speakerMappings = visible.speakerMappings;
     }
 
     // The client polls this every few seconds while a transcript progresses.

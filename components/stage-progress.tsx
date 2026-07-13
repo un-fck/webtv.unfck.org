@@ -10,6 +10,7 @@ export type Stage =
   | "identifying_speakers"
   | "analyzing_topics"
   | "completed"
+  | "no_content"
   | "error";
 
 export const STAGE_KEYS = [

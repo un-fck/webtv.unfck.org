@@ -295,6 +295,8 @@
       "noTranscriptYet": "尚无可用的转录",
       "noTranscriptHintPending": "本次会议尚未结束。使用<strong>在可用时生成</strong>将其加入队列 — 录像可用后将自动生成转录。",
       "noTranscriptHintFinished": "生成自动转录,以便边读边查看发言者识别和主题标签。",
+      "noContentTitle": "未检测到语音内容",
+      "noContentHint": "该录像已处理完毕，但未发现可转录的语音——其内容可能主要为静音或背景噪音。如果录像之后有更新，您可以重新生成转录。",
       "audioOutOfSyncTitle": "音频与转录不再匹配",
       "audioOutOfSyncBody": "本转录基于早先版本的录音(时长 {originalDuration})生成,该录音此后已被缩短为 {currentDuration}。部分内容可能与播放不同步。",
       "audioOutOfSyncRequest": "请求重新转录",

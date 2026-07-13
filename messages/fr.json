@@ -295,6 +295,8 @@
       "noTranscriptYet": "Aucune transcription disponible pour l'instant",
       "noTranscriptHintPending": "Cette réunion n'est pas encore terminée. Utilisez <strong>Générer dès que disponible</strong> pour la mettre en file — la transcription sera générée automatiquement dès que l'enregistrement sera disponible.",
       "noTranscriptHintFinished": "Générez une transcription automatique pour suivre les débats avec identification des intervenants et marquage des sujets.",
+      "noContentTitle": "Aucun contenu vocal détecté",
+      "noContentHint": "Cet enregistrement a été traité, mais aucune parole transcriptible n'y a été détectée — il peut s'agir essentiellement de silence ou de bruit de fond. Si l'enregistrement est mis à jour ultérieurement, vous pourrez générer une nouvelle transcription.",
       "audioOutOfSyncTitle": "L'audio ne correspond plus à la transcription",
       "audioOutOfSyncBody": "Cette transcription a été établie à partir d'une version antérieure de l'enregistrement de {originalDuration}, qui a depuis été réduite à {currentDuration}. Certains passages peuvent ne pas correspondre à la lecture.",
       "audioOutOfSyncRequest": "Demander une nouvelle transcription",

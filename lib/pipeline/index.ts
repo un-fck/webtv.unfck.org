@@ -73,6 +73,16 @@ async function mapWithConcurrency<T, R>(
 }
 
 const ParagraphSpeakerMapping = z.object({
+  // Whole-transcript verdict. Complements the per-paragraph `is_off_record`
+  // flag (which is deliberately restricted to the very start/end): a recording
+  // that contains NO substantive proceedings at all — silence-dominated feeds
+  // where the ASR transcribed ambience as words (SYNTHESIS §13.4) — can only
+  // be caught by a transcript-level judgment. `reason` is internal
+  // (error_message), never shown to users.
+  transcript_assessment: z.object({
+    is_substantive: z.boolean(),
+    reason: z.string(),
+  }),
   paragraphs: z.array(
     z.object({
       index: z.number(),
@@ -117,6 +127,9 @@ export async function identifySpeakers(
   const client = createOpenAIClient();
   let finalParagraphs = [...paragraphs];
   let finalMapping: SpeakerMapping = {};
+  // Whole-transcript verdict from the speaker-ID call (legacy path only).
+  // The prebuilt-mapping path skips that call, so it defaults to substantive.
+  let assessment = { is_substantive: true, reason: "" };
 
   if (prebuiltMapping) {
     // Gemini path: speaker identity already resolved — skip OpenAI speaker ID + resegmentation
@@ -215,6 +228,33 @@ Typical patterns:
   - Last 1-3 paragraphs: check if they're post-meeting remarks after formal closing
   - Middle paragraphs: ALWAYS mark is_off_record = false
 
+TRANSCRIPT-LEVEL ASSESSMENT:
+Separately from the per-paragraph flags, assess the transcript AS A WHOLE and
+report it in transcript_assessment.
+
+Substantive means FORMAL CONTENT: official proceedings, statements,
+briefings, Q&A sessions, or press encounters. Genuine-but-incidental speech
+does NOT make a transcript substantive — visitor tours, waiting-room or
+corridor conversations, private small talk between individuals, and other
+real speech captured by an open microphone are all non-substantive.
+
+Set is_substantive = false when the ENTIRE recording contains no formal
+content — for example:
+  - Ambient noise, music, or background audio transcribed as words
+  - Repetition loops, fragments, or gibberish throughout
+  - Only incidental speech: tour groups, corridor chatter, mic checks,
+    private conversations — real voices, but no proceedings
+  - Text that reads as speech-recognition artifacts rather than real speech
+
+If ANY portion of the transcript is a genuine statement, briefing, Q&A, or
+press encounter — even a short one at the very end of a long recording — set
+is_substantive = true. When uncertain whether some portion is formal content,
+set true: hiding real proceedings is far worse than showing a poor
+transcript. But do not treat mere incidental conversation as that portion.
+
+In the reason field, give one short English sentence explaining the verdict
+(internal diagnostics only — never shown to users).
+
 ${IDENTIFICATION_RULES}
 
 ${COMMON_ABBREVIATIONS}
@@ -224,6 +264,8 @@ ${SCHEMA_DEFINITIONS}
 has_multiple_speakers: Boolean - Does this paragraph contain words spoken by multiple different people? True if multiple speakers' words are mixed together, false if one person speaks the entire paragraph.
 
 is_off_record: Boolean - Is this paragraph clearly NOT part of the formal meeting? Only true for paragraphs at the very start/end that are obviously pre-meeting chatter, audio tests, gibberish, or post-meeting remarks. When uncertain, use false.
+
+transcript_assessment: Object - Whole-transcript verdict. is_substantive: false only when the ENTIRE recording clearly contains no real proceedings/statements (see TRANSCRIPT-LEVEL ASSESSMENT above); reason: one short English sentence (internal only).
 `,
           },
           {
@@ -249,6 +291,13 @@ ${transcriptParts.join("\n\n")}`,
     >;
     console.log(`  ✓ Initial identification complete`);
 
+    assessment = parsed.transcript_assessment ?? assessment;
+    if (!assessment.is_substantive) {
+      console.log(
+        `  ℹ Transcript assessed as non-substantive: ${assessment.reason}`,
+      );
+    }
+
     // Log off-record paragraphs
     const offRecord = parsed.paragraphs
       .filter((p) => p.is_off_record)
@@ -262,9 +311,9 @@ ${transcriptParts.join("\n\n")}`,
     // Collect paragraphs needing resegmentation. Splitting a paragraph into
     // sub-segments requires per-word timing to place the split boundary in
     // time; without words a paragraph is already the smallest honest unit, so
-    // skip it (no fabricated sub-timing). Off-record paragraphs are discarded
-    // further down, so resegmenting them would spend an LLM call on content
-    // nobody will ever see.
+    // skip it (no fabricated sub-timing). Off-record paragraphs are hidden at
+    // the serving boundary (lib/off-record.ts), so resegmenting them would
+    // spend an LLM call on content nobody will ever see.
     const toResegment = parsed.paragraphs
       .filter((p) => p.has_multiple_speakers && !p.is_off_record)
       .map((p) => p.index)
@@ -396,34 +445,17 @@ ${transcriptParts.join("\n\n")}`,
     }
   } // end legacy path (else block)
 
-  // Filter out off-record paragraphs
+  // Off-record paragraphs are KEPT (flagged in the mapping) rather than
+  // hard-deleted: the data stays in the DB for auditing while every serving
+  // surface hides flagged statements via lib/off-record.ts. (The previous
+  // hard-delete made the decision unreviewable and unrecoverable.)
   const offRecordIndices = Object.keys(finalMapping)
     .filter((idx) => finalMapping[idx]?.is_off_record)
     .map((idx) => parseInt(idx));
-
   if (offRecordIndices.length > 0) {
     console.log(
-      `  → Filtering out ${offRecordIndices.length} off-record paragraph(s): [${offRecordIndices.join(", ")}]`,
+      `  ℹ ${offRecordIndices.length} off-record paragraph(s) flagged (kept in DB, hidden from output): [${offRecordIndices.join(", ")}]`,
     );
-
-    // Remove from paragraphs array
-    const filteredParagraphs: ParagraphInput[] = [];
-    const filteredMapping: SpeakerMapping = {};
-    let newIndex = 0;
-
-    for (let i = 0; i < finalParagraphs.length; i++) {
-      if (!finalMapping[i.toString()]?.is_off_record) {
-        filteredParagraphs.push(finalParagraphs[i]);
-        const speaker = { ...finalMapping[i.toString()] };
-        delete speaker.is_off_record; // Remove flag from final output
-        filteredMapping[newIndex.toString()] = speaker;
-        newIndex++;
-      }
-    }
-
-    finalParagraphs = filteredParagraphs;
-    finalMapping = filteredMapping;
-    console.log(`  ✓ Kept ${finalParagraphs.length} on-record paragraphs`);
   }
 
   // Group consecutive same-speaker paragraphs
@@ -438,7 +470,13 @@ ${transcriptParts.join("\n\n")}`,
       const para = finalParagraphs[i];
       const speaker = finalMapping[i.toString()];
 
-      if (speakersEqual(currentSpeaker, speaker)) {
+      // Never merge across an off-record boundary: the serving-side filter
+      // hides whole statements, so an off-record paragraph folded into an
+      // on-record group would either leak or take real content down with it.
+      const sameOffRecord =
+        !!currentSpeaker?.is_off_record === !!speaker?.is_off_record;
+
+      if (sameOffRecord && speakersEqual(currentSpeaker, speaker)) {
         const hasWords =
           (currentGroup.words?.length ?? 0) > 0 &&
           (para.words?.length ?? 0) > 0;
@@ -509,6 +547,28 @@ ${transcriptParts.join("\n\n")}`,
       await setSpeakerMapping(transcriptId, finalMapping);
       console.log(`  ✓ Saved statements and speaker mappings`);
     }
+  }
+
+  // Whole-transcript no-content gate. Fires when the LLM assessed the
+  // recording as non-substantive, or when nothing visible remains anyway
+  // (no statements at all, or every statement flagged off-record — the
+  // "empty after hiding" edge that previously left rows stuck mid-status).
+  const visibleStatementCount = statementsWithSentences.filter(
+    (_, idx) => !finalMapping[idx.toString()]?.is_off_record,
+  ).length;
+
+  if (
+    transcriptId &&
+    (!assessment.is_substantive || visibleStatementCount === 0)
+  ) {
+    const reason = assessment.is_substantive
+      ? "No visible statements after off-record flagging"
+      : assessment.reason || "LLM assessed transcript as non-substantive";
+    console.log(`  ⚠ Marking transcript no_content: ${reason}`);
+    // Internal diagnostics only — pollTranscription never exposes
+    // error_message for no_content rows.
+    await updateTranscriptionStatus(transcriptId, "no_content", reason);
+    return finalMapping;
   }
 
   // Define and tag topics

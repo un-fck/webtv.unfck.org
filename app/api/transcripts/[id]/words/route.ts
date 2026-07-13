@@ -1,9 +1,11 @@
 // Returns word-level timestamps for a completed transcript.
 import { NextRequest } from "next/server";
 import { getTranscriptByIdForDisplay } from "@/lib/db";
+import { getSpeakerMapping } from "@/lib/speakers";
 import { apiError } from "@/lib/api-error";
 import { compressedJson } from "@/lib/compressed-json";
 import { wordsOnlyFromStatements } from "@/lib/strip-words";
+import { filterOffRecord } from "@/lib/off-record";
 
 /**
  * Word-level timestamps for an existing completed transcript. Companion to
@@ -30,8 +32,15 @@ export async function GET(
       return apiError(404, "not_found", "Transcript not found");
     }
 
-    const statements = transcript.content.statements;
-    if (!statements || statements.length === 0) {
+    // Hide off-record statements with the same filter as every other serving
+    // surface — the panel merges this payload back per-index, so the indices
+    // MUST match the filtered statements it received from check/poll.
+    const fullMapping = (await getSpeakerMapping(transcriptId)) || {};
+    const { statements } = filterOffRecord(
+      transcript.content.statements,
+      fullMapping,
+    );
+    if (statements.length === 0) {
       return compressedJson(request, { statements: [] });
     }
 

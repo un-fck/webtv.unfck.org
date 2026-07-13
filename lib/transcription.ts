@@ -211,6 +211,20 @@ export async function pollTranscription(
     };
   }
 
+  // No substantive content detected (LLM assessment). The junk stays in the
+  // DB for auditing but must never reach a client — return the bare state.
+  // The internal `reason` lives in error_message and is deliberately not
+  // exposed.
+  if (transcript.transcription_status === "no_content") {
+    return {
+      stage: "no_content",
+      analysis_status: transcript.analysis_status,
+      statements: [],
+      topics: {},
+      propositions: [],
+    };
+  }
+
   // In-flight stages (transcribing / identifying_speakers / analyzing_topics)
   // or interrupted: return current state read-only. Recovery of interrupted
   // rows is handled by the boot picker + cron liveness sweep + process-scheduled
@@ -536,7 +550,9 @@ export async function submitTranscription(
         lang,
         client,
       );
-      if (existing) {
+      // A `no_content` row is terminal but re-runnable (WebTV usually trims
+      // silence-dominated feeds later) — treat it like "no existing run".
+      if (existing && existing.transcription_status !== "no_content") {
         return {
           transcriptId: existing.transcript_id,
           stage: existing.transcription_status,

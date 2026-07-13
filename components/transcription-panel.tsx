@@ -334,6 +334,7 @@ export function TranscriptionPanel({
     stage !== "idle" &&
     stage !== "scheduled" &&
     stage !== "completed" &&
+    stage !== "no_content" &&
     stage !== "error";
 
   const formatTime = formatTimecode;
@@ -610,6 +611,10 @@ export function TranscriptionPanel({
         setPropositions(data.propositions);
 
       if (data.stage === "completed") break;
+      // Terminal: the pipeline assessed the recording as having no
+      // transcribable content. setStage above already switched the UI to the
+      // dedicated state; just stop polling.
+      if (data.stage === "no_content") break;
       if (data.stage === "error")
         throw new Error(data.error_message || "Pipeline failed");
       if (data.stage === "transcribing" && pollCount >= maxTranscriptionPolls) {
@@ -1274,6 +1279,11 @@ export function TranscriptionPanel({
             // Queued — the cron starts it once audio is available. Show the
             // queued state to everyone but don't poll (nothing progresses yet).
             setStage("scheduled");
+          } else if (data.stage === "no_content") {
+            // Terminal: processed, but no transcribable content found.
+            // Show the dedicated state; don't poll. Re-transcription stays
+            // available (WebTV often trims such recordings later).
+            setStage("no_content");
           } else if (
             data.stage &&
             data.stage !== "completed" &&
@@ -1383,6 +1393,20 @@ export function TranscriptionPanel({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <div className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60" />
           <span>{t("queuedForTranscription")}</span>
+        </div>
+      )}
+
+      {/* Processed, but the recording contained no transcribable speech
+          (silence-dominated feeds). Neutral info state, not an error; the
+          toolbar's Generate button stays available for a re-run once WebTV
+          trims the recording. Junk content and internal reasons are never
+          shown. */}
+      {stage === "no_content" && viewMode !== "pv" && (
+        <div className="mt-2 rounded-lg border border-border bg-muted/30 px-5 py-6">
+          <p className="mb-1 text-sm font-medium text-foreground">
+            {t("noContentTitle")}
+          </p>
+          <p className="text-sm text-muted-foreground">{t("noContentHint")}</p>
         </div>
       )}
 

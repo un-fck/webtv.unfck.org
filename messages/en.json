@@ -278,6 +278,8 @@
       "noTranscriptYet": "No transcript available yet",
       "noTranscriptHintPending": "This meeting hasn't finished yet. Use <strong>Generate when available</strong> to queue it — the transcript will be generated automatically once the recording is available.",
       "noTranscriptHintFinished": "Generate an automatic transcript to read along with speaker identification and topic tagging.",
+      "noContentTitle": "No speech content found",
+      "noContentHint": "This recording was processed, but no transcribable speech was found — it may consist mostly of silence or background noise. If the recording is updated later, you can generate a transcript again.",
       "audioOutOfSyncTitle": "Audio no longer matches transcript",
       "audioOutOfSyncBody": "This transcript was made from an earlier {originalDuration} version of the audio that has since been shortened to {currentDuration}. Some parts may not match playback.",
       "audioOutOfSyncRequest": "Request a fresh transcription",

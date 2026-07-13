@@ -9,6 +9,7 @@ import {
   type TranscriptionStatus,
 } from "./db";
 import { stripWordsFromStatements } from "./strip-words";
+import { filterOffRecord } from "./off-record";
 
 /**
  * The one package of transcript facts every display surface receives —
@@ -49,8 +50,13 @@ export async function buildTranscriptPayload(
   transcript: Transcript,
   { isLoggedIn }: { isLoggedIn: boolean },
 ): Promise<TranscriptPayload> {
-  const speakerMappings =
+  const fullMapping =
     (await getSpeakerMapping(transcript.transcript_id)) || {};
+  // Off-record statements are stored but never served (lib/off-record.ts).
+  const { statements: visibleStatements, speakerMappings } = filterOffRecord(
+    transcript.content.statements,
+    fullMapping,
+  );
   const flagged = isTranscriptFlagged(transcript);
   // A pending replacement is only meaningful for flagged rows, so the extra
   // lookup is confined to them.
@@ -62,7 +68,7 @@ export async function buildTranscriptPayload(
         )
       : null;
   return {
-    statements: stripWordsFromStatements(transcript.content.statements),
+    statements: stripWordsFromStatements(visibleStatements),
     speakerMappings,
     topics: transcript.content.topics || {},
     propositions: isLoggedIn ? transcript.content.propositions || [] : [],
