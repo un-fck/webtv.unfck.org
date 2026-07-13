@@ -19,7 +19,13 @@ export {
  * THE place to change which model transcribes which language.
  */
 export const STT_ROUTING: Record<string, string> = {
-  floor: "gemini-3-flash", // multilingual original audio
+  // Multilingual original audio. Switched from gemini-3-flash 2026-07-10 after
+  // the floor bake-off (eval/analysis/SYNTHESIS.md §13): Melia beat Gemini on
+  // paired floor WER, is near-perfectly speaker-calibrated at every meeting
+  // length, carries per-word language labels, and — decisively — sits in the
+  // classic-ASR error family (zero name hallucinations across all probes,
+  // where Gemini reproduced Keita→"Kanem" the same day).
+  floor: "speechmatics-melia-1",
   en: "assemblyai-universal-3-5-pro",
   fr: "azure-gpt-4o-transcribe",
   es: "azure-gpt-4o-transcribe",

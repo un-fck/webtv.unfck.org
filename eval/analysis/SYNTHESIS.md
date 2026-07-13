@@ -383,6 +383,215 @@ existed when §7 was decided. Suggested experiment: a 4-arm V5 floor bake-off
 Nebenzia (ru) and Bahrain (ar) passages, and speaker count vs the PV's 17 — total cost
 <$2, ~4 new provider entries in `lib/providers/`.
 
+### 13.1 Bake-off results (run 2026-07-10, V5 floor, 80 min) — two viable challengers
+
+All four arms ran (Soniox after the account was funded; Azure LLM Speech after a new
+Foundry resource `foundry-transcripts-notheurope` was deployed in northeurope — tenant
+policy `DenyNotAllowedLocations` allows northeurope/centralus/eastus2/southeastasia/
+eastasia/westeurope, and of those only northeurope + southeastasia have enhanced mode).
+Two gotchas cost real time and look like other errors: **enhanced mode only answers on
+the `<resource>.services.ai.azure.com` hostname** — the same request on the same
+resource's `cognitiveservices.azure.com` hostname returns the *same* "Enhanced mode is
+currently not supported yet" 400 as a wrong region does; and `lib/load-env` uses
+`override: true`, so `.env` silently beats CLI-provided env vars (`AZURE_SPEECH_*`
+overrides on the command line do nothing).
+
+| arm | script mix L/A/C/CJK (target 75/10/13/3) | speakers (≈15–16 true) | coverage | Nebenzia (ru) passage |
+| --- | --- | ---: | ---: | --- |
+| **soniox-stt-async-v5** (six-language `language_hints`) | **73.6 / 10.1 / 13.1 / 3.2** | **5** ⚠️ | **98.3%** | near-verbatim vs the PV, correct "Гросси"; per-token labels clean (ru 12.9, no uk) |
+| **azure-llm-speech** (enhanced mode, northeurope) | **74.8 / 10.0 / 12.5 / 2.6** | **14** | **98.4%** | body is PV-grade Russian — but the opening sentence leaked into **Spanish**, and Bahrain's Arabic opens in **English**: statement-boundary language leakage, the §5 azure class in mild form |
+| **speechmatics-melia-1** (+ six-language `language_hints`) | **73.6 / 10.3 / 13.0 / 3.0** | **17** | 97.4% | correct Russian tracking the PV; residual Ukrainian-tinged spellings ("апарата", "енергии") + acoustic slips (МГАТЭ, "Гроссе") |
+| **elevenlabs-scribe-v2-tuned** (`diarization_threshold: 0.35`) | **73.1 / 10.9 / 12.7 / 3.3** | **14** | 93.2% | **flawless Russian**, near-verbatim vs the PV, correct МАГАТЭ |
+| gemini-3-flash (incumbent, §4) | 75.3 / 9.5 / 12.1 / 3.1 | — | 75.7% | good; name-hallucination class remains |
+
+Both challengers transcribe all six languages natively in-script (President's Chinese
+opening, Bahrain's Arabic, France's French all read correctly against the PV), and both
+fail in the **classic-ASR family** — no invented content observed in any sampled passage.
+Findings that change standing judgments:
+
+- **ElevenLabs' §3/§8 disqualification is fixed by one parameter.** `diarization_threshold`
+  0.35 → **14 speakers** where the default gave 34–41. (The two knobs are mutually
+  exclusive — the API rejects `num_speakers` + `diarization_threshold` together.) Its
+  Russian was the cleanest of any provider we have ever run on this file. Remaining
+  weaknesses: coarse utterances (25 for 80 min; one spans ~8 min) and the known en-WER gap.
+- **Melia is the structural best-fit**: per-word language labels, 17 well-calibrated
+  speakers, 80 min processed in ~40 s, $0.129/hr (free 10 h/mo). One real defect found:
+  **unhinted**, it rendered the first ~half of the Russian statement in **Ukrainian**
+  (labels split uk 6.4 / ru 6.3) — correctly-heard content, wrong East-Slavic orthography.
+  Six-language `language_hints` (now the provider default; unhinted run preserved as
+  `speechmatics-melia-1-nohints`) eliminate the uk labels and most, not all, of the
+  orthography bleed. Melia smoke WER on V2 floor: 33.5 norm (leaders 32.3–32.9).
+- **Soniox has the best text, worst diarization.** Cleanest per-token language labels
+  (ru 12.9%, no uk confusion — unlike unhinted Melia), highest coverage (98.3%),
+  PV-grade Russian and Arabic, native zh with real punctuation, and the best V2-floor
+  WER **of any provider ever run on that track** (32.0 norm vs u3.5-pro's 32.3, gemini's
+  32.9). But it merged the meeting into **5 speakers** (truth ≈15–16) — the inverse of
+  ElevenLabs' old failure. French had one notable acoustic slip ("l'Agence internationale
+  de la **détermination** atomique"). No speaker-count/threshold knob is documented;
+  under-diarization matters less for us than over-splitting since the downstream
+  speaker-ID stage re-derives named speakers from context, but it is the weakest hint
+  quality of the three.
+- **Azure LLM Speech is the accuracy leader with the LLM-family asterisk.** Best V2-floor
+  WER ever measured (**30.9** norm, ahead of Soniox 32.0), fastest wall-clock (80 min in
+  58 s), 14 speakers, 98.4% coverage, clean per-phrase locale labels (ru-RU 12.4, no uk).
+  But both sampled non-Latin statements open with **cross-language leakage** — Nebenzia's
+  first sentence in Spanish, Bahrain's in English — before snapping into the correct
+  language. That is the §5 azure-openai fingerprint (milder), i.e. exactly the error
+  family the floor slot is trying to leave; the three classic-ASR arms showed nothing
+  comparable. Also note `confidence` is always 0 and the model is an unnamed preview.
+- On V2's 9-min floor all four arms matched or beat the leaders (30.9–33.5 norm WER vs
+  English PV).
+
+**Floor verdict update:** Gemini is no longer the only clean all-script option — four
+challengers now pass the script test, each with a different weak axis (Soniox:
+diarization; Melia: ru orthography bleed; ElevenLabs: en WER + coarse turns;
+azure-llm-speech: boundary language leakage + LLM class). The three **non-LLM** arms are
+the strategically interesting ones; azure-llm-speech is the accuracy benchmark to beat
+but carries the hallucination-family risk. §13.2 runs the §9 anecdotal battery on all
+four. Analyzer: `eval/analysis/bakeoff-floor.py`; raw arms under
+`eval/results/raw/S_PV.10153/`.
+
+### 13.2 Anecdotal battery on the challengers (run 2026-07-10, floor tracks of V1/V3/V4)
+
+Ran V1 (Keita entity trap, 171 m), V3 (timestamps/structure, 171 m), V4 (accented
+English, 40 m) — **floor tracks** rather than the study's original `en` tracks, so the
+arms are tested in their exact floor configuration (Melia `multi` is a different model
+than Speechmatics' monolingual `en`). `gemini-3-flash` ran as a paired incumbent arm on
+the same audio. Scorer: `eval/analysis/bakeoff-entities.py`.
+
+**Headline: the Kanem hallucination reproduced on the incumbent and on none of the
+challengers.** On V1, gemini-3-flash wrote "Kanem" ×6 — including *"I give now the floor
+to Ms. Diane Kanem, Executive Director of the United Nations Population Fund"* — plus
+"UN 2.0"-class UN80 misses ×57 and heavy fragmentation (2,076 utterances, ~12% fewer
+chars on V4). All four challengers: **Kanem ×0**; their entity errors are misses or
+acoustic mishears, never substitutions of a different real person.
+
+| probe (V1, floor) | melia | soniox | 11labs-tuned | azure-llm | gemini |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Keita (good) | 6 | 7 | 4 | 5 | 4 |
+| **Kanem (hallucination)** | **0** | **0** | **0** | **0** | **6** ⚠️ |
+| UN80 correct / miss-form | 3 / 19† | **27 / 1** | 16 / 4 | 4 / 1 | 2 / 57 |
+| speakers (≈8 true) | 46 ⚠️ | **8** | 44 ⚠️ | 19 | 10 |
+
+† Melia's miss-form is "Eighty Initiative" — §6.6 number-spelling drift, not invention.
+
+V4 (accented English): **all five arms** got the historical probe words right
+("appalling" not "polling", "cold blood") — the U-2-era acoustic weakness is gone across
+the board. Soniox writes "Starobilsk" (the standard Ukrainian transliteration, ×14 —
+counted as correct); only ElevenLabs and gemini caught the patronymic "Alexeyevich".
+One Soniox mishear worth remembering: "UNFPA–UN Women **merger** assessment" →
+"UN Women **Murder** Assessment" — classic-ASR class, loud but not a fabrication.
+
+V3/V1 structure: challenger coverage is uniformly ~97–98% vs gemini's 79–82% (gemini's
+coverage metric is deflated by timestamp compression per §6.8, but its char counts also
+run ~5–12% short). **Long-audio diarization re-shuffles the §13.1 ranking**: Soniox —
+5 speakers on the 80-min V5 — hit **exactly 8 on the 171-min V1** and 18 on V3, while
+Melia (46/39) and tuned ElevenLabs (44/39) both **over-split at 171 min** (the
+`diarization_threshold: 0.35` fix does not hold at that length). Azure-llm stayed ~19.
+No knob is length-aware; whichever arm wins needs a per-duration diarization check.
+
+**Bottom line:** the challengers clear the hallucination gate that keeps Gemini confined
+to the floor slot. Remaining decision inputs: a paired multi-session floor sweep and a
+diarization-vs-length characterization for the chosen arm. On today's evidence Soniox
+has the best overall profile (entities, coverage, V1 diarization, price) with Melia
+second (labels, speed) — both strictly better than Gemini on the error class that
+matters most. *(§13.3's sweep partially revises this: Soniox's V1 "exactly 8" was its
+under-diarization ceiling, not calibration.)*
+
+### 13.3 Multi-session floor sweep + diarization-vs-length (run 2026-07-10)
+
+Seven standing-corpus SC/GA sessions stratified by duration (4/13/22/36/62/114/192 min),
+floor tracks, 5 arms (4 challengers + gemini incumbent), paired. WER is floor-vs-English-
+PV — absolutes are only meaningful when the floor is mostly English and the PV matches
+the video; S/PV.9606 (46% non-Latin), 9614 and 9686 (resumed/continued meetings, PV↔video
+mismatch, >94% for every arm) carry no absolute meaning but stay valid as paired deltas.
+Roll-up: `eval/analysis/bakeoff-sweep.py`.
+
+**Paired mean normalized WER over all 7 sessions — the incumbent comes last:**
+
+| azure-llm | soniox | elevenlabs-tuned | melia | **gemini-3-flash** |
+| ---: | ---: | ---: | ---: | ---: |
+| **66.5** | 67.3 | 69.1 | 69.8 | **71.5** |
+
+Gemini loses the paired comparison to every challenger, and by the most on the sessions
+with real interpretation-style content: 9578 (Ukraine, 114 m) gemini 60.5 vs azure 45.1 /
+soniox 45.4; 9532 (62 m) gemini 83.0 vs azure 74.5. Two structural gemini findings:
+coverage 56–94% across the sweep (timestamp compression §6.8 at scale) while its char
+counts run ~10% *over* the challengers on long sessions (102k vs ~92k on 9578; 155k vs
+~136k on 9686) — over-generation, consistent with its worst-of-all 113.9 on 9686. Script
+mix stays consistent across all five arms on every session (e.g. 9578: 14.2–17.0%
+non-Latin) — nobody Latin-collapses.
+
+**Diarization vs length (detected / PV-truth), the decisive axis:**
+
+| session (min) | melia | soniox | 11labs | azure | gemini | true |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 10100 (4) | 1 | 2 | 2 | 1 | 1 | 1 |
+| 9722 (13) | 4 | 5 | 4 | 4 | 4 | 4 |
+| 9606 (22, rapid votes) | 5 | 4 | 5 | 5 | 4 | 25 |
+| 9614 (35) | 9 | 6 | 9 | 9 | 5 | 24 |
+| 9532 (62) | **16** | 3 | 15 | **16** | 6 | 16 |
+| 10153 (80) | 17 | 5 | 14 | 14 | 5 | 15 |
+| 9578 (114) | **22** | 7 | 21 | 20 | 9 | 22 |
+| 9686 (191) | **26** | 6 | **26** | 20 | 12 | 26 |
+
+- **Melia and tuned ElevenLabs are near-perfectly calibrated on formal SC meetings at
+  every length ≥60 min** (melia: 16/16, 22/22, 26/26). §13.2's "over-split at 171 min"
+  needs re-reading: the UN80 videos are informal briefings with member-state Q&A, and
+  the "≈8" truth there was an estimate — 39–46 labels may be closer to the real speaker
+  count than 8. Treat the §3-era over-split verdicts with suspicion generally.
+- **Soniox under-diarizes systematically**: ≤8 labels regardless of truth (3/16, 5/15,
+  7/22, 6/26). §13.2's "exactly 8 on V1" was this ceiling coinciding with the estimate,
+  not calibration. Best-in-class text, worst-in-class speaker signal — and no knob.
+- Everyone collapses on rapid-fire procedural turns (9606: 25 one-liner speakers → 4–5
+  labels for all arms; 9614 similar). Vote-heavy meetings are diarization-hostile.
+- Gemini under-diarizes at length too (6/16, 9/22, 12/26).
+
+**Sweep verdict:** every challenger beats the incumbent on paired floor WER; the
+non-LLM pick is between **Melia** (calibrated diarization at all lengths, per-word
+language labels, ~40 s per 80 min, $0.129/hr paid tier — ru-orthography bleed §13.1 is
+its known defect, mostly fixed by hints) and **ElevenLabs tuned** (equally calibrated,
+cleanest Russian, but no per-word language labels, ~5× slower, $0.22/hr, historical en
+WER gap). Soniox drops to "best raw text, unusable speaker hints"; azure-llm-speech
+wins raw WER but stays in the LLM/leakage class (§13.1). A routing flip to Melia (with
+`language_hints`) is now defensible on the evidence; the remaining honest gap is a
+verbatim-reference WER comparison (interpretation tracks, not floor-vs-English-PV) if
+we want a number the §2 table can absorb.
+
+**Harness lessons from this sweep:** sessions serialize (only providers parallelize),
+audio downloads dominate wall-clock on long sessions, and the Gemini provider re-downloads
+audio the harness already fetched — three cheap fixes before the next big sweep.
+Free-tier note: Melia's 10 h/month cap 403s mid-sweep (billing added 2026-07-10).
+
+### 13.4 Silence-dominated audio (V6, SC-Stakeout-Jul13, run 2026-07-13) — new probe class
+
+Discovered in production the day the floor flipped to Melia: a **186-min Security Council
+Media Stakeout** — a corridor feed that is hours of ambience with minutes of speech —
+produced a junk transcript on the live site (repetition loops, `<unk>`, noise detected as
+ar/fa; ~25 chars/min where real speech runs ~700). Transcript deleted; the video is now
+corpus entry **V6** (`SC-Stakeout-Jul13`), probing **hallucination-over-non-speech** — a
+content class no §9 video covered (V4's "noise" was disfluent *speech*, not silence).
+
+| arm | chars | chars/min | speakers | behavior on ambience |
+| --- | ---: | ---: | ---: | --- |
+| azure-llm-speech | 3,782 | 20 | 9 | sparsest; locale labels churn across he/pl/el/fi on noise; one Hebrew junk passage |
+| speechmatics-melia-1 | 7,296 | 44 | 3 | the production failure: sparse junk, 4 `<unk>`, noise as Arabic |
+| elevenlabs-tuned | 7,365 | 54 | 3 | sparse; one Persian-ish junk passage where azure emitted Hebrew |
+| soniox | 9,371 | 57 | 5 | sparse junk early; **correctly transcribes the real corridor small talk** at 141 m |
+| **gemini-3-flash** | **98,560** | **529** | **284** ⚠️ | **fabricates a full meeting**: loops ("Yes, yes, yes. I'm sorry, I'm sorry." ×dozens), an invented Persian *news broadcast naming Dujarric and Guterres*, a fabricated formal Turkish speech ("Sayın Başkan, değerli üyeler…") — 13× everyone's volume, spread over 284 fake speakers |
+
+Window-paired reads (9–11 m, 60–62 m, 100–102 m): where challengers are silent, gemini
+writes coherent invented content. **The switch away from Gemini made this failure
+smaller, not larger** — the incumbent would have published a 98k-char fabricated meeting
+where Melia published 7k of visible junk.
+
+**Standing issue for ALL providers:** even the challengers' sparse junk reaches the site
+as a "completed" transcript. Mitigation is pipeline-level, not provider-level: a
+**junk gate** on chars/min + repetition + script-churn signals (mark low-speech
+transcripts as error instead of publishing), ideally plus an ffmpeg `silencedetect`
+pre-check that skips or trims silence-dominated recordings before spending on
+transcription. Melia cannot filter server-side (audio filtering unsupported).
+
 ## Implementation notes
 
 - Shared async helper `lib/providers/dashscope-asr.ts` backs fun-asr + alibaba. Request shapes

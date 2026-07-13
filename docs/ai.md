@@ -11,7 +11,7 @@ Transcription is routed **per language** (`STT_ROUTING` in `lib/providers/config
 | English | AssemblyAI | `universal-3-5-pro` |
 | French / Spanish / Arabic / Russian | Azure OpenAI | `gpt-4o-transcribe` |
 | Chinese | Alibaba | `fun-asr` |
-| Floor (multilingual original) | Google Gemini | `gemini-3-flash-preview` |
+| Floor (multilingual original) | Speechmatics Melia | `melia-1` (`language: multi` + six-language `language_hints`) |
 
 | Other AI | Model | Used for |
 | --- | --- | --- |

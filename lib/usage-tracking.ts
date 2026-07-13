@@ -242,6 +242,7 @@ function vendorFromProviderName(name: string): ProcessingUsageProvider {
   if (name.startsWith("azure")) return "azure-openai";
   if (name.startsWith("alibaba")) return "alibaba";
   if (name.startsWith("openai")) return "openai";
+  if (name.startsWith("speechmatics")) return "speechmatics";
   // Unknown — log loudly so a missing mapping doesn't silently mis-label rows.
   console.warn(
     `[usage-tracking] Unknown provider name "${name}" — defaulting vendor to "openai". Add a case to vendorFromProviderName.`,

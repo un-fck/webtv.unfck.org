@@ -179,7 +179,8 @@ Copy `.env.example` → `.env.local` and fill in values.
 **Required for the web app:**
 
 - `DATABASE_URL` — PostgreSQL connection string (Azure Database for PostgreSQL, direct on port 5432; we used to go through Azure's built-in PgBouncer on 6432 but dropped it — with a few long-lived Azure app instances the fan-in benefit was unused while PgBouncer's invisible idle-socket reaping was generating "Connection terminated unexpectedly" errors). All tables live in the `webtv` schema and every query is explicitly schema-qualified (`webtv.<table>`); there is no `search_path` setup, so this works regardless of the connection's default schema.
-- `GEMINI_API_KEY` — transcription of the multilingual "floor" track + PV document alignment (Gemini)
+- `GEMINI_API_KEY` — PV document alignment + routing fallback (Gemini; no longer the floor transcriber)
+- `SPEECHMATICS_API_KEY` — transcription of the multilingual "floor" track (Speechmatics Melia, since 2026-07-10; see eval/analysis/SYNTHESIS.md §13)
 - `ASSEMBLYAI_API_KEY` — English transcription (AssemblyAI Universal-3.5 Pro)
 - `DASHSCOPE_API_KEY` — Chinese transcription (Alibaba Fun-ASR)
 - `AZURE_OPENAI_ENDPOINT` — fr/es/ar/ru transcription (gpt-4o-transcribe) + speaker identification, topics, propositions
@@ -196,7 +197,7 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Optional:**
 
-- STT provider selection is **per-language**, configured in `lib/providers/config.ts` (`STT_ROUTING`), not via an env var. Provider keys are `{vendor}-{model}` (e.g. `assemblyai-universal-3-5-pro`, `azure-gpt-4o-transcribe`, `alibaba-fun-asr`, `gemini-3-flash`); see `lib/providers/registry.ts`. All Gemini providers emit numeric speaker IDs only — names are assigned downstream by the OpenAI speaker-ID stage.
+- STT provider selection is **per-language**, configured in `lib/providers/config.ts` (`STT_ROUTING`), not via an env var. Provider keys are `{vendor}-{model}` (e.g. `assemblyai-universal-3-5-pro`, `azure-gpt-4o-transcribe`, `alibaba-fun-asr`, `speechmatics-melia-1`, `gemini-3-flash`); see `lib/providers/registry.ts`. All Gemini providers emit numeric speaker IDs only — names are assigned downstream by the OpenAI speaker-ID stage.
 - `STT_ANALYSIS_MODEL` — Azure OpenAI model for speaker ID, resegmentation, topics, propositions (default: `gpt-5.4`)
 - `STT_ANALYSIS_MODEL_MINI` — Azure OpenAI model for cross-chunk normalization (default: `gpt-5.4-mini`)
 - `STT_ANALYSIS_MODEL_NANO` — Azure OpenAI model for sentence tagging (default: `gpt-5.4-nano`)
@@ -234,7 +235,7 @@ See `docs/ai.md` for the full pipeline with model details and design decisions.
 
 Triggered from the video page UI (`POST /api/transcripts`) or via the scheduled-processing cron (`/api/cron/process-scheduled`):
 
-1. **Transcribe** — provider selected **per language** via `lib/providers/config.ts` (`STT_ROUTING`: English→AssemblyAI Universal-3.5 Pro, fr/es/ar/ru→Azure gpt-4o-transcribe, Chinese→Alibaba Fun-ASR, floor→Gemini). Audio is downloaded from Kaltura and transcribed with numeric speaker diarization (no names — see step 2). Providers chunk long audio internally as needed.
+1. **Transcribe** — provider selected **per language** via `lib/providers/config.ts` (`STT_ROUTING`: English→AssemblyAI Universal-3.5 Pro, fr/es/ar/ru→Azure gpt-4o-transcribe, Chinese→Alibaba Fun-ASR, floor→Speechmatics Melia). Audio is downloaded from Kaltura and transcribed with numeric speaker diarization (no names — see step 2). Providers chunk long audio internally as needed.
 2. **Speaker identification + resegmentation** — `lib/pipeline/index.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping. (Pipeline stages live in `lib/pipeline/`.)
 3. **Topic definition** — identifies 5–10 substantive policy topics across the meeting (GPT-5.4).
 4. **Sentence tagging** — tags each non-chair sentence with 0–3 topic keys (GPT-5.4-nano, batched; rate-limited via Bottleneck — 20 concurrent / 10 per sec).
