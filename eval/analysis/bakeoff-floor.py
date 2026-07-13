@@ -21,6 +21,7 @@ ARMS = [
     "speechmatics-melia-1",
     "azure-llm-speech",
     "elevenlabs-scribe-v2-tuned",
+    "gemini-3-flash",
     # incumbents for reference when present
     "assemblyai-universal-3-5-pro",
     "google-chirp-3",
@@ -103,6 +104,8 @@ def analyze(symbol):
             f"  chars={len(text)} utts={len(utts)} speakers={len(speakers)}"
             f" dur={round(dur/60000,1)}m coverage={round(100*covered/dur,1) if dur else 0}%"
             f" repetition={repetition_score(text)}"
+            f" chars/min={round(len(text)/(dur/60000)) if dur else 0}"
+            f" unk={text.count('<unk>')}"
         )
         print(f"  script mix: {mix}  (consensus: {CONSENSUS})")
         ll = lang_labels(p, d)

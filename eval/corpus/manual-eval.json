@@ -23,5 +23,10 @@
     "symbol": "S/PV.10153",
     "assetId": "k1v/k1v2e5uujj",
     "notes": "Middle East - Security Council 10153rd meeting (~80min). FLOOR-ONLY multilingual test: member statements in all 6 UN languages (ar/zh/ru/en/fr/es) on the original floor track. Has PV."
+  },
+  {
+    "symbol": "SC-Stakeout-Jul13",
+    "assetId": "k11/k11ra7vpq7",
+    "notes": "Security Council Media Stakeout (2026-07-13, 186min). SILENCE-DOMINATED corridor feed: hours of ambient noise with minutes of speech. Melia's first production floor transcript hallucinated over the silence (repetition loops, <unk>, noise detected as ar/fa/ru) — discovered on the live site, transcript deleted. Probes hallucination-over-non-speech; scored on chars/min, repetition, script churn — no PV."
   }
 ]

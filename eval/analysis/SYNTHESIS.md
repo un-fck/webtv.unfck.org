@@ -563,6 +563,35 @@ audio downloads dominate wall-clock on long sessions, and the Gemini provider re
 audio the harness already fetched — three cheap fixes before the next big sweep.
 Free-tier note: Melia's 10 h/month cap 403s mid-sweep (billing added 2026-07-10).
 
+### 13.4 Silence-dominated audio (V6, SC-Stakeout-Jul13, run 2026-07-13) — new probe class
+
+Discovered in production the day the floor flipped to Melia: a **186-min Security Council
+Media Stakeout** — a corridor feed that is hours of ambience with minutes of speech —
+produced a junk transcript on the live site (repetition loops, `<unk>`, noise detected as
+ar/fa; ~25 chars/min where real speech runs ~700). Transcript deleted; the video is now
+corpus entry **V6** (`SC-Stakeout-Jul13`), probing **hallucination-over-non-speech** — a
+content class no §9 video covered (V4's "noise" was disfluent *speech*, not silence).
+
+| arm | chars | chars/min | speakers | behavior on ambience |
+| --- | ---: | ---: | ---: | --- |
+| azure-llm-speech | 3,782 | 20 | 9 | sparsest; locale labels churn across he/pl/el/fi on noise; one Hebrew junk passage |
+| speechmatics-melia-1 | 7,296 | 44 | 3 | the production failure: sparse junk, 4 `<unk>`, noise as Arabic |
+| elevenlabs-tuned | 7,365 | 54 | 3 | sparse; one Persian-ish junk passage where azure emitted Hebrew |
+| soniox | 9,371 | 57 | 5 | sparse junk early; **correctly transcribes the real corridor small talk** at 141 m |
+| **gemini-3-flash** | **98,560** | **529** | **284** ⚠️ | **fabricates a full meeting**: loops ("Yes, yes, yes. I'm sorry, I'm sorry." ×dozens), an invented Persian *news broadcast naming Dujarric and Guterres*, a fabricated formal Turkish speech ("Sayın Başkan, değerli üyeler…") — 13× everyone's volume, spread over 284 fake speakers |
+
+Window-paired reads (9–11 m, 60–62 m, 100–102 m): where challengers are silent, gemini
+writes coherent invented content. **The switch away from Gemini made this failure
+smaller, not larger** — the incumbent would have published a 98k-char fabricated meeting
+where Melia published 7k of visible junk.
+
+**Standing issue for ALL providers:** even the challengers' sparse junk reaches the site
+as a "completed" transcript. Mitigation is pipeline-level, not provider-level: a
+**junk gate** on chars/min + repetition + script-churn signals (mark low-speech
+transcripts as error instead of publishing), ideally plus an ffmpeg `silencedetect`
+pre-check that skips or trims silence-dominated recordings before spending on
+transcription. Melia cannot filter server-side (audio filtering unsupported).
+
 ## Implementation notes
 
 - Shared async helper `lib/providers/dashscope-asr.ts` backs fun-asr + alibaba. Request shapes
