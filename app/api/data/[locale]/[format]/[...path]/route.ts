@@ -18,6 +18,7 @@ import {
 } from "@/lib/db";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getLanguageDisplayName } from "@/lib/languages";
+import { filterOffRecord } from "@/lib/off-record";
 import { symbolFromSlug } from "@/lib/meeting-slug";
 import { buildExportHeaderText } from "@/lib/transcript-export";
 import {
@@ -261,8 +262,14 @@ async function handleMeeting(
     });
   }
 
-  const speakerMappings =
+  const fullMapping =
     (await getSpeakerMapping(transcript.transcript_id)) || {};
+  // Off-record statements are stored but never served (lib/off-record.ts) —
+  // the public JSON/text outputs get the same filtered view as the app.
+  const { statements: visibleStatements, speakerMappings } = filterOffRecord(
+    transcript.content.statements,
+    fullMapping,
+  );
 
   const countryNames = new Map<string, string>();
   const iso3Codes = new Set<string>();
@@ -280,12 +287,12 @@ async function handleMeeting(
 
   if (format === "text") {
     const segments = buildSpeakerSegments(
-      transcript.content.statements,
+      visibleStatements,
       speakerMappings,
     );
     const body = formatTranscriptAsPlainText(
       segments,
-      transcript.content.statements,
+      visibleStatements,
       (idx) => formatSpeakerText(idx, speakerMappings, countryNames),
       formatTimecode,
     );
@@ -298,7 +305,7 @@ async function handleMeeting(
 
   // Timestamps are already realignment-shifted by the display getter
   // (getTranscriptByKalturaId).
-  const transcriptData = transcript.content.statements.map((stmt, index) => {
+  const transcriptData = visibleStatements.map((stmt, index) => {
     const info = speakerMappings[index.toString()];
     return {
       statement_number: index + 1,

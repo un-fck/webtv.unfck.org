@@ -80,6 +80,8 @@ Identifies who is actually speaking each paragraph (not who is being mentioned o
 
 **Output per paragraph:** `name`, `function`, `affiliation`, `group`, `has_multiple_speakers`, `is_off_record`.
 
+**Output per transcript:** `transcript_assessment` — `{is_substantive, reason}`, a whole-transcript verdict. `is_substantive: false` (only when the *entire* recording clearly contains no proceedings — ambience/gibberish transcribed as words) flips the row to `transcription_status: no_content`: content is kept in the DB but never served, and topics/tagging are skipped. The per-paragraph `is_off_record` flags are likewise **kept, not deleted** — every serving surface (transcript check/poll/words routes, public JSON/text) hides flagged statements via `lib/off-record.ts`, which filters, reindexes, and strips the flag. The `reason` string is internal diagnostics (stored in `error_message`), never exposed to users or the API.
+
 ## 3. Resegmentation
 
 **File:** `lib/pipeline/resegment.ts` — `resegmentParagraph()`

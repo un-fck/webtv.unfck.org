@@ -29,6 +29,19 @@ export async function GET(request: NextRequest) {
       return compressedJson(request, { cached: false });
     }
 
+    // No substantive content detected (LLM assessment). The row HAS
+    // statements in the DB (kept for auditing), so this MUST be checked
+    // before the statements fast-path below or the junk would be served.
+    // Surfaced as its own stage so the panel can show the dedicated state;
+    // re-transcription stays possible (WebTV often trims such feeds later).
+    if (cached.transcription_status === "no_content") {
+      return compressedJson(request, {
+        cached: false,
+        transcriptId: cached.transcript_id,
+        stage: "no_content",
+      });
+    }
+
     // Viewable as soon as content exists — independent of any later stage
     // (e.g. on-demand analysis) so the transcript never disappears for others.
     // Timestamps are already realignment-shifted by the display getter above.

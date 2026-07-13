@@ -10,12 +10,19 @@ import { REDUCTION_TRIGGER_MS } from "./realignment-constants";
 // `interrupted` (migration 020) = worker died mid-flight (SIGTERM, OOM,
 // crash). Distinct from `error` (intrinsic failure) so the picker can
 // safely auto-retry interrupted rows while leaving genuine errors alone.
+// `no_content` = transcription ran to completion but the LLM assessment found
+// no substantive proceedings (silence-dominated feeds, ambience transcribed
+// as words — see eval/analysis/SYNTHESIS.md §13.4). Terminal like `error`,
+// but surfaced to viewers as its own state; content stays in the DB and is
+// hidden at the serving boundary (lib/off-record.ts). Manual re-transcription
+// is allowed (WebTV often trims such feeds later, making a re-run useful).
 export type TranscriptionStatus =
   | "scheduled"
   | "transcribing"
   | "identifying_speakers"
   | "analyzing_topics"
   | "completed"
+  | "no_content"
   | "error"
   | "interrupted";
 // On-demand proposition analysis, independent of transcript viewability.
@@ -516,7 +523,11 @@ export async function scheduleTranscript(
       languageCode,
       client,
     );
-    if (existing) {
+    // `no_content` is terminal but deliberately re-runnable: WebTV usually
+    // trims silence-dominated feeds (media stakeouts) after publication, so a
+    // manual re-run against the trimmed audio is legitimate — don't let the
+    // old no-content row block it.
+    if (existing && existing.transcription_status !== "no_content") {
       return {
         transcriptId: existing.transcript_id,
         stage: existing.transcription_status,
@@ -1253,12 +1264,13 @@ export async function getPendingTranscriptByKalturaId(
   //   - `scheduled` (waiting for audio / first attempt)
   //   - `transcribing | identifying_speakers | analyzing_topics` (in flight)
   //   - `interrupted` (will be auto-resumed by the picker)
-  // Excluding `completed | error` matches "do not spawn a duplicate run."
+  // Excluding terminal states (`completed | error | no_content`) matches
+  // "do not spawn a duplicate run."
   const result = await pool.query(
     q(
       `SELECT * FROM webtv.transcripts
         WHERE kaltura_id = ? AND language_code = ?
-          AND transcription_status NOT IN ('completed', 'error')
+          AND transcription_status NOT IN ('completed', 'error', 'no_content')
         ORDER BY created_at DESC LIMIT 1`,
       [kalturaId, languageCode],
     ),

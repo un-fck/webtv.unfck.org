@@ -297,7 +297,9 @@ export function TranscriptToolbar({
             be attributed and counted against the per-user daily cap. */}
         {!hasContent &&
           !checking &&
-          stage === "idle" &&
+          // `no_content` is terminal-but-re-runnable: WebTV usually trims
+          // silence-dominated recordings later, so the Generate button stays.
+          (stage === "idle" || stage === "no_content") &&
           !starting &&
           (isLoggedIn ? (
             <button
