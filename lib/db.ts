@@ -42,7 +42,8 @@ export type ProcessingUsageProvider =
   | "gemini"
   | "azure-openai"
   | "assemblyai"
-  | "alibaba";
+  | "alibaba"
+  | "speechmatics";
 export type ProcessingUsageStatus = "success" | "error";
 
 // Lazily construct the Pool so importing this module during `next build`'s

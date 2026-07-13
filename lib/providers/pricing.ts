@@ -131,6 +131,15 @@ export const PROVIDER_PRICING: Record<string, Pricing> = {
     rateCardVersion: "2026-05-30",
   },
 
+  // ── Speechmatics (Melia, production floor since 2026-07-10) ──
+  // Batch list price "as low as $0.129/hr" (speechmatics.com/pricing +
+  // Melia launch post); volume tiers may lower it. First 10 h/month free.
+  "speechmatics/melia-1": {
+    kind: "audio_hours",
+    perHourUsd: 0.129,
+    rateCardVersion: "2026-07-10",
+  },
+
   // ── Alibaba (Qwen3-ASR-Flash, Qwen3.5-Omni, Fun-ASR) ──
   // Intentionally NOT in the table: DashScope ASR pricing is not published in
   // English on alibabacloud.com and third-party aggregators disagree by >1000×.

@@ -30,7 +30,7 @@ import { voxtralSmall } from "./voxtral-small";
 // Registry keyed by each provider's `name` (the stable {vendor}-{model} identifier),
 // so the key and the provider's own name can never drift apart.
 const ALL: TranscriptionProvider[] = [
-  gemini3Flash, // production default + multilingual floor
+  gemini3Flash, // routing fallback (floor moved to Melia 2026-07-10)
   gemini35Flash,
   assemblyaiUniversal35Pro, // production English
   assemblyaiUniversal2,
@@ -44,7 +44,7 @@ const ALL: TranscriptionProvider[] = [
   elevenlabs,
   elevenlabsTuned, // floor bake-off arm: diarization_threshold/num_speakers
   sonioxV5, // floor bake-off arm (SYNTHESIS §13)
-  speechmaticsMelia, // floor bake-off arm (SYNTHESIS §13)
+  speechmaticsMelia, // production floor since 2026-07-10 (SYNTHESIS §13)
   azureLlmSpeech, // floor bake-off arm (SYNTHESIS §13)
   azureSpeech,
   googleChirp,

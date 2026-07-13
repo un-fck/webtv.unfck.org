@@ -120,12 +120,26 @@ export const speechmaticsMelia: TranscriptionProvider = {
         const speaker = alt.speaker || "UU";
         const startMs = r.start_time * 1000;
         const endMs = r.end_time * 1000;
+        const word = {
+          text: alt.content,
+          start: startMs,
+          end: endMs,
+          confidence: alt.confidence,
+          speaker,
+        };
         const last = utterances[utterances.length - 1];
         if (last && last.speaker === speaker) {
           last.end = endMs;
           last.text += " " + alt.content;
+          last.words!.push(word);
         } else {
-          utterances.push({ speaker, start: startMs, end: endMs, text: alt.content });
+          utterances.push({
+            speaker,
+            start: startMs,
+            end: endMs,
+            text: alt.content,
+            words: [word],
+          });
         }
       }
 
