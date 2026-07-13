@@ -592,6 +592,142 @@ transcripts as error instead of publishing), ideally plus an ffmpeg `silencedete
 pre-check that skips or trims silence-dominated recordings before spending on
 transcription. Melia cannot filter server-side (audio filtering unsupported).
 
+## 14. The English track — floor challengers vs AssemblyAI (run 2026-07-13)
+
+Phases 1–2 of [`PLAN-single-vendor-consolidation.md`](PLAN-single-vendor-consolidation.md).
+**20 standing-corpus sessions × the `en` track × 6 arms**, plus the §9 anecdotal battery on
+the `en` tracks of V1/V3/V4. Motivation: English is **96% of production audio** (1 811 h of
+1 894 h, queried 2026-07-13) — it is the only STT slot where quality or money is at stake —
+and the one procurable non-Azure vendor slot should go to whoever serves it.
+
+**Verdict: `en` does NOT move to Speechmatics. The strongest challenger is
+`azure-llm-speech` — better WER, passes the hallucination gate, and is already procured.
+The incumbent has a newly-found defect: it stops diarizing on long meetings.**
+
+### 14.0 A harness bug invalidated absolute WER on every vote-bearing meeting
+
+`normalizeGroundTruth` ends its vote-roll-call match with a lookahead for the next speaker
+label (`^The President`), but stripped **speaker labels first** — destroying that terminator.
+The lazy `[\s\S]*?` then ran to the end of the document, deleting every line after
+"In favour:" from the reference, *including genuinely-spoken content* (the President's closing
+remarks). Providers transcribe that speech correctly and were charged phantom **insertions**.
+
+On S/PV.10100 the reference was 261 words instead of 378, and AssemblyAI scored **82.5%
+instead of 30.6%** — 187 of its 221 "errors" were insertions of words that were actually said.
+Fixed by reordering (`eval/metrics/ground-truth-normalizer.ts`), guarded by
+`ground-truth-normalizer.test.ts`. **Absolute WERs in §2/§11.2/§13.3 for any meeting with a
+recorded vote are inflated and should not be quoted;** paired rankings largely survive.
+
+### 14.1 Paired WER (16 sessions; 4 PV↔video-mismatch sessions excluded)
+
+Bootstrap 95% CI over per-session paired deltas vs the incumbent. Excluded 9606/9614/9732/9686
+— every arm scores >85% there, so the record does not match the recording. **The ranking is
+identical with them included** (n=20).
+
+| arm | mean WER | Δ vs incumbent | 95% CI of Δ | sessions won | verdict |
+| --- | ---: | ---: | --- | ---: | --- |
+| **azure-llm-speech** | **43.8** | **−1.0** | **[−2.0, −0.2]** | **13/16** | **better** |
+| soniox-stt-async-v5 | 44.2 | −0.6 | [−1.7, 0.3] | 10/16 | tied |
+| **assemblyai-universal-3-5-pro** *(incumbent)* | 44.8 | — | — | — | — |
+| speechmatics-enhanced | 45.8 | +1.0 | [−0.3, 2.0] | **2/16** | consistently, slightly worse |
+| speechmatics-standard | 46.4 | +1.6 | [0.5, 2.6] | 2/16 | worse |
+| elevenlabs-scribe-v2-tuned | 48.2 | +3.4 | [1.9, 5.3] | 1/16 | clearly worst |
+
+**Read Speechmatics Enhanced carefully.** Its mean-delta CI includes zero, so the CI test says
+"no significant difference" — but it wins **2 of 16** sessions (sign test p≈0.002). The honest
+statement is *consistently* worse than AssemblyAI by a *small* margin (~1 WER point), not
+equivalent. Standard is worse still, exactly as the vendor's own accuracy table predicts
+(enhanced "Highest" > standard "High").
+
+ElevenLabs confirms §5/§8: tuning its diarization did nothing for its English text — it remains
+the worst of the serious set.
+
+### 14.2 Hallucination gate (V1, `en`) — **all six arms pass**
+
+Pre-registered as the one binary, non-negotiable rule: any Kanem-class substitution (a
+*different real person's* name, confidently) disqualifies an arm for `en` regardless of WER.
+
+| probe (V1 `en`, 171 m) | assemblyai | azure-llm | sm-enh | sm-std | soniox | 11labs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Keita (good) | 6 | 3 | 5 | 6 | 8 | 2 |
+| **Kanem (hallucination)** | **0** | **0** | **0** | **0** | **0** | **0** |
+| UN80 correct | 11 | 6 | 9 | 6 | **48** | 21 |
+| UN80 miss-form | 1 | 1 | 1 | 5 | 1 | 3 |
+| speakers | **1** ⚠️ | 20 | 43 | 42 | 22 | 39 |
+
+**Nobody hallucinates on the English track** — including `azure-llm-speech`, the LLM-family arm.
+Its floor defect was *cross-language leakage* (§13.1), and on a monolingual track there is
+nothing to leak into. That hypothesis held. (It was also the *sparsest*, best-behaved arm on the
+V6 silence probe — §13.4 — so it is not a Gemini-style confabulator.)
+
+### 14.3 **The incumbent stops diarizing on long meetings** — new finding
+
+| file | assemblyai | azure-llm | sm-enh | sm-std | soniox | 11labs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| V1 (171 m, 147 k chars) | **1 speaker / 1 utterance** ⚠️ | 20 | 43 | 42 | 22 | 39 |
+| V3 (171 m, 141 k chars) | **2 speakers** (longest utterance **15.9 min**) ⚠️ | 17 | 35 | 35 | 30 | 35 |
+
+Confirmed at the API level, not a parsing artifact: AssemblyAI's own response carries
+`utterances: 1` and a single word-level speaker `"A"` across **22 837 words** of a 171-minute
+meeting. It diarizes fine on shorter files (mean 9.6 speakers over the standing corpus, whose
+sessions are ≤90 min) and **collapses on the long ones**. Both 171-min files fail.
+
+This matters in production: our pipeline feeds provider diarization to the GPT-5.4 speaker-ID
+stage **as hints**. On long meetings — routine for GA briefings — AssemblyAI supplies *no
+speaker signal at all*. Every challenger handles the same audio. This is a real, previously
+undocumented quality defect in the slot carrying 96% of our audio.
+
+### 14.4 Accented English (V4) — Speechmatics fails the historical probe
+
+| probe | assemblyai | azure-llm | sm-enh | sm-std | soniox | 11labs |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: |
+| "appalling" (not "polling") | ✅ | ✅ | ❌ **"polling"** | ✅ | ✅ | ✅ |
+| "cold blood" | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| "Starobelsk" | 12 | 13 | 7 | **0** ❌ | 14 | 14 |
+| patronymic "Alexeyevich" | 0 | 0 | 0 | 0 | 0 | **2** |
+
+**Speechmatics Enhanced reproduces the U-2-era mishear** that every other arm now passes:
+*"Equally, **polling** was the statement…"* for *"Equally **appalling** was the statement…"*.
+Standard gets that one right but misses the place name "Starobelsk" entirely (0 of ~13). Only
+ElevenLabs caught the patronymic — unchanged since §6.7.
+
+### 14.5 Decision — and the procurement math
+
+**English = 1 811 h to date and growing.** Lifetime cost at each arm's rate:
+
+| arm | $/hr | 1 811 h | procurement |
+| --- | ---: | ---: | --- |
+| **azure-llm-speech** | ~gpt-4o class | **~$0 marginal** | **already procured (Azure)** |
+| soniox-stt-async-v5 | 0.10 | ~$181 | new vendor |
+| assemblyai-3.5-pro *(today)* | 0.23 | ~$417 | new vendor |
+| speechmatics-enhanced | 0.40 | ~$724 | shares the floor's slot |
+| speechmatics-standard | 0.24 | ~$435 | shares the floor's slot |
+
+- **Speechmatics does not take `en`.** It is consistently (if slightly) worse on WER, it fails
+  the accented-English probe, and Enhanced costs 1.7× the incumbent. §0.2 of the plan predicted
+  this and the data confirmed it: **`melia-1` cannot run monolingual** (it requires
+  `language: "multi"`), so Speechmatics-on-English is the Ursa 2 stack — a *different model*
+  from the one that won the floor. The §13 floor evidence transferred at zero strength, exactly
+  as feared. **Floor stays Melia; that decision is untouched.**
+- **`azure-llm-speech` is the strongest candidate for `en`**: best paired WER, passes the
+  hallucination gate, diarizes long meetings the incumbent cannot, and is **already procured** —
+  which would free the one non-Azure slot for Speechmatics on floor (Config C of the plan).
+  Caveats before flipping: it is an **unnamed Microsoft preview**, `confidence` is always 0, and
+  it threw one HTTP 500 and one hard failure across ~26 runs (retry needed). Reliability, not
+  accuracy, is its open question.
+- **Soniox is the value option** — statistically tied with the incumbent, $0.10/hr, passes the
+  gate, diarizes long files (30 speakers on V3). Its floor-track under-diarization (§13.3) does
+  not appear on `en`.
+- **The incumbent is not safe by default.** §14.3 means staying on AssemblyAI has a real,
+  quantified cost on long meetings, not just an opportunity cost.
+
+### 14.6 Not run
+
+- The **vocabulary-roster probe** (`keyterms_prompt` / `additional_vocab`) — deferred again.
+- **Phase 3** (fr/es/ar/ru/zh) — deliberately dropped: those five tracks are 45 h of production
+  audio *in total*; the eval would cost ~7× the spend it optimizes. Revisit if their volume grows
+  (the user notes an unrelated failure mode is currently suppressing non-English usage).
+
 ## Implementation notes
 
 - Shared async helper `lib/providers/dashscope-asr.ts` backs fun-asr + alibaba. Request shapes

@@ -131,13 +131,24 @@ export const PROVIDER_PRICING: Record<string, Pricing> = {
     rateCardVersion: "2026-05-30",
   },
 
-  // ── Speechmatics (Melia, production floor since 2026-07-10) ──
-  // Batch list price "as low as $0.129/hr" (speechmatics.com/pricing +
-  // Melia launch post); volume tiers may lower it. First 10 h/month free.
+  // ── Speechmatics (batch; Melia = production floor since 2026-07-10) ──
+  // Three distinct models at three distinct rates — see lib/providers/speechmatics.ts.
+  // Melia is multilingual-only; standard/enhanced are monolingual-only. First
+  // ~10 h/month free (docs); volume tiers above 500 h/month lower these.
   "speechmatics/melia-1": {
     kind: "audio_hours",
     perHourUsd: 0.129,
     rateCardVersion: "2026-07-10",
+  },
+  "speechmatics/standard": {
+    kind: "audio_hours",
+    perHourUsd: 0.24,
+    rateCardVersion: "2026-07-13",
+  },
+  "speechmatics/enhanced": {
+    kind: "audio_hours",
+    perHourUsd: 0.4,
+    rateCardVersion: "2026-07-13",
   },
 
   // ── Alibaba (Qwen3-ASR-Flash, Qwen3.5-Omni, Fun-ASR) ──

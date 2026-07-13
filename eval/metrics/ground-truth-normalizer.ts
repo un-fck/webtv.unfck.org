@@ -112,16 +112,24 @@ export function normalizeGroundTruth(text: string, language = "en"): string {
     result = result.replace(pattern, "");
   }
 
+  // Remove vote roll-call blocks BEFORE speaker labels. The roll-call regexes
+  // delimit the end of the block by looking ahead to the next speaker label
+  // (`^The President`, `^Mr.`, …). Stripping the labels first destroys that
+  // terminator, so the lazy `[\s\S]*?` runs past the roll call and swallows
+  // every remaining line of the record — deleting genuinely-spoken content
+  // (e.g. the President's closing remarks) from the reference. The hypothesis
+  // still contains that speech, so every provider is charged phantom
+  // insertions, and WER for any meeting with a recorded vote is inflated by
+  // tens of points. Order is load-bearing; do not "tidy" these two blocks.
+  const votePatterns = VOTE_BLOCK_PATTERNS[language] || [];
+  for (const pattern of votePatterns) {
+    result = result.replace(pattern, "");
+  }
+
   // Remove speaker labels
   const speakerPatterns =
     SPEAKER_LABEL_PATTERNS[language] || SPEAKER_LABEL_PATTERNS.en;
   for (const pattern of speakerPatterns) {
-    result = result.replace(pattern, "");
-  }
-
-  // Remove vote roll call blocks
-  const votePatterns = VOTE_BLOCK_PATTERNS[language] || [];
-  for (const pattern of votePatterns) {
     result = result.replace(pattern, "");
   }
 

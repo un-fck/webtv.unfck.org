@@ -9,7 +9,11 @@ import { elevenlabs, elevenlabsTuned } from "./elevenlabs";
 import { azureSpeech } from "./azure-speech";
 import { azureLlmSpeech } from "./azure-llm-speech";
 import { sonioxV5 } from "./soniox";
-import { speechmaticsMelia } from "./speechmatics";
+import {
+  speechmaticsMelia,
+  speechmaticsStandard,
+  speechmaticsEnhanced,
+} from "./speechmatics";
 import { googleChirp } from "./google-chirp";
 import { gemini3Flash, gemini35Flash } from "./gemini";
 import { groqWhisper } from "./groq-whisper";
@@ -45,6 +49,8 @@ const ALL: TranscriptionProvider[] = [
   elevenlabsTuned, // floor bake-off arm: diarization_threshold/num_speakers
   sonioxV5, // floor bake-off arm (SYNTHESIS §13)
   speechmaticsMelia, // production floor since 2026-07-10 (SYNTHESIS §13)
+  speechmaticsStandard, // monolingual (Ursa 2) — English challenger
+  speechmaticsEnhanced, // monolingual (Ursa 2) — English challenger
   azureLlmSpeech, // floor bake-off arm (SYNTHESIS §13)
   azureSpeech,
   googleChirp,
