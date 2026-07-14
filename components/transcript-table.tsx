@@ -1099,14 +1099,14 @@ export function VideoTable({
           {!fullTextActive && (
             <button
               onClick={toggleFullText}
-              className="text-sm text-un-blue-text underline-offset-4 hover:underline"
+              className="text-sm text-un-blue underline-offset-4 hover:underline"
             >
               {t("searchTranscriptsInstead")}
             </button>
           )}
           <button
             onClick={() => submitSearch("")}
-            className="text-sm text-un-blue-text underline-offset-4 hover:underline"
+            className="text-sm text-un-blue underline-offset-4 hover:underline"
           >
             Clear search
           </button>

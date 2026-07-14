@@ -106,7 +106,7 @@ all result meetings):
         "statements": [
           {
             "speaker": { "name": "…", "function": "…", "affiliation": "USA", "group": null },
-            "text": "…full statement text (capped at 1000 chars)…",
+            "text": "… snippet centered on the first match, ellipses mark truncation …",
             "start": 5025,
             "pageUrl": "/en/sc/10175?t=5025"
           }
@@ -118,10 +118,11 @@ all result meetings):
 }
 ```
 
-`statements` holds the first 3 matches in transcript order; `start` is seconds
-into the video, and `pageUrl` opens the meeting page with the player seeked to
-that moment (`?t=` is supported on all meeting pages). `count` is the meeting's
-full match total.
+`statements` holds the first 3 matches in transcript order, each `text` a
+~240-char snippet centered on the first term occurrence (fetch `jsonUrl` for
+full statements); `start` is seconds into the video, and `pageUrl` opens the
+meeting page with the player seeked to that moment (`?t=` is supported on all
+meeting pages). `count` is the meeting's full match total.
 
 The `.txt` variant (`GET /{locale}/meetings.txt`) returns a one-line-per-meeting summary.
 

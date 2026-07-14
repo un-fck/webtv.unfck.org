@@ -428,7 +428,10 @@ export function TranscriptionPanel({
   const anchorUrl = (seconds: number) => {
     const params = new URLSearchParams();
     if (selectedLanguage !== locale) params.set("lang", selectedLanguage);
-    params.set("t", String(Math.max(0, Math.floor(seconds))));
+    // CEIL, not floor: segment starts are fractional seconds, and the
+    // arrival highlight picks the statement CONTAINING t — flooring lands a
+    // fraction before the start and lights up the previous statement.
+    params.set("t", String(Math.max(0, Math.ceil(seconds))));
     return `${window.location.origin}/${locale}/${video.slug}?${params.toString()}`;
   };
 

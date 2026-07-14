@@ -582,7 +582,9 @@ async function handleList(
               count: matchSummary.count,
               statements: matchSummary.hits.map((hit) => ({
                 speaker: hit.speaker,
-                text: hit.text,
+                // Snippet window centered on the first match, with ellipses
+                // marking truncation — full statements live in jsonUrl.
+                text: `${hit.leading ? "… " : ""}${hit.text}${hit.trailing ? " …" : ""}`,
                 start: hit.startSeconds,
                 pageUrl: `/${locale}/${url}?t=${hit.startSeconds}`,
               })),

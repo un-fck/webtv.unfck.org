@@ -7,6 +7,7 @@ import { REDUCTION_TRIGGER_MS } from "./realignment-constants";
 import {
   buildStatementConditions,
   parseSearchQuery,
+  windowText,
 } from "./statement-search";
 
 // Transcript production lifecycle. Proposition analysis is a separate axis
@@ -581,9 +582,15 @@ export async function reindexTranscriptStatements(
         .replace(/\s+/g, " ")
         .trim();
       if (!text) return;
+      // FIRST SENTENCE start, not stmt.start: the player-page highlight
+      // (usePlaybackTracking) anchors a statement at its first sentence, so a
+      // deeplink derived from anything earlier would light up the previous
+      // statement. Query-side CEIL handles the sub-second remainder.
+      const startMs =
+        stmt.paragraphs?.[0]?.sentences?.[0]?.start ?? stmt.start ?? 0;
       rows.push({
         idx,
-        startMs: Math.max(0, Math.round(stmt.start ?? 0)),
+        startMs: Math.max(0, Math.round(startMs)),
         text,
       });
     });
@@ -1900,10 +1907,15 @@ export interface VideosQueryParams {
 export interface StatementHit {
   /** RAW index into content.statements (ordering key; links use time). */
   statementIdx: number;
-  /** Display-time start (realignment offset applied), whole seconds. */
+  /** Display-time start (realignment offset applied), whole seconds,
+   *  rounded UP so a seek always lands inside the statement. */
   startSeconds: number;
-  /** Statement text, capped — snippet windows are built client-side. */
+  /** Snippet window centered on the first term occurrence (built server-side
+   *  over the full statement text — the client only marks terms). */
   text: string;
+  /** Text continues before/after the snippet window. */
+  leading: boolean;
+  trailing: boolean;
   speaker: SpeakerInfo | null;
 }
 
@@ -2270,11 +2282,16 @@ async function runContentSearchQuery(args: {
     agg AS (
       SELECT kaltura_id,
              COUNT(*) AS match_count,
+             -- CEIL, not FLOOR: statement starts are fractional seconds, and
+             -- the player page highlights the statement containing t — a t
+             -- even a fraction BEFORE the start lights up the previous one.
+             -- Full text here (server-side only); the snippet window is cut
+             -- in mapStatementHits, where the match position is known.
              jsonb_agg(
                jsonb_build_object(
                  'statementIdx', statement_idx,
-                 'startSeconds', FLOOR(adj_ms / 1000.0),
-                 'text', LEFT(text, 1000),
+                 'startSeconds', CEIL(adj_ms / 1000.0),
+                 'text', text,
                  'speaker', speaker
                ) ORDER BY statement_idx
              ) FILTER (WHERE hit_rank <= ${CONTENT_HITS_PER_MEETING}) AS hits
@@ -2334,13 +2351,14 @@ async function runContentSearchQuery(args: {
     countAllPromise,
   ]);
 
+  const highlightTerms = parseSearchQuery(queryText).highlightTerms;
   const contentMatches: Record<string, ContentMatchSummary> = {};
   const records = data.rows.map((row) => {
     const rec = mapVideoRow(row);
     if (row.content_match_count != null) {
       contentMatches[rec.asset_id] = {
         count: Number(row.content_match_count),
-        hits: mapStatementHits(row.content_hits),
+        hits: mapStatementHits(row.content_hits, highlightTerms),
       };
     }
     return rec;
@@ -2361,14 +2379,20 @@ async function runContentSearchQuery(args: {
   };
 }
 
-function mapStatementHits(raw: unknown): StatementHit[] {
+function mapStatementHits(
+  raw: unknown,
+  highlightTerms: string[],
+): StatementHit[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((h) => {
     const hit = h as Record<string, unknown>;
+    const windowed = windowText(String(hit.text ?? ""), highlightTerms);
     return {
       statementIdx: Number(hit.statementIdx),
       startSeconds: Number(hit.startSeconds),
-      text: String(hit.text ?? ""),
+      text: windowed.text,
+      leading: windowed.leading,
+      trailing: windowed.trailing,
       speaker: (hit.speaker as SpeakerInfo | null) ?? null,
     };
   });
@@ -2399,7 +2423,7 @@ export async function getStatementMatches(
   const result = await pool.query(
     q(
       `SELECT s.statement_idx,
-              GREATEST(0, s.start_ms + COALESCE(t.time_offset_ms, 0)) AS adj_ms,
+              CEIL(GREATEST(0, s.start_ms + COALESCE(t.time_offset_ms, 0)) / 1000.0) AS start_s,
               s.text,
               (sm.mapping -> s.statement_idx::text) - 'is_off_record' AS speaker,
               COUNT(*) OVER () AS total
@@ -2422,16 +2446,22 @@ export async function getStatementMatches(
     ),
   );
 
+  const highlightTerms = parsed.highlightTerms;
   return {
     total: Number(
       (result.rows[0] as { total?: string } | undefined)?.total ?? 0,
     ),
-    hits: result.rows.map((row) => ({
-      statementIdx: Number(row.statement_idx),
-      startSeconds: Math.floor(Number(row.adj_ms) / 1000),
-      text: String(row.text ?? "").slice(0, 1000),
-      speaker: (row.speaker as SpeakerInfo | null) ?? null,
-    })),
+    hits: result.rows.map((row) => {
+      const windowed = windowText(String(row.text ?? ""), highlightTerms);
+      return {
+        statementIdx: Number(row.statement_idx),
+        startSeconds: Number(row.start_s),
+        text: windowed.text,
+        leading: windowed.leading,
+        trailing: windowed.trailing,
+        speaker: (row.speaker as SpeakerInfo | null) ?? null,
+      };
+    }),
   };
 }
 

@@ -197,7 +197,7 @@
     "api": {
       "heading": "Using this programmatically",
       "intro": "Every meeting page has a matching data endpoint — append <code>.json</code> for structured data, or <code>.txt</code> for plain text, compact enough to use as LLM context.",
-      "search": "To search or list meetings across the archive, fetch <code>/{locale}/meetings.json</code> — filter with <code>?date=</code>, <code>?q=</code>, <code>?category=</code>, or <code>?from=</code>/<code>?to=</code> for a date range.",
+      "search": "To search or list meetings across the archive, fetch <code>/{locale}/meetings.json</code> — filter with <code>?date=</code>, <code>?q=</code>, <code>?category=</code>, or <code>?from=</code>/<code>?to=</code> for a date range. Add <code>?ft=1</code> to a query to also search inside the transcripts themselves — matched meetings then include the matching statements, each with a link to the exact moment in the meeting.",
       "forAgents": {
         "heading": "For AI agents",
         "body": "If you are an LLM or autonomous agent, start at <llmsLink>llms.txt</llmsLink> for a structured guide to this API — the URL grammar, the search endpoint, and a recommended fetch workflow. A full machine-readable schema is available as an <openapiLink>OpenAPI reference</openapiLink>."

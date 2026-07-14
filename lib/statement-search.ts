@@ -183,16 +183,17 @@ function highlightRegex(terms: string[]): RegExp | null {
 }
 
 /**
- * Window `text` around the first term occurrence and split it into
- * mark/no-mark parts for rendering. Stemmed FTS variants the exact terms
- * don't cover simply aren't marked — the row itself was matched by SQL, so
- * the snippet still shows relevant context (falling back to the text head).
+ * Cut a window of `text` around the first term occurrence. Runs SERVER-side
+ * over the full statement text (a client-side window over pre-truncated text
+ * silently loses matches beyond the truncation point). Falls back to the
+ * text head when no exact term occurs (e.g. only a stemmed FTS variant
+ * matched — the row is still a genuine match).
  */
-export function buildSnippet(
+export function windowText(
   text: string,
   highlightTerms: string[],
-  windowChars = 220,
-): { parts: SnippetPart[]; leading: boolean; trailing: boolean } {
+  windowChars = 240,
+): { text: string; leading: boolean; trailing: boolean } {
   const re = highlightRegex(highlightTerms);
   const first = re ? re.exec(text) : null;
 
@@ -209,24 +210,45 @@ export function buildSnippet(
     if (lastSpace > start + windowChars / 2) end = lastSpace;
   }
 
-  const slice = text.slice(start, end);
-  const parts: SnippetPart[] = [];
-  if (re) {
-    re.lastIndex = 0;
-    let cursor = 0;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(slice)) !== null) {
-      if (m.index > cursor)
-        parts.push({ text: slice.slice(cursor, m.index), mark: false });
-      parts.push({ text: m[0], mark: true });
-      cursor = m.index + m[0].length;
-      if (m[0].length === 0) re.lastIndex++; // safety against empty matches
-    }
-    if (cursor < slice.length)
-      parts.push({ text: slice.slice(cursor), mark: false });
-  } else {
-    parts.push({ text: slice, mark: false });
-  }
+  return {
+    text: text.slice(start, end),
+    leading: start > 0,
+    trailing: end < text.length,
+  };
+}
 
-  return { parts, leading: start > 0, trailing: end < text.length };
+/** Split (already-windowed) text into mark/no-mark parts for rendering. */
+export function markParts(
+  text: string,
+  highlightTerms: string[],
+): SnippetPart[] {
+  const re = highlightRegex(highlightTerms);
+  if (!re) return [{ text, mark: false }];
+
+  const parts: SnippetPart[] = [];
+  let cursor = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > cursor)
+      parts.push({ text: text.slice(cursor, m.index), mark: false });
+    parts.push({ text: m[0], mark: true });
+    cursor = m.index + m[0].length;
+    if (m[0].length === 0) re.lastIndex++; // safety against empty matches
+  }
+  if (cursor < text.length) parts.push({ text: text.slice(cursor), mark: false });
+  return parts;
+}
+
+/** windowText + markParts in one call (tests / single-consumer paths). */
+export function buildSnippet(
+  text: string,
+  highlightTerms: string[],
+  windowChars = 240,
+): { parts: SnippetPart[]; leading: boolean; trailing: boolean } {
+  const w = windowText(text, highlightTerms, windowChars);
+  return {
+    parts: markParts(w.text, highlightTerms),
+    leading: w.leading,
+    trailing: w.trailing,
+  };
 }

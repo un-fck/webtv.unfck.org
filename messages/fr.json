@@ -214,7 +214,7 @@
     "api": {
       "heading": "Utilisation programmatique",
       "intro": "Chaque page de séance a un point d'accès de données correspondant — ajoutez <code>.json</code> pour des données structurées, ou <code>.txt</code> pour du texte brut, assez compact pour servir de contexte à un LLM.",
-      "search": "Pour rechercher ou lister les séances dans les archives, récupérez <code>/{locale}/meetings.json</code> — filtrez avec <code>?date=</code>, <code>?q=</code>, <code>?category=</code>, ou <code>?from=</code>/<code>?to=</code> pour une plage de dates.",
+      "search": "Pour rechercher ou lister les séances dans les archives, récupérez <code>/{locale}/meetings.json</code> — filtrez avec <code>?date=</code>, <code>?q=</code>, <code>?category=</code>, ou <code>?from=</code>/<code>?to=</code> pour une plage de dates. Ajoutez <code>?ft=1</code> à une requête pour chercher aussi dans les transcriptions elles-mêmes — les réunions trouvées incluent alors les interventions correspondantes, chacune avec un lien vers le moment exact de la réunion.",
       "forAgents": {
         "heading": "Pour les agents IA",
         "body": "Si vous êtes un LLM ou un agent autonome, commencez par <llmsLink>llms.txt</llmsLink> pour un guide structuré de cette API — la grammaire des URL, le point d'accès de recherche et un flux de récupération recommandé. Un schéma lisible par machine complet est disponible sous forme de <openapiLink>référence OpenAPI</openapiLink>."

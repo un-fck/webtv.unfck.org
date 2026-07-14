@@ -4,11 +4,8 @@ import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { ContentMatchSummary, StatementHit } from "@/lib/db";
-import { buildSnippet, parseSearchQuery } from "@/lib/statement-search";
-import { SpeakerBadges } from "@/components/speaker-badges";
+import { markParts, parseSearchQuery } from "@/lib/statement-search";
 import { getCountryName } from "@/lib/country-lookup";
-import { formatTimecode } from "@/lib/transcript-formatting";
-import { cn } from "@/lib/utils";
 
 /**
  * Content-search hit sub-rows, rendered directly after their meeting's row
@@ -16,6 +13,10 @@ import { cn } from "@/lib/utils";
  * "search inside transcripts" checkbox is on). Each hit deep-links into the
  * transcript at its timestamp via `?t=`; the first CONTENT_HITS_PER_MEETING
  * hits arrive inline with the feed, the rest load on "show all".
+ *
+ * Deliberately quiet styling: a single muted speaker line (no name — the
+ * transcript pages hide names too — and no colored pills) so the UN-blue
+ * term highlight is the only color in the row.
  */
 export function TranscriptMatchRows({
   assetId,
@@ -59,54 +60,52 @@ export function TranscriptMatchRows({
     }
   };
 
+  // Muted one-line attribution: affiliation · group · function. Names are
+  // hidden (matching the transcript pages); "representative" is noise.
+  const speakerLine = (speaker: StatementHit["speaker"]): string =>
+    [
+      speaker?.affiliation
+        ? getCountryName(speaker.affiliation, locale) || speaker.affiliation
+        : null,
+      speaker?.group,
+      speaker?.function?.toLowerCase() !== "representative"
+        ? speaker?.function
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
   return (
     <>
       {hits.map((hit) => {
-        const snippet = buildSnippet(hit.text, highlightTerms);
-        const affiliationName = hit.speaker?.affiliation
-          ? getCountryName(hit.speaker.affiliation, locale) ||
-            hit.speaker.affiliation
-          : null;
+        const attribution = speakerLine(hit.speaker);
         return (
           <tr
             key={hit.statementIdx}
             className="border-b border-gray-100 bg-muted/30 transition-colors last:border-0 hover:bg-muted/60"
           >
-            {/* In-video timecode in the time column (the meeting row above
-                already carries the wall-clock time). */}
-            <td className="px-4 py-2 text-right align-top text-xs text-muted-foreground tabular-nums">
-              {formatTimecode(hit.startSeconds)}
-            </td>
+            <td className="px-4 py-2" />
             <td className="px-0 py-2" />
             <td className="px-4 py-2 align-top" colSpan={2}>
               <Link
                 href={`/${slug}?t=${hit.startSeconds}`}
                 className="group block"
               >
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {hit.speaker?.name && (
-                    <span className="text-xs font-medium text-foreground">
-                      {hit.speaker.name}
-                    </span>
-                  )}
-                  <SpeakerBadges
-                    info={hit.speaker}
-                    affiliationName={affiliationName}
-                  />
-                </div>
+                {attribution && (
+                  <div className="text-xs font-medium text-muted-foreground">
+                    {attribution}
+                  </div>
+                )}
                 <p
                   dir="auto"
-                  className={cn(
-                    "mt-0.5 text-start text-xs leading-relaxed text-muted-foreground",
-                    "group-hover:text-foreground",
-                  )}
+                  className="mt-0.5 text-start text-xs leading-relaxed text-muted-foreground group-hover:text-foreground"
                 >
-                  {snippet.leading && "… "}
-                  {snippet.parts.map((part, i) =>
+                  {hit.leading && "… "}
+                  {markParts(hit.text, highlightTerms).map((part, i) =>
                     part.mark ? (
                       <mark
                         key={i}
-                        className="rounded-sm bg-primary/20 px-0.5 text-foreground"
+                        className="rounded-sm bg-un-blue/25 px-0.5 text-foreground"
                       >
                         {part.text}
                       </mark>
@@ -114,7 +113,7 @@ export function TranscriptMatchRows({
                       <span key={i}>{part.text}</span>
                     ),
                   )}
-                  {snippet.trailing && " …"}
+                  {hit.trailing && " …"}
                 </p>
               </Link>
             </td>
@@ -129,7 +128,7 @@ export function TranscriptMatchRows({
             <button
               onClick={showAll}
               disabled={loadingAll}
-              className="text-xs text-un-blue-text underline-offset-4 hover:underline disabled:opacity-50"
+              className="text-xs text-un-blue underline-offset-4 hover:underline disabled:opacity-50"
             >
               {loadingAll
                 ? t("loading")

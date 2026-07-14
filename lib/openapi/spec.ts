@@ -167,6 +167,18 @@ export function buildSpec(): Record<string, unknown> {
             qp("q", "Full-text search query (min 2 chars).", {
               type: "string",
             }),
+            qp(
+              "ft",
+              "Set to 1 (with q) to also search INSIDE transcript statements. " +
+                "Content-matched meetings are added to the results and carry a " +
+                "`matches` object with speaker, snippet, and a `?t=` deeplink per " +
+                "hit. Terms containing digits (L.73, 2735, S/2026/243) match as " +
+                "exact fragments — robust for document symbols; word terms use " +
+                "stemmed full-text search; quoted phrases work. Searches the URL " +
+                "locale's transcript track; only meetings with a completed " +
+                "transcript are covered.",
+              { type: "string", enum: ["1"] },
+            ),
             qp("category", "Filter by WebTV category name.", {
               type: "string",
             }),

@@ -93,4 +93,15 @@ describe("buildSnippet", () => {
     expect(s.leading).toBe(false);
     expect(s.trailing).toBe(true);
   });
+
+  it("finds matches deep inside long statements (regression: pre-truncation)", () => {
+    // The window must be cut over the FULL statement text — an earlier
+    // version truncated to 1000 chars server-side before windowing, so a
+    // match at char 3000 produced an unhighlighted text-head snippet.
+    const long = "word ".repeat(800) + "the honourable Guy Ryder spoke " + "word ".repeat(100);
+    const s = buildSnippet(long, ["Guy", "Ryder"], 200);
+    const marked = s.parts.filter((p) => p.mark).map((p) => p.text);
+    expect(marked).toEqual(["Guy", "Ryder"]);
+    expect(s.leading).toBe(true);
+  });
 });
