@@ -183,7 +183,8 @@ Copy `.env.example` → `.env.local` and fill in values.
 - `SPEECHMATICS_API_KEY` — transcription of the multilingual "floor" track (Speechmatics Melia, since 2026-07-10; see eval/analysis/SYNTHESIS.md §13)
 - `ASSEMBLYAI_API_KEY` — English transcription (AssemblyAI Universal-3.5 Pro)
 - `DASHSCOPE_API_KEY` — Chinese transcription (Alibaba Fun-ASR)
-- `AZURE_OPENAI_ENDPOINT` — fr/es/ar/ru transcription (gpt-4o-transcribe) + speaker identification, topics, propositions
+- `AZURE_SPEECH_KEY` / `AZURE_SPEECH_ENDPOINT` — **fr/es/ar/ru transcription** (Azure AI Speech, LLM Speech enhanced mode, since 2026-07-14; see eval/analysis/SYNTHESIS.md §15). Note this is Azure **AI Speech**, a different service and rate card from Azure OpenAI below. Enhanced mode only answers on the `<resource>.services.ai.azure.com` hostname — the `cognitiveservices.azure.com` hostname of the *same* resource returns a misleading 400 — and only in certain regions (northeurope / southeastasia among our tenant-allowed ones).
+- `AZURE_OPENAI_ENDPOINT` — speaker identification, resegmentation, topics, propositions (no longer transcription)
 - `AZURE_OPENAI_API_KEY` — as above
 - `AZURE_OPENAI_API_VERSION` — defaults in `.env.example` (e.g. `2025-03-01-preview`)
 - `AUTH_SECRET` — HMAC secret signing login session cookies (`openssl rand -hex 32`). Required in production; falls back to a dev default otherwise.
@@ -197,12 +198,12 @@ Copy `.env.example` → `.env.local` and fill in values.
 
 **Optional:**
 
-- STT provider selection is **per-language**, configured in `lib/providers/config.ts` (`STT_ROUTING`), not via an env var. Provider keys are `{vendor}-{model}` (e.g. `assemblyai-universal-3-5-pro`, `azure-gpt-4o-transcribe`, `alibaba-fun-asr`, `speechmatics-melia-1`, `gemini-3-flash`); see `lib/providers/registry.ts`. All Gemini providers emit numeric speaker IDs only — names are assigned downstream by the OpenAI speaker-ID stage.
+- STT provider selection is **per-language**, configured in `lib/providers/config.ts` (`STT_ROUTING`), not via an env var. Provider keys are `{vendor}-{model}` (e.g. `assemblyai-universal-3-5-pro`, `azure-llm-speech`, `alibaba-fun-asr`, `speechmatics-melia-1`, `gemini-3-flash`); see `lib/providers/registry.ts`. All Gemini providers emit numeric speaker IDs only — names are assigned downstream by the OpenAI speaker-ID stage.
 - `STT_ANALYSIS_MODEL` — Azure OpenAI model for speaker ID, resegmentation, topics, propositions (default: `gpt-5.4`)
 - `STT_ANALYSIS_MODEL_MINI` — Azure OpenAI model for cross-chunk normalization (default: `gpt-5.4-mini`)
 - `STT_ANALYSIS_MODEL_NANO` — Azure OpenAI model for sentence tagging (default: `gpt-5.4-nano`)
 
-**Eval system only:** `ASSEMBLYAI_API_KEY`, `AZURE_SPEECH_KEY`, `AZURE_SPEECH_ENDPOINT`, `ELEVENLABS_API_KEY`, `GROQ_API_KEY`, `DASHSCOPE_API_KEY`, `DEEPGRAM_API_KEY`, `MISTRAL_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`.
+**Eval system only:** `ELEVENLABS_API_KEY`, `GROQ_API_KEY`, `DEEPGRAM_API_KEY`, `MISTRAL_API_KEY`, `SONIOX_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`. (`AZURE_SPEECH_KEY` / `AZURE_SPEECH_ENDPOINT` moved to **required** on 2026-07-14 — they now serve fr/es/ar/ru in production. `ASSEMBLYAI_API_KEY` and `DASHSCOPE_API_KEY` are likewise required, for en and zh.)
 
 ## Documentation
 
@@ -235,7 +236,7 @@ See `docs/ai.md` for the full pipeline with model details and design decisions.
 
 Triggered from the video page UI (`POST /api/transcripts`) or via the scheduled-processing cron (`/api/cron/process-scheduled`):
 
-1. **Transcribe** — provider selected **per language** via `lib/providers/config.ts` (`STT_ROUTING`: English→AssemblyAI Universal-3.5 Pro, fr/es/ar/ru→Azure gpt-4o-transcribe, Chinese→Alibaba Fun-ASR, floor→Speechmatics Melia). Audio is downloaded from Kaltura and transcribed with numeric speaker diarization (no names — see step 2). Providers chunk long audio internally as needed.
+1. **Transcribe** — provider selected **per language** via `lib/providers/config.ts` (`STT_ROUTING`: English→AssemblyAI Universal-3.5 Pro, fr/es/ar/ru→Azure LLM Speech, Chinese→Alibaba Fun-ASR, floor→Speechmatics Melia). Audio is downloaded from Kaltura and transcribed with numeric speaker diarization (no names — see step 2). Providers chunk long audio internally as needed.
 2. **Speaker identification + resegmentation** — `lib/pipeline/index.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping. (Pipeline stages live in `lib/pipeline/`.)
 3. **Topic definition** — identifies 5–10 substantive policy topics across the meeting (GPT-5.4).
 4. **Sentence tagging** — tags each non-chair sentence with 0–3 topic keys (GPT-5.4-nano, batched; rate-limited via Bottleneck — 20 concurrent / 10 per sec).

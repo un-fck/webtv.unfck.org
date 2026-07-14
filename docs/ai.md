@@ -9,7 +9,7 @@ Transcription is routed **per language** (`STT_ROUTING` in `lib/providers/config
 | Track | Provider | Model |
 | --- | --- | --- |
 | English | AssemblyAI | `universal-3-5-pro` |
-| French / Spanish / Arabic / Russian | Azure OpenAI | `gpt-4o-transcribe` |
+| French / Spanish / Arabic / Russian | Azure AI Speech | LLM Speech enhanced mode (`locales` pinned per track) |
 | Chinese | Alibaba | `fun-asr` |
 | Floor (multilingual original) | Speechmatics Melia | `melia-1` (`language: multi` + six-language `language_hints`) |
 

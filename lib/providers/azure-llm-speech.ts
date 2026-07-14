@@ -45,16 +45,21 @@ const AZURE_LOCALE: Record<string, string> = {
  * `enhancedMode.model` — which is what we do — routes to Microsoft's *unnamed*
  * default speech-LLM ("multimodal model" / "renewed speech-LLM model" in the docs;
  * never identified). It is NOT MAI-Transcribe: that is a separate, named model you
- * opt into via `enhancedMode.model: "mai-transcribe-1.5"`. Two consequences worth
- * knowing before trusting this in production:
- *   - There is no version pin for the default model, and Microsoft has already
- *     swapped it once ("renewed") under the same request shape. Behavior can shift
- *     under us with no signal.
- *   - `transcribeStyle: "verbatim"` exists ONLY on mai-transcribe-1.5, which in turn
- *     has NO diarization and NO word timestamps. So there is no configuration that
- *     gives verbatim + diarization together. The default model is
- *     "readability-optimized" by default; whether that extends to dropping
- *     disfluencies (as opposed to display formatting) is undocumented.
+ * opt into via `enhancedMode.model: "mai-transcribe-1.5"` (which has no diarization
+ * and no word timestamps, so it is not usable for us).
+ *
+ * ⚠️ THE DEFAULT MODEL IS UNPINNABLE. There is no version identifier, and Microsoft
+ * has already replaced it once ("renewed speech-LLM model", Build 2026) under an
+ * unchanged request shape. Behavior can shift under us with no signal. This is
+ * guarded by `eval/analysis/regression-azure-llm.ts` — run it on a schedule; a step
+ * change in drift means the model moved and the §14/§15 evals must be re-run.
+ *
+ * Not a concern (measured, SYNTHESIS §15.0a): the "readability-optimized" default
+ * does NOT rewrite content. Word counts land within 0.3% of classic ASR, fillers are
+ * retained at the same rate as AssemblyAI, and side-by-side passages are word-for-
+ * word identical — it is display formatting, not paraphrase. (`transcribeStyle:
+ * "verbatim"` exists only on mai-transcribe-1.5 and would merely *preserve* filler
+ * words, which a UN verbatim record does not want anyway — the PV itself strips them.)
  *
  * `locales`: omitting it puts the service in multi-lingual auto-detect mode. For a
  * single-language track that is the wrong config — the docs say pinning `locales`
@@ -101,28 +106,71 @@ export const azureLlmSpeech: TranscriptionProvider = {
         );
       if (locale) definition.locales = [locale];
 
-      const form = new FormData();
-      form.append(
-        "audio",
-        new Blob([fs.readFileSync(mp3Path)], { type: "audio/mpeg" }),
-        path.basename(mp3Path),
-      );
-      form.append("definition", JSON.stringify(definition));
-
       const endpoint = AZURE_SPEECH_ENDPOINT.replace(/\/$/, "");
+      const audioBytes = fs.readFileSync(mp3Path);
       const t0 = Date.now();
-      const res = await fetch(
-        `${endpoint}/speechtotext/transcriptions:transcribe?api-version=2025-10-15`,
-        {
-          method: "POST",
-          headers: { "Ocp-Apim-Subscription-Key": AZURE_SPEECH_KEY },
-          body: form,
-        },
-      );
-      if (!res.ok)
-        throw new Error(
-          `Azure LLM Speech failed ${res.status}: ${await res.text()}`,
+
+      // Retry per Microsoft's own guidance: up to 5 attempts with exponential
+      // backoff on 429 and 5xx, plus network/timeout errors ("the API might
+      // accept a request but time out while generating the response"). Both a
+      // 500 and a hard timeout were observed during the §15 sweep, so this is
+      // not theoretical. 4xx other than 429 is a request bug — fail fast.
+      // The body is rebuilt each attempt: a FormData/Blob is single-use.
+      const RETRYABLE = new Set([429, 500, 502, 503, 504]);
+      const BACKOFF_MS = [2000, 4000, 8000, 16000];
+      let res: Response | undefined;
+      let lastErr: unknown;
+
+      for (let attempt = 0; attempt < 5; attempt++) {
+        if (attempt > 0) {
+          const wait = BACKOFF_MS[attempt - 1];
+          console.log(
+            `  [azure-llm-speech] retry ${attempt}/4 in ${wait / 1000}s (${
+              res ? `HTTP ${res.status}` : (lastErr as Error)?.message
+            })`,
+          );
+          await new Promise((r) => setTimeout(r, wait));
+        }
+
+        const form = new FormData();
+        form.append(
+          "audio",
+          new Blob([audioBytes], { type: "audio/mpeg" }),
+          path.basename(mp3Path),
         );
+        form.append("definition", JSON.stringify(definition));
+
+        try {
+          res = await fetch(
+            `${endpoint}/speechtotext/transcriptions:transcribe?api-version=2025-10-15`,
+            {
+              method: "POST",
+              headers: { "Ocp-Apim-Subscription-Key": AZURE_SPEECH_KEY },
+              body: form,
+            },
+          );
+          lastErr = undefined;
+        } catch (err) {
+          // Network error / timeout — retryable.
+          res = undefined;
+          lastErr = err;
+          continue;
+        }
+
+        if (res.ok) break;
+        if (!RETRYABLE.has(res.status))
+          throw new Error(
+            `Azure LLM Speech failed ${res.status}: ${await res.text()}`,
+          );
+      }
+
+      if (!res || !res.ok) {
+        const detail = res
+          ? `${res.status}: ${await res.text()}`
+          : `network error: ${(lastErr as Error)?.message}`;
+        throw new Error(`Azure LLM Speech failed after 5 attempts — ${detail}`);
+      }
+
       console.log(
         `  [azure-llm-speech] transcribed in ${((Date.now() - t0) / 1000).toFixed(0)}s`,
       );
