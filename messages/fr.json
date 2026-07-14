@@ -114,7 +114,13 @@
     },
     "loading": "Chargement…",
     "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
-    "meetings": "{count, plural, =0 {Aucune réunion} one {# réunion} other {# réunions}}"
+    "meetings": "{count, plural, =0 {Aucune réunion} one {# réunion} other {# réunions}}",
+    "searchTranscripts": "Rechercher dans les transcriptions",
+    "searchTranscriptsScope": "uniquement les réunions transcrites",
+    "matchingStatements": "{count, plural, one {# intervention correspondante} other {# interventions correspondantes}}",
+    "showAllMatches": "{count, plural, one {Afficher la correspondance de cette réunion} other {Afficher les # correspondances de cette réunion}}",
+    "searchTranscriptsInstead": "Rechercher plutôt dans les transcriptions",
+    "noMatchesWithTranscripts": "Aucun résultat pour « {query} » dans les titres de réunion ni dans les transcriptions. Seules les réunions transcrites peuvent être interrogées."
   },
   "speakers": {
     "title": "Intervenants",
@@ -208,7 +214,7 @@
     "api": {
       "heading": "Utilisation programmatique",
       "intro": "Chaque page de séance a un point d'accès de données correspondant — ajoutez <code>.json</code> pour des données structurées, ou <code>.txt</code> pour du texte brut, assez compact pour servir de contexte à un LLM.",
-      "search": "Pour rechercher ou lister les séances dans les archives, récupérez <code>/{locale}/meetings.json</code> — filtrez avec <code>?date=</code>, <code>?q=</code>, <code>?category=</code>, ou <code>?from=</code>/<code>?to=</code> pour une plage de dates.",
+      "search": "Pour rechercher ou lister les séances dans les archives, récupérez <code>/{locale}/meetings.json</code> — filtrez avec <code>?date=</code>, <code>?q=</code>, <code>?category=</code>, ou <code>?from=</code>/<code>?to=</code> pour une plage de dates. Ajoutez <code>?ft=1</code> à une requête pour chercher aussi dans les transcriptions elles-mêmes — les réunions trouvées incluent alors les interventions correspondantes, chacune avec un lien vers le moment exact de la réunion.",
       "forAgents": {
         "heading": "Pour les agents IA",
         "body": "Si vous êtes un LLM ou un agent autonome, commencez par <llmsLink>llms.txt</llmsLink> pour un guide structuré de cette API — la grammaire des URL, le point d'accès de recherche et un flux de récupération recommandé. Un schéma lisible par machine complet est disponible sous forme de <openapiLink>référence OpenAPI</openapiLink>."
@@ -283,7 +289,9 @@
     },
     "view": {
       "speaker": "Intervenant",
-      "speakerN": "Intervenant {n}"
+      "speakerN": "Intervenant {n}",
+      "copyLink": "Copier le lien vers cette intervention",
+      "linkCopied": "Lien copié"
     },
     "panel": {
       "checkingForTranscript": "Recherche d'une transcription existante…",

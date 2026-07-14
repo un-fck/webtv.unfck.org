@@ -114,7 +114,13 @@
     },
     "loading": "加载中…",
     "results": "{count, plural, =0 {无结果} other {# 条结果}}",
-    "meetings": "{count, plural, =0 {无会议} other {# 场会议}}"
+    "meetings": "{count, plural, =0 {无会议} other {# 场会议}}",
+    "searchTranscripts": "在转录内容中搜索",
+    "searchTranscriptsScope": "仅限已转录的会议",
+    "matchingStatements": "{count, plural, other {# 条匹配发言}}",
+    "showAllMatches": "{count, plural, other {显示此会议的全部 # 条匹配}}",
+    "searchTranscriptsInstead": "改为在转录内容中搜索",
+    "noMatchesWithTranscripts": "在会议标题和转录内容中均未找到“{query}”。只能搜索已转录的会议。"
   },
   "speakers": {
     "title": "发言者",
@@ -208,7 +214,7 @@
     "api": {
       "heading": "以编程方式使用",
       "intro": "每个会议页面都有对应的数据接口——追加 <code>.json</code> 获取结构化数据,或追加 <code>.txt</code> 获取纯文本,足够精简,适合用作大语言模型(LLM)的上下文。",
-      "search": "如需在整个存档中搜索或列出会议,请获取 <code>/{locale}/meetings.json</code>——可使用 <code>?date=</code>、<code>?q=</code>、<code>?category=</code>,或 <code>?from=</code>/<code>?to=</code> 指定日期范围进行筛选。",
+      "search": "如需在整个存档中搜索或列出会议,请获取 <code>/{locale}/meetings.json</code>——可使用 <code>?date=</code>、<code>?q=</code>、<code>?category=</code>,或 <code>?from=</code>/<code>?to=</code> 指定日期范围进行筛选。 在查询中加上 <code>?ft=1</code> 还可在转录内容本身中搜索——匹配的会议将包含匹配的发言，每条发言附有指向会议确切时刻的链接。",
       "forAgents": {
         "heading": "面向 AI 代理",
         "body": "如果您是大语言模型(LLM)或自主代理,请从 <llmsLink>llms.txt</llmsLink> 开始,获取本 API 的结构化指南——包括 URL 语法、搜索接口和推荐的抓取流程。完整的机器可读架构见 <openapiLink>OpenAPI 参考文档</openapiLink>。"
@@ -283,7 +289,9 @@
     },
     "view": {
       "speaker": "发言者",
-      "speakerN": "发言者 {n}"
+      "speakerN": "发言者 {n}",
+      "copyLink": "复制此发言的链接",
+      "linkCopied": "链接已复制"
     },
     "panel": {
       "checkingForTranscript": "正在检查现有转录…",

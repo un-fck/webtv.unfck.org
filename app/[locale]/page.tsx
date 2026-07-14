@@ -124,10 +124,12 @@ export default async function Home({
           locale,
           includeOther: params.includeOtherLangs === true,
         },
+        contentSearch:
+          params.fullText && params.q ? { language: locale } : undefined,
       };
 
   const [
-    { records, total, totalIncludingOther },
+    { records, total, totalIncludingOther, contentMatches, statementTotal },
     availableDates,
     filterOptions,
   ] = await Promise.all([
@@ -195,6 +197,8 @@ export default async function Home({
         serverParams={params}
         availableDates={availableDates}
         filterOptions={filterOptions}
+        contentMatches={contentMatches}
+        statementTotal={statementTotal}
       />
     </PageShell>
   );

@@ -1,7 +1,10 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Check, Link as LinkIcon } from "lucide-react";
 import type { SpeakerMapping } from "@/lib/speakers";
+import { SpeakerBadges } from "@/components/speaker-badges";
 import { getTopicColor } from "@/components/transcription-panel";
 import { formatTimecode } from "@/lib/transcript-formatting";
 import { typography } from "@/lib/typography";
@@ -59,23 +62,12 @@ function renderSpeakerInfo(
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {info.affiliation && (
-        <span className="inline-flex items-center rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-          {countryNames.get(info.affiliation) || info.affiliation}
-        </span>
-      )}
-      {info.group && (
-        <span className="inline-flex items-center rounded-md bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-          {info.group}
-        </span>
-      )}
-      {info.function && info.function.toLowerCase() !== "representative" && (
-        <span className="text-sm font-medium text-muted-foreground">
-          {info.function}
-        </span>
-      )}
-    </div>
+    <SpeakerBadges
+      info={info}
+      affiliationName={
+        info.affiliation ? countryNames.get(info.affiliation) : null
+      }
+    />
   );
 }
 
@@ -93,6 +85,11 @@ interface TranscriptViewProps {
   selectedTopic: string | null;
   topicCollapsed: boolean;
   onSeek: (timestampSeconds: number) => void;
+  /** Build the shareable deeplink for a segment's timestamp (`?t=` anchor).
+   *  Omitted by callers that have no canonical URL to link to. */
+  getAnchorUrl?: (timestampSeconds: number) => string;
+  /** Segment to pulse once on arrival via a `?t=` deeplink. */
+  flashSegmentIndex?: number | null;
 }
 
 export function TranscriptView({
@@ -109,11 +106,28 @@ export function TranscriptView({
   selectedTopic,
   topicCollapsed,
   onSeek,
+  getAnchorUrl,
+  flashSegmentIndex = null,
 }: TranscriptViewProps) {
   const t = useTranslations("transcript.view");
   const speakerLabels = {
     speaker: t("speaker"),
     speakerN: (n: number) => t("speakerN", { n }),
+  };
+  // Which segment's anchor button just copied — swaps the link icon for a
+  // check for a beat as the confirmation, announced via the aria-live span.
+  const [copiedSegment, setCopiedSegment] = useState<number | null>(null);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyAnchor = async (segmentIndex: number, seconds: number) => {
+    if (!getAnchorUrl) return;
+    try {
+      await navigator.clipboard.writeText(getAnchorUrl(seconds));
+    } catch {
+      return;
+    }
+    setCopiedSegment(segmentIndex);
+    if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    copiedTimer.current = setTimeout(() => setCopiedSegment(null), 2000);
   };
   const allTopicKeys = Object.keys(topics);
   const highlightColor = selectedTopic
@@ -122,6 +136,9 @@ export function TranscriptView({
 
   return (
     <div className="space-y-3">
+      <span aria-live="polite" className="sr-only">
+        {copiedSegment !== null ? t("linkCopied") : ""}
+      </span>
       {segments.map((segment, segmentIndex) => {
         const isSegmentActive = segmentIndex === activeSegmentIndex;
         const firstStmtIndex = segment.statementIndices[0] ?? 0;
@@ -139,7 +156,7 @@ export function TranscriptView({
         }
 
         return (
-          <div key={segmentIndex} className="space-y-1 pt-2">
+          <div key={segmentIndex} className="group space-y-1 pt-2">
             <div className="flex flex-wrap items-center gap-2">
               <div className={typography.speakerLabel}>
                 {renderSpeakerInfo(
@@ -159,13 +176,36 @@ export function TranscriptView({
               >
                 {formatTimecode(segment.timestamp)}
               </button>
+              {getAnchorUrl && (
+                <button
+                  onClick={() => copyAnchor(segmentIndex, segment.timestamp)}
+                  className={cn(
+                    "rounded p-1 text-muted-foreground transition-[opacity,color,background-color] hover:bg-muted hover:text-primary",
+                    // Hidden until the segment is hovered or the button is
+                    // focused — but only where hover exists; touch devices
+                    // show it always (muted) since there is nothing to hover.
+                    copiedSegment !== segmentIndex &&
+                      "[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100",
+                  )}
+                  aria-label={t("copyLink")}
+                  title={t("copyLink")}
+                >
+                  {copiedSegment === segmentIndex ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    <LinkIcon className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              )}
             </div>
             <div
-              className={`rounded-lg border p-3 transition-colors duration-200 ${
+              className={cn(
+                "rounded-lg border p-3 transition-colors duration-200",
                 isSegmentActive
                   ? "border-primary/40 bg-primary/5"
-                  : "border-transparent bg-muted/40"
-              }`}
+                  : "border-transparent bg-muted/40",
+                segmentIndex === flashSegmentIndex && "anchor-flash",
+              )}
             >
               <div className={cn(typography.body, "space-y-2")}>
                 {segment.statementIndices.map((stmtIdx, indexInSegment) => {

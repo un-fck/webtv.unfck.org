@@ -4,6 +4,12 @@ import { randomUUID } from "crypto";
 import "@/lib/load-env";
 import { applyTimeOffset } from "./transcript-offset";
 import { REDUCTION_TRIGGER_MS } from "./realignment-constants";
+import {
+  buildStatementConditions,
+  firstMatchIndex,
+  parseSearchQuery,
+  windowText,
+} from "./statement-search";
 
 // Transcript production lifecycle. Proposition analysis is a separate axis
 // (`AnalysisStatus`) and intentionally not part of this enum.
@@ -462,6 +468,19 @@ export async function saveTranscript(
       ],
     ),
   );
+  // A completed upsert (e.g. re-save of a finished transcript) must keep the
+  // statement search index in sync. Same executor: inside withVideoLock
+  // transactions the row isn't visible to other connections yet.
+  if (status === "completed") {
+    try {
+      await reindexTranscriptStatements(transcriptId, executor);
+    } catch (err) {
+      console.error(
+        `Statement reindex failed for ${transcriptId}:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
 }
 
 export async function updateTranscriptionStatus(
@@ -475,6 +494,12 @@ export async function updateTranscriptionStatus(
       [status, errorMessage ?? null, transcriptId],
     ),
   );
+  // Completion is the point where content becomes final (and off-record
+  // flags settled in the speaker mapping), i.e. indexable; `no_content`
+  // clears any rows a previous completed run left behind.
+  if (status === "completed" || status === "no_content") {
+    await reindexStatementsSafe(transcriptId);
+  }
 }
 
 // On-demand proposition analysis lives on its own axis so it never moves the
@@ -502,6 +527,113 @@ export async function updateTranscriptContent(
       [content, transcriptId],
     ),
   );
+  // Keep the statement search index in sync (no-op unless completed).
+  await reindexStatementsSafe(transcriptId);
+}
+
+// ── Statement search index (migration 026) ───────────────────────────────────
+
+/**
+ * Rebuild the search-index rows for one transcript.
+ *
+ * Rows exist only for COMPLETED transcripts — earlier pipeline stages persist
+ * intermediate content, and `no_content` junk must never be searchable. The
+ * off-record rule mirrors lib/off-record.ts: statements flagged
+ * `is_off_record` in the speaker mapping are skipped, so the index never
+ * contains material the serving boundary hides. `statement_idx` keeps the
+ * RAW content index (hits deep-link by timestamp, not index, so the
+ * serving-side reindexing of visible statements doesn't matter here).
+ *
+ * Called wherever the indexed inputs can change: transcription completion,
+ * content updates, speaker-mapping updates (off-record flags live there),
+ * and completed saveTranscript upserts. Delete + insert is idempotent;
+ * FK ON DELETE CASCADE cleans up deleted transcripts.
+ */
+export async function reindexTranscriptStatements(
+  transcriptId: string,
+  executor: Pick<Pool, "query"> = pool,
+): Promise<void> {
+  const res = await executor.query(
+    q(
+      `SELECT t.transcription_status, t.language_code, t.content, sm.mapping
+         FROM webtv.transcripts t
+         LEFT JOIN webtv.speaker_mappings sm ON sm.transcript_id = t.transcript_id
+        WHERE t.transcript_id = ?`,
+      [transcriptId],
+    ),
+  );
+  const row = res.rows[0] as
+    | {
+        transcription_status: TranscriptionStatus;
+        language_code: string | null;
+        content: TranscriptContent | null;
+        mapping: SpeakerMapping | null;
+      }
+    | undefined;
+  if (!row) return;
+
+  const rows: Array<{ idx: number; startMs: number; text: string }> = [];
+  if (row.transcription_status === "completed") {
+    const mapping = row.mapping ?? {};
+    (row.content?.statements ?? []).forEach((stmt, idx) => {
+      if (mapping[idx.toString()]?.is_off_record) return;
+      const text = (stmt.paragraphs ?? [])
+        .flatMap((p) => (p.sentences ?? []).map((s) => s.text))
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (!text) return;
+      // FIRST SENTENCE start, not stmt.start: the player-page highlight
+      // (usePlaybackTracking) anchors a statement at its first sentence, so a
+      // deeplink derived from anything earlier would light up the previous
+      // statement. Query-side CEIL handles the sub-second remainder.
+      const startMs =
+        stmt.paragraphs?.[0]?.sentences?.[0]?.start ?? stmt.start ?? 0;
+      rows.push({
+        idx,
+        startMs: Math.max(0, Math.round(startMs)),
+        text,
+      });
+    });
+  }
+
+  await executor.query(
+    q("DELETE FROM webtv.transcript_statements WHERE transcript_id = ?", [
+      transcriptId,
+    ]),
+  );
+  const CHUNK = 200;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const chunk = rows.slice(i, i + CHUNK);
+    const values = chunk.map(() => "(?, ?, ?, ?, ?)").join(", ");
+    await executor.query(
+      q(
+        `INSERT INTO webtv.transcript_statements
+           (transcript_id, statement_idx, language_code, start_ms, text)
+         VALUES ${values}`,
+        chunk.flatMap((r) => [
+          transcriptId,
+          r.idx,
+          row.language_code ?? "floor",
+          r.startMs,
+          r.text,
+        ]),
+      ),
+    );
+  }
+}
+
+// Pipeline-safe wrapper: index maintenance must never fail a status/content
+// write — e.g. while migration 026 hasn't been applied yet.
+async function reindexStatementsSafe(transcriptId: string): Promise<void> {
+  try {
+    await reindexTranscriptStatements(transcriptId);
+  } catch (err) {
+    console.error(
+      `Statement reindex failed for ${transcriptId}:`,
+      err instanceof Error ? err.message : err,
+    );
+  }
 }
 
 // Idempotent + race-safe: if a non-error transcript already exists for this
@@ -1764,6 +1896,35 @@ export interface VideosQueryParams {
   pageSize?: number;
   transcriptedEntryIds?: string[];
   localeFilter?: LocaleFilter;
+  /** Full-text search inside transcript statements (the schedule's
+   *  "search inside transcripts" checkbox / `?ft=1`). Widens the result set
+   *  to meetings whose transcript CONTENT matches `q` (union with title
+   *  matches) and attaches per-meeting hit summaries. `language` selects the
+   *  transcript track to search — the UI locale. */
+  contentSearch?: { language: string };
+}
+
+/** One content-search hit inside a meeting's transcript. */
+export interface StatementHit {
+  /** RAW index into content.statements (ordering key; links use time). */
+  statementIdx: number;
+  /** Display-time start (realignment offset applied), whole seconds,
+   *  rounded UP so a seek always lands inside the statement. */
+  startSeconds: number;
+  /** Snippet window centered on the first term occurrence (built server-side
+   *  over the full statement text — the client only marks terms). */
+  text: string;
+  /** Text continues before/after the snippet window. */
+  leading: boolean;
+  trailing: boolean;
+  speaker: SpeakerInfo | null;
+}
+
+export interface ContentMatchSummary {
+  /** Total matching statements in this meeting's transcript. */
+  count: number;
+  /** First matches in transcript order, capped at CONTENT_HITS_PER_MEETING. */
+  hits: StatementHit[];
 }
 
 export interface VideosQueryResult {
@@ -1774,6 +1935,12 @@ export interface VideosQueryResult {
    *  to `total` when the locale filter is a no-op (English, or
    *  `includeOther === true`). */
   totalIncludingOther: number;
+  /** Per-meeting transcript hits, keyed by asset_id. Present only when
+   *  `contentSearch` was requested (meetings with no content match — pure
+   *  title matches — have no entry). */
+  contentMatches?: Record<string, ContentMatchSummary>;
+  /** Total matching statements across all `total` meetings (content search). */
+  statementTotal?: number;
 }
 
 /**
@@ -1955,6 +2122,31 @@ export async function queryVideos(
   const explicit = sort ? explicitOrderBy(sort) : null;
 
   const trimmedQ = queryText?.trim() ?? "";
+  if (trimmedQ && params.contentSearch) {
+    // Full-text search inside transcripts: one date-ordered union of
+    // title-matched and content-matched meetings, with per-meeting hit
+    // summaries. Falls through to the title-only paths when the query
+    // parses to nothing searchable.
+    const parsed = parseSearchQuery(trimmedQ);
+    const stmt = buildStatementConditions(
+      parsed,
+      params.contentSearch.language,
+    );
+    if (stmt) {
+      return runContentSearchQuery({
+        conditions,
+        conditionArgs,
+        stmtConditions: stmt.conditions,
+        stmtArgs: stmt.args,
+        language: params.contentSearch.language,
+        queryText: trimmedQ,
+        orderBy: explicit ?? "date DESC, scheduled_time ASC, asset_id ASC",
+        pageSize,
+        offset,
+        localeFilter,
+      });
+    }
+  }
   if (trimmedQ) {
     const words = trimmedQ.split(/\s+/);
     const allShort = words.every((w) => w.length < 3);
@@ -2016,6 +2208,397 @@ export async function queryVideos(
     offset,
     localeFilter,
   });
+}
+
+/** Inline hits returned per meeting by the content-search feed; the rest are
+ *  fetched on demand via getStatementMatches ("show all N matches"). */
+export const CONTENT_HITS_PER_MEETING = 3;
+
+/**
+ * The `contentSearch` variant of the feed query: meetings matching the query
+ * by TITLE or by TRANSCRIPT CONTENT, one row per meeting, date-ordered like
+ * the browse feed, each content-matched meeting carrying its match count and
+ * first hits.
+ *
+ * The statement scan runs once over the GIN indexes (not per-video); when a
+ * meeting briefly has several completed transcripts for the language
+ * (mid-retranscribe), only the newest one counts. The title predicate is a
+ * single-stage `FTS OR ILIKE` — the title-only path's prefer-FTS fallback
+ * doesn't apply to a union that's date-ordered anyway.
+ */
+async function runContentSearchQuery(args: {
+  conditions: string[];
+  conditionArgs: unknown[];
+  stmtConditions: string[];
+  stmtArgs: unknown[];
+  language: string;
+  queryText: string;
+  orderBy: string;
+  pageSize: number;
+  offset: number;
+  localeFilter?: LocaleFilter;
+}): Promise<VideosQueryResult> {
+  const {
+    conditions,
+    conditionArgs,
+    stmtConditions,
+    stmtArgs,
+    language,
+    queryText,
+    orderBy,
+    pageSize,
+    offset,
+    localeFilter,
+  } = args;
+
+  // `speaker` comes from the mapping at the statement's RAW index. Indexed
+  // rows are on-record only, but strip the internal flag regardless — it
+  // must never appear in a response payload (see lib/off-record.ts).
+  const matchCte = `
+    stmt_matches AS (
+      SELECT t.kaltura_id,
+             s.transcript_id,
+             s.statement_idx,
+             GREATEST(0, s.start_ms + COALESCE(t.time_offset_ms, 0)) AS adj_ms,
+             s.text,
+             (sm.mapping -> s.statement_idx::text) - 'is_off_record' AS speaker,
+             t.created_at
+        FROM webtv.transcript_statements s
+        JOIN webtv.transcripts t ON t.transcript_id = s.transcript_id
+        LEFT JOIN webtv.speaker_mappings sm ON sm.transcript_id = s.transcript_id
+       WHERE t.language_code = ?
+         AND t.transcription_status = 'completed'
+         AND ${stmtConditions.join(" AND ")}
+    ),
+    ranked AS (
+      SELECT m.*,
+             DENSE_RANK() OVER (
+               PARTITION BY kaltura_id ORDER BY created_at DESC, transcript_id
+             ) AS transcript_rank,
+             ROW_NUMBER() OVER (
+               PARTITION BY kaltura_id, transcript_id ORDER BY statement_idx
+             ) AS hit_rank
+        FROM stmt_matches m
+    ),
+    agg AS (
+      SELECT kaltura_id,
+             COUNT(*) AS match_count,
+             -- CEIL, not FLOOR: statement starts are fractional seconds, and
+             -- the player page highlights the statement containing t — a t
+             -- even a fraction BEFORE the start lights up the previous one.
+             -- Full text here (server-side only); the snippet window is cut
+             -- in mapStatementHits, where the match position is known.
+             jsonb_agg(
+               jsonb_build_object(
+                 'transcriptId', transcript_id,
+                 'statementIdx', statement_idx,
+                 'startSeconds', CEIL(adj_ms / 1000.0),
+                 'text', text,
+                 'speaker', speaker
+               ) ORDER BY statement_idx
+             ) FILTER (WHERE hit_rank <= ${CONTENT_HITS_PER_MEETING}) AS hits
+        FROM ranked
+       WHERE transcript_rank = 1
+       GROUP BY kaltura_id
+    )`;
+  const cteArgs = [language, ...stmtArgs];
+
+  const titleMatch = `(fts_vec @@ websearch_to_tsquery('english', ?) OR title ILIKE ? OR clean_title ILIKE ?)`;
+  const titleArgs = [queryText, `%${queryText}%`, `%${queryText}%`];
+
+  const filterActive = localeFilterActive(localeFilter);
+  const structural = conditions.join(" AND ");
+  const matchClause = `(${titleMatch} OR agg.match_count IS NOT NULL)`;
+  // Arg reading order: CTE → structural → (locale) → title.
+  const whereAll = `${structural} AND ${matchClause}`;
+  const whereLocalized = filterActive
+    ? `${structural} AND (i18n -> ?) IS NOT NULL AND ${matchClause}`
+    : whereAll;
+  const allArgs = [...cteArgs, ...conditionArgs, ...titleArgs];
+  const localizedArgs = filterActive
+    ? [...cteArgs, ...conditionArgs, localeFilter!.locale, ...titleArgs]
+    : allArgs;
+
+  const fromJoin = `FROM webtv.videos LEFT JOIN agg ON agg.kaltura_id = videos.kaltura_id`;
+  const dataPromise = pool.query(
+    q(
+      `WITH ${matchCte}
+       SELECT videos.*, agg.match_count AS content_match_count, agg.hits AS content_hits
+       ${fromJoin} WHERE ${whereLocalized}
+       ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+      [...localizedArgs, pageSize, offset],
+    ),
+  );
+  const countLocalizedPromise = pool.query(
+    q(
+      `WITH ${matchCte}
+       SELECT COUNT(*) AS total, COALESCE(SUM(agg.match_count), 0) AS stmt_total
+       ${fromJoin} WHERE ${whereLocalized}`,
+      localizedArgs,
+    ),
+  );
+  const countAllPromise = filterActive
+    ? pool.query(
+        q(
+          `WITH ${matchCte}
+           SELECT COUNT(*) AS total ${fromJoin} WHERE ${whereAll}`,
+          allArgs,
+        ),
+      )
+    : null;
+
+  const [data, countLocalized, countAll] = await Promise.all([
+    dataPromise,
+    countLocalizedPromise,
+    countAllPromise,
+  ]);
+
+  const highlightTerms = parseSearchQuery(queryText).highlightTerms;
+  const contentMatches: Record<string, ContentMatchSummary> = {};
+  const allRefs: SentenceRef[] = [];
+  const records = data.rows.map((row) => {
+    const rec = mapVideoRow(row);
+    if (row.content_match_count != null) {
+      const { hits, refs } = mapStatementHits(row.content_hits, highlightTerms);
+      contentMatches[rec.asset_id] = {
+        count: Number(row.content_match_count),
+        hits,
+      };
+      allRefs.push(...refs);
+    }
+    return rec;
+  });
+  // Refine hit timestamps from statement start to the SENTENCE containing
+  // the first match — long statements can run for minutes, and the deeplink
+  // should land where the term was actually said.
+  await applySentenceStarts(
+    Object.values(contentMatches).flatMap((m) => m.hits),
+    allRefs,
+  );
+
+  const countRow = countLocalized.rows[0] as
+    | { total?: string; stmt_total?: string }
+    | undefined;
+  const total = Number(countRow?.total ?? 0);
+  return {
+    records,
+    total,
+    totalIncludingOther: countAll
+      ? Number((countAll.rows[0] as { total?: string })?.total ?? 0)
+      : total,
+    contentMatches,
+    statementTotal: Number(countRow?.stmt_total ?? 0),
+  };
+}
+
+/** Ties a produced StatementHit back to its statement in the content JSONB
+ *  plus the first-match char offset in the flattened statement text — the
+ *  inputs sentence-level timestamp resolution needs. */
+interface SentenceRef {
+  hit: StatementHit;
+  transcriptId: string;
+  statementIdx: number;
+  matchIdx: number;
+}
+
+function mapStatementHits(
+  raw: unknown,
+  highlightTerms: string[],
+): { hits: StatementHit[]; refs: SentenceRef[] } {
+  if (!Array.isArray(raw)) return { hits: [], refs: [] };
+  const hits: StatementHit[] = [];
+  const refs: SentenceRef[] = [];
+  for (const h of raw) {
+    const rowHit = h as Record<string, unknown>;
+    const fullText = String(rowHit.text ?? "");
+    const matchIdx = firstMatchIndex(fullText, highlightTerms);
+    const windowed = windowText(fullText, highlightTerms);
+    const hit: StatementHit = {
+      statementIdx: Number(rowHit.statementIdx),
+      startSeconds: Number(rowHit.startSeconds),
+      text: windowed.text,
+      leading: windowed.leading,
+      trailing: windowed.trailing,
+      speaker: (rowHit.speaker as SpeakerInfo | null) ?? null,
+    };
+    hits.push(hit);
+    if (matchIdx >= 0 && typeof rowHit.transcriptId === "string") {
+      refs.push({
+        hit,
+        transcriptId: rowHit.transcriptId,
+        statementIdx: hit.statementIdx,
+        matchIdx,
+      });
+    }
+  }
+  return { hits, refs };
+}
+
+/**
+ * Upgrade hit timestamps from statement start to the start of the SENTENCE
+ * containing the first match. One bounded query extracts (text, start) for
+ * just the referenced statements' sentences; the flattened text is rebuilt
+ * exactly as reindexTranscriptStatements built it, so the match offset maps
+ * onto a sentence range. Best-effort: on any mismatch the statement start
+ * stays (correct, just coarser). `hits` is accepted only to keep call sites
+ * honest about what gets mutated.
+ */
+async function applySentenceStarts(
+  hits: StatementHit[],
+  refs: SentenceRef[],
+): Promise<void> {
+  void hits;
+  if (refs.length === 0) return;
+
+  // De-dup extraction per statement; several hits can share one statement.
+  const byKey = new Map<string, SentenceRef[]>();
+  for (const ref of refs) {
+    const key = `${ref.transcriptId}:${ref.statementIdx}`;
+    const list = byKey.get(key);
+    if (list) list.push(ref);
+    else byKey.set(key, [ref]);
+  }
+  const keys = [...byKey.keys()];
+  const tids = keys.map((k) => k.slice(0, k.lastIndexOf(":")));
+  const idxs = keys.map((k) => Number(k.slice(k.lastIndexOf(":") + 1)));
+
+  const result = await pool.query(
+    `SELECT p.tid AS transcript_id,
+            p.idx AS statement_index,
+            t.time_offset_ms,
+            (
+              SELECT jsonb_agg(
+                       jsonb_build_object('text', s.sent->>'text',
+                                          'start', s.sent->'start')
+                       ORDER BY para.ord, s.ord
+                     )
+                FROM jsonb_array_elements(
+                       t.content->'statements'->p.idx->'paragraphs'
+                     ) WITH ORDINALITY AS para(par, ord),
+                     jsonb_array_elements(para.par->'sentences')
+                       WITH ORDINALITY AS s(sent, ord)
+            ) AS sentences
+       FROM webtv.transcripts t
+       JOIN unnest($1::text[], $2::int[]) AS p(tid, idx)
+         ON p.tid = t.transcript_id`,
+    [tids, idxs],
+  );
+
+  for (const row of result.rows) {
+    const sentences = row.sentences as Array<{
+      text: string;
+      start: number;
+    }> | null;
+    const targets = byKey.get(`${row.transcript_id}:${row.statement_index}`);
+    if (!sentences || !targets) continue;
+
+    // Rebuild the indexed flattening (per-sentence whitespace collapse,
+    // empties skipped, single-space joins) with cumulative char ranges.
+    const ranges: Array<{ end: number; startMs: number }> = [];
+    let cursor = 0;
+    for (const sent of sentences) {
+      const norm = String(sent.text ?? "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (!norm) continue;
+      cursor += (ranges.length > 0 ? 1 : 0) + norm.length; // joining space
+      ranges.push({ end: cursor, startMs: Number(sent.start) });
+    }
+    if (ranges.length === 0) continue;
+
+    const offsetMs = Number(row.time_offset_ms ?? 0);
+    for (const ref of targets) {
+      const range =
+        ranges.find((r) => ref.matchIdx < r.end) ?? ranges[ranges.length - 1];
+      if (!Number.isFinite(range.startMs)) continue;
+      ref.hit.startSeconds = Math.ceil(
+        Math.max(0, range.startMs + offsetMs) / 1000,
+      );
+    }
+  }
+}
+
+export interface StatementMatchesResult {
+  total: number;
+  hits: StatementHit[];
+}
+
+/**
+ * All content-search hits inside one meeting (backs the sub-rows'
+ * "show all N matches"), transcript order, paged. Same query semantics as
+ * the feed's aggregation: newest completed transcript for the language.
+ * Keyed by asset_id — the client-side Video shape doesn't carry kaltura_id.
+ */
+export async function getStatementMatches(
+  assetId: string,
+  language: string,
+  queryText: string,
+  offset = 0,
+  limit = 100,
+): Promise<StatementMatchesResult> {
+  const parsed = parseSearchQuery(queryText);
+  const stmt = buildStatementConditions(parsed, language);
+  if (!stmt) return { total: 0, hits: [] };
+
+  const result = await pool.query(
+    q(
+      `SELECT s.transcript_id,
+              s.statement_idx,
+              CEIL(GREATEST(0, s.start_ms + COALESCE(t.time_offset_ms, 0)) / 1000.0) AS start_s,
+              s.text,
+              (sm.mapping -> s.statement_idx::text) - 'is_off_record' AS speaker,
+              COUNT(*) OVER () AS total
+         FROM webtv.transcript_statements s
+         JOIN webtv.transcripts t ON t.transcript_id = s.transcript_id
+         LEFT JOIN webtv.speaker_mappings sm ON sm.transcript_id = s.transcript_id
+        WHERE t.transcript_id = (
+                SELECT t2.transcript_id
+                  FROM webtv.transcripts t2
+                  JOIN webtv.videos v ON v.kaltura_id = t2.kaltura_id
+                 WHERE v.asset_id = ? AND t2.language_code = ?
+                   AND t2.transcription_status = 'completed'
+                 ORDER BY t2.created_at DESC
+                 LIMIT 1
+              )
+          AND ${stmt.conditions.join(" AND ")}
+        ORDER BY s.statement_idx
+        LIMIT ? OFFSET ?`,
+      [assetId, language, ...stmt.args, limit, offset],
+    ),
+  );
+
+  const highlightTerms = parsed.highlightTerms;
+  const refs: SentenceRef[] = [];
+  const hits = result.rows.map((row) => {
+    const fullText = String(row.text ?? "");
+    const matchIdx = firstMatchIndex(fullText, highlightTerms);
+    const windowed = windowText(fullText, highlightTerms);
+    const hit: StatementHit = {
+      statementIdx: Number(row.statement_idx),
+      startSeconds: Number(row.start_s),
+      text: windowed.text,
+      leading: windowed.leading,
+      trailing: windowed.trailing,
+      speaker: (row.speaker as SpeakerInfo | null) ?? null,
+    };
+    if (matchIdx >= 0) {
+      refs.push({
+        hit,
+        transcriptId: String(row.transcript_id),
+        statementIdx: hit.statementIdx,
+        matchIdx,
+      });
+    }
+    return hit;
+  });
+  await applySentenceStarts(hits, refs);
+
+  return {
+    total: Number(
+      (result.rows[0] as { total?: string } | undefined)?.total ?? 0,
+    ),
+    hits,
+  };
 }
 
 export async function getAvailableDates(
@@ -2162,6 +2745,10 @@ export async function setSpeakerMapping(
       [transcriptId, mapping],
     ),
   );
+  // Off-record flags live in the mapping, and the statement search index
+  // skips flagged statements — a mapping change on a completed transcript
+  // (e.g. pnpm reidentify) must therefore reindex. No-op mid-pipeline.
+  await reindexStatementsSafe(transcriptId);
 }
 
 /** One speaker mapping plus the meeting metadata needed to build links. */

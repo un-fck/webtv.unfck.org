@@ -262,6 +262,7 @@ The provider is selected per language via `STT_ROUTING` in `lib/providers/config
 - `videos` — scraped video metadata, keyed by `asset_id`. Columns: `entry_id`, `title`, `clean_title`, `date`, `scheduled_time`, `duration`, `url`, `body`, `category`, `event_code`, `event_type`, `session_number`, `part_number`, `pv_symbol`, `pv_available`, `pv_checked_at`, `slug`, `last_seen`, `created_at`, `updated_at`, plus a generated `fts_vec tsvector` over `COALESCE(clean_title, title)`. Indexes: unique on `slug`; btree on `entry_id`, `date`, `last_seen`, `body`, `category`; GIN on `fts_vec`; GIN trigram on the title fallback.
 - `transcripts` — transcription results, keyed by `transcript_id`. Two status columns: `transcription_status` (`scheduled → transcribing → identifying_speakers → analyzing_topics → completed | no_content | error | interrupted`) and `analysis_status` (`none | analyzing | completed | error | interrupted`, for on-demand proposition analysis only). `interrupted` (migration 020) = worker died mid-flight (Azure deploy SIGTERM, OOM, hard kill) **or** the pipeline hit a transient infra error (audio not downloadable yet, network/provider timeout — `isTransientPipelineError()` in `lib/pipeline-errors.ts`); distinct from `error` (intrinsic failure) so the picker auto-resumes interrupted rows while leaving genuine errors alone. `no_content` = pipeline completed but the speaker-ID LLM assessed the recording as non-substantive (silence-dominated feeds transcribed as junk — SYNTHESIS §13.4); terminal like `error` but shown to viewers as its own state, junk content stays in the DB and is hidden at the serving boundary (`lib/off-record.ts`), and manual re-transcription is allowed (WebTV usually trims such feeds later). Concurrency control is status-CAS based (`claimTranscript`/`claimAnalysis`): `worker_id` records which process owns the row, `heartbeat_at` is refreshed by a per-worker 60s tick and at long-stage boundaries (`touchHeartbeat()`), `retry_count` caps interrupted resumes at 5 before escalating to `error`. Recovery: graceful shutdown → SIGTERM handler in `lib/server-init.ts` flips owned rows to `interrupted` via `markOwnRowsInterrupted`; hard kill → `liveness-sweep` cron (5min staleness threshold) does the same via `sweepStaleHeartbeats`. Boot picker in `lib/server-init.ts` resumes `interrupted` rows on startup; `process-scheduled` cron does the same on its tick. FK `transcripts.kaltura_id → videos(kaltura_id) ON DELETE CASCADE` (migration 016); canonical join is `v.kaltura_id = t.kaltura_id` (both `NOT NULL` since migration 015).
 - `speaker_mappings` — AI-resolved speaker info per transcript (name, function, affiliation, group), one row per `transcript_id` with a JSONB `mapping` column.
+- `transcript_statements` — statement-level search index for full-text search inside transcripts (migration 026). One row per ON-RECORD statement of a COMPLETED transcript (`transcript_id` FK CASCADE + `statement_idx` PK, `language_code`, raw `start_ms`, `text`, generated per-language `tsv`); GIN on `tsv` + GIN trigram on `text`. Maintained by `reindexTranscriptStatements()` in `lib/db.ts`, hooked into every content/status/mapping write; backfill via `tsx scripts/backfill-statement-search.ts`. Query routing lives in `lib/statement-search.ts`: digit-bearing terms ("L.73", "2735") → trigram containment (symbols hide inside compound FTS tokens; survives STT-garbled prefixes), word terms → `websearch_to_tsquery` per-language, zh → containment only. The realignment offset is applied at query time, so re-cuts never reindex.
 - `processing_usage_events` — per-operation API cost tracking (provider, stage, operation, status, model, tokens, hours, rate card, USD-derivable). 33 columns, SERIAL PK.
 - `pv_contents` — cached PV/SR document content, composite PK `(pv_symbol, language)`, JSONB `content` plus `fetched_at` / `parsed_at`. Populated by `app/api/pv/route.ts`.
 
@@ -281,7 +282,8 @@ Historically the schema avoided FK constraints and enforced referential integrit
 | `/api/transcripts/[id]`              | GET    | Poll transcript status / fetch result                                |
 | `/api/transcripts/[id]/analysis`     | POST   | Run proposition analysis on transcript                               |
 | `/api/languages`                     | GET    | List available audio language tracks for a Kaltura entry             |
-| `/api/search`                        | GET    | Search video archive (`?q=...&offset=...`)                           |
+| `/api/videos`                        | GET    | Schedule feed: browse + search (`?q=`), `?ft=1` adds transcript-content matches |
+| `/api/videos/matches`                | GET    | All content-search hits inside one meeting (`?assetId=&q=&locale=`)  |
 | `/api/pv`                            | GET    | Fetch / parse a PV document PDF and cache JSON in `pv_contents`      |
 | `/api/pv/align`                      | POST   | Align a PV document with audio (timestamps only)                     |
 | `/api/cron/process-scheduled`        | GET    | Cron: process scheduled transcripts (auth via `CRON_SECRET`)         |
@@ -308,6 +310,13 @@ Cron schedule (`docker/crontab.template`): `process-scheduled` every 5 min, `syn
 - `/hrc/{session}/{meeting}` — Human Rights Council
 - `/ecosoc/{year}/{meeting}` — ECOSOC
 - `/meeting/{asset_id}` — fallback for videos without document symbols
+
+Meeting pages accept three query params: `?lang=` (audio/transcript track),
+`?view=` (transcript | analysis | pv), and `?t=<seconds>` (timestamp deeplink:
+seeks the player paused, scrolls to and flashes the containing statement).
+`lang`/`view` are UI state written back via `replaceState`; `t` is
+**inbound-only** — the app never writes it to the address bar; per-statement
+copy-link buttons in the transcript compose it explicitly.
 
 Slug logic lives in `lib/meeting-slug.ts` with bidirectional conversion (`slugFromSymbol` / `symbolFromSlug`).
 

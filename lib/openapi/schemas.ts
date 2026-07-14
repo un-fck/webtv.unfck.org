@@ -189,6 +189,38 @@ export const MetadataSchema = z
 
 // ── Meeting list response ───────────────────────────────────────────────────
 
+export const MeetingMatchesSchema = z
+  .object({
+    count: z
+      .number()
+      .int()
+      .describe("Total matching statements in this meeting's transcript."),
+    statements: z
+      .array(
+        z.object({
+          speaker: SpeakerSchema.nullable(),
+          text: z
+            .string()
+            .describe(
+              "Snippet centered on the first match; ellipses mark truncation. " +
+                "Full statements live in jsonUrl.",
+            ),
+          start: z.number().int().describe("Seconds into the video."),
+          pageUrl: z
+            .string()
+            .describe(
+              "Meeting page deep-linked to this moment via `?t=` — opens " +
+                "with the player seeked and the statement highlighted.",
+            ),
+        }),
+      )
+      .describe("First 3 matches in transcript order."),
+  })
+  .describe(
+    "Transcript-content hits for this meeting (present only with `ft=1` " +
+      "when the transcript matched).",
+  );
+
 export const MeetingListItemSchema = z.object({
   title: z.string().nullable(),
   date: z.string().nullable(),
@@ -200,6 +232,7 @@ export const MeetingListItemSchema = z.object({
   pageUrl: z.string(),
   jsonUrl: z.string(),
   textUrl: z.string().nullable(),
+  matches: MeetingMatchesSchema.optional(),
 });
 
 export const MeetingsResponseSchema = z.object({
@@ -212,6 +245,13 @@ export const MeetingsResponseSchema = z.object({
   hasMore: z.boolean(),
   offset: z.number().int(),
   pageSize: z.number().int(),
+  statementTotal: z
+    .number()
+    .int()
+    .optional()
+    .describe(
+      "With `ft=1`: matching statements across all result meetings.",
+    ),
 });
 
 // ── Meeting detail response (three variants) ────────────────────────────────

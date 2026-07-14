@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type ReactNode,
@@ -68,6 +69,10 @@ interface MeetingState {
   player: PlayerHandle | undefined;
   setPlayer: Dispatch<SetStateAction<PlayerHandle | undefined>>;
 
+  /** Timestamp deeplink target (`?t=<seconds>`), or null. Read once on
+   *  mount; the panel uses it to flash the statement the link points at. */
+  initialSeekSeconds: number | null;
+
   /** Refetch the available-languages list from /api/languages. The panel
    *  fires this after a successful transcribe POST so a brand-new track
    *  shows up in the chrome's language switcher without a page reload. */
@@ -121,6 +126,30 @@ export function MeetingStateProvider({
     null,
   );
   const [player, setPlayer] = useState<PlayerHandle | undefined>();
+
+  // Timestamp deeplink: `?t=<integer seconds>` positions the player (paused —
+  // browsers block unmuted autoplay without a gesture, and seek-paused is the
+  // less jarring landing anyway) at that moment once the player is ready.
+  // Read once, like `?lang=`; the app never writes `t` back to the URL — the
+  // per-statement copy-link buttons compose it explicitly, so the address bar
+  // doesn't drift to a random moment (see TranscriptView).
+  const [initialSeekSeconds] = useState<number | null>(() => {
+    const raw = searchParams.get("t");
+    if (!raw) return null;
+    const parsed = Math.floor(Number(raw));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  });
+  const initialSeekDone = useRef(false);
+  useEffect(() => {
+    if (!player || initialSeekSeconds === null || initialSeekDone.current)
+      return;
+    initialSeekDone.current = true;
+    try {
+      player.currentTime = initialSeekSeconds;
+    } catch {
+      // Best-effort — a deeplink that fails to seek still shows the meeting.
+    }
+  }, [player, initialSeekSeconds]);
 
   const refreshLanguages = useCallback(() => {
     fetch(`/api/languages?kalturaId=${encodeURIComponent(kalturaId)}`)
@@ -187,6 +216,7 @@ export function MeetingStateProvider({
       setPanelData,
       player,
       setPlayer,
+      initialSeekSeconds,
       refreshLanguages,
     }),
     [
@@ -197,6 +227,7 @@ export function MeetingStateProvider({
       topicCollapsed,
       panelData,
       player,
+      initialSeekSeconds,
       refreshLanguages,
     ],
   );
