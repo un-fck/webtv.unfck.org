@@ -916,6 +916,67 @@ This does **not** reverse the WER verdict, but it means:
 - **Soniox looks materially better on entities** (48 vs 6) at statistically indistinguishable WER
   and $0.10/hr. It deserves a closer look than its §14 "tied" verdict suggested.
 
+### 15.5b The seven checks, applied to azure-llm-speech
+
+The 2026-05 study's seven reference-free checks (the `compare.py` harness — accuracy, speaker
+labels, multilingual floor, Chinese text, names & entities, numbers & symbols, timestamps), run
+on **S/PV.10156** — the same 9-minute meeting the original 10-engine consensus was built on, so
+azure-llm is scored against that consensus rather than in isolation. `azure-llm-speech` and the
+other §13–§15 challengers are now registered in `compare.py`'s `PROVIDERS`.
+
+| check | azure-llm | evidence |
+| --- | :-: | --- |
+| **Accuracy** | ✅ | best or tied on all six languages (§15.1) |
+| **Speaker labels** | ◐ | 18–20 speakers on 171-min files (good), but **coarse**: 1–4 utterances on a 9-min meeting, single utterances spanning 9 min. Interpretation tracks return 1 speaker — arguably *correct* (one booth interpreter), not a failure |
+| **Multilingual floor** | ◐ | script mix matches consensus, best floor WER (30.9) — but statement-boundary **language leakage** (§13.1) |
+| **Chinese text** | ✅ | see below |
+| **Names & entities** | ❌ | **worst of every engine** — §15.5a |
+| **Numbers & symbols** | ◐ | see below |
+| **Timestamps** | ✅ | word-level timestamps in all 6 languages (743–1 791 words), monotonic, 98.5–98.9% span coverage. Coarse *grouping*, but per §6.5 that is lumping, not drift |
+
+#### Chinese ✅ — clean
+
+| | azure-llm | 2026-05 consensus (10 engines) |
+| --- | ---: | --- |
+| chars | 1 984 | median 2 015 (range 1 809–2 121) |
+| **U+FFFD** | **0** | 0 for all except mistral (**176** — the CJK-collapse class §6.3) |
+| off-script | 1.2% | 0.1–1.2% normal band (omni 10.8%) |
+| coverage | 97.9% | — |
+
+Renders proper Simplified Chinese and gets the meeting number as **digits** —
+「安全理事会第**10156**次会议现在开始」. No corruption, no romanization, no truncation.
+**But its WER ties fun-asr (98.0 vs 97.5, n.s.), and fun-asr is Mandarin-first — there is no
+reason to move `zh`.**
+
+#### Arabic ✅ — the cleanest Arabic of any engine we have run
+
+| | azure-llm | consensus |
+| --- | ---: | --- |
+| chars | 4 526 | median 4 347 (range 3 565–4 567) — at the top, nothing truncated |
+| **off-script** | **0.0%** | 0.0–1.4% |
+| coverage | 98.1% | — |
+
+And across the 15-session standing corpus its Arabic is **0.1% off-script vs azure-gpt-4o's 4.4%**
+(§15.2) — the incumbent is the one leaking Latin into Arabic. WER ties (89.7 vs 89.5), so on the
+metric it is a wash, but on *fidelity* azure-llm is clearly the better Arabic engine.
+
+#### Numbers & symbols ◐ — a real defect, and it is language-specific
+
+UN document symbols (`S/2026/426`) and meeting numbers, S/PV.10156:
+
+| lang | azure-llm | assemblyai (control) |
+| --- | --- | --- |
+| en | ✅ S/2024/507, S/2026/426 | ✅ both |
+| fr | ✅ S/2024/507, S/2026/426 | ✅ both |
+| **es** | ❌ **`S-2026/426`** (hyphen for slash) and **S/2024/507 lost** | ✅ both |
+| ru | — none found | ❌ `S-2024-507` |
+| zh / ar | — none found | — none found |
+| **ar** | ❌ meeting number **spelled out in words** — `عشرة آلاف ومئة وستة وخمسين` instead of `10156` | — |
+
+Spanish corrupts the symbol separator (`S-2026/426`), which would break any downstream symbol
+parsing or PV linking; Arabic drifts to number-spelling (§6.6's ITN class). English, French,
+Spanish, Russian and Chinese all render the *meeting* number in digits — only Arabic spells it.
+
 ### 15.6 Drift regression test (`regression-azure-llm.ts`)
 
 The unpinnable-model risk (§15.0) cannot be fixed in code — it can only be *detected*. A silent
