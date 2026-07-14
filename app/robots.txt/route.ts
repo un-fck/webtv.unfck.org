@@ -13,6 +13,13 @@ export async function GET() {
 #   /{locale}/{slug}.txt
 #   /{locale}/{slug}.json
 # e.g. /en/sc/10175.txt or /en/sc/10175.json
+#
+# Search inside the transcripts (find meetings by what was said):
+#   /{locale}/meetings.json?q={query}&ft=1
+# Each hit returns the speaker, a snippet, and a link to the exact moment.
+#
+# Cite a moment: append ?t={seconds} to any meeting page URL
+#   /en/sc/10175?t=5025
 
 User-agent: *
 Allow: /

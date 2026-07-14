@@ -140,6 +140,13 @@ export function buildSpec(): Record<string, unknown> {
         "`ga/79/21`). Append `.json` or `.txt` to any meeting page URL to " +
         "get the same content as data. Videos without a document symbol are " +
         "addressable at `/{locale}/asset/{asset_id}`.\n\n" +
+        "Citing a moment: every meeting page URL accepts `?t=<seconds>` " +
+        "(whole seconds, e.g. `/en/sc/10175?t=5025`), which opens the page " +
+        "with the video seeked to that moment and the matching statement " +
+        "highlighted. The sentence timings in a transcript's `.json` " +
+        "(`start`/`end`, in seconds) are exactly what you put in `?t=`, so " +
+        "any statement can be turned into a citation link. Only a bare " +
+        "number is parsed — `?t=90s` or `?t=1:30` are ignored.\n\n" +
         "Transcripts available through this API are created by using " +
         "automatic speech recognition and are not official records nor " +
         "official documents of the United Nations. Official records and " +
@@ -164,9 +171,15 @@ export function buildSpec(): Record<string, unknown> {
           operationId: "listMeetings",
           parameters: [
             localeParam,
-            qp("q", "Full-text search query (min 2 chars).", {
-              type: "string",
-            }),
+            qp(
+              "q",
+              "Search meeting titles and metadata (min 2 chars; shorter is " +
+                "ignored and the query degrades to a plain browse). Add `ft=1` " +
+                "to also search inside transcript content.",
+              {
+                type: "string",
+              },
+            ),
             qp(
               "ft",
               "Set to 1 (with q) to also search INSIDE transcript statements. " +
@@ -184,7 +197,9 @@ export function buildSpec(): Record<string, unknown> {
             }),
             qp(
               "date",
-              "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.",
+              "Filter to a single date (YYYY-MM-DD). Combining it with from/to " +
+                "is not rejected but intersects the two constraints, which is " +
+                "rarely what you want — pass either date or from/to.",
               {
                 type: "string",
                 pattern: "^\\d{4}-\\d{2}-\\d{2}$",
@@ -213,7 +228,8 @@ export function buildSpec(): Record<string, unknown> {
               description:
                 "Filter by available document type. `transcript` = has an automatic transcript; " +
                 "`pv` = has an official verbatim record; `sr` = has an official summary record. " +
-                "Repeat to require multiple (e.g. `text=transcript&text=pv`). " +
+                "Repeating it matches ANY of the given types, not all " +
+                "(`text=transcript&text=pv` = has a transcript OR a verbatim record). " +
                 "Use `text=transcript` to exclude meetings with no content to read.",
               schema: {
                 type: "array",

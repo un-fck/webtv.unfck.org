@@ -3,7 +3,7 @@
   "info": {
     "title": "UN Transcripts API",
     "version": "1.0.0",
-    "description": "Public, read-only API for UN Web TV meeting records and automatically generated transcripts.\n\nMeeting URLs use human-readable slugs derived from official UN document symbols (S/PV.10175 → `sc/10175`, A/79/PV.21 → `ga/79/21`). Append `.json` or `.txt` to any meeting page URL to get the same content as data. Videos without a document symbol are addressable at `/{locale}/asset/{asset_id}`.\n\nTranscripts available through this API are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations; the verbatim (PV) or summary (SR) document for a meeting can be fetched via `GET /api/pv`."
+    "description": "Public, read-only API for UN Web TV meeting records and automatically generated transcripts.\n\nMeeting URLs use human-readable slugs derived from official UN document symbols (S/PV.10175 → `sc/10175`, A/79/PV.21 → `ga/79/21`). Append `.json` or `.txt` to any meeting page URL to get the same content as data. Videos without a document symbol are addressable at `/{locale}/asset/{asset_id}`.\n\nCiting a moment: every meeting page URL accepts `?t=<seconds>` (whole seconds, e.g. `/en/sc/10175?t=5025`), which opens the page with the video seeked to that moment and the matching statement highlighted. The sentence timings in a transcript's `.json` (`start`/`end`, in seconds) are exactly what you put in `?t=`, so any statement can be turned into a citation link. Only a bare number is parsed — `?t=90s` or `?t=1:30` are ignored.\n\nTranscripts available through this API are created by using automatic speech recognition and are not official records nor official documents of the United Nations. Official records and official documents are available on the Official Document System of the United Nations; the verbatim (PV) or summary (SR) document for a meeting can be fetched via `GET /api/pv`."
   },
   "servers": [
     {
@@ -55,9 +55,21 @@
             "name": "q",
             "in": "query",
             "required": false,
-            "description": "Full-text search query (min 2 chars).",
+            "description": "Search meeting titles and metadata (min 2 chars; shorter is ignored and the query degrades to a plain browse). Add `ft=1` to also search inside transcript content.",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "ft",
+            "in": "query",
+            "required": false,
+            "description": "Set to 1 (with q) to also search INSIDE transcript statements. Content-matched meetings are added to the results and carry a `matches` object with speaker, snippet, and a `?t=` deeplink per hit. Terms containing digits (L.73, 2735, S/2026/243) match as exact fragments — robust for document symbols; word terms use stemmed full-text search; quoted phrases work. Searches the URL locale's transcript track; only meetings with a completed transcript are covered.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
             }
           },
           {
@@ -73,7 +85,7 @@
             "name": "date",
             "in": "query",
             "required": false,
-            "description": "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.",
+            "description": "Filter to a single date (YYYY-MM-DD). Combining it with from/to is not rejected but intersects the two constraints, which is rarely what you want — pass either date or from/to.",
             "schema": {
               "type": "string",
               "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
@@ -128,7 +140,7 @@
             "name": "text",
             "in": "query",
             "required": false,
-            "description": "Filter by available document type. `transcript` = has an automatic transcript; `pv` = has an official verbatim record; `sr` = has an official summary record. Repeat to require multiple (e.g. `text=transcript&text=pv`). Use `text=transcript` to exclude meetings with no content to read.",
+            "description": "Filter by available document type. `transcript` = has an automatic transcript; `pv` = has an official verbatim record; `sr` = has an official summary record. Repeating it matches ANY of the given types, not all (`text=transcript&text=pv` = has a transcript OR a verbatim record). Use `text=transcript` to exclude meetings with no content to read.",
             "schema": {
               "type": "array",
               "items": {
@@ -591,6 +603,90 @@
                 "textUrl": {
                   "type": "string",
                   "nullable": true
+                },
+                "matches": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Total matching statements in this meeting's transcript."
+                    },
+                    "statements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "speaker": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "affiliation": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "ISO alpha-3 country code or short affiliation label."
+                              },
+                              "affiliation_full": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Official UN country name resolved from the ISO code."
+                              },
+                              "group": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "function": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "affiliation",
+                              "affiliation_full",
+                              "group",
+                              "function"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Resolved speaker for a statement.",
+                            "nullable": true
+                          },
+                          "text": {
+                            "type": "string",
+                            "description": "Snippet centered on the first match; ellipses mark truncation. Full statements live in jsonUrl."
+                          },
+                          "start": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Seconds into the video."
+                          },
+                          "pageUrl": {
+                            "type": "string",
+                            "description": "Meeting page deep-linked to this moment via `?t=` — opens with the player seeked and the statement highlighted."
+                          }
+                        },
+                        "required": [
+                          "speaker",
+                          "text",
+                          "start",
+                          "pageUrl"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "First 3 matches in transcript order."
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "statements"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Transcript-content hits for this meeting (present only with `ft=1` when the transcript matched)."
                 }
               },
               "required": [
@@ -628,6 +724,12 @@
             "maximum": 9007199254740991
           },
           "pageSize": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "statementTotal": {
+            "description": "With `ft=1`: matching statements across all result meetings.",
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
