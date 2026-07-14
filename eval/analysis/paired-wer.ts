@@ -79,17 +79,26 @@ let complete = [...bySession.entries()].filter(
 );
 const dropped = bySession.size - complete.length;
 
-// Sessions where even the BEST arm scores above this are not measuring
-// transcription — the verbatim record does not correspond to the video
-// (resumed/continued meetings, re-cut recordings). Every arm lands within a
-// fraction of a point of every other, so they contribute ~zero paired deltas
-// and only dilute the comparison toward "no difference". Excluded by default;
-// pass --keep-mismatched to see them.
-const MISMATCH_FLOOR = 0.85;
-const mismatched = complete.filter(
-  ([, m]) =>
-    Math.min(...providers.map((p) => m.get(p)!.normalizedWer)) > MISMATCH_FLOOR,
-);
+// Sessions whose verbatim record does not correspond to the video (resumed /
+// continued meetings, re-cut recordings). Every arm fails them identically, so
+// they contribute ~zero paired deltas and only dilute the comparison.
+//
+// This is a property of the SESSION, not the language, so it must be a fixed
+// list — NOT a WER threshold. A threshold calibrated on English (where good
+// transcription lands at 15–40%) is meaningless for Arabic and Chinese, whose
+// WER against an edited PV is intrinsically 80–100% for every provider
+// (SYNTHESIS §2) because of morphology, orthography and CJK scoring. An 85%
+// floor silently excluded 13/15 Arabic sessions and all 20 Chinese ones.
+//
+// Derived from the English sweep, where the absolute scale is interpretable:
+// every arm scored >90% on these four and nowhere near that elsewhere.
+const MISMATCHED_SESSIONS = new Set([
+  "S/PV.9606",
+  "S/PV.9614",
+  "S/PV.9686",
+  "S/PV.9732",
+]);
+const mismatched = complete.filter(([sym]) => MISMATCHED_SESSIONS.has(sym));
 if (!process.argv.includes("--keep-mismatched")) {
   complete = complete.filter((c) => !mismatched.includes(c));
 }
@@ -101,8 +110,8 @@ console.log(
 );
 if (mismatched.length) {
   console.log(
-    `Excluded ${mismatched.length} PV↔video-mismatch session(s) — every arm >${MISMATCH_FLOOR * 100}% ` +
-      `WER, so the record does not match the recording: ${mismatched.map(([s]) => s).join(", ")}`,
+    `Excluded ${mismatched.length} PV↔video-mismatch session(s) (record does not match the recording): ` +
+      `${mismatched.map(([s]) => s).join(", ")}`,
   );
 }
 if (!providers.includes(INCUMBENT)) {

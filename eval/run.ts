@@ -19,6 +19,7 @@ import { UN_LANGUAGES } from "./config";
 import {
   downloadAudioToTemp,
   formatTime as msToHMS,
+  parallelMap,
 } from "../lib/providers/utils";
 
 interface SessionConfig {
@@ -56,6 +57,7 @@ function parseArgs() {
     providers?: string[];
     languages?: string[];
     cachedOnly?: boolean;
+    sessionConcurrency?: number;
   } = {};
 
   for (const arg of args) {
@@ -68,6 +70,10 @@ function parseArgs() {
     if (arg.startsWith("--languages="))
       opts.languages = arg.slice("--languages=".length).split(",");
     if (arg === "--cached-only") opts.cachedOnly = true;
+    if (arg.startsWith("--session-concurrency="))
+      opts.sessionConcurrency = Number(
+        arg.slice("--session-concurrency=".length),
+      );
   }
   return opts;
 }
@@ -407,7 +413,21 @@ async function main() {
 
   const allResults: SessionResult[] = [...existingResults];
 
-  for (const session of filteredSessions) {
+  // Sessions run serially by default. Providers already run in parallel within
+  // a session, and audio is cached per (symbol, language), so for a single
+  // language the serial loop is fine (~1h for 20 sessions). It becomes the
+  // bottleneck on a multi-language sweep, where every (session, language) pair
+  // needs its own download: 20 sessions x 5 languages = 100 serial downloads.
+  // `--session-concurrency=N` overlaps them. Keep N modest — the providers are
+  // shared across sessions and will rate-limit if you fan out too far.
+  const sessionConcurrency = Math.max(1, opts.sessionConcurrency ?? 1);
+  if (sessionConcurrency > 1)
+    console.log(`Session concurrency: ${sessionConcurrency}\n`);
+
+  // The merge below runs after an await inside each worker, but JS is
+  // single-threaded between awaits, so the read-check-write on `existingKeys`
+  // is atomic. No lock needed.
+  await parallelMap(filteredSessions, sessionConcurrency, async (session) => {
     const results = await evalSession(
       session,
       providerNames,
@@ -422,7 +442,7 @@ async function main() {
         existingKeys.add(existingKey(r));
       }
     }
-  }
+  });
 
   // Write merged summary
   fs.writeFileSync(summaryPath, JSON.stringify(allResults, null, 2));

@@ -3,10 +3,26 @@ import os from "os";
 import path from "path";
 import { execSync } from "child_process";
 import type { TranscriptionProvider, NormalizedTranscript } from "./types";
-import { downloadAudioToTemp } from "./utils";
+import { downloadAudioToTemp, apiLanguage } from "./utils";
 
 const AZURE_SPEECH_KEY = process.env.AZURE_SPEECH_KEY!;
 const AZURE_SPEECH_ENDPOINT = process.env.AZURE_SPEECH_ENDPOINT!;
+
+/**
+ * `locales` requires full BCP-47 — a bare ISO code is rejected with
+ * `400 InvalidLocale "The specified locale is not supported."` (verified for
+ * every one of our codes; `zh-Hans` is likewise rejected — it must be `zh-CN`).
+ * Arabic is pinned to `ar-SA` (Modern Standard Arabic, which is what UN Arabic
+ * is, and what the service itself auto-detects on our Arabic track).
+ */
+const AZURE_LOCALE: Record<string, string> = {
+  en: "en-US",
+  fr: "fr-FR",
+  es: "es-ES",
+  ar: "ar-SA",
+  ru: "ru-RU",
+  zh: "zh-CN",
+};
 
 /**
  * Azure "LLM Speech" enhanced-mode fast transcription (api-version 2025-10-15)
@@ -24,6 +40,26 @@ const AZURE_SPEECH_ENDPOINT = process.env.AZURE_SPEECH_ENDPOINT!;
  * hostname of the SAME resource returns `400 "Enhanced mode is currently not
  * supported yet"` (which reads like a region problem but isn't). Plain fast
  * transcription works on either hostname. Set AZURE_SPEECH_ENDPOINT accordingly.
+ *
+ * WHAT MODEL IS THIS? "Enhanced mode" is a serving surface, not a model. Omitting
+ * `enhancedMode.model` — which is what we do — routes to Microsoft's *unnamed*
+ * default speech-LLM ("multimodal model" / "renewed speech-LLM model" in the docs;
+ * never identified). It is NOT MAI-Transcribe: that is a separate, named model you
+ * opt into via `enhancedMode.model: "mai-transcribe-1.5"`. Two consequences worth
+ * knowing before trusting this in production:
+ *   - There is no version pin for the default model, and Microsoft has already
+ *     swapped it once ("renewed") under the same request shape. Behavior can shift
+ *     under us with no signal.
+ *   - `transcribeStyle: "verbatim"` exists ONLY on mai-transcribe-1.5, which in turn
+ *     has NO diarization and NO word timestamps. So there is no configuration that
+ *     gives verbatim + diarization together. The default model is
+ *     "readability-optimized" by default; whether that extends to dropping
+ *     disfluencies (as opposed to display formatting) is undocumented.
+ *
+ * `locales`: omitting it puts the service in multi-lingual auto-detect mode. For a
+ * single-language track that is the wrong config — the docs say pinning `locales`
+ * "forces recognition in a single language" and improves accuracy and latency. We
+ * pin it per-track and leave it off only for the multilingual floor.
  */
 export const azureLlmSpeech: TranscriptionProvider = {
   name: "azure-llm-speech",
@@ -54,6 +90,16 @@ export const azureLlmSpeech: TranscriptionProvider = {
         enhancedMode: { enabled: true, task: "transcribe" },
         diarization: { enabled: true, maxSpeakers: 20 },
       };
+      // Pin the language on single-language tracks; leave unset for `floor` so
+      // the service stays in multi-lingual mode and code-switches (see above).
+      const lang = apiLanguage(opts?.language);
+      const locale = lang ? AZURE_LOCALE[lang] : undefined;
+      if (lang && !locale)
+        throw new Error(
+          `azure-llm-speech: no BCP-47 locale mapped for language "${lang}". ` +
+            `Bare ISO codes are rejected by the API — add it to AZURE_LOCALE.`,
+        );
+      if (locale) definition.locales = [locale];
 
       const form = new FormData();
       form.append(

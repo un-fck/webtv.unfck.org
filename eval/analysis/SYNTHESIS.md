@@ -728,6 +728,124 @@ ElevenLabs caught the patronymic — unchanged since §6.7.
   audio *in total*; the eval would cost ~7× the spend it optimizes. Revisit if their volume grows
   (the user notes an unrelated failure mode is currently suppressing non-English usage).
 
+## 15. azure-llm-speech across all six languages (run 2026-07-13/14)
+
+Scoped Phase 3: the §14 winner against each language's incumbent. **azure-llm-speech beats or
+ties every incumbent on every language**, and is the only provider that could plausibly serve
+all six from a slot we already pay for.
+
+### 15.0 What `azure-llm-speech` actually is — read this before trusting it
+
+**"Enhanced mode" is a serving surface, not a model.** Omitting `enhancedMode.model` — which is
+what we do — routes to Microsoft's **unnamed default speech-LLM** ("multimodal model" /
+"renewed speech-LLM model" in the docs; never identified). It is **not** MAI-Transcribe (§10):
+that is a separate, named model you opt into via `enhancedMode.model: "mai-transcribe-1.5"`.
+
+Three consequences, all material for a slot carrying 96% of production audio:
+
+1. **The model is unnamed and unpinnable, and Microsoft has already silently swapped it once**
+   ("renewed speech-LLM model", Build 2026) under the same request shape. There is no version
+   identifier. What we validated here is not guaranteed to be what runs next month.
+2. **There is no configuration that gives verbatim + diarization together.**
+   `transcribeStyle: "verbatim"` exists **only** on `mai-transcribe-1.5`, which has **no
+   diarization and no word timestamps**. The default model is "readability-optimized" by default
+   with only a soft prompt (`"Output must be in lexical format."`) as a lever; whether that
+   extends to dropping disfluencies (vs. mere display formatting) is **undocumented**. For a
+   *verbatim* record system this is an open question, not a footnote.
+3. **`confidence` is always 0 — documented and intentional**, removing the cheapest
+   hallucination tripwire. Any junk gate (§13.4) needs a different signal.
+
+Config fix found while running this: **`locales` requires full BCP-47**. A bare ISO code is
+rejected (`400 InvalidLocale`); `zh-Hans` is rejected too (must be `zh-CN`). Omitting `locales`
+entirely leaves the service in **multi-lingual auto-detect**, which is how §14's English numbers
+were produced — i.e. the challenger ran *handicapped* and still won. All §15 numbers (and a
+re-run of `en`) pin the locale. On Arabic, pinning produced byte-identical output to
+auto-detect, so the handicap was nominal.
+
+### 15.1 Paired WER vs each incumbent
+
+Bootstrap 95% CI over per-session paired deltas. Each language is scored on the **identical
+session set** across its arms; four PV↔video-mismatch sessions (9606/9614/9686/9732 — the record
+does not match the recording) are excluded by a **fixed session list**, not a WER threshold.
+
+> **Methodological correction:** an *absolute* WER floor for detecting mismatch is invalid across
+> languages. Arabic and Chinese WER against an edited PV is intrinsically 80–100% for **every**
+> provider (§2) — morphology, orthography, CJK scoring — so an 85% floor calibrated on English
+> silently excluded 13/15 Arabic sessions and **all 20** Chinese ones. Mismatch is a property of
+> the *session*, not the language.
+
+| track | incumbent | incumbent WER | azure-llm WER | Δ | 95% CI | won | verdict |
+| --- | --- | ---: | ---: | ---: | --- | ---: | --- |
+| **en** | assemblyai-3.5-pro | 43.5 | **42.2** | **−1.3** | [−2.3, −0.6] | 12/14 | **better** |
+| **fr** | azure-gpt-4o | 75.0 | **70.5** | **−4.4** | [−6.0, −3.0] | **10/10** | **better** |
+| **es** | azure-gpt-4o | 68.7 | **65.2** | **−3.5** | [−6.6, −1.4] | **10/10** | **better** |
+| **ru** | azure-gpt-4o | 72.9 | **71.1** | **−1.7** | [−2.5, −1.0] | 11/12 | **better** |
+| **ar** | azure-gpt-4o | 89.5 | 89.7 | +0.2 | [−0.8, 1.1] | 3/12 | tie |
+| **zh** | alibaba-fun-asr | 97.5 | 98.0 | +0.5 | [−0.0, 1.0] | 4/16 | tie |
+
+Absolute values across languages are **not comparable** (ar/zh are inflated by PV editing and
+CJK scoring); only the within-language deltas mean anything.
+
+Note the incumbent it displaces: **azure-gpt-4o-transcribe is a weak holder of fr/es/ar/ru.**
+Run on the English track for reference it came **last of seven** (45.4, +1.9 vs AssemblyAI) —
+worse than every challenger we tested.
+
+### 15.2 Cross-language leakage — the challenger is *cleaner* than the incumbent
+
+The §5 `azure-openai` fingerprint (Chinese gavel-leak, wrong-language runs) shows up in the
+**incumbent**, not the challenger. Off-script % = letters not in the track's expected script:
+
+| track | azure-llm | incumbent | |
+| --- | ---: | ---: | --- |
+| ar | **0.1%** | **4.4%** (gpt-4o) | gpt-4o leaks Latin into Arabic |
+| ru | **0.1%** | 1.7% (gpt-4o) | |
+| zh | 1.7% | 1.6% (fun-asr) | wash; zero U+FFFD either side |
+| fr / es | 0.0% | 0.0–0.1% | clean both |
+
+No U+FFFD anywhere (the mistral CJK-collapse class, §6.3, is absent).
+
+### 15.3 Coverage — azure-llm transcribes more of the audio
+
+Matched sessions, share of audio duration covered by utterances:
+
+| track | azure-llm | incumbent |
+| --- | ---: | ---: |
+| fr | **96%** | 81% |
+| es | **98%** | 83% |
+| ar | **97%** | 87% |
+| ru | **97%** | 85% |
+| zh | **97%** | 79% |
+
+Content volume is within ±3% of the incumbent on matched sessions for fr/es/ar/ru (zh: 0.93×,
+slightly less text than fun-asr). *(An apparent 35% French shortfall vanished once the arms were
+compared on the same session set — a reminder to always intersect before comparing volumes.)*
+
+### 15.4 Verdict
+
+**On the evidence, one already-procured provider could serve all six tracks**: strictly better on
+en/fr/es/ru, tied on ar and zh, cleaner on cross-language leakage, higher coverage, and it passed
+the §14.2 hallucination gate on English.
+
+**But do not flip on this alone.** The blockers are in §15.0, and they are about *governance*,
+not accuracy: an unnamed, unpinnable, silently-updated model; no verbatim guarantee for a
+verbatim-record system; no confidence signal. Before any routing change:
+
+1. **Verbatim check** — does the default model drop disfluencies/self-repairs, or only reformat?
+   A direct disfluency-retention test against the audio (not the PV) settles it.
+2. **Reliability soak** — it threw HTTP 500s and timeouts across this sweep. Microsoft's own docs
+   prescribe 5 retries with exponential backoff on 5xx; our provider has **no retry**.
+3. **The ar/zh ties buy nothing.** Those tracks are ~15 h of production audio *combined*. Moving
+   them adds risk for no measurable gain — leave `zh` on fun-asr.
+
+### 15.5 Coverage gaps in this run
+
+Interrupted at the disk limit (the audio cache reached 6.9 GB). Sessions scored per language:
+en 14, fr 10, es 10, ar 12, ru 12, zh 16 — of 20. fr/es are the thinnest; their CIs are
+correspondingly wider, though both show **10/10 clean sweeps**, so the direction is not in doubt.
+Nothing was re-transcribed to produce these numbers — `eval/analysis/rescore-cached.ts` rebuilds
+`summary.json` from cached transcripts offline (`run.ts --cached-only` would still hit the
+network for the unfinished sessions).
+
 ## Implementation notes
 
 - Shared async helper `lib/providers/dashscope-asr.ts` backs fun-asr + alibaba. Request shapes
