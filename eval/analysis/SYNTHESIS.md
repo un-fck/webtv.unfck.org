@@ -746,14 +746,53 @@ Three consequences, all material for a slot carrying 96% of production audio:
 1. **The model is unnamed and unpinnable, and Microsoft has already silently swapped it once**
    ("renewed speech-LLM model", Build 2026) under the same request shape. There is no version
    identifier. What we validated here is not guaranteed to be what runs next month.
-2. **There is no configuration that gives verbatim + diarization together.**
-   `transcribeStyle: "verbatim"` exists **only** on `mai-transcribe-1.5`, which has **no
-   diarization and no word timestamps**. The default model is "readability-optimized" by default
-   with only a soft prompt (`"Output must be in lexical format."`) as a lever; whether that
-   extends to dropping disfluencies (vs. mere display formatting) is **undocumented**. For a
-   *verbatim* record system this is an open question, not a footnote.
-3. **`confidence` is always 0 — documented and intentional**, removing the cheapest
+2. **`confidence` is always 0 — documented and intentional**, removing the cheapest
    hallucination tripwire. Any junk gate (§13.4) needs a different signal.
+3. **No retry on 5xx.** Microsoft's own docs prescribe 5 retries with exponential backoff
+   (2/4/8/16/32 s) on 429/500/502/503/504 and note the API "might accept a request but time out
+   while generating the response". Our provider has none, and this sweep saw both HTTP 500s and
+   timeouts.
+
+### 15.0a "Verbatim" is a non-issue — I had this backwards
+
+An earlier draft of this section listed "no configuration gives verbatim + diarization together"
+as a blocker. **That was wrong, twice over.** Recording the correction because the reasoning
+generalizes.
+
+The docs say of `mai-transcribe-1.5`: *"By default, the model returns a readability-optimized
+transcript. You can set the value to `verbatim` to preserve the original spoken content,
+**including filler words and disfluencies**."* So "readability-optimized" means *fillers and
+disfluencies are removed* — and `transcribeStyle` exists only on mai-transcribe, which cannot
+diarize.
+
+Why that does not matter:
+
+1. **We do not want fillers.** "Verbatim record" in the UN sense means *not a summary record* —
+   it does not mean "transcribe every 'uh'". The PV itself is professionally edited with
+   **fillers removed and grammar cleaned** (this is exactly why our WER floor is 15–40%, see
+   `eval/README.md`). A model that drops fillers moves *toward* the reference, not away from it.
+   Filler-stripping would be a small WER *win*, not a fidelity loss.
+2. **The model we actually use doesn't strip anything anyway.** Verified on cached transcripts
+   at zero cost — 7 arms on identical `en` audio:
+
+   | arm | words (S/PV.9578) | fillers /1k words |
+   | --- | ---: | ---: |
+   | azure-llm-speech | 14 869 | 0.5 |
+   | assemblyai-3.5-pro | 14 913 | 0.2 |
+   | speechmatics-enhanced | 15 011 | 0.1 |
+   | soniox | 14 899 | 0.1 |
+   | azure-gpt-4o | 15 079 | 0.6 |
+   | elevenlabs-tuned | 15 229 | **6.6** ← the only arm that really marks disfluencies |
+
+   azure-llm's word count sits within **0.3%** of classic ASR and it keeps *more* fillers than
+   AssemblyAI. Side-by-side passage reads are word-for-word identical apart from ordinary ASR
+   noise (capitalization, comma-vs-period, "Ruhans"/"Luhansk"). **It is not paraphrasing,
+   compressing, or summarizing** — "readability-optimized" on the default model is display
+   formatting (punctuation, casing, ITN), not content rewriting.
+
+The real content risk was never fillers; it was *paraphrase*. That is what was tested, and it
+is absent. The remaining blockers are governance (unpinnable model) and plumbing (no retry, no
+confidence) — not fidelity.
 
 Config fix found while running this: **`locales` requires full BCP-47**. A bare ISO code is
 rejected (`400 InvalidLocale`); `zh-Hans` is rejected too (must be `zh-CN`). Omitting `locales`
@@ -826,16 +865,57 @@ compared on the same session set — a reminder to always intersect before compa
 en/fr/es/ru, tied on ar and zh, cleaner on cross-language leakage, higher coverage, and it passed
 the §14.2 hallucination gate on English.
 
-**But do not flip on this alone.** The blockers are in §15.0, and they are about *governance*,
-not accuracy: an unnamed, unpinnable, silently-updated model; no verbatim guarantee for a
-verbatim-record system; no confidence signal. Before any routing change:
+It also **passes the §14.2 hallucination gate** under the pinned-locale config (V1: Kanem ×0,
+18 speakers, 97.5% coverage) — so the one binary, pre-registered disqualifier is cleared.
 
-1. **Verbatim check** — does the default model drop disfluencies/self-repairs, or only reformat?
-   A direct disfluency-retention test against the audio (not the PV) settles it.
-2. **Reliability soak** — it threw HTTP 500s and timeouts across this sweep. Microsoft's own docs
-   prescribe 5 retries with exponential backoff on 5xx; our provider has **no retry**.
+**But do not flip on this alone.** The blockers (§15.0) are *governance and plumbing*, not
+accuracy or fidelity:
+
+1. **Model drift is the real risk.** Unnamed, unpinnable, already silently swapped once. This is
+   the one thing that cannot be fixed by code — it needs a **standing regression test** (§15.6)
+   so a silent model swap shows up as a diff instead of a quiet quality regression.
+2. **Add retries** before any production use — 5x exponential backoff on 429/5xx per Microsoft's
+   own guidance. The provider currently has none.
 3. **The ar/zh ties buy nothing.** Those tracks are ~15 h of production audio *combined*. Moving
    them adds risk for no measurable gain — leave `zh` on fun-asr.
+4. `confidence: 0` means the §13.4 junk gate must key on chars/min + repetition + script churn,
+   not provider confidence.
+
+### 15.6 Drift regression test (`regression-azure-llm.ts`)
+
+The unpinnable-model risk (§15.0) cannot be fixed in code — it can only be *detected*. A silent
+model swap would otherwise surface as a quiet quality regression across 96% of our audio with no
+signal at all.
+
+`eval/analysis/regression-azure-llm.ts` transcribes one short fixed clip (S/PV.10100 `en`,
+4.5 min), diffs it against a committed baseline
+(`eval/analysis/baselines/azure-llm-speech.en.json`), and exits non-zero if drift exceeds 5%.
+Drift is WER **against the baseline transcript**, not against ground truth — we are detecting
+*change*, not correctness.
+
+```bash
+npx tsx eval/analysis/regression-azure-llm.ts            # check
+npx tsx eval/analysis/regression-azure-llm.ts --update   # re-baseline after an accepted change
+```
+
+Measured back-to-back: **0.2% drift, 10 s wall clock, ~5 MB audio** — cheap enough to run weekly.
+(Speaker count wobbles 1↔2 on this clip and is *not* part of the pass/fail criterion; on 4.5 min
+of near-monologue it is noise.)
+
+**Scheduling — a cloud/Claude routine will NOT work.** Two blockers: the check needs
+`AZURE_SPEECH_KEY`/`AZURE_SPEECH_ENDPOINT`, which live in gitignored `.env` and are invisible to
+a cloud agent; and it needs the code, which lives on a local branch. Run it somewhere that has
+the credentials:
+
+- **Local (simplest)** — a weekly `launchd`/cron entry on the dev machine:
+  `cd <repo> && npx tsx eval/analysis/regression-azure-llm.ts`
+- **Production cron (most robust)** — the app container already holds the Azure creds and has
+  cron infrastructure (`docker/crontab.template`, `CRON_SECRET`). This is the right home **if and
+  when** `azure-llm-speech` is actually routed in production; until then it guards a provider we
+  do not use.
+
+Re-baseline (`--update`) only after *verifying* a change is an improvement — otherwise the
+baseline silently absorbs the drift it exists to catch.
 
 ### 15.5 Coverage gaps in this run
 
