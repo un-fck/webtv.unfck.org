@@ -283,7 +283,9 @@
     },
     "view": {
       "speaker": "المتكلم",
-      "speakerN": "المتكلم {n}"
+      "speakerN": "المتكلم {n}",
+      "copyLink": "نسخ رابط هذه المداخلة",
+      "linkCopied": "تم نسخ الرابط"
     },
     "panel": {
       "checkingForTranscript": "البحث عن تفريغ موجود…",

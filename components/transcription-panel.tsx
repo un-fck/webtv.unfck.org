@@ -213,6 +213,7 @@ export function TranscriptionPanel({
     topicCollapsed,
     setTopicCollapsed: onTopicCollapsedChange,
     setPanelData: onDataChange,
+    initialSeekSeconds,
   } = useMeetingState();
   // Server-fetched data is only "initial" when it matches the URL locale.
   // After a language switch the panel falls back to the /check fast path,
@@ -322,6 +323,31 @@ export function TranscriptionPanel({
     currentTimeRef,
   } = usePlaybackTracking(player, segments, statements);
 
+  // Arriving via a `?t=` deeplink: pulse the segment the link points at, once,
+  // so the recipient sees unambiguously which statement they were sent — the
+  // persistent active style alone doesn't distinguish "you are here because of
+  // the link" from ordinary playback. The seek itself happens in meeting-state
+  // when the player is ready; scrolling comes from useScrollToActive below.
+  const [flashSegmentIndex, setFlashSegmentIndex] = useState<number | null>(
+    null,
+  );
+  const flashDone = useRef(false);
+  useEffect(() => {
+    if (flashDone.current || initialSeekSeconds === null || !segments) return;
+    let idx = -1;
+    for (let i = segments.length - 1; i >= 0; i--) {
+      if (initialSeekSeconds >= segments[i].timestamp) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx < 0) return;
+    flashDone.current = true;
+    setFlashSegmentIndex(idx);
+    const timer = setTimeout(() => setFlashSegmentIndex(null), 2600);
+    return () => clearTimeout(timer);
+  }, [initialSeekSeconds, segments]);
+
   const handlePvSpeakersChange = useCallback(
     (speakers: PVSpeakerEntry[], activeIdx: number) => {
       setPvSpeakers(speakers);
@@ -392,6 +418,18 @@ export function TranscriptionPanel({
     } catch (err) {
       console.error("Failed to seek:", err);
     }
+  };
+
+  // Shareable anchor for one statement: canonical URL (locale + slug, same
+  // rationale as exportUrls — the address bar can disagree with the rendered
+  // track) plus `?t=` and, when off the locale default, `?lang=`. Composed
+  // here and written straight to the clipboard by TranscriptView; `t` is
+  // never reflected into the address bar.
+  const anchorUrl = (seconds: number) => {
+    const params = new URLSearchParams();
+    if (selectedLanguage !== locale) params.set("lang", selectedLanguage);
+    params.set("t", String(Math.max(0, Math.floor(seconds))));
+    return `${window.location.origin}/${locale}/${video.slug}?${params.toString()}`;
   };
 
   // Lazy word-level timestamps. The /api/transcripts/check fast path strips
@@ -1496,6 +1534,8 @@ export function TranscriptionPanel({
           selectedTopic={selectedTopic}
           topicCollapsed={topicCollapsed}
           onSeek={seekToTimestamp}
+          getAnchorUrl={anchorUrl}
+          flashSegmentIndex={flashSegmentIndex}
         />
       )}
 

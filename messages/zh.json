@@ -283,7 +283,9 @@
     },
     "view": {
       "speaker": "发言者",
-      "speakerN": "发言者 {n}"
+      "speakerN": "发言者 {n}",
+      "copyLink": "复制此发言的链接",
+      "linkCopied": "链接已复制"
     },
     "panel": {
       "checkingForTranscript": "正在检查现有转录…",

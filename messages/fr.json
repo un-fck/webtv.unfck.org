@@ -283,7 +283,9 @@
     },
     "view": {
       "speaker": "Intervenant",
-      "speakerN": "Intervenant {n}"
+      "speakerN": "Intervenant {n}",
+      "copyLink": "Copier le lien vers cette intervention",
+      "linkCopied": "Lien copié"
     },
     "panel": {
       "checkingForTranscript": "Recherche d'une transcription existante…",

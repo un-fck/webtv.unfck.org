@@ -283,7 +283,9 @@
     },
     "view": {
       "speaker": "Orador",
-      "speakerN": "Orador {n}"
+      "speakerN": "Orador {n}",
+      "copyLink": "Copiar el enlace a esta intervención",
+      "linkCopied": "Enlace copiado"
     },
     "panel": {
       "checkingForTranscript": "Buscando una transcripción existente…",

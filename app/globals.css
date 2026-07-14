@@ -232,3 +232,20 @@ html {
 :lang(zh) {
   font-family: var(--font-sc), var(--font-roboto), system-ui, sans-serif;
 }
+
+/* One-shot pulse on the statement a `?t=` deeplink points at, layered over
+   the segment box's own background. Ends transparent so the segment's active
+   style shows through when the pulse finishes. The prefers-reduced-motion
+   block above collapses it like every other animation. */
+@keyframes anchor-flash {
+  0% {
+    background-color: color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.anchor-flash {
+  animation: anchor-flash 2.5s ease-out;
+}

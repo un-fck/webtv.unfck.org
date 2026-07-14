@@ -266,7 +266,9 @@
     },
     "view": {
       "speaker": "Speaker",
-      "speakerN": "Speaker {n}"
+      "speakerN": "Speaker {n}",
+      "copyLink": "Copy link to this statement",
+      "linkCopied": "Link copied"
     },
     "panel": {
       "checkingForTranscript": "Checking for existing transcript…",
