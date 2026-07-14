@@ -592,6 +592,436 @@ transcripts as error instead of publishing), ideally plus an ffmpeg `silencedete
 pre-check that skips or trims silence-dominated recordings before spending on
 transcription. Melia cannot filter server-side (audio filtering unsupported).
 
+## 14. The English track — floor challengers vs AssemblyAI (run 2026-07-13)
+
+Phases 1–2 of [`PLAN-single-vendor-consolidation.md`](PLAN-single-vendor-consolidation.md).
+**20 standing-corpus sessions × the `en` track × 6 arms**, plus the §9 anecdotal battery on
+the `en` tracks of V1/V3/V4. Motivation: English is **96% of production audio** (1 811 h of
+1 894 h, queried 2026-07-13) — it is the only STT slot where quality or money is at stake —
+and the one procurable non-Azure vendor slot should go to whoever serves it.
+
+**Verdict: `en` does NOT move to Speechmatics. The strongest challenger is
+`azure-llm-speech` — better WER, passes the hallucination gate, and is already procured.
+The incumbent has a newly-found defect: it stops diarizing on long meetings.**
+
+### 14.0 A harness bug invalidated absolute WER on every vote-bearing meeting
+
+`normalizeGroundTruth` ends its vote-roll-call match with a lookahead for the next speaker
+label (`^The President`), but stripped **speaker labels first** — destroying that terminator.
+The lazy `[\s\S]*?` then ran to the end of the document, deleting every line after
+"In favour:" from the reference, *including genuinely-spoken content* (the President's closing
+remarks). Providers transcribe that speech correctly and were charged phantom **insertions**.
+
+On S/PV.10100 the reference was 261 words instead of 378, and AssemblyAI scored **82.5%
+instead of 30.6%** — 187 of its 221 "errors" were insertions of words that were actually said.
+Fixed by reordering (`eval/metrics/ground-truth-normalizer.ts`), guarded by
+`ground-truth-normalizer.test.ts`. **Absolute WERs in §2/§11.2/§13.3 for any meeting with a
+recorded vote are inflated and should not be quoted;** paired rankings largely survive.
+
+### 14.1 Paired WER (16 sessions; 4 PV↔video-mismatch sessions excluded)
+
+Bootstrap 95% CI over per-session paired deltas vs the incumbent. Excluded 9606/9614/9732/9686
+— every arm scores >85% there, so the record does not match the recording. **The ranking is
+identical with them included** (n=20).
+
+| arm | mean WER | Δ vs incumbent | 95% CI of Δ | sessions won | verdict |
+| --- | ---: | ---: | --- | ---: | --- |
+| **azure-llm-speech** | **43.8** | **−1.0** | **[−2.0, −0.2]** | **13/16** | **better** |
+| soniox-stt-async-v5 | 44.2 | −0.6 | [−1.7, 0.3] | 10/16 | tied |
+| **assemblyai-universal-3-5-pro** *(incumbent)* | 44.8 | — | — | — | — |
+| speechmatics-enhanced | 45.8 | +1.0 | [−0.3, 2.0] | **2/16** | consistently, slightly worse |
+| speechmatics-standard | 46.4 | +1.6 | [0.5, 2.6] | 2/16 | worse |
+| elevenlabs-scribe-v2-tuned | 48.2 | +3.4 | [1.9, 5.3] | 1/16 | clearly worst |
+
+**Read Speechmatics Enhanced carefully.** Its mean-delta CI includes zero, so the CI test says
+"no significant difference" — but it wins **2 of 16** sessions (sign test p≈0.002). The honest
+statement is *consistently* worse than AssemblyAI by a *small* margin (~1 WER point), not
+equivalent. Standard is worse still, exactly as the vendor's own accuracy table predicts
+(enhanced "Highest" > standard "High").
+
+ElevenLabs confirms §5/§8: tuning its diarization did nothing for its English text — it remains
+the worst of the serious set.
+
+### 14.2 Hallucination gate (V1, `en`) — **all six arms pass**
+
+Pre-registered as the one binary, non-negotiable rule: any Kanem-class substitution (a
+*different real person's* name, confidently) disqualifies an arm for `en` regardless of WER.
+
+| probe (V1 `en`, 171 m) | assemblyai | azure-llm | sm-enh | sm-std | soniox | 11labs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Keita (good) | 6 | 3 | 5 | 6 | 8 | 2 |
+| **Kanem (hallucination)** | **0** | **0** | **0** | **0** | **0** | **0** |
+| UN80 correct | 11 | 6 | 9 | 6 | **48** | 21 |
+| UN80 miss-form | 1 | 1 | 1 | 5 | 1 | 3 |
+| speakers | **1** ⚠️ | 20 | 43 | 42 | 22 | 39 |
+
+**Nobody hallucinates on the English track** — including `azure-llm-speech`, the LLM-family arm.
+Its floor defect was *cross-language leakage* (§13.1), and on a monolingual track there is
+nothing to leak into. That hypothesis held. (It was also the *sparsest*, best-behaved arm on the
+V6 silence probe — §13.4 — so it is not a Gemini-style confabulator.)
+
+### 14.3 **The incumbent stops diarizing on long meetings** — new finding
+
+| file | assemblyai | azure-llm | sm-enh | sm-std | soniox | 11labs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| V1 (171 m, 147 k chars) | **1 speaker / 1 utterance** ⚠️ | 20 | 43 | 42 | 22 | 39 |
+| V3 (171 m, 141 k chars) | **2 speakers** (longest utterance **15.9 min**) ⚠️ | 17 | 35 | 35 | 30 | 35 |
+
+Confirmed at the API level, not a parsing artifact: AssemblyAI's own response carries
+`utterances: 1` and a single word-level speaker `"A"` across **22 837 words** of a 171-minute
+meeting. It diarizes fine on shorter files (mean 9.6 speakers over the standing corpus, whose
+sessions are ≤90 min) and **collapses on the long ones**. Both 171-min files fail.
+
+This matters in production: our pipeline feeds provider diarization to the GPT-5.4 speaker-ID
+stage **as hints**. On long meetings — routine for GA briefings — AssemblyAI supplies *no
+speaker signal at all*. Every challenger handles the same audio. This is a real, previously
+undocumented quality defect in the slot carrying 96% of our audio.
+
+### 14.4 Accented English (V4) — Speechmatics fails the historical probe
+
+| probe | assemblyai | azure-llm | sm-enh | sm-std | soniox | 11labs |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: |
+| "appalling" (not "polling") | ✅ | ✅ | ❌ **"polling"** | ✅ | ✅ | ✅ |
+| "cold blood" | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| "Starobelsk" | 12 | 13 | 7 | **0** ❌ | 14 | 14 |
+| patronymic "Alexeyevich" | 0 | 0 | 0 | 0 | 0 | **2** |
+
+**Speechmatics Enhanced reproduces the U-2-era mishear** that every other arm now passes:
+*"Equally, **polling** was the statement…"* for *"Equally **appalling** was the statement…"*.
+Standard gets that one right but misses the place name "Starobelsk" entirely (0 of ~13). Only
+ElevenLabs caught the patronymic — unchanged since §6.7.
+
+### 14.5 Decision — and the procurement math
+
+**English = 1 811 h to date and growing.** Lifetime cost at each arm's rate:
+
+| arm | $/hr | 1 811 h | procurement |
+| --- | ---: | ---: | --- |
+| **azure-llm-speech** | ~gpt-4o class | **~$0 marginal** | **already procured (Azure)** |
+| soniox-stt-async-v5 | 0.10 | ~$181 | new vendor |
+| assemblyai-3.5-pro *(today)* | 0.23 | ~$417 | new vendor |
+| speechmatics-enhanced | 0.40 | ~$724 | shares the floor's slot |
+| speechmatics-standard | 0.24 | ~$435 | shares the floor's slot |
+
+- **Speechmatics does not take `en`.** It is consistently (if slightly) worse on WER, it fails
+  the accented-English probe, and Enhanced costs 1.7× the incumbent. §0.2 of the plan predicted
+  this and the data confirmed it: **`melia-1` cannot run monolingual** (it requires
+  `language: "multi"`), so Speechmatics-on-English is the Ursa 2 stack — a *different model*
+  from the one that won the floor. The §13 floor evidence transferred at zero strength, exactly
+  as feared. **Floor stays Melia; that decision is untouched.**
+- **`azure-llm-speech` is the strongest candidate for `en`**: best paired WER, passes the
+  hallucination gate, diarizes long meetings the incumbent cannot, and is **already procured** —
+  which would free the one non-Azure slot for Speechmatics on floor (Config C of the plan).
+  Caveats before flipping: it is an **unnamed Microsoft preview**, `confidence` is always 0, and
+  it threw one HTTP 500 and one hard failure across ~26 runs (retry needed). Reliability, not
+  accuracy, is its open question.
+- **Soniox is the value option** — statistically tied with the incumbent, $0.10/hr, passes the
+  gate, diarizes long files (30 speakers on V3). Its floor-track under-diarization (§13.3) does
+  not appear on `en`.
+- **The incumbent is not safe by default.** §14.3 means staying on AssemblyAI has a real,
+  quantified cost on long meetings, not just an opportunity cost.
+
+### 14.6 Not run
+
+- The **vocabulary-roster probe** (`keyterms_prompt` / `additional_vocab`) — deferred again.
+- **Phase 3** (fr/es/ar/ru/zh) — deliberately dropped: those five tracks are 45 h of production
+  audio *in total*; the eval would cost ~7× the spend it optimizes. Revisit if their volume grows
+  (the user notes an unrelated failure mode is currently suppressing non-English usage).
+
+## 15. azure-llm-speech across all six languages (run 2026-07-13/14)
+
+Scoped Phase 3: the §14 winner against each language's incumbent. **azure-llm-speech beats or
+ties every incumbent on every language**, and is the only provider that could plausibly serve
+all six from a slot we already pay for.
+
+### 15.0 What `azure-llm-speech` actually is — read this before trusting it
+
+**"Enhanced mode" is a serving surface, not a model.** Omitting `enhancedMode.model` — which is
+what we do — routes to Microsoft's **unnamed default speech-LLM** ("multimodal model" /
+"renewed speech-LLM model" in the docs; never identified). It is **not** MAI-Transcribe (§10):
+that is a separate, named model you opt into via `enhancedMode.model: "mai-transcribe-1.5"`.
+
+Three consequences, all material for a slot carrying 96% of production audio:
+
+1. **The model is unnamed and unpinnable, and Microsoft has already silently swapped it once**
+   ("renewed speech-LLM model", Build 2026) under the same request shape. There is no version
+   identifier. What we validated here is not guaranteed to be what runs next month.
+2. **`confidence` is always 0 — documented and intentional**, removing the cheapest
+   hallucination tripwire. Any junk gate (§13.4) needs a different signal.
+3. **No retry on 5xx.** Microsoft's own docs prescribe 5 retries with exponential backoff
+   (2/4/8/16/32 s) on 429/500/502/503/504 and note the API "might accept a request but time out
+   while generating the response". Our provider has none, and this sweep saw both HTTP 500s and
+   timeouts.
+
+### 15.0a "Verbatim" is a non-issue — I had this backwards
+
+An earlier draft of this section listed "no configuration gives verbatim + diarization together"
+as a blocker. **That was wrong, twice over.** Recording the correction because the reasoning
+generalizes.
+
+The docs say of `mai-transcribe-1.5`: *"By default, the model returns a readability-optimized
+transcript. You can set the value to `verbatim` to preserve the original spoken content,
+**including filler words and disfluencies**."* So "readability-optimized" means *fillers and
+disfluencies are removed* — and `transcribeStyle` exists only on mai-transcribe, which cannot
+diarize.
+
+Why that does not matter:
+
+1. **We do not want fillers.** "Verbatim record" in the UN sense means *not a summary record* —
+   it does not mean "transcribe every 'uh'". The PV itself is professionally edited with
+   **fillers removed and grammar cleaned** (this is exactly why our WER floor is 15–40%, see
+   `eval/README.md`). A model that drops fillers moves *toward* the reference, not away from it.
+   Filler-stripping would be a small WER *win*, not a fidelity loss.
+2. **The model we actually use doesn't strip anything anyway.** Verified on cached transcripts
+   at zero cost — 7 arms on identical `en` audio:
+
+   | arm | words (S/PV.9578) | fillers /1k words |
+   | --- | ---: | ---: |
+   | azure-llm-speech | 14 869 | 0.5 |
+   | assemblyai-3.5-pro | 14 913 | 0.2 |
+   | speechmatics-enhanced | 15 011 | 0.1 |
+   | soniox | 14 899 | 0.1 |
+   | azure-gpt-4o | 15 079 | 0.6 |
+   | elevenlabs-tuned | 15 229 | **6.6** ← the only arm that really marks disfluencies |
+
+   azure-llm's word count sits within **0.3%** of classic ASR and it keeps *more* fillers than
+   AssemblyAI. Side-by-side passage reads are word-for-word identical apart from ordinary ASR
+   noise (capitalization, comma-vs-period, "Ruhans"/"Luhansk"). **It is not paraphrasing,
+   compressing, or summarizing** — "readability-optimized" on the default model is display
+   formatting (punctuation, casing, ITN), not content rewriting.
+
+The real content risk was never fillers; it was *paraphrase*. That is what was tested, and it
+is absent. The remaining blockers are governance (unpinnable model) and plumbing (no retry, no
+confidence) — not fidelity.
+
+Config fix found while running this: **`locales` requires full BCP-47**. A bare ISO code is
+rejected (`400 InvalidLocale`); `zh-Hans` is rejected too (must be `zh-CN`). Omitting `locales`
+entirely leaves the service in **multi-lingual auto-detect**, which is how §14's English numbers
+were produced — i.e. the challenger ran *handicapped* and still won. All §15 numbers (and a
+re-run of `en`) pin the locale. On Arabic, pinning produced byte-identical output to
+auto-detect, so the handicap was nominal.
+
+### 15.1 Paired WER vs each incumbent
+
+Bootstrap 95% CI over per-session paired deltas. Each language is scored on the **identical
+session set** across its arms; four PV↔video-mismatch sessions (9606/9614/9686/9732 — the record
+does not match the recording) are excluded by a **fixed session list**, not a WER threshold.
+
+> **Methodological correction:** an *absolute* WER floor for detecting mismatch is invalid across
+> languages. Arabic and Chinese WER against an edited PV is intrinsically 80–100% for **every**
+> provider (§2) — morphology, orthography, CJK scoring — so an 85% floor calibrated on English
+> silently excluded 13/15 Arabic sessions and **all 20** Chinese ones. Mismatch is a property of
+> the *session*, not the language.
+
+| track | incumbent | incumbent WER | azure-llm WER | Δ | 95% CI | won | verdict |
+| --- | --- | ---: | ---: | ---: | --- | ---: | --- |
+| **en** | assemblyai-3.5-pro | 43.5 | **42.2** | **−1.3** | [−2.3, −0.6] | 12/14 | **better** |
+| **fr** | azure-gpt-4o | 75.0 | **70.5** | **−4.4** | [−6.0, −3.0] | **10/10** | **better** |
+| **es** | azure-gpt-4o | 68.7 | **65.2** | **−3.5** | [−6.6, −1.4] | **10/10** | **better** |
+| **ru** | azure-gpt-4o | 72.9 | **71.1** | **−1.7** | [−2.5, −1.0] | 11/12 | **better** |
+| **ar** | azure-gpt-4o | 89.5 | 89.7 | +0.2 | [−0.8, 1.1] | 3/12 | tie |
+| **zh** | alibaba-fun-asr | 97.5 | 98.0 | +0.5 | [−0.0, 1.0] | 4/16 | tie |
+
+Absolute values across languages are **not comparable** (ar/zh are inflated by PV editing and
+CJK scoring); only the within-language deltas mean anything.
+
+Note the incumbent it displaces: **azure-gpt-4o-transcribe is a weak holder of fr/es/ar/ru.**
+Run on the English track for reference it came **last of seven** (45.4, +1.9 vs AssemblyAI) —
+worse than every challenger we tested.
+
+### 15.2 Cross-language leakage — the challenger is *cleaner* than the incumbent
+
+The §5 `azure-openai` fingerprint (Chinese gavel-leak, wrong-language runs) shows up in the
+**incumbent**, not the challenger. Off-script % = letters not in the track's expected script:
+
+| track | azure-llm | incumbent | |
+| --- | ---: | ---: | --- |
+| ar | **0.1%** | **4.4%** (gpt-4o) | gpt-4o leaks Latin into Arabic |
+| ru | **0.1%** | 1.7% (gpt-4o) | |
+| zh | 1.7% | 1.6% (fun-asr) | wash; zero U+FFFD either side |
+| fr / es | 0.0% | 0.0–0.1% | clean both |
+
+No U+FFFD anywhere (the mistral CJK-collapse class, §6.3, is absent).
+
+### 15.3 Coverage — azure-llm transcribes more of the audio
+
+Matched sessions, share of audio duration covered by utterances:
+
+| track | azure-llm | incumbent |
+| --- | ---: | ---: |
+| fr | **96%** | 81% |
+| es | **98%** | 83% |
+| ar | **97%** | 87% |
+| ru | **97%** | 85% |
+| zh | **97%** | 79% |
+
+Content volume is within ±3% of the incumbent on matched sessions for fr/es/ar/ru (zh: 0.93×,
+slightly less text than fun-asr). *(An apparent 35% French shortfall vanished once the arms were
+compared on the same session set — a reminder to always intersect before comparing volumes.)*
+
+### 15.4 Verdict
+
+**On the evidence, one already-procured provider could serve all six tracks**: strictly better on
+en/fr/es/ru, tied on ar and zh, cleaner on cross-language leakage, higher coverage, and it passed
+the §14.2 hallucination gate on English.
+
+It also **passes the §14.2 hallucination gate** under the pinned-locale config (V1: Kanem ×0,
+18 speakers, 97.5% coverage) — so the one binary, pre-registered disqualifier is cleared.
+
+**But do not flip on this alone.** The blockers (§15.0) are *governance and plumbing*, not
+accuracy or fidelity:
+
+1. **Model drift is the real risk.** Unnamed, unpinnable, already silently swapped once. This is
+   the one thing that cannot be fixed by code — it needs a **standing regression test** (§15.6)
+   so a silent model swap shows up as a diff instead of a quiet quality regression.
+2. **Add retries** before any production use — 5x exponential backoff on 429/5xx per Microsoft's
+   own guidance. The provider currently has none.
+3. **The ar/zh ties buy nothing.** Those tracks are ~15 h of production audio *combined*. Moving
+   them adds risk for no measurable gain — leave `zh` on fun-asr.
+4. `confidence: 0` means the §13.4 junk gate must key on chars/min + repetition + script churn,
+   not provider confidence.
+
+### 15.5a Entity rendering — **the metric winner is the worst at proper nouns**
+
+The single most decision-relevant thing the anecdotal battery found, and it is **invisible to
+WER**. On V1, "UN80" is spoken ~56 times (every arm independently hears ~41 instances of the
+following word "initiative", so they are all listening to the same mentions). How they render it:
+
+| arm | "UN80" correct | substituted with a **real** UN acronym | non-existent acronym |
+| --- | ---: | --- | --- |
+| soniox | **48** | UNAIDS ×15 | — |
+| elevenlabs-tuned | 21 | — | UNAT ×4 |
+| assemblyai-3.5-pro | 11 | UNAIDS ×4 | UNAT ×14, UNAD ×1 |
+| speechmatics-enhanced | 9 | — | UNAT ×1 |
+| speechmatics-standard | 6 | UNAids ×1 | — |
+| **azure-llm-speech** | **6** ⚠️ | — | **UNAT ×36, UNAD ×14** |
+
+**"UN80" is a systematic failure for every provider** — it is a novel initiative name that sounds
+like an acronym — but **azure-llm is the worst of all of them**, rendering it correctly 6 times
+and mangling it ~50 times into "the UNAT initiative" / "the UNAD initiative". (UNAT *is* a real
+UN body — the Appeals Tribunal. UNAIDS is a real UN programme. So both classes put a wrong-but-
+real institution in front of a reader.)
+
+WER cannot see this: ~50 mangled tokens in a 22 837-word transcript is **0.2%** of the text. It
+does not move the number that decided §14/§15, and it is precisely the kind of error that matters
+most in a UN record, where the institution being discussed *is* the content.
+
+This does **not** reverse the WER verdict, but it means:
+
+- **The roster / entity-biasing probe is no longer optional** — it is the top open item. AssemblyAI
+  has `keyterms_prompt`, Speechmatics Standard/Enhanced have `additional_vocab`, and
+  `mai-transcribe-1.5` has `phraseList`. The **unnamed default speech-LLM we benchmarked has
+  neither** — only soft `prompt` steering. A provider that cannot be told "UN80" is a word may be
+  structurally unfit for this corpus regardless of its WER.
+- **Soniox looks materially better on entities** (48 vs 6) at statistically indistinguishable WER
+  and $0.10/hr. It deserves a closer look than its §14 "tied" verdict suggested.
+
+### 15.5b The seven checks, applied to azure-llm-speech
+
+The 2026-05 study's seven reference-free checks (the `compare.py` harness — accuracy, speaker
+labels, multilingual floor, Chinese text, names & entities, numbers & symbols, timestamps), run
+on **S/PV.10156** — the same 9-minute meeting the original 10-engine consensus was built on, so
+azure-llm is scored against that consensus rather than in isolation. `azure-llm-speech` and the
+other §13–§15 challengers are now registered in `compare.py`'s `PROVIDERS`.
+
+| check | azure-llm | evidence |
+| --- | :-: | --- |
+| **Accuracy** | ✅ | best or tied on all six languages (§15.1) |
+| **Speaker labels** | ◐ | 18–20 speakers on 171-min files (good), but **coarse**: 1–4 utterances on a 9-min meeting, single utterances spanning 9 min. Interpretation tracks return 1 speaker — arguably *correct* (one booth interpreter), not a failure |
+| **Multilingual floor** | ◐ | script mix matches consensus, best floor WER (30.9) — but statement-boundary **language leakage** (§13.1) |
+| **Chinese text** | ✅ | see below |
+| **Names & entities** | ❌ | **worst of every engine** — §15.5a |
+| **Numbers & symbols** | ◐ | see below |
+| **Timestamps** | ✅ | word-level timestamps in all 6 languages (743–1 791 words), monotonic, 98.5–98.9% span coverage. Coarse *grouping*, but per §6.5 that is lumping, not drift |
+
+#### Chinese ✅ — clean
+
+| | azure-llm | 2026-05 consensus (10 engines) |
+| --- | ---: | --- |
+| chars | 1 984 | median 2 015 (range 1 809–2 121) |
+| **U+FFFD** | **0** | 0 for all except mistral (**176** — the CJK-collapse class §6.3) |
+| off-script | 1.2% | 0.1–1.2% normal band (omni 10.8%) |
+| coverage | 97.9% | — |
+
+Renders proper Simplified Chinese and gets the meeting number as **digits** —
+「安全理事会第**10156**次会议现在开始」. No corruption, no romanization, no truncation.
+**But its WER ties fun-asr (98.0 vs 97.5, n.s.), and fun-asr is Mandarin-first — there is no
+reason to move `zh`.**
+
+#### Arabic ✅ — the cleanest Arabic of any engine we have run
+
+| | azure-llm | consensus |
+| --- | ---: | --- |
+| chars | 4 526 | median 4 347 (range 3 565–4 567) — at the top, nothing truncated |
+| **off-script** | **0.0%** | 0.0–1.4% |
+| coverage | 98.1% | — |
+
+And across the 15-session standing corpus its Arabic is **0.1% off-script vs azure-gpt-4o's 4.4%**
+(§15.2) — the incumbent is the one leaking Latin into Arabic. WER ties (89.7 vs 89.5), so on the
+metric it is a wash, but on *fidelity* azure-llm is clearly the better Arabic engine.
+
+#### Numbers & symbols ◐ — a real defect, and it is language-specific
+
+UN document symbols (`S/2026/426`) and meeting numbers, S/PV.10156:
+
+| lang | azure-llm | assemblyai (control) |
+| --- | --- | --- |
+| en | ✅ S/2024/507, S/2026/426 | ✅ both |
+| fr | ✅ S/2024/507, S/2026/426 | ✅ both |
+| **es** | ❌ **`S-2026/426`** (hyphen for slash) and **S/2024/507 lost** | ✅ both |
+| ru | — none found | ❌ `S-2024-507` |
+| zh / ar | — none found | — none found |
+| **ar** | ❌ meeting number **spelled out in words** — `عشرة آلاف ومئة وستة وخمسين` instead of `10156` | — |
+
+Spanish corrupts the symbol separator (`S-2026/426`), which would break any downstream symbol
+parsing or PV linking; Arabic drifts to number-spelling (§6.6's ITN class). English, French,
+Spanish, Russian and Chinese all render the *meeting* number in digits — only Arabic spells it.
+
+### 15.6 Drift regression test (`regression-azure-llm.ts`)
+
+The unpinnable-model risk (§15.0) cannot be fixed in code — it can only be *detected*. A silent
+model swap would otherwise surface as a quiet quality regression across 96% of our audio with no
+signal at all.
+
+`eval/analysis/regression-azure-llm.ts` transcribes one short fixed clip (S/PV.10100 `en`,
+4.5 min), diffs it against a committed baseline
+(`eval/analysis/baselines/azure-llm-speech.en.json`), and exits non-zero if drift exceeds 5%.
+Drift is WER **against the baseline transcript**, not against ground truth — we are detecting
+*change*, not correctness.
+
+```bash
+npx tsx eval/analysis/regression-azure-llm.ts            # check
+npx tsx eval/analysis/regression-azure-llm.ts --update   # re-baseline after an accepted change
+```
+
+Measured back-to-back: **0.2% drift, 10 s wall clock, ~5 MB audio** — cheap enough to run weekly.
+(Speaker count wobbles 1↔2 on this clip and is *not* part of the pass/fail criterion; on 4.5 min
+of near-monologue it is noise.)
+
+**Scheduling — a cloud/Claude routine will NOT work.** Two blockers: the check needs
+`AZURE_SPEECH_KEY`/`AZURE_SPEECH_ENDPOINT`, which live in gitignored `.env` and are invisible to
+a cloud agent; and it needs the code, which lives on a local branch. Run it somewhere that has
+the credentials:
+
+- **Local (simplest)** — a weekly `launchd`/cron entry on the dev machine:
+  `cd <repo> && npx tsx eval/analysis/regression-azure-llm.ts`
+- **Production cron (most robust)** — the app container already holds the Azure creds and has
+  cron infrastructure (`docker/crontab.template`, `CRON_SECRET`). This is the right home **if and
+  when** `azure-llm-speech` is actually routed in production; until then it guards a provider we
+  do not use.
+
+Re-baseline (`--update`) only after *verifying* a change is an improvement — otherwise the
+baseline silently absorbs the drift it exists to catch.
+
+### 15.5 Coverage gaps in this run
+
+Interrupted at the disk limit (the audio cache reached 6.9 GB). Sessions scored per language:
+en 14, fr 10, es 10, ar 12, ru 12, zh 16 — of 20. fr/es are the thinnest; their CIs are
+correspondingly wider, though both show **10/10 clean sweeps**, so the direction is not in doubt.
+Nothing was re-transcribed to produce these numbers — `eval/analysis/rescore-cached.ts` rebuilds
+`summary.json` from cached transcripts offline (`run.ts --cached-only` would still hit the
+network for the unfinished sessions).
+
 ## Implementation notes
 
 - Shared async helper `lib/providers/dashscope-asr.ts` backs fun-asr + alibaba. Request shapes

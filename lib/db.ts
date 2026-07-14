@@ -33,11 +33,7 @@ export type TranscriptionStatus =
   | "interrupted";
 // On-demand proposition analysis, independent of transcript viewability.
 export type AnalysisStatus =
-  | "none"
-  | "analyzing"
-  | "completed"
-  | "error"
-  | "interrupted";
+  "none" | "analyzing" | "completed" | "error" | "interrupted";
 
 // In-flight transcription states. SIGTERM handler / heartbeat sweep flip
 // these to `interrupted`; the picker's claim CAS transitions out of them.
@@ -54,6 +50,8 @@ export type ProcessingUsageProvider =
   | "openai"
   | "gemini"
   | "azure-openai"
+  | "azure-speech" // Azure AI Speech (LLM Speech / batch) — a different service
+  // and rate card from Azure OpenAI, so it gets its own vendor token.
   | "assemblyai"
   | "alibaba"
   | "speechmatics";

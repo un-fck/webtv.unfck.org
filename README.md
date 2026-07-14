@@ -13,7 +13,7 @@ This app scrapes [UN Web TV](https://webtv.un.org/en/schedule) (which has no pub
 - **Video schedule table** with column filters, sorting, pagination, and global search (TanStack Table)
 - **Full-archive search** via PostgreSQL (beyond the rolling schedule window)
 - **Embedded video pages** with Kaltura player
-- **AI transcription** with per-language speech-to-text routing (AssemblyAI / Azure / Alibaba / Gemini), diarization, and paragraph breaks
+- **Automatic transcription** with per-language speech-to-text routing (AssemblyAI / Azure AI Speech / Alibaba / Speechmatics), diarization, and paragraph breaks
 - **Speaker identification** via Azure OpenAI (maps speaker labels to named delegates)
 - **Scheduled transcription** for upcoming events (cron job picks them up when audio becomes available)
 - **JSON API** for programmatic access to video data
@@ -68,10 +68,13 @@ See `.env.example` for all variables. Core ones:
 | Variable                | Required   | Purpose                        |
 | ----------------------- | ---------- | ------------------------------ |
 | `DATABASE_URL`          | Yes        | PostgreSQL connection string   |
-| `GEMINI_API_KEY`        | Yes        | Floor transcription + PV alignment |
+| `GEMINI_API_KEY`        | Yes        | PV alignment (no longer transcription) |
 | `ASSEMBLYAI_API_KEY`    | Yes        | English transcription          |
+| `SPEECHMATICS_API_KEY`  | Yes        | Floor (multilingual) transcription |
+| `AZURE_SPEECH_KEY`      | Yes        | fr/es/ar/ru transcription (Azure AI Speech) |
+| `AZURE_SPEECH_ENDPOINT` | Yes        | as above (must be the `services.ai.azure.com` host) |
 | `DASHSCOPE_API_KEY`     | Yes        | Chinese transcription (Fun-ASR)|
-| `AZURE_OPENAI_API_KEY`  | Yes        | fr/es/ar/ru transcription + speaker ID |
+| `AZURE_OPENAI_API_KEY`  | Yes        | Speaker ID, topics, propositions       |
 | `AZURE_OPENAI_ENDPOINT` | Yes        | as above                       |
 | `CRON_SECRET`           | Production | Cron job auth (Bearer token)   |
 | `BASE_URL`              | Production | Base URL for outbound email links |
@@ -84,7 +87,7 @@ See `.env.example` for all variables. Core ones:
 - **UI**: shadcn/ui, Lucide icons, Radix UI primitives
 - **Table**: TanStack Table v8
 - **Database**: PostgreSQL via `pg` connection pool
-- **Transcription**: per-language STT routing (AssemblyAI Universal-3.5 Pro, Azure gpt-4o-transcribe, Alibaba Fun-ASR, Gemini 3 Flash) — see `lib/providers/config.ts`
+- **Transcription**: per-language STT routing (AssemblyAI Universal-3.5 Pro, Azure LLM Speech, Alibaba Fun-ASR, Speechmatics Melia) — see `lib/providers/config.ts`
 - **Speaker ID**: Azure OpenAI (structured output via Zod)
 - **Video hosting**: Kaltura (partner ID: 2503451)
 - **Deployment**: Vercel — three cron jobs: `process-scheduled` every 5 min, `sync-videos` every 15 min, `check-pv` every 6 hours

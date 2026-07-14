@@ -239,6 +239,11 @@ export async function trackGeminiTranscription({
 function vendorFromProviderName(name: string): ProcessingUsageProvider {
   if (name.startsWith("gemini")) return "gemini";
   if (name.startsWith("assemblyai")) return "assemblyai";
+  // Azure AI Speech is a different service (and rate card) from Azure OpenAI —
+  // must be tested before the generic `azure` prefix below, which would
+  // otherwise swallow it and misattribute the cost.
+  if (name.startsWith("azure-llm-speech") || name.startsWith("azure-speech"))
+    return "azure-speech";
   if (name.startsWith("azure")) return "azure-openai";
   if (name.startsWith("alibaba")) return "alibaba";
   if (name.startsWith("openai")) return "openai";

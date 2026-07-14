@@ -29,6 +29,15 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: "eval",
+          environment: "node",
+          include: ["eval/**/*.test.ts"],
+          env,
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: "components",
           environment: "jsdom",
           include: ["components/**/*.test.tsx"],

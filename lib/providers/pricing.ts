@@ -131,13 +131,40 @@ export const PROVIDER_PRICING: Record<string, Pricing> = {
     rateCardVersion: "2026-05-30",
   },
 
-  // ── Speechmatics (Melia, production floor since 2026-07-10) ──
-  // Batch list price "as low as $0.129/hr" (speechmatics.com/pricing +
-  // Melia launch post); volume tiers may lower it. First 10 h/month free.
+  // ── Azure AI Speech — LLM Speech "enhanced mode" (fr/es/ar/ru since 2026-07-14) ──
+  // ⚠️ RATE IS UNCONFIRMED FOR THE DEFAULT ENHANCED MODEL. Microsoft does not
+  // publish a separate LLM-Speech line item. $0.36/hr is the **fast
+  // transcription** tier that LLM Speech is served on, and it is corroborated by
+  // MAI-Transcribe-1.5's published $6 per 1,000 minutes (= $0.36/hr) on the same
+  // endpoint. Enhanced add-ons (diarization, language ID) are documented as free
+  // for batch. Priced rather than left NULL because these four tracks are ~38 h
+  // of audio in total (≈$14 lifetime) — the blast radius of being wrong is
+  // negligible, and a NULL would hide the cost of four production languages.
+  // Confirm against the Azure invoice once real traffic lands.
+  "azure-speech/llm-speech-enhanced": {
+    kind: "audio_hours",
+    perHourUsd: 0.36,
+    rateCardVersion: "2026-07-14",
+  },
+
+  // ── Speechmatics (batch; Melia = production floor since 2026-07-10) ──
+  // Three distinct models at three distinct rates — see lib/providers/speechmatics.ts.
+  // Melia is multilingual-only; standard/enhanced are monolingual-only. First
+  // ~10 h/month free (docs); volume tiers above 500 h/month lower these.
   "speechmatics/melia-1": {
     kind: "audio_hours",
     perHourUsd: 0.129,
     rateCardVersion: "2026-07-10",
+  },
+  "speechmatics/standard": {
+    kind: "audio_hours",
+    perHourUsd: 0.24,
+    rateCardVersion: "2026-07-13",
+  },
+  "speechmatics/enhanced": {
+    kind: "audio_hours",
+    perHourUsd: 0.4,
+    rateCardVersion: "2026-07-13",
   },
 
   // ── Alibaba (Qwen3-ASR-Flash, Qwen3.5-Omni, Fun-ASR) ──

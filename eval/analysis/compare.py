@@ -24,7 +24,11 @@ OUT = os.path.join(os.path.dirname(__file__), "out")
 PROVIDERS = ["assemblyai", "mistral", "gemini", "azure-openai", "alibaba", "elevenlabs",
              "gemini-3.5-flash", "assemblyai-u3-pro", "fun-asr", "qwen3.5-omni-plus",
              # new-style {vendor}-{model} registry keys (post-rename runs)
-             "assemblyai-universal-3-5-pro", "assemblyai-universal-3-pro"]
+             "assemblyai-universal-3-5-pro", "assemblyai-universal-3-pro",
+             # floor bake-off (§13) + English/all-language challengers (§14/§15)
+             "azure-llm-speech", "speechmatics-melia-1", "speechmatics-standard",
+             "speechmatics-enhanced", "soniox-stt-async-v5",
+             "elevenlabs-scribe-v2-tuned"]
 WINDOW_MS = 30_000
 # Only our four hand-picked videos (ignore older corpus results in raw/)
 ONLY_SYMBOLS = {"UN80-Apr06-keita", "S_PV.10156", "UN80-Apr29-timestamps", "Nebenzia-Starobelsk", "S_PV.10153"}

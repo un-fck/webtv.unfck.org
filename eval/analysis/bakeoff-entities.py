@@ -14,13 +14,28 @@ from collections import Counter
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "results", "raw")
 
-ARMS = [
+# Track and arms are overridable so the same probes can score the `en`
+# challenger battery (PLAN-single-vendor-consolidation §3) as well as the
+# original floor bake-off (§13.2):
+#   python3 bakeoff-entities.py --lang=en --arms=a,b,c
+DEFAULT_ARMS = [
     "speechmatics-melia-1",
     "soniox-stt-async-v5",
     "elevenlabs-scribe-v2-tuned",
     "azure-llm-speech",
     "gemini-3-flash",
 ]
+
+
+def _arg(name, fallback):
+    for a in sys.argv[1:]:
+        if a.startswith(f"--{name}="):
+            return a.split("=", 1)[1]
+    return fallback
+
+
+LANG = _arg("lang", "floor")
+ARMS = [a for a in _arg("arms", ",".join(DEFAULT_ARMS)).split(",") if a]
 
 # (symbol, {label: [regexes]}) — case-insensitive
 PROBES = {
@@ -52,7 +67,7 @@ def main():
     for symbol, probes in PROBES.items():
         print(f"\n{'='*72}\n{symbol}\n{'='*72}")
         for arm in ARMS:
-            f = os.path.join(ROOT, symbol, f"{arm}_floor.json")
+            f = os.path.join(ROOT, symbol, f"{arm}_{LANG}.json")
             if not os.path.exists(f):
                 print(f"\n--- {arm}: (missing)")
                 continue
@@ -75,7 +90,7 @@ def main():
     symbol = "UN80-Apr29-timestamps"
     print(f"\n{'='*72}\n{symbol} (structure only)\n{'='*72}")
     for arm in ARMS:
-        f = os.path.join(ROOT, symbol, f"{arm}_floor.json")
+        f = os.path.join(ROOT, symbol, f"{arm}_{LANG}.json")
         if not os.path.exists(f):
             print(f"--- {arm}: (missing)")
             continue
