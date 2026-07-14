@@ -114,7 +114,13 @@
     },
     "loading": "加载中…",
     "results": "{count, plural, =0 {无结果} other {# 条结果}}",
-    "meetings": "{count, plural, =0 {无会议} other {# 场会议}}"
+    "meetings": "{count, plural, =0 {无会议} other {# 场会议}}",
+    "searchTranscripts": "在转录内容中搜索",
+    "searchTranscriptsScope": "仅限已转录的会议",
+    "matchingStatements": "{count, plural, other {# 条匹配发言}}",
+    "showAllMatches": "{count, plural, other {显示此会议的全部 # 条匹配}}",
+    "searchTranscriptsInstead": "改为在转录内容中搜索",
+    "noMatchesWithTranscripts": "在会议标题和转录内容中均未找到“{query}”。只能搜索已转录的会议。"
   },
   "speakers": {
     "title": "发言者",

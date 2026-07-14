@@ -17,6 +17,10 @@ export interface ServerParams {
   // the active locale is non-English, the schedule hides meetings without a
   // harvested i18n entry for that locale.
   includeOtherLangs?: boolean;
+  // "Search inside transcripts" checkbox (`?ft=1`), default off. Only
+  // meaningful in search mode (with `q`): widens the result set to meetings
+  // whose transcript content matches and renders per-meeting hit sub-rows.
+  fullText?: boolean;
   // Schedule view mode: undefined / "recent" (default) shows today + past in
   // descending order; "upcoming" shows strictly future days in ascending
   // order. Ignored in search mode.
@@ -63,6 +67,9 @@ export function parseScheduleParams(raw: RawSearchParams): ServerParams {
       ? raw.q.trim()
       : undefined;
   const includeOtherLangs = raw.xlang === "1";
+  // fullText only exists together with a query — a bare ?ft=1 is inert and
+  // normalizes away so the drift check treats it as absent.
+  const fullText = raw.ft === "1" && !!q;
   const view = raw.view === "upcoming" ? "upcoming" : undefined;
   // Upper bound mirrors MAX_WEEKS in components/transcript-table.tsx — half a
   // year each side is the practical limit of the default-browse window before
@@ -82,6 +89,7 @@ export function parseScheduleParams(raw: RawSearchParams): ServerParams {
     text: text.length ? text : undefined,
     q,
     includeOtherLangs,
+    fullText,
     view,
     weeks,
   };
@@ -112,6 +120,7 @@ export function scheduleParamsKey(p: ServerParams): string {
     text: sorted(p.text),
     q: p.q,
     xlang: p.includeOtherLangs === true,
+    ft: p.fullText === true,
     view: p.view,
     weeks: p.weeks,
   });

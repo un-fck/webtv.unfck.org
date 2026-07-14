@@ -56,6 +56,9 @@ export async function GET(request: NextRequest) {
   // ?xlang=1 turns off the per-locale visibility filter (the "Include
   // meetings in other languages" toggle on the home toolbar).
   const includeOther = sp.get("xlang") === "1";
+  // ?ft=1 additionally searches INSIDE transcript statements (requires `q`).
+  // Searches the UI locale's transcript track; English when no locale given.
+  const fullText = sp.get("ft") === "1";
 
   const [transcriptedEntries, transcriptedEntriesInLocale] = await Promise.all([
     getCachedTranscriptedEntries(),
@@ -77,9 +80,11 @@ export async function GET(request: NextRequest) {
       ? transcriptedEntries
       : undefined,
     localeFilter: locale ? { locale, includeOther } : undefined,
+    contentSearch: fullText && q ? { language: locale ?? "en" } : undefined,
   };
 
-  const { records, total, totalIncludingOther } = await queryVideos(params);
+  const { records, total, totalIncludingOther, contentMatches, statementTotal } =
+    await queryVideos(params);
 
   const transcriptedSet = new Set(transcriptedEntries);
   const transcriptedInLocaleSet = new Set(transcriptedEntriesInLocale);
@@ -99,6 +104,9 @@ export async function GET(request: NextRequest) {
     total,
     totalIncludingOther,
     hasMore,
+    // Content-search extras (`ft=1`): per-meeting hit summaries keyed by
+    // asset_id, plus the all-meetings statement total for the count line.
+    ...(contentMatches ? { contentMatches, statementTotal } : {}),
   });
   // Search responses (with `q`) need a shorter TTL than the steady-state
   // browse feed: the FTS index updates as new meetings come in and we don't

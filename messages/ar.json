@@ -114,7 +114,13 @@
     },
     "loading": "جارٍ التحميل…",
     "results": "{count, plural, =0 {لا توجد نتائج} one {نتيجة واحدة} two {نتيجتان} few {# نتائج} many {# نتيجة} other {# نتيجة}}",
-    "meetings": "{count, plural, =0 {لا توجد جلسات} one {جلسة واحدة} two {جلستان} few {# جلسات} many {# جلسة} other {# جلسة}}"
+    "meetings": "{count, plural, =0 {لا توجد جلسات} one {جلسة واحدة} two {جلستان} few {# جلسات} many {# جلسة} other {# جلسة}}",
+    "searchTranscripts": "البحث داخل التفريغات",
+    "searchTranscriptsScope": "الجلسات المفرّغة فقط",
+    "matchingStatements": "{count, plural, zero {لا مداخلات مطابقة} one {مداخلة واحدة مطابقة} two {مداخلتان مطابقتان} few {# مداخلات مطابقة} many {# مداخلة مطابقة} other {# مداخلة مطابقة}}",
+    "showAllMatches": "{count, plural, zero {لا نتائج في هذه الجلسة} one {عرض النتيجة الوحيدة في هذه الجلسة} two {عرض النتيجتين في هذه الجلسة} few {عرض جميع النتائج (#) في هذه الجلسة} many {عرض جميع النتائج (#) في هذه الجلسة} other {عرض جميع النتائج (#) في هذه الجلسة}}",
+    "searchTranscriptsInstead": "ابحث داخل التفريغات بدلاً من ذلك",
+    "noMatchesWithTranscripts": "لا نتائج لـ ”{query}“ في عناوين الجلسات أو التفريغات. لا يمكن البحث إلا في الجلسات المفرّغة."
   },
   "speakers": {
     "title": "المتكلمون",

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Link as LinkIcon } from "lucide-react";
 import type { SpeakerMapping } from "@/lib/speakers";
+import { SpeakerBadges } from "@/components/speaker-badges";
 import { getTopicColor } from "@/components/transcription-panel";
 import { formatTimecode } from "@/lib/transcript-formatting";
 import { typography } from "@/lib/typography";
@@ -61,23 +62,12 @@ function renderSpeakerInfo(
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {info.affiliation && (
-        <span className="inline-flex items-center rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-          {countryNames.get(info.affiliation) || info.affiliation}
-        </span>
-      )}
-      {info.group && (
-        <span className="inline-flex items-center rounded-md bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-          {info.group}
-        </span>
-      )}
-      {info.function && info.function.toLowerCase() !== "representative" && (
-        <span className="text-sm font-medium text-muted-foreground">
-          {info.function}
-        </span>
-      )}
-    </div>
+    <SpeakerBadges
+      info={info}
+      affiliationName={
+        info.affiliation ? countryNames.get(info.affiliation) : null
+      }
+    />
   );
 }
 

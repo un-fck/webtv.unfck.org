@@ -515,6 +515,11 @@ async function handleList(
     .filter((d) => ["transcript", "pv", "sr"].includes(d));
 
   const includeOther = sp.get("xlang") === "1";
+  // ?ft=1 (with q): also search INSIDE transcript statements. Adds
+  // content-matched meetings to the result set and a `matches` object per
+  // meeting (count + first hits with speaker, text, start seconds, and a
+  // ready-made pageUrl deeplink).
+  const fullText = sp.get("ft") === "1" && !!q;
 
   const [transcriptedEntries, transcriptedEntriesInLocale] = await Promise.all([
     getCachedTranscriptedEntries(),
@@ -538,9 +543,11 @@ async function handleList(
       ? transcriptedEntries
       : undefined,
     localeFilter: { locale, includeOther },
+    contentSearch: fullText ? { language: locale } : undefined,
   };
 
-  const { records, total, totalIncludingOther } = await queryVideos(params);
+  const { records, total, totalIncludingOther, contentMatches, statementTotal } =
+    await queryVideos(params);
   const transcriptedSet = new Set(transcriptedEntries);
   const transcriptedInLocaleSet = new Set(transcriptedEntriesInLocale);
 
@@ -555,6 +562,7 @@ async function handleList(
         : false,
     );
     const url = videoUrl(record);
+    const matchSummary = contentMatches?.[record.asset_id];
     return {
       title: v.title,
       date: v.date,
@@ -566,6 +574,21 @@ async function handleList(
       pageUrl: `/${locale}/${url}`,
       jsonUrl: `/${locale}/${url}.json`,
       textUrl: v.hasTranscript ? `/${locale}/${url}.txt` : null,
+      // Content-search hits (ft=1 only): who said it, what, and a deeplink
+      // that opens the transcript at that moment.
+      ...(matchSummary
+        ? {
+            matches: {
+              count: matchSummary.count,
+              statements: matchSummary.hits.map((hit) => ({
+                speaker: hit.speaker,
+                text: hit.text,
+                start: hit.startSeconds,
+                pageUrl: `/${locale}/${url}?t=${hit.startSeconds}`,
+              })),
+            },
+          }
+        : {}),
     };
   });
 
@@ -596,5 +619,6 @@ async function handleList(
     hasMore,
     offset,
     pageSize: LIST_PAGE_SIZE,
+    ...(fullText ? { statementTotal } : {}),
   });
 }

@@ -186,6 +186,42 @@ CREATE TABLE IF NOT EXISTS speaker_mappings (
     mapping JSONB NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+-- ── transcript_statements ─────────────────────────────────────────────────────
+-- Statement-level search index (migration 026). One row per ON-RECORD
+-- statement of a COMPLETED transcript, populated by
+-- reindexTranscriptStatements (lib/db.ts) — statements flagged is_off_record
+-- in the speaker mapping are skipped, mirroring lib/off-record.ts, and
+-- statement_idx keeps the raw content index.
+-- start_ms is RAW; the realignment offset (transcripts.time_offset_ms) is
+-- applied at query time, so re-cuts never require reindexing. Word search
+-- goes through tsv (per-language regconfig; zh routes to trigram instead);
+-- digit-bearing terms ("L.73", "2735") go through trigram containment on
+-- text, because document symbols hide inside compound FTS tokens.
+CREATE TABLE IF NOT EXISTS transcript_statements (
+    transcript_id TEXT NOT NULL REFERENCES transcripts(transcript_id) ON DELETE CASCADE,
+    statement_idx INTEGER NOT NULL,
+    -- Denormalized from transcripts.language_code: the generated tsvector
+    -- must pick its regconfig from the row itself.
+    language_code TEXT NOT NULL,
+    start_ms INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    tsv tsvector GENERATED ALWAYS AS (
+        to_tsvector(
+            CASE language_code
+                WHEN 'en' THEN 'english'::regconfig
+                WHEN 'fr' THEN 'french'::regconfig
+                WHEN 'es' THEN 'spanish'::regconfig
+                WHEN 'ru' THEN 'russian'::regconfig
+                WHEN 'ar' THEN 'arabic'::regconfig
+                ELSE 'simple'::regconfig
+            END,
+            text
+        )
+    ) STORED,
+    PRIMARY KEY (transcript_id, statement_idx)
+);
+CREATE INDEX IF NOT EXISTS idx_transcript_statements_tsv ON transcript_statements USING GIN (tsv);
+CREATE INDEX IF NOT EXISTS idx_transcript_statements_trgm ON transcript_statements USING GIN (text public.gin_trgm_ops);
 -- ── processing_usage_events ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS processing_usage_events (
     id SERIAL PRIMARY KEY,

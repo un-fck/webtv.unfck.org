@@ -114,7 +114,13 @@
     },
     "loading": "Cargando…",
     "results": "{count, plural, =0 {Sin resultados} one {# resultado} other {# resultados}}",
-    "meetings": "{count, plural, =0 {Sin reuniones} one {# reunión} other {# reuniones}}"
+    "meetings": "{count, plural, =0 {Sin reuniones} one {# reunión} other {# reuniones}}",
+    "searchTranscripts": "Buscar dentro de las transcripciones",
+    "searchTranscriptsScope": "solo reuniones transcritas",
+    "matchingStatements": "{count, plural, one {# intervención coincidente} other {# intervenciones coincidentes}}",
+    "showAllMatches": "{count, plural, one {Mostrar la coincidencia de esta reunión} other {Mostrar las # coincidencias de esta reunión}}",
+    "searchTranscriptsInstead": "Buscar también dentro de las transcripciones",
+    "noMatchesWithTranscripts": "No hay resultados para «{query}» ni en los títulos de las reuniones ni en las transcripciones. Solo se pueden buscar las reuniones transcritas."
   },
   "speakers": {
     "title": "Oradores",

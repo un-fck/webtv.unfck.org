@@ -30,6 +30,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -37,6 +38,8 @@ import {
   useState,
   useTransition,
 } from "react";
+import type { ContentMatchSummary } from "@/lib/db";
+import { TranscriptMatchRows } from "@/components/transcript-match-rows";
 import { useCategoryName } from "@/lib/hooks/use-category-name";
 import { useMeetingFormat } from "@/lib/hooks/use-meeting-format";
 import { rememberScheduleUrl } from "@/lib/schedule-return";
@@ -509,6 +512,10 @@ interface VideoTableProps {
     categories: string[];
     categoryCounts: Record<string, number>;
   };
+  // Content-search extras (present when serverParams.fullText): per-meeting
+  // transcript hits keyed by asset_id + the all-meetings statement total.
+  contentMatches?: Record<string, ContentMatchSummary>;
+  statementTotal?: number;
 }
 
 export function VideoTable({
@@ -518,6 +525,8 @@ export function VideoTable({
   serverParams,
   availableDates,
   filterOptions,
+  contentMatches,
+  statementTotal,
 }: VideoTableProps) {
   const router = useRouter();
   const t = useT();
@@ -548,11 +557,17 @@ export function VideoTable({
   // automatically right after almost every filter change (short viewport
   // keeps the sentinel visible), so this race is the rule, not the exception.
   const feedEpoch = useRef(0);
+  // Per-meeting transcript hits, keyed by asset_id. Seeded from SSR, merged
+  // with each loadMore chunk's matches, reset on reseed.
+  const [matchesByAsset, setMatchesByAsset] = useState<
+    Record<string, ContentMatchSummary>
+  >(contentMatches ?? {});
   useEffect(() => {
     feedEpoch.current += 1;
     setRows(videos);
     setHasMore(videos.length < totalCount);
-  }, [videos, totalCount]);
+    setMatchesByAsset(contentMatches ?? {});
+  }, [videos, totalCount, contentMatches]);
 
   // The committed server state, readable from inside timeouts without
   // capturing a stale closure.
@@ -618,6 +633,8 @@ export function VideoTable({
       if ("q" in paramUpdates) setOrDelete("q", paramUpdates.q);
       if ("includeOtherLangs" in paramUpdates)
         setOrDelete("xlang", paramUpdates.includeOtherLangs ? "1" : undefined);
+      if ("fullText" in paramUpdates)
+        setOrDelete("ft", paramUpdates.fullText ? "1" : undefined);
       if ("view" in paramUpdates)
         setOrDelete(
           "view",
@@ -769,6 +786,7 @@ export function VideoTable({
     sp.set("offset", String(rows.length));
     sp.set("locale", locale);
     if (serverParams.q) sp.set("q", serverParams.q);
+    if (serverParams.fullText) sp.set("ft", "1");
     if (serverParams.includeOtherLangs) sp.set("xlang", "1");
     if (serverParams.sort) sp.set("sort", serverParams.sort);
     if (serverParams.date) sp.set("date", serverParams.date);
@@ -785,6 +803,12 @@ export function VideoTable({
           const fresh = (data.videos as Video[]).filter((v) => !seen.has(v.id));
           return fresh.length === 0 ? prev : [...prev, ...fresh];
         });
+        if (data.contentMatches) {
+          setMatchesByAsset((prev) => ({
+            ...prev,
+            ...(data.contentMatches as Record<string, ContentMatchSummary>),
+          }));
+        }
         let nextHasMore = Boolean(data.hasMore);
         // Upcoming view only renders future rows, but the server pages
         // descend through the whole date window. Once a chunk has no future
@@ -832,6 +856,12 @@ export function VideoTable({
     updateParams({
       includeOtherLangs: includeOtherLangs ? undefined : true,
     });
+  // "Search inside transcripts" (`?ft=1`): scope checkbox in the xlang style,
+  // only rendered while a query is active — a scope widener with nothing to
+  // scope would be dead UI.
+  const fullTextActive = serverParams.fullText === true;
+  const toggleFullText = () =>
+    updateParams({ fullText: fullTextActive ? undefined : true });
   // How many more meetings would appear if the user flipped the toggle. The
   // server returns `total{,IncludingOther}` from the same WHERE chain with
   // the locale cut dropped — see queryVideos in lib/db.ts. SSR delivers fresh
@@ -913,10 +943,14 @@ export function VideoTable({
     const time = video.scheduledTime;
     const duration = formatDuration(video.duration);
     const activeCategory = serverParams.category === category;
+    // Transcript hits render as sub-rows directly under their meeting —
+    // always expanded while the fullText checkbox is on (bounded: first
+    // hits inline, "show all" for the rest).
+    const meetingMatches = fullTextActive ? matchesByAsset[video.id] : undefined;
 
     return (
+      <Fragment key={video.id}>
       <tr
-        key={video.id}
         className="border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50"
       >
         {/* Time (always) + duration (≥sm only — too cramped on mobile).
@@ -982,6 +1016,15 @@ export function VideoTable({
           ) : null}
         </td>
       </tr>
+      {meetingMatches && meetingMatches.hits.length > 0 && serverParams.q && (
+        <TranscriptMatchRows
+          assetId={video.id}
+          slug={video.slug}
+          query={serverParams.q}
+          matches={meetingMatches}
+        />
+      )}
+      </Fragment>
     );
   };
 
@@ -1013,9 +1056,15 @@ export function VideoTable({
 
   const searchStatus =
     isSearchMode && rows.length > 0
-      ? hasMore
-        ? `Showing ${rows.length.toLocaleString()} meetings`
-        : `${totalCount.toLocaleString()} meetings in total`
+      ? [
+          hasMore
+            ? `Showing ${rows.length.toLocaleString()} meetings`
+            : `${totalCount.toLocaleString()} meetings in total`,
+          // Split tally for content search: meetings · matching statements.
+          ...(fullTextActive && (statementTotal ?? 0) > 0
+            ? [t("matchingStatements", { count: statementTotal ?? 0 })]
+            : []),
+        ].join(" · ")
       : null;
 
   const clearAllFilters = () =>
@@ -1032,12 +1081,29 @@ export function VideoTable({
       {isSearchMode ? (
         <>
           <p className="text-sm text-muted-foreground">
-            No meetings match{" "}
-            <span className="font-medium text-foreground">
-              &ldquo;{serverParams.q}&rdquo;
-            </span>
-            .
+            {fullTextActive ? (
+              t("noMatchesWithTranscripts", { query: serverParams.q ?? "" })
+            ) : (
+              <>
+                No meetings match{" "}
+                <span className="font-medium text-foreground">
+                  &ldquo;{serverParams.q}&rdquo;
+                </span>
+                .
+              </>
+            )}
           </p>
+          {/* Recruitment point for content search: when title search comes
+              up empty, offer widening the scope in one click — explicit,
+              never automatic. */}
+          {!fullTextActive && (
+            <button
+              onClick={toggleFullText}
+              className="text-sm text-un-blue-text underline-offset-4 hover:underline"
+            >
+              {t("searchTranscriptsInstead")}
+            </button>
+          )}
           <button
             onClick={() => submitSearch("")}
             className="text-sm text-un-blue-text underline-offset-4 hover:underline"
@@ -1117,6 +1183,22 @@ export function VideoTable({
           onChange={(val) => updateParams({ category: val })}
           counts={filterOptions.categoryCounts}
         />
+        {isSearchMode && (
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground transition-colors select-none hover:text-foreground">
+            <input
+              type="checkbox"
+              checked={fullTextActive}
+              onChange={toggleFullText}
+              className="h-3.5 w-3.5 cursor-pointer accent-primary"
+            />
+            <span>
+              {t("searchTranscripts")}
+              <span className="ms-1.5 text-xs text-muted-foreground/80">
+                ({t("searchTranscriptsScope")})
+              </span>
+            </span>
+          </label>
+        )}
         {localeFilterApplicable && (
           <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground transition-colors select-none hover:text-foreground">
             <input

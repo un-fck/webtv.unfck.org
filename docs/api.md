@@ -55,7 +55,8 @@ Returns a paginated list of UN meetings matching the given filters. Covers the l
 
 | Parameter  | Type           | Description                                                                                                      |
 | ---------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `q`        | string         | Search meeting titles and metadata — not transcript content (FTS with trigram ILIKE fallback). Min 2 characters. |
+| `q`        | string         | Search meeting titles and metadata (FTS with trigram ILIKE fallback). Min 2 characters. Add `ft=1` to also search transcript content. |
+| `ft`       | `1`            | With `q`: also search **inside transcript statements** (the URL locale's transcript track). Adds content-matched meetings to the results and a per-meeting `matches` object (see below). Terms containing digits (`L.73`, `2735`, `S/2026/243`) match as exact fragments — robust for document symbols; word terms use stemmed full-text search, and quoted phrases work. Only meetings with a completed transcript are searchable this way. |
 | `category` | string         | Filter by meeting category.                                                                                      |
 | `date`     | YYYY-MM-DD     | Filter to a specific date. Mutually exclusive with `from`/`to`.                                                  |
 | `from`     | YYYY-MM-DD     | Inclusive start of a date range.                                                                                 |
@@ -90,6 +91,37 @@ Returns a paginated list of UN meetings matching the given filters. Covers the l
   "pageSize": 100
 }
 ```
+
+With `ft=1`, meetings whose transcript matched additionally carry a `matches`
+object, and the top level gains `statementTotal` (matching statements across
+all result meetings):
+
+```json
+{
+  "meetings": [
+    {
+      "…": "…",
+      "matches": {
+        "count": 12,
+        "statements": [
+          {
+            "speaker": { "name": "…", "function": "…", "affiliation": "USA", "group": null },
+            "text": "…full statement text (capped at 1000 chars)…",
+            "start": 5025,
+            "pageUrl": "/en/sc/10175?t=5025"
+          }
+        ]
+      }
+    }
+  ],
+  "statementTotal": 27
+}
+```
+
+`statements` holds the first 3 matches in transcript order; `start` is seconds
+into the video, and `pageUrl` opens the meeting page with the player seeked to
+that moment (`?t=` is supported on all meeting pages). `count` is the meeting's
+full match total.
 
 The `.txt` variant (`GET /{locale}/meetings.txt`) returns a one-line-per-meeting summary.
 

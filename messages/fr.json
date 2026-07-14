@@ -114,7 +114,13 @@
     },
     "loading": "Chargement…",
     "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
-    "meetings": "{count, plural, =0 {Aucune réunion} one {# réunion} other {# réunions}}"
+    "meetings": "{count, plural, =0 {Aucune réunion} one {# réunion} other {# réunions}}",
+    "searchTranscripts": "Rechercher dans les transcriptions",
+    "searchTranscriptsScope": "uniquement les réunions transcrites",
+    "matchingStatements": "{count, plural, one {# intervention correspondante} other {# interventions correspondantes}}",
+    "showAllMatches": "{count, plural, one {Afficher la correspondance de cette réunion} other {Afficher les # correspondances de cette réunion}}",
+    "searchTranscriptsInstead": "Rechercher plutôt dans les transcriptions",
+    "noMatchesWithTranscripts": "Aucun résultat pour « {query} » dans les titres de réunion ni dans les transcriptions. Seules les réunions transcrites peuvent être interrogées."
   },
   "speakers": {
     "title": "Intervenants",
