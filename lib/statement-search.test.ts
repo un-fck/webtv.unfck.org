@@ -101,7 +101,17 @@ describe("buildSnippet", () => {
     const long = "word ".repeat(800) + "the honourable Guy Ryder spoke " + "word ".repeat(100);
     const s = buildSnippet(long, ["Guy", "Ryder"], 200);
     const marked = s.parts.filter((p) => p.mark).map((p) => p.text);
-    expect(marked).toEqual(["Guy", "Ryder"]);
+    expect(marked).toEqual(["Guy Ryder"]);
     expect(s.leading).toBe(true);
+  });
+
+  it("merges adjacent marks into one run, keeps separated ones apart", () => {
+    const s = buildSnippet(
+      "welcome Guy Ryder, and later Ryder again",
+      ["Guy", "Ryder"],
+      200,
+    );
+    const marked = s.parts.filter((p) => p.mark).map((p) => p.text);
+    expect(marked).toEqual(["Guy Ryder", "Ryder"]);
   });
 });

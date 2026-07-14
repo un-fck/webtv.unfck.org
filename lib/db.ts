@@ -6,6 +6,7 @@ import { applyTimeOffset } from "./transcript-offset";
 import { REDUCTION_TRIGGER_MS } from "./realignment-constants";
 import {
   buildStatementConditions,
+  firstMatchIndex,
   parseSearchQuery,
   windowText,
 } from "./statement-search";
@@ -2289,6 +2290,7 @@ async function runContentSearchQuery(args: {
              -- in mapStatementHits, where the match position is known.
              jsonb_agg(
                jsonb_build_object(
+                 'transcriptId', transcript_id,
                  'statementIdx', statement_idx,
                  'startSeconds', CEIL(adj_ms / 1000.0),
                  'text', text,
@@ -2353,16 +2355,26 @@ async function runContentSearchQuery(args: {
 
   const highlightTerms = parseSearchQuery(queryText).highlightTerms;
   const contentMatches: Record<string, ContentMatchSummary> = {};
+  const allRefs: SentenceRef[] = [];
   const records = data.rows.map((row) => {
     const rec = mapVideoRow(row);
     if (row.content_match_count != null) {
+      const { hits, refs } = mapStatementHits(row.content_hits, highlightTerms);
       contentMatches[rec.asset_id] = {
         count: Number(row.content_match_count),
-        hits: mapStatementHits(row.content_hits, highlightTerms),
+        hits,
       };
+      allRefs.push(...refs);
     }
     return rec;
   });
+  // Refine hit timestamps from statement start to the SENTENCE containing
+  // the first match — long statements can run for minutes, and the deeplink
+  // should land where the term was actually said.
+  await applySentenceStarts(
+    Object.values(contentMatches).flatMap((m) => m.hits),
+    allRefs,
+  );
 
   const countRow = countLocalized.rows[0] as
     | { total?: string; stmt_total?: string }
@@ -2379,23 +2391,131 @@ async function runContentSearchQuery(args: {
   };
 }
 
+/** Ties a produced StatementHit back to its statement in the content JSONB
+ *  plus the first-match char offset in the flattened statement text — the
+ *  inputs sentence-level timestamp resolution needs. */
+interface SentenceRef {
+  hit: StatementHit;
+  transcriptId: string;
+  statementIdx: number;
+  matchIdx: number;
+}
+
 function mapStatementHits(
   raw: unknown,
   highlightTerms: string[],
-): StatementHit[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((h) => {
-    const hit = h as Record<string, unknown>;
-    const windowed = windowText(String(hit.text ?? ""), highlightTerms);
-    return {
-      statementIdx: Number(hit.statementIdx),
-      startSeconds: Number(hit.startSeconds),
+): { hits: StatementHit[]; refs: SentenceRef[] } {
+  if (!Array.isArray(raw)) return { hits: [], refs: [] };
+  const hits: StatementHit[] = [];
+  const refs: SentenceRef[] = [];
+  for (const h of raw) {
+    const rowHit = h as Record<string, unknown>;
+    const fullText = String(rowHit.text ?? "");
+    const matchIdx = firstMatchIndex(fullText, highlightTerms);
+    const windowed = windowText(fullText, highlightTerms);
+    const hit: StatementHit = {
+      statementIdx: Number(rowHit.statementIdx),
+      startSeconds: Number(rowHit.startSeconds),
       text: windowed.text,
       leading: windowed.leading,
       trailing: windowed.trailing,
-      speaker: (hit.speaker as SpeakerInfo | null) ?? null,
+      speaker: (rowHit.speaker as SpeakerInfo | null) ?? null,
     };
-  });
+    hits.push(hit);
+    if (matchIdx >= 0 && typeof rowHit.transcriptId === "string") {
+      refs.push({
+        hit,
+        transcriptId: rowHit.transcriptId,
+        statementIdx: hit.statementIdx,
+        matchIdx,
+      });
+    }
+  }
+  return { hits, refs };
+}
+
+/**
+ * Upgrade hit timestamps from statement start to the start of the SENTENCE
+ * containing the first match. One bounded query extracts (text, start) for
+ * just the referenced statements' sentences; the flattened text is rebuilt
+ * exactly as reindexTranscriptStatements built it, so the match offset maps
+ * onto a sentence range. Best-effort: on any mismatch the statement start
+ * stays (correct, just coarser). `hits` is accepted only to keep call sites
+ * honest about what gets mutated.
+ */
+async function applySentenceStarts(
+  hits: StatementHit[],
+  refs: SentenceRef[],
+): Promise<void> {
+  void hits;
+  if (refs.length === 0) return;
+
+  // De-dup extraction per statement; several hits can share one statement.
+  const byKey = new Map<string, SentenceRef[]>();
+  for (const ref of refs) {
+    const key = `${ref.transcriptId}:${ref.statementIdx}`;
+    const list = byKey.get(key);
+    if (list) list.push(ref);
+    else byKey.set(key, [ref]);
+  }
+  const keys = [...byKey.keys()];
+  const tids = keys.map((k) => k.slice(0, k.lastIndexOf(":")));
+  const idxs = keys.map((k) => Number(k.slice(k.lastIndexOf(":") + 1)));
+
+  const result = await pool.query(
+    `SELECT p.tid AS transcript_id,
+            p.idx AS statement_index,
+            t.time_offset_ms,
+            (
+              SELECT jsonb_agg(
+                       jsonb_build_object('text', s.sent->>'text',
+                                          'start', s.sent->'start')
+                       ORDER BY para.ord, s.ord
+                     )
+                FROM jsonb_array_elements(
+                       t.content->'statements'->p.idx->'paragraphs'
+                     ) WITH ORDINALITY AS para(par, ord),
+                     jsonb_array_elements(para.par->'sentences')
+                       WITH ORDINALITY AS s(sent, ord)
+            ) AS sentences
+       FROM webtv.transcripts t
+       JOIN unnest($1::text[], $2::int[]) AS p(tid, idx)
+         ON p.tid = t.transcript_id`,
+    [tids, idxs],
+  );
+
+  for (const row of result.rows) {
+    const sentences = row.sentences as Array<{
+      text: string;
+      start: number;
+    }> | null;
+    const targets = byKey.get(`${row.transcript_id}:${row.statement_index}`);
+    if (!sentences || !targets) continue;
+
+    // Rebuild the indexed flattening (per-sentence whitespace collapse,
+    // empties skipped, single-space joins) with cumulative char ranges.
+    const ranges: Array<{ end: number; startMs: number }> = [];
+    let cursor = 0;
+    for (const sent of sentences) {
+      const norm = String(sent.text ?? "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (!norm) continue;
+      cursor += (ranges.length > 0 ? 1 : 0) + norm.length; // joining space
+      ranges.push({ end: cursor, startMs: Number(sent.start) });
+    }
+    if (ranges.length === 0) continue;
+
+    const offsetMs = Number(row.time_offset_ms ?? 0);
+    for (const ref of targets) {
+      const range =
+        ranges.find((r) => ref.matchIdx < r.end) ?? ranges[ranges.length - 1];
+      if (!Number.isFinite(range.startMs)) continue;
+      ref.hit.startSeconds = Math.ceil(
+        Math.max(0, range.startMs + offsetMs) / 1000,
+      );
+    }
+  }
 }
 
 export interface StatementMatchesResult {
@@ -2422,7 +2542,8 @@ export async function getStatementMatches(
 
   const result = await pool.query(
     q(
-      `SELECT s.statement_idx,
+      `SELECT s.transcript_id,
+              s.statement_idx,
               CEIL(GREATEST(0, s.start_ms + COALESCE(t.time_offset_ms, 0)) / 1000.0) AS start_s,
               s.text,
               (sm.mapping -> s.statement_idx::text) - 'is_off_record' AS speaker,
@@ -2447,21 +2568,36 @@ export async function getStatementMatches(
   );
 
   const highlightTerms = parsed.highlightTerms;
+  const refs: SentenceRef[] = [];
+  const hits = result.rows.map((row) => {
+    const fullText = String(row.text ?? "");
+    const matchIdx = firstMatchIndex(fullText, highlightTerms);
+    const windowed = windowText(fullText, highlightTerms);
+    const hit: StatementHit = {
+      statementIdx: Number(row.statement_idx),
+      startSeconds: Number(row.start_s),
+      text: windowed.text,
+      leading: windowed.leading,
+      trailing: windowed.trailing,
+      speaker: (row.speaker as SpeakerInfo | null) ?? null,
+    };
+    if (matchIdx >= 0) {
+      refs.push({
+        hit,
+        transcriptId: String(row.transcript_id),
+        statementIdx: hit.statementIdx,
+        matchIdx,
+      });
+    }
+    return hit;
+  });
+  await applySentenceStarts(hits, refs);
+
   return {
     total: Number(
       (result.rows[0] as { total?: string } | undefined)?.total ?? 0,
     ),
-    hits: result.rows.map((row) => {
-      const windowed = windowText(String(row.text ?? ""), highlightTerms);
-      return {
-        statementIdx: Number(row.statement_idx),
-        startSeconds: Number(row.start_s),
-        text: windowed.text,
-        leading: windowed.leading,
-        trailing: windowed.trailing,
-        speaker: (row.speaker as SpeakerInfo | null) ?? null,
-      };
-    }),
+    hits,
   };
 }
 

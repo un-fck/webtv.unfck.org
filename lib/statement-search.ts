@@ -182,6 +182,18 @@ function highlightRegex(terms: string[]): RegExp | null {
   return new RegExp(parts.join("|"), "giu");
 }
 
+/** Character index of the first term occurrence in `text`, or -1 (e.g. only
+ *  a stemmed FTS variant matched). Drives snippet windows and sentence-level
+ *  deeplink resolution. */
+export function firstMatchIndex(
+  text: string,
+  highlightTerms: string[],
+): number {
+  const re = highlightRegex(highlightTerms);
+  const first = re ? re.exec(text) : null;
+  return first ? first.index : -1;
+}
+
 /**
  * Cut a window of `text` around the first term occurrence. Runs SERVER-side
  * over the full statement text (a client-side window over pre-truncated text
@@ -194,8 +206,8 @@ export function windowText(
   highlightTerms: string[],
   windowChars = 240,
 ): { text: string; leading: boolean; trailing: boolean } {
-  const re = highlightRegex(highlightTerms);
-  const first = re ? re.exec(text) : null;
+  const matchIdx = firstMatchIndex(text, highlightTerms);
+  const first = matchIdx >= 0 ? { index: matchIdx } : null;
 
   let start = 0;
   if (first && first.index > windowChars / 2) {
@@ -217,7 +229,9 @@ export function windowText(
   };
 }
 
-/** Split (already-windowed) text into mark/no-mark parts for rendering. */
+/** Split (already-windowed) text into mark/no-mark parts for rendering.
+ *  Adjacent marks separated only by whitespace merge into one run, so a
+ *  two-word query highlights "Guy Ryder" as a single block. */
 export function markParts(
   text: string,
   highlightTerms: string[],
@@ -236,7 +250,27 @@ export function markParts(
     if (m[0].length === 0) re.lastIndex++; // safety against empty matches
   }
   if (cursor < text.length) parts.push({ text: text.slice(cursor), mark: false });
-  return parts;
+
+  const merged: SnippetPart[] = [];
+  for (const part of parts) {
+    const prev = merged[merged.length - 1];
+    const prevPrev = merged[merged.length - 2];
+    if (
+      part.mark &&
+      prev &&
+      !prev.mark &&
+      /^\s+$/.test(prev.text) &&
+      prevPrev?.mark
+    ) {
+      prevPrev.text += prev.text + part.text;
+      merged.pop();
+    } else if (part.mark && prev?.mark) {
+      prev.text += part.text;
+    } else {
+      merged.push(part);
+    }
+  }
+  return merged;
 }
 
 /** windowText + markParts in one call (tests / single-consumer paths). */
