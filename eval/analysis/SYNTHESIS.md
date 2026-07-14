@@ -881,6 +881,41 @@ accuracy or fidelity:
 4. `confidence: 0` means the §13.4 junk gate must key on chars/min + repetition + script churn,
    not provider confidence.
 
+### 15.5a Entity rendering — **the metric winner is the worst at proper nouns**
+
+The single most decision-relevant thing the anecdotal battery found, and it is **invisible to
+WER**. On V1, "UN80" is spoken ~56 times (every arm independently hears ~41 instances of the
+following word "initiative", so they are all listening to the same mentions). How they render it:
+
+| arm | "UN80" correct | substituted with a **real** UN acronym | non-existent acronym |
+| --- | ---: | --- | --- |
+| soniox | **48** | UNAIDS ×15 | — |
+| elevenlabs-tuned | 21 | — | UNAT ×4 |
+| assemblyai-3.5-pro | 11 | UNAIDS ×4 | UNAT ×14, UNAD ×1 |
+| speechmatics-enhanced | 9 | — | UNAT ×1 |
+| speechmatics-standard | 6 | UNAids ×1 | — |
+| **azure-llm-speech** | **6** ⚠️ | — | **UNAT ×36, UNAD ×14** |
+
+**"UN80" is a systematic failure for every provider** — it is a novel initiative name that sounds
+like an acronym — but **azure-llm is the worst of all of them**, rendering it correctly 6 times
+and mangling it ~50 times into "the UNAT initiative" / "the UNAD initiative". (UNAT *is* a real
+UN body — the Appeals Tribunal. UNAIDS is a real UN programme. So both classes put a wrong-but-
+real institution in front of a reader.)
+
+WER cannot see this: ~50 mangled tokens in a 22 837-word transcript is **0.2%** of the text. It
+does not move the number that decided §14/§15, and it is precisely the kind of error that matters
+most in a UN record, where the institution being discussed *is* the content.
+
+This does **not** reverse the WER verdict, but it means:
+
+- **The roster / entity-biasing probe is no longer optional** — it is the top open item. AssemblyAI
+  has `keyterms_prompt`, Speechmatics Standard/Enhanced have `additional_vocab`, and
+  `mai-transcribe-1.5` has `phraseList`. The **unnamed default speech-LLM we benchmarked has
+  neither** — only soft `prompt` steering. A provider that cannot be told "UN80" is a word may be
+  structurally unfit for this corpus regardless of its WER.
+- **Soniox looks materially better on entities** (48 vs 6) at statistically indistinguishable WER
+  and $0.10/hr. It deserves a closer look than its §14 "tied" verdict suggested.
+
 ### 15.6 Drift regression test (`regression-azure-llm.ts`)
 
 The unpinnable-model risk (§15.0) cannot be fixed in code — it can only be *detected*. A silent
