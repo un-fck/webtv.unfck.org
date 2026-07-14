@@ -173,11 +173,12 @@ export function buildSpec(): Record<string, unknown> {
             localeParam,
             qp(
               "q",
-              "Search meeting titles and metadata (min 2 chars; shorter is " +
-                "ignored and the query degrades to a plain browse). Add `ft=1` " +
-                "to also search inside transcript content.",
+              "Search meeting titles and metadata. Minimum 2 characters — a " +
+                "shorter non-empty q is a 400. Add `ft=1` to also search " +
+                "inside transcript content.",
               {
                 type: "string",
+                minLength: 2,
               },
             ),
             qp(
@@ -189,7 +190,7 @@ export function buildSpec(): Record<string, unknown> {
                 "exact fragments — robust for document symbols; word terms use " +
                 "stemmed full-text search; quoted phrases work. Searches the URL " +
                 "locale's transcript track; only meetings with a completed " +
-                "transcript are covered.",
+                "transcript are covered. `ft=1` without a valid q is a 400.",
               { type: "string", enum: ["1"] },
             ),
             qp("category", "Filter by WebTV category name.", {
@@ -213,14 +214,25 @@ export function buildSpec(): Record<string, unknown> {
               type: "string",
               pattern: "^\\d{4}-\\d{2}-\\d{2}$",
             }),
-            qp("sort", "Sort order (default date_desc).", {
-              type: "string",
-              enum: ["date_desc", "date_asc", "title_asc", "title_desc"],
-            }),
-            qp("offset", "Pagination offset.", {
-              type: "integer",
-              minimum: 0,
-            }),
+            qp(
+              "sort",
+              "Sort order (default date_desc). There is no relevance mode — " +
+                "content searches (ft=1) come back date-ordered too, by design. " +
+                "An unrecognized value is a 400.",
+              {
+                type: "string",
+                enum: ["date_desc", "date_asc", "title_asc", "title_desc"],
+              },
+            ),
+            qp(
+              "page",
+              "1-based page number (default 1). Results come in pages of 250; " +
+                "page with 1, 2, 3, … A non-positive or non-integer value is a 400.",
+              {
+                type: "integer",
+                minimum: 1,
+              },
+            ),
             {
               name: "text",
               in: "query",
@@ -248,6 +260,13 @@ export function buildSpec(): Record<string, unknown> {
             "200": {
               description: "A page of meetings.",
               content: jsonContent("MeetingsResponse"),
+            },
+            "400": {
+              description:
+                "A known parameter was malformed — a bad date/from/to, an " +
+                "unknown sort or text value, q shorter than 2 chars, ft=1 " +
+                "without q, or a non-positive page.",
+              content: jsonContent("DataApiError"),
             },
           },
         },

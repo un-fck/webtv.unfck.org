@@ -61,16 +61,18 @@ Returns a paginated list of UN meetings matching the given filters. Covers the l
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| \`q\`     | string | Search meeting titles and metadata. Min 2 characters (shorter is ignored, and the request degrades to a plain browse). Add \`ft=1\` to also search inside the transcripts. |
-| \`ft\`    | \`1\` | With \`q\`: also search **inside transcript statements** — i.e. find meetings by what was *said*, not just by title. See "Searching inside transcripts" below. |
+| \`q\`     | string | Search meeting titles and metadata. Min 2 characters — a shorter non-empty \`q\` is a **400**. Add \`ft=1\` to also search inside the transcripts. |
+| \`ft\`    | \`1\` | With \`q\`: also search **inside transcript statements** — i.e. find meetings by what was *said*, not just by title. See "Searching inside transcripts" below. \`ft=1\` without a valid \`q\` is a **400**. |
 | \`category\` | string | Filter by meeting category. |
-| \`date\`  | YYYY-MM-DD | Filter to a specific date. Pass either \`date\` or \`from\`/\`to\` — passing both is not rejected, it just intersects the two constraints. |
-| \`from\`  | YYYY-MM-DD | Inclusive start of a date range. |
-| \`to\`    | YYYY-MM-DD | Inclusive end of a date range. |
-| \`sort\`  | enum | \`date_desc\` (default), \`date_asc\`, \`title_asc\`, \`title_desc\`. There is no relevance sort — even a content search comes back newest-first. |
-| \`offset\`| integer | Pagination offset. Results come in chunks of 250, and \`offset\` is rounded **down** to a multiple of 250 — page with \`0\`, \`250\`, \`500\`, … |
-| \`text\`  | string (multi) | Filter by document type: \`transcript\` = has automatic transcript; \`pv\` = has official verbatim record; \`sr\` = has official summary record. Repeating it matches **any** of the given types, not all. Use \`text=transcript\` to exclude meetings with no content. |
+| \`date\`  | YYYY-MM-DD | Filter to a specific date; malformed → **400**. Pass either \`date\` or \`from\`/\`to\` — passing both is not rejected, it just intersects the two constraints. |
+| \`from\`  | YYYY-MM-DD | Inclusive start of a date range; malformed → **400**. |
+| \`to\`    | YYYY-MM-DD | Inclusive end of a date range; malformed → **400**. |
+| \`sort\`  | enum | \`date_desc\` (default), \`date_asc\`, \`title_asc\`, \`title_desc\`. There is no relevance sort — even a content search comes back newest-first (by design). An unrecognized value is a **400**. |
+| \`page\`  | integer | 1-based page number (default 1). Results come in pages of 250 — page with \`1\`, \`2\`, \`3\`, …. A non-positive or non-integer value is a **400**. |
+| \`text\`  | string (multi) | Filter by document type: \`transcript\` = has automatic transcript; \`pv\` = has official verbatim record; \`sr\` = has official summary record. Repeating it matches **any** of the given types, not all. An unrecognized value is a **400**. Use \`text=transcript\` to exclude meetings with no content. |
 | \`xlang\` | \`1\` | Include meetings not yet available in the URL locale (default: hide them). |
+
+A malformed **known** parameter returns \`400\` with \`{ "error": "…" }\`. \`ft\`/\`xlang\` are lenient (only \`1\` enables them; other values read as off), and unknown params are ignored — neither is an error.
 
 ### Response shape
 
@@ -93,15 +95,15 @@ Returns a paginated list of UN meetings matching the given filters. Covers the l
   "total": 42,
   "totalIncludingOther": 42,
   "hasMore": true,
-  "offset": 0,
-  "pageSize": 100
+  "page": 1,
+  "pageSize": 250
 }
 \`\`\`
 
 ### Notes
 
 - Covers the last 365 days (same window as the website homepage).
-- Use \`hasMore\` + incrementing \`offset\` by 250 to paginate through all results.
+- Use \`hasMore\` + incrementing \`page\` to paginate through all results.
 - The \`.txt\` variant (\`GET /{locale}/meetings.txt\`) returns a one-line-per-meeting summary, useful for quickly listing meetings into an LLM prompt. It carries **no** match snippets — if you use \`ft=1\`, request \`meetings.json\`.
 
 ---
@@ -264,6 +266,8 @@ Returns full structured data with timestamps, speaker mappings, topics, and word
     "data": [
       {
         "statement_number": 1,
+        "start": 12.0,
+        "pageUrl": "/en/sc/10175?t=12",
         "speaker": {
           "name": "...",
           "affiliation": "XXX",
@@ -307,7 +311,7 @@ Returns full structured data with timestamps, speaker mappings, topics, and word
 
 **Key fields:**
 
-- \`data[]\` — speaker turns (statements). Each has \`paragraphs[].sentences[]\` with \`text\`, \`start\`/\`end\` (seconds, float), \`topics\`, and optional \`words[]\`.
+- \`data[]\` — speaker turns (statements). Each has \`start\` (seconds, the statement's first sentence), a ready-made \`pageUrl\` deeplinking to that moment (\`?t=\`; carries \`?lang=\` when the served track isn't the URL locale's), \`paragraphs[].sentences[]\` with \`text\`, \`start\`/\`end\` (seconds, float), \`topics\`, and optional \`words[]\`.
 - \`speaker\` — resolved speaker info. \`affiliation\` is ISO 3166-1 alpha-3. \`affiliation_full\` is the expanded country name.
 - \`topics[]\` on each sentence — 0–3 topics this sentence relates to.
 - \`words[]\` — word-level timing (omitted when the provider didn't supply it).
@@ -351,7 +355,7 @@ Closed or confidential meetings are not covered (they are not recorded on Web TV
 ## Known limitations
 
 - **Search scope**: \`?q=\` alone searches titles and metadata only. Add \`&ft=1\` to search transcript content — but note that only meetings with a **completed transcript in the requested language** are covered, so a content search is a search of what has been transcribed, not of everything the UN has said.
-- **No relevance ranking**: results are always date-ordered, including content searches. Paging deep into a busy query walks backwards in time, it does not walk down a ranked list.
+- **Date-ordered, by design**: results — including content searches — are always newest-first, never ranked by match quality. This is intentional (the archive is a chronological record); paging deep into a busy query walks backwards in time. If you want the most *relevant* hits rather than the most *recent*, narrow with \`date\`/\`from\`/\`to\` and read them all.
 - **Snippets are capped**: \`ft=1\` returns at most 3 matching statements per meeting (\`matches.count\` tells you the true total). Fetch the transcript itself to see the rest.
 - **No speaker filtering**: you cannot ask "what did France say about X" in one query. Search the content, then fetch the transcripts and filter on \`speaker\` yourself.
 - **Time window**: search and browse cover the last 365 days, matching the website homepage.

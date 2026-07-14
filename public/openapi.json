@@ -55,16 +55,17 @@
             "name": "q",
             "in": "query",
             "required": false,
-            "description": "Search meeting titles and metadata (min 2 chars; shorter is ignored and the query degrades to a plain browse). Add `ft=1` to also search inside transcript content.",
+            "description": "Search meeting titles and metadata. Minimum 2 characters — a shorter non-empty q is a 400. Add `ft=1` to also search inside transcript content.",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 2
             }
           },
           {
             "name": "ft",
             "in": "query",
             "required": false,
-            "description": "Set to 1 (with q) to also search INSIDE transcript statements. Content-matched meetings are added to the results and carry a `matches` object with speaker, snippet, and a `?t=` deeplink per hit. Terms containing digits (L.73, 2735, S/2026/243) match as exact fragments — robust for document symbols; word terms use stemmed full-text search; quoted phrases work. Searches the URL locale's transcript track; only meetings with a completed transcript are covered.",
+            "description": "Set to 1 (with q) to also search INSIDE transcript statements. Content-matched meetings are added to the results and carry a `matches` object with speaker, snippet, and a `?t=` deeplink per hit. Terms containing digits (L.73, 2735, S/2026/243) match as exact fragments — robust for document symbols; word terms use stemmed full-text search; quoted phrases work. Searches the URL locale's transcript track; only meetings with a completed transcript are covered. `ft=1` without a valid q is a 400.",
             "schema": {
               "type": "string",
               "enum": [
@@ -115,7 +116,7 @@
             "name": "sort",
             "in": "query",
             "required": false,
-            "description": "Sort order (default date_desc).",
+            "description": "Sort order (default date_desc). There is no relevance mode — content searches (ft=1) come back date-ordered too, by design. An unrecognized value is a 400.",
             "schema": {
               "type": "string",
               "enum": [
@@ -127,13 +128,13 @@
             }
           },
           {
-            "name": "offset",
+            "name": "page",
             "in": "query",
             "required": false,
-            "description": "Pagination offset.",
+            "description": "1-based page number (default 1). Results come in pages of 250; page with 1, 2, 3, … A non-positive or non-integer value is a 400.",
             "schema": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 1
             }
           },
           {
@@ -175,6 +176,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MeetingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A known parameter was malformed — a bad date/from/to, an unknown sort or text value, q shorter than 2 chars, ft=1 without q, or a non-positive page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataApiError"
                 }
               }
             }
@@ -718,10 +729,11 @@
           "hasMore": {
             "type": "boolean"
           },
-          "offset": {
+          "page": {
             "type": "integer",
             "minimum": -9007199254740991,
-            "maximum": 9007199254740991
+            "maximum": 9007199254740991,
+            "description": "1-based page number of this response."
           },
           "pageSize": {
             "type": "integer",
@@ -740,7 +752,7 @@
           "total",
           "totalIncludingOther",
           "hasMore",
-          "offset",
+          "page",
           "pageSize"
         ],
         "additionalProperties": false
@@ -929,6 +941,14 @@
                           "maximum": 9007199254740991,
                           "description": "1-based index of the statement."
                         },
+                        "start": {
+                          "type": "number",
+                          "description": "Start time of the statement in seconds (its first sentence)."
+                        },
+                        "pageUrl": {
+                          "type": "string",
+                          "description": "Meeting page deep-linked to this statement via `?t=` — cite a statement without rebuilding the URL from `start`."
+                        },
                         "paragraphs": {
                           "type": "array",
                           "items": {
@@ -1056,6 +1076,8 @@
                       },
                       "required": [
                         "statement_number",
+                        "start",
+                        "pageUrl",
                         "paragraphs",
                         "speaker"
                       ],

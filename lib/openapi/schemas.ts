@@ -25,14 +25,21 @@ export const MeetingsQuerySchema = z.object({
     .string()
     .min(2)
     .optional()
-    .describe("Full-text search query (ignored if shorter than 2 chars)."),
+    .describe("Search titles/metadata (400 if a non-empty q is < 2 chars)."),
+  ft: z
+    .literal("1")
+    .optional()
+    .describe(
+      "With q: also search inside transcript statements. 400 without a valid q.",
+    ),
   category: z.string().optional().describe("Filter by WebTV category name."),
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .describe(
-      "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.",
+      "Filter to a single date (YYYY-MM-DD). Combining with from/to " +
+        "intersects rather than erroring.",
     ),
   from: z
     .string()
@@ -48,12 +55,12 @@ export const MeetingsQuerySchema = z.object({
     .enum(["date_desc", "date_asc", "title_asc", "title_desc"])
     .optional()
     .describe("Sort order (default: date_desc)."),
-  offset: z.coerce
+  page: z.coerce
     .number()
     .int()
-    .min(0)
+    .min(1)
     .optional()
-    .describe("Pagination offset; page size is 250."),
+    .describe("1-based page number (default 1); page size is 250."),
   text: z
     .union([
       z.enum(["transcript", "pv", "sr"]),
@@ -62,7 +69,7 @@ export const MeetingsQuerySchema = z.object({
     .optional()
     .describe(
       "Restrict to meetings that have the given document(s) available. " +
-        "Repeat the param to require multiple (e.g. text=transcript&text=pv).",
+        "Repeating the param matches ANY of the types (OR), not all.",
     ),
   xlang: z
     .literal("1")
@@ -150,6 +157,15 @@ export const StatementSchema = z.object({
     .number()
     .int()
     .describe("1-based index of the statement."),
+  start: z
+    .number()
+    .describe("Start time of the statement in seconds (its first sentence)."),
+  pageUrl: z
+    .string()
+    .describe(
+      "Meeting page deep-linked to this statement via `?t=` — cite a " +
+        "statement without rebuilding the URL from `start`.",
+    ),
   paragraphs: z.array(ParagraphSchema),
   speaker: SpeakerSchema,
 });
@@ -243,15 +259,13 @@ export const MeetingsResponseSchema = z.object({
     .int()
     .describe("Total ignoring the locale filter (see the xlang param)."),
   hasMore: z.boolean(),
-  offset: z.number().int(),
+  page: z.number().int().describe("1-based page number of this response."),
   pageSize: z.number().int(),
   statementTotal: z
     .number()
     .int()
     .optional()
-    .describe(
-      "With `ft=1`: matching statements across all result meetings.",
-    ),
+    .describe("With `ft=1`: matching statements across all result meetings."),
 });
 
 // ── Meeting detail response (three variants) ────────────────────────────────
