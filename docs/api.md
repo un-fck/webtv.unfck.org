@@ -43,6 +43,36 @@ Mirrors UN Web TV's URL grammar exactly — swap the host `webtv.un.org` → `tr
 
 Slug logic lives in `lib/meeting-slug.ts`; the page-URL builder is `videoUrl()` in `lib/video-url.ts`.
 
+### Timestamp deeplinks (`?t=`)
+
+Any meeting **page** URL accepts `?t={seconds}`:
+
+```
+/en/sc/10175?t=5025
+```
+
+It opens the page with the player seeked to that second (paused — browsers block
+unmuted autoplay without a gesture) and the statement spoken there scrolled to
+and flashed. This is the site's citation primitive: it addresses a sentence of a
+speech rather than an eight-hour recording.
+
+- **Whole seconds, bare number.** Parsed with `Number()` in
+  `components/meeting-state/meeting-state.tsx`, floored, and accepted only when
+  finite and `> 0`. The YouTube-style `?t=90s` and clock-style `?t=1:30` parse to
+  `NaN` and are **silently ignored** — the visitor lands at the start with no error.
+- **Same unit as the data.** Sentence `start`/`end` in `/{locale}/{slug}.json` are
+  seconds, so `?t=${Math.ceil(sentence.start)}` turns any sentence into a citation.
+  The `.txt` transcript prints `[H:MM:SS]` timecodes for humans — those need
+  converting first.
+- **Inbound only.** The app never writes `t` back to the address bar; the
+  per-statement copy-link buttons in the transcript compose it explicitly, so the
+  URL doesn't drift to a random moment as you scroll. Combine with `?lang=XX` when
+  citing a track other than the URL locale's.
+
+Produced server-side at `matches.statements[].pageUrl` (below), and client-side by
+the copy-link anchor in `components/transcription-panel.tsx` and the search hit
+rows in `components/transcript-match-rows.tsx`.
+
 ## Search & browse meetings
 
 ```
@@ -53,18 +83,24 @@ Returns a paginated list of UN meetings matching the given filters. Covers the l
 
 ### Query parameters
 
-| Parameter  | Type           | Description                                                                                                      |
-| ---------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `q`        | string         | Search meeting titles and metadata (FTS with trigram ILIKE fallback). Min 2 characters. Add `ft=1` to also search transcript content. |
-| `ft`       | `1`            | With `q`: also search **inside transcript statements** (the URL locale's transcript track). Adds content-matched meetings to the results and a per-meeting `matches` object (see below). Terms containing digits (`L.73`, `2735`, `S/2026/243`) match as exact fragments — robust for document symbols; word terms use stemmed full-text search, and quoted phrases work. Only meetings with a completed transcript are searchable this way. |
-| `category` | string         | Filter by meeting category.                                                                                      |
-| `date`     | YYYY-MM-DD     | Filter to a specific date. Mutually exclusive with `from`/`to`.                                                  |
-| `from`     | YYYY-MM-DD     | Inclusive start of a date range.                                                                                 |
-| `to`       | YYYY-MM-DD     | Inclusive end of a date range.                                                                                   |
-| `sort`     | enum           | `date_desc` (default), `date_asc`, `title_asc`, `title_desc`                                                     |
-| `offset`   | integer        | Pagination offset. Results come in chunks of 250.                                                                |
-| `text`     | string (multi) | Filter by available documents: `transcript`, `pv` (verbatim record), `sr` (summary record).                      |
-| `xlang`    | `1`            | Include meetings not yet available in the URL locale (default: hide them).                                       |
+| Parameter  | Type           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `q`        | string         | Search meeting titles and metadata (FTS with trigram ILIKE fallback). Min 2 characters — a shorter (non-empty) `q` is a **400**. Add `ft=1` to also search transcript content.                                                                                                                                                                                                                                                                                                        |
+| `ft`       | `1`            | With `q`: also search **inside transcript statements** (the URL locale's transcript track). Adds content-matched meetings to the results and a per-meeting `matches` object (see below). Terms containing digits (`L.73`, `2735`, `S/2026/243`) match as exact fragments — robust for document symbols; word terms use stemmed full-text search, and quoted phrases work. Only meetings with a completed transcript are searchable this way. `ft=1` without a valid `q` is a **400**. |
+| `category` | string         | Filter by meeting category.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `date`     | YYYY-MM-DD     | Filter to a specific date. A value not matching `YYYY-MM-DD` is a **400**. Pass either `date` or `from`/`to` — combining them is _not_ rejected, the conditions are `AND`ed into an intersection.                                                                                                                                                                                                                                                                                     |
+| `from`     | YYYY-MM-DD     | Inclusive start of a date range. Malformed → **400**.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `to`       | YYYY-MM-DD     | Inclusive end of a date range. Malformed → **400**.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `sort`     | enum           | `date_desc` (default), `date_asc`, `title_asc`, `title_desc`. No relevance mode — content searches are date-ordered too, by design. An unrecognized value is a **400**.                                                                                                                                                                                                                                                                                                               |
+| `page`     | integer        | 1-based page number (default 1). Results come in pages of 250; page with `1`, `2`, `3`, …. A non-positive or non-integer value is a **400**. (Replaces the former `offset`, which silently rounded down to a multiple of the page size.)                                                                                                                                                                                                                                              |
+| `text`     | string (multi) | Filter by available documents: `transcript`, `pv` (verbatim record), `sr` (summary record). Repeating it matches **any** of the given types, not all (`lib/db.ts` joins the conditions with `OR`). An unrecognized value is a **400**.                                                                                                                                                                                                                                                |
+| `xlang`    | `1`            | Include meetings not yet available in the URL locale (default: hide them).                                                                                                                                                                                                                                                                                                                                                                                                            |
+
+A malformed **known** parameter returns `400` with `{ "error": "…" }` rather than
+silently degrading to plausible-but-wrong results. `ft` and `xlang` are lenient
+booleans (only `1` turns them on; any other value reads as off), and unknown
+parameters are ignored — neither is an error. Combining `date` with `from`/`to` is
+also not rejected (see the `date` row).
 
 ### Response
 
@@ -87,8 +123,8 @@ Returns a paginated list of UN meetings matching the given filters. Covers the l
   "total": 42,
   "totalIncludingOther": 50,
   "hasMore": true,
-  "offset": 0,
-  "pageSize": 100
+  "page": 1,
+  "pageSize": 250
 }
 ```
 
@@ -105,7 +141,12 @@ all result meetings):
         "count": 12,
         "statements": [
           {
-            "speaker": { "name": "…", "function": "…", "affiliation": "USA", "group": null },
+            "speaker": {
+              "name": "…",
+              "function": "…",
+              "affiliation": "USA",
+              "group": null
+            },
             "text": "… snippet centered on the first match, ellipses mark truncation …",
             "start": 5025,
             "pageUrl": "/en/sc/10175?t=5025"
@@ -126,7 +167,7 @@ containing the first match** (falling back to the statement start), and
 (`?t=` is supported on all meeting pages). `count` is the meeting's full
 match total.
 
-The `.txt` variant (`GET /{locale}/meetings.txt`) returns a one-line-per-meeting summary.
+The `.txt` variant (`GET /{locale}/meetings.txt`) returns a one-line-per-meeting summary. It accepts the same parameters, but the line format carries only date / transcript flag / URL / body / title — so `ft=1` still _selects_ content-matched meetings while **silently dropping** their snippets and `?t=` deeplinks. Use `meetings.json` when searching content.
 
 The internal homepage feed still lives at `/api/videos` and returns the full video shape used by the table component — it is not part of the public contract and may change.
 
@@ -215,6 +256,8 @@ language differs from the URL locale.
     "data": [
       {
         "statement_number": 1,
+        "start": 12.0,
+        "pageUrl": "/en/sc/10175?t=12",
         "speaker": {
           "name": "...",
           "affiliation": "XXX",
@@ -252,7 +295,7 @@ language differs from the URL locale.
 
 **Key fields:**
 
-- `data[]` — speaker turns (statements); each has `paragraphs[].sentences[]` with `text`, `start`/`end` (**seconds**, floating point), `topics`, and an optional per-sentence `words[]` array with `text` + `start`/`end` in seconds. `words` is omitted when the underlying STT provider didn't supply word-level timing.
+- `data[]` — speaker turns (statements); each has `start` (**seconds**, the statement's first sentence), a ready-made `pageUrl` deeplinking to that moment (`?t=`, plus `?lang=` when the served track isn't the URL locale's), and `paragraphs[].sentences[]` with `text`, `start`/`end` (**seconds**, floating point), `topics`, and an optional per-sentence `words[]` array with `text` + `start`/`end` in seconds. `words` is omitted when the underlying STT provider didn't supply word-level timing.
 - `speaker` on each statement — resolved speaker info (name, function, affiliation as ISO 3166-1 alpha-3, affiliation_full as country name, group).
 - `topics[]` on each sentence — 0–3 topics this sentence relates to (key + label + description, denormalized for convenience).
 

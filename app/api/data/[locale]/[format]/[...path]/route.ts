@@ -262,8 +262,7 @@ async function handleMeeting(
     });
   }
 
-  const fullMapping =
-    (await getSpeakerMapping(transcript.transcript_id)) || {};
+  const fullMapping = (await getSpeakerMapping(transcript.transcript_id)) || {};
   // Off-record statements are stored but never served (lib/off-record.ts) —
   // the public JSON/text outputs get the same filtered view as the app.
   const { statements: visibleStatements, speakerMappings } = filterOffRecord(
@@ -286,10 +285,7 @@ async function handleMeeting(
   const topics = transcript.content.topics || {};
 
   if (format === "text") {
-    const segments = buildSpeakerSegments(
-      visibleStatements,
-      speakerMappings,
-    );
+    const segments = buildSpeakerSegments(visibleStatements, speakerMappings);
     const body = formatTranscriptAsPlainText(
       segments,
       visibleStatements,
@@ -303,12 +299,28 @@ async function handleMeeting(
     );
   }
 
+  // Per-statement citation link: same `?t=` grammar as the search-hit and
+  // copy-link buttons (whole seconds, CEIL'd), carrying ?lang= when the served
+  // transcript isn't the URL locale's track. Lets a consumer cite a statement
+  // without re-deriving the URL from the sentence `start` themselves.
+  const statementPageUrl = (startMs: number) => {
+    const t = Math.max(0, Math.ceil(startMs / 1000));
+    const langQuery =
+      transcript.language_code !== locale
+        ? `lang=${transcript.language_code}&`
+        : "";
+    return `/${locale}/${url}?${langQuery}t=${t}`;
+  };
+
   // Timestamps are already realignment-shifted by the display getter
   // (getTranscriptByKalturaId).
   const transcriptData = visibleStatements.map((stmt, index) => {
     const info = speakerMappings[index.toString()];
+    const startMs = stmt.paragraphs[0]?.sentences[0]?.start ?? 0;
     return {
       statement_number: index + 1,
+      start: startMs / 1000,
+      pageUrl: statementPageUrl(startMs),
       paragraphs: stmt.paragraphs.map((para) => ({
         sentences: para.sentences.map((sent) => ({
           text: sent.text,
@@ -491,34 +503,68 @@ async function handleList(
   format: Format,
 ) {
   const sp = request.nextUrl.searchParams;
-  const offset = Math.max(0, parseInt(sp.get("offset") || "0", 10) || 0);
-  const page = Math.floor(offset / LIST_PAGE_SIZE) + 1;
+
+  // Validation: malformed known params return 400 rather than silently
+  // degrading to plausible-but-wrong results. Unknown params are still
+  // ignored (that's not "malformed", just extra). ft/xlang are lenient
+  // booleans — only "1" turns them on; any other value reads as off.
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+  // Pagination is 1-based `page` (was `offset`, which silently rounded down
+  // to a multiple of the page size and confused callers).
+  const pageRaw = sp.get("page");
+  let page = 1;
+  if (pageRaw !== null) {
+    if (!/^\d+$/.test(pageRaw) || Number(pageRaw) < 1) {
+      return badRequest("page must be a positive integer (1-based).");
+    }
+    page = Number(pageRaw);
+  }
 
   const qRaw = sp.get("q")?.trim();
+  if (qRaw !== undefined && qRaw.length > 0 && qRaw.length < 2) {
+    return badRequest("q must be at least 2 characters.");
+  }
   const q = qRaw && qRaw.length >= 2 ? qRaw : undefined;
 
   const sortRaw = sp.get("sort");
-  const sortKey =
-    sortRaw && SORT_VALUES.includes(sortRaw) ? sortRaw : "date_desc";
+  if (sortRaw !== null && !SORT_VALUES.includes(sortRaw)) {
+    return badRequest(`sort must be one of: ${SORT_VALUES.join(", ")}.`);
+  }
+  const sortKey = sortRaw ?? "date_desc";
   const [by, dir] = sortKey.split("_") as ["date" | "title", "asc" | "desc"];
 
   const dateRaw = sp.get("date");
-  const date =
-    dateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : undefined;
   const fromRaw = sp.get("from");
-  const dateFrom =
-    fromRaw && /^\d{4}-\d{2}-\d{2}$/.test(fromRaw) ? fromRaw : undefined;
   const toRaw = sp.get("to");
-  const dateTo = toRaw && /^\d{4}-\d{2}-\d{2}$/.test(toRaw) ? toRaw : undefined;
-  const docs = sp
-    .getAll("text")
-    .filter((d) => ["transcript", "pv", "sr"].includes(d));
+  for (const [name, value] of [
+    ["date", dateRaw],
+    ["from", fromRaw],
+    ["to", toRaw],
+  ] as const) {
+    if (value !== null && !DATE_RE.test(value)) {
+      return badRequest(`${name} must be in YYYY-MM-DD format.`);
+    }
+  }
+  const date = dateRaw ?? undefined;
+  const dateFrom = fromRaw ?? undefined;
+  const dateTo = toRaw ?? undefined;
 
-  const includeOther = sp.get("xlang") === "1";
+  const docsRaw = sp.getAll("text");
+  const badDoc = docsRaw.find((d) => !["transcript", "pv", "sr"].includes(d));
+  if (badDoc !== undefined) {
+    return badRequest("text must be one of: transcript, pv, sr.");
+  }
+  const docs = docsRaw;
+
   // ?ft=1 (with q): also search INSIDE transcript statements. Adds
   // content-matched meetings to the result set and a `matches` object per
   // meeting (count + first hits with speaker, text, start seconds, and a
-  // ready-made pageUrl deeplink).
+  // ready-made pageUrl deeplink). It needs a query to run against.
+  if (sp.get("ft") === "1" && !q) {
+    return badRequest("ft=1 requires a q of at least 2 characters.");
+  }
+  const includeOther = sp.get("xlang") === "1";
   const fullText = sp.get("ft") === "1" && !!q;
 
   const [transcriptedEntries, transcriptedEntriesInLocale] = await Promise.all([
@@ -546,8 +592,13 @@ async function handleList(
     contentSearch: fullText ? { language: locale } : undefined,
   };
 
-  const { records, total, totalIncludingOther, contentMatches, statementTotal } =
-    await queryVideos(params);
+  const {
+    records,
+    total,
+    totalIncludingOther,
+    contentMatches,
+    statementTotal,
+  } = await queryVideos(params);
   const transcriptedSet = new Set(transcriptedEntries);
   const transcriptedInLocaleSet = new Set(transcriptedEntriesInLocale);
 
@@ -594,7 +645,8 @@ async function handleList(
     };
   });
 
-  const hasMore = offset + items.length < total;
+  const shown = (page - 1) * LIST_PAGE_SIZE + items.length;
+  const hasMore = shown < total;
 
   if (format === "text") {
     const header = `# UN meetings — one per line. Fetch each URL below verbatim; do not construct URLs.
@@ -609,7 +661,7 @@ async function handleList(
       return `${d}  ${t}  ${url}  ${m.body ?? ""} — ${m.title}`;
     });
     const tail = hasMore
-      ? `\n... ${total - (offset + items.length)} more. Append ?offset=${offset + items.length} for the next page.\n`
+      ? `\n... ${total - shown} more. Append ?page=${page + 1} for the next page.\n`
       : "";
     return textResponse(request, header + lines.join("\n") + tail + "\n");
   }
@@ -619,7 +671,7 @@ async function handleList(
     total,
     totalIncludingOther,
     hasMore,
-    offset,
+    page,
     pageSize: LIST_PAGE_SIZE,
     ...(fullText ? { statementTotal } : {}),
   });

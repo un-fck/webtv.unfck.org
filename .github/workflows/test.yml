@@ -36,3 +36,11 @@ jobs:
       # Blocking: errors fail the build. The advisory React Compiler rules
       # (set-state-in-effect, immutability) are configured as warnings.
       - run: pnpm lint
+
+      # public/openapi.json is a checked-in build artifact generated from the
+      # Zod schemas in lib/openapi/. Nothing regenerates it at build time (the
+      # Docker context excludes scripts/), so the served spec silently drifts
+      # from the code whenever someone edits spec.ts/schemas.ts and forgets
+      # `pnpm generate-openapi` — which is exactly how the spec came to omit
+      # the whole full-text-search surface. This guard fails the build instead.
+      - run: pnpm check-openapi

@@ -140,6 +140,13 @@ export function buildSpec(): Record<string, unknown> {
         "`ga/79/21`). Append `.json` or `.txt` to any meeting page URL to " +
         "get the same content as data. Videos without a document symbol are " +
         "addressable at `/{locale}/asset/{asset_id}`.\n\n" +
+        "Citing a moment: every meeting page URL accepts `?t=<seconds>` " +
+        "(whole seconds, e.g. `/en/sc/10175?t=5025`), which opens the page " +
+        "with the video seeked to that moment and the matching statement " +
+        "highlighted. The sentence timings in a transcript's `.json` " +
+        "(`start`/`end`, in seconds) are exactly what you put in `?t=`, so " +
+        "any statement can be turned into a citation link. Only a bare " +
+        "number is parsed — `?t=90s` or `?t=1:30` are ignored.\n\n" +
         "Transcripts available through this API are created by using " +
         "automatic speech recognition and are not official records nor " +
         "official documents of the United Nations. Official records and " +
@@ -164,9 +171,16 @@ export function buildSpec(): Record<string, unknown> {
           operationId: "listMeetings",
           parameters: [
             localeParam,
-            qp("q", "Full-text search query (min 2 chars).", {
-              type: "string",
-            }),
+            qp(
+              "q",
+              "Search meeting titles and metadata. Minimum 2 characters — a " +
+                "shorter non-empty q is a 400. Add `ft=1` to also search " +
+                "inside transcript content.",
+              {
+                type: "string",
+                minLength: 2,
+              },
+            ),
             qp(
               "ft",
               "Set to 1 (with q) to also search INSIDE transcript statements. " +
@@ -176,7 +190,7 @@ export function buildSpec(): Record<string, unknown> {
                 "exact fragments — robust for document symbols; word terms use " +
                 "stemmed full-text search; quoted phrases work. Searches the URL " +
                 "locale's transcript track; only meetings with a completed " +
-                "transcript are covered.",
+                "transcript are covered. `ft=1` without a valid q is a 400.",
               { type: "string", enum: ["1"] },
             ),
             qp("category", "Filter by WebTV category name.", {
@@ -184,7 +198,9 @@ export function buildSpec(): Record<string, unknown> {
             }),
             qp(
               "date",
-              "Filter to a single date (YYYY-MM-DD). Mutually exclusive with from/to.",
+              "Filter to a single date (YYYY-MM-DD). Combining it with from/to " +
+                "is not rejected but intersects the two constraints, which is " +
+                "rarely what you want — pass either date or from/to.",
               {
                 type: "string",
                 pattern: "^\\d{4}-\\d{2}-\\d{2}$",
@@ -198,14 +214,25 @@ export function buildSpec(): Record<string, unknown> {
               type: "string",
               pattern: "^\\d{4}-\\d{2}-\\d{2}$",
             }),
-            qp("sort", "Sort order (default date_desc).", {
-              type: "string",
-              enum: ["date_desc", "date_asc", "title_asc", "title_desc"],
-            }),
-            qp("offset", "Pagination offset.", {
-              type: "integer",
-              minimum: 0,
-            }),
+            qp(
+              "sort",
+              "Sort order (default date_desc). There is no relevance mode — " +
+                "content searches (ft=1) come back date-ordered too, by design. " +
+                "An unrecognized value is a 400.",
+              {
+                type: "string",
+                enum: ["date_desc", "date_asc", "title_asc", "title_desc"],
+              },
+            ),
+            qp(
+              "page",
+              "1-based page number (default 1). Results come in pages of 250; " +
+                "page with 1, 2, 3, … A non-positive or non-integer value is a 400.",
+              {
+                type: "integer",
+                minimum: 1,
+              },
+            ),
             {
               name: "text",
               in: "query",
@@ -213,7 +240,8 @@ export function buildSpec(): Record<string, unknown> {
               description:
                 "Filter by available document type. `transcript` = has an automatic transcript; " +
                 "`pv` = has an official verbatim record; `sr` = has an official summary record. " +
-                "Repeat to require multiple (e.g. `text=transcript&text=pv`). " +
+                "Repeating it matches ANY of the given types, not all " +
+                "(`text=transcript&text=pv` = has a transcript OR a verbatim record). " +
                 "Use `text=transcript` to exclude meetings with no content to read.",
               schema: {
                 type: "array",
@@ -232,6 +260,13 @@ export function buildSpec(): Record<string, unknown> {
             "200": {
               description: "A page of meetings.",
               content: jsonContent("MeetingsResponse"),
+            },
+            "400": {
+              description:
+                "A known parameter was malformed — a bad date/from/to, an " +
+                "unknown sort or text value, q shorter than 2 chars, ft=1 " +
+                "without q, or a non-positive page.",
+              content: jsonContent("DataApiError"),
             },
           },
         },

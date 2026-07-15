@@ -19,9 +19,11 @@ Meeting slugs come from UN document symbols; multi-part recordings take a traili
 
 ## API
 
-- [Search / browse meetings](/en/meetings.json): \`GET /{locale}/meetings.json\` — filter by \`date\`, \`from\`/\`to\`, \`q\`, \`category\`, \`text\`; returns items with literal \`pageUrl\`, \`jsonUrl\`, \`textUrl\`. Plain-text sibling at \`/{locale}/meetings.txt\`.
+- [Search / browse meetings](/en/meetings.json): \`GET /{locale}/meetings.json\` — filter by \`date\`, \`from\`/\`to\`, \`q\`, \`ft\`, \`category\`, \`text\`; returns items with literal \`pageUrl\`, \`jsonUrl\`, \`textUrl\`. Plain-text sibling at \`/{locale}/meetings.txt\` (no match snippets — use \`.json\` with \`ft=1\`).
+- [Search inside transcripts](/en/meetings.json?q=ceasefire&ft=1): \`GET /{locale}/meetings.json?q={query}&ft=1\` — find meetings by what was *said*. Each hit carries the speaker, a snippet, and a \`?t=\` link to that exact moment.
 - [Read a transcript (plain text)](/en/sc/10175.txt): \`GET /{locale}/{slug}.txt\` — speaker labels, timestamps, compact for LLM context.
 - [Read a transcript (JSON)](/en/sc/10175.json): \`GET /{locale}/{slug}.json\` — statements, speakers, topics, optional word-level timing.
+- Cite a moment: append \`?t={seconds}\` to any meeting page URL (\`/en/sc/10175?t=5025\`) — seeks the video there and highlights the statement. Whole seconds, bare number; \`?t=90s\` / \`?t=1:30\` are not parsed. Sentence \`start\` values in the JSON are in the same unit.
 
 ## Pages
 
