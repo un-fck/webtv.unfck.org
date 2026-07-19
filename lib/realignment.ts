@@ -25,7 +25,7 @@
 import { pool, type TranscriptContent } from "./db";
 import { getKalturaAudioUrl } from "./transcription";
 import { fetchKalturaDurations } from "./kaltura-helpers";
-import { getLanguageFullName } from "./languages";
+import { bcp47ToKalturaName } from "./languages";
 import {
   GEMINI_API_KEY,
   GEMINI_MODEL,
@@ -225,7 +225,12 @@ export async function realignTranscript(
     tokensOut: 0,
   };
 
-  const lang = getLanguageFullName(input.languageCode || "en");
+  // Kaltura flavor language name (e.g. "interlingua" for floor, "english"),
+  // NOT getLanguageFullName — that returns the prompt phrase "the original
+  // language" for floor, which never matches a flavor so every floor-track
+  // realignment throws "no flavors ready". Mirror the main pipeline and
+  // process-scheduled, which both use bcp47ToKalturaName here.
+  const lang = bcp47ToKalturaName(input.languageCode || "en");
   const { entryId, audioUrl } = await getKalturaAudioUrl(input.kalturaId, lang);
 
   let currentSec = opts.currentSec;

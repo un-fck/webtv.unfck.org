@@ -126,13 +126,27 @@ export async function runRealign(): Promise<RealignResult> {
           console.warn(`[realign] ⚠ ${r.transcript_id} ${result.message}`);
         }
       } catch (err) {
-        summary["error"] = (summary["error"] ?? 0) + 1;
-        console.error(
-          `[realign] error ${r.transcript_id}: ${err instanceof Error ? err.message : String(err)}`,
-        );
-        Sentry.captureException(err, {
-          tags: { pipeline: "realign", transcript_id: r.transcript_id },
-        });
+        const msg = err instanceof Error ? err.message : String(err);
+        // A WebTV re-cut is exactly what makes a row a realign candidate, and
+        // the same re-cut leaves Kaltura re-converting its audio flavors for
+        // ~15-60 min. During that window getKalturaAudioUrl throws "no flavors"
+        // — an expected transient the next hourly tick clears, not a fault.
+        // Classify as `deferred` and skip Sentry, mirroring the readiness gate
+        // in process-scheduled.ts. Genuine failures still page.
+        if (
+          msg.includes("no flavors") ||
+          msg.includes("404") ||
+          msg.includes("not found")
+        ) {
+          summary["deferred"] = (summary["deferred"] ?? 0) + 1;
+          console.warn(`[realign] ⏳ ${r.transcript_id} audio not ready: ${msg}`);
+        } else {
+          summary["error"] = (summary["error"] ?? 0) + 1;
+          console.error(`[realign] error ${r.transcript_id}: ${msg}`);
+          Sentry.captureException(err, {
+            tags: { pipeline: "realign", transcript_id: r.transcript_id },
+          });
+        }
       }
     }
 
