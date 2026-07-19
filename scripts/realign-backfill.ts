@@ -30,7 +30,7 @@ import {
   type RealignResult,
 } from "../lib/realignment";
 import { getKalturaAudioUrl } from "../lib/transcription";
-import { getLanguageFullName } from "../lib/languages";
+import { bcp47ToKalturaName } from "../lib/languages";
 import { fmtHHMMSS } from "../lib/gemini-utils";
 
 const IN_RATE = 0.3 / 1_000_000;
@@ -117,7 +117,7 @@ async function main() {
     try {
       const { entryId } = await getKalturaAudioUrl(
         r.kaltura_id,
-        getLanguageFullName(r.language_code || "en"),
+        bcp47ToKalturaName(r.language_code || "en"),
       );
       entryByTranscript.set(r.transcript_id, entryId);
     } catch {

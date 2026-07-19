@@ -1557,7 +1557,8 @@ export async function saveVideo(
            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
              CASE WHEN ?::text IS NULL THEN NULL
                   ELSE COALESCE(
-                    (SELECT MAX(pv_part) FROM webtv.videos WHERE pv_symbol = ?),
+                    (SELECT MAX(sib.pv_part) FROM webtv.videos sib
+                      WHERE sib.pv_symbol = ?),
                     0
                   ) + 1
              END,
@@ -1581,10 +1582,16 @@ export async function saveVideo(
                -- Symbol stays NULL → pv_part stays NULL (CHECK iff).
                WHEN COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol) IS NULL THEN NULL
                -- Newly gaining a symbol → take the next ordinal in the cluster.
+               -- The inner scan MUST be aliased (sib): an unaliased
+               -- FROM webtv.videos shadows the ON CONFLICT target, so a bare
+               -- videos.asset_id here would bind to the inner row (making the
+               -- self-exclusion asset_id <> asset_id always false, i.e. an
+               -- empty set, MAX NULL, pv_part always 1 -- colliding on every
+               -- 2nd sibling in a symbol cluster).
                ELSE COALESCE(
-                 (SELECT MAX(pv_part) FROM webtv.videos
-                   WHERE pv_symbol = COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol)
-                     AND asset_id <> videos.asset_id),
+                 (SELECT MAX(sib.pv_part) FROM webtv.videos sib
+                   WHERE sib.pv_symbol = COALESCE(EXCLUDED.pv_symbol, videos.pv_symbol)
+                     AND sib.asset_id <> videos.asset_id),
                  0
                ) + 1
              END,
