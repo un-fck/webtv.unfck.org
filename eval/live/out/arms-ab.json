@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-07-21T06:02:12.681Z",
+  "rows": [
+    {
+      "symbol": "S/PV.10156",
+      "language": "en",
+      "arm": "A-interpreter",
+      "wer": 0.1976112920738328,
+      "normalizedWer": 0.15948275862068967,
+      "cer": 0.12339431685480731,
+      "normalizedCer": 0.11468253968253968,
+      "refWords": 921,
+      "hypWords": 969
+    },
+    {
+      "symbol": "S/PV.10156",
+      "language": "en",
+      "arm": "B-pivot",
+      "wer": 0.26601520086862107,
+      "normalizedWer": 0.20689655172413793,
+      "cer": 0.16329311015959516,
+      "normalizedCer": 0.1523809523809524,
+      "refWords": 921,
+      "hypWords": 955
+    },
+    {
+      "symbol": "S/PV.10156",
+      "language": "zh",
+      "arm": "A-interpreter",
+      "wer": 0.9479166666666666,
+      "normalizedWer": 0.9401197604790419,
+      "cer": 1.1918876755070202,
+      "normalizedCer": 1.1752316764953665,
+      "refWords": 96,
+      "hypWords": 80
+    },
+    {
+      "symbol": "S/PV.10156",
+      "language": "zh",
+      "arm": "B-pivot",
+      "wer": 1,
+      "normalizedWer": 0.9101796407185628,
+      "cer": 0.7051482059282371,
+      "normalizedCer": 0.7026116259477675,
+      "refWords": 96,
+      "hypWords": 3
+    }
+  ]
+}
