@@ -68,6 +68,24 @@ interface Row {
 const HUMAN_LAG_MEDIAN_S = 1.6;
 const HUMAN_LAG_BY_SOURCE = "0.9 s from English, 4.7 s from Arabic";
 
+/**
+ * Latency a system incurs BEFORE the point its own instrumentation can see.
+ *
+ * Soniox's translation tokens carry no timestamps, so they can only be
+ * anchored to the last finalized SOURCE token. The measured per-token lag is
+ * therefore the gap from "the ASR finalized this word" to "its translation is
+ * out" — it omits how long the ASR took to finalize the word after it was
+ * actually spoken. That omitted half is exactly measurable (source tokens DO
+ * carry timestamps) and probe-srclag.ts measures it at 2.38 s median / 4.88 s
+ * p90 over a full session.
+ *
+ * Without this correction the table reads 0.6 s and implies the model beats a
+ * human interpreter by 3x. It does not.
+ */
+const PRE_INSTRUMENT_LAG_S: Record<string, number> = {
+  "C-soniox-rt-v5": 2.38,
+};
+
 const LABELS: Record<string, string> = {
   "A-human": "Human interpreter → ASR",
   "B-pivot": "Floor ASR → Azure MT",
@@ -217,34 +235,58 @@ function main() {
   say("");
   say("Offline arms have no latency by construction and are omitted here.");
   say("");
+  say("'measured' is what the provider's own token stream exposes.");
+  say("'end-to-end' adds latency incurred before that instrumentation can see it");
+  say("(for Soniox, +2.4 s of ASR finalization, measured by probe-srclag.ts).");
+  say("End-to-end is the number comparable to the human booths.");
+  say("");
   say(
-    "system".padEnd(28) +
-      "lang".padEnd(6) +
-      "median".padEnd(10) +
-      "p90".padEnd(10) +
-      "ATD".padEnd(10) +
+    "system".padEnd(26) +
+      "session".padEnd(13) +
+      "lang".padEnd(5) +
+      "measured".padEnd(10) +
+      "end-to-end".padEnd(12) +
       "vs human",
   );
-  say("─".repeat(80));
+  say("─".repeat(90));
   for (const s of systems) {
+    const pre = PRE_INSTRUMENT_LAG_S[s] ?? 0;
     for (const cell of cells.sort()) {
       const r = get(s, cell);
       if (!r || r.medianLagS == null) continue;
+      const e2e = r.medianLagS + pre;
+      const ratio = e2e / HUMAN_LAG_MEDIAN_S;
       say(
-        (LABELS[s] ?? s).padEnd(28) +
-          r.language.padEnd(6) +
+        (LABELS[s] ?? s).padEnd(26) +
+          r.symbol.padEnd(13) +
+          r.language.padEnd(5) +
           f1(r.medianLagS, "s").padEnd(10) +
-          f1(r.p90LagS, "s").padEnd(10) +
-          f1(r.atdS, "s").padEnd(10) +
-          `${(r.medianLagS / HUMAN_LAG_MEDIAN_S).toFixed(1)}× slower`,
+          f1(e2e, "s").padEnd(12) +
+          (ratio >= 1
+            ? `${ratio.toFixed(1)}× slower than human`
+            : `${(1 / ratio).toFixed(1)}× faster than human`),
       );
     }
+  }
+  say("");
+  say("p90 tells a harsher story than the median for the live text model:");
+  for (const s of systems) {
+    const vals = cells
+      .map((c) => get(s, c))
+      .filter((r) => r?.p90LagS != null)
+      .map((r) => r!.p90LagS!);
+    if (!vals.length) continue;
+    const worst = Math.max(...vals);
+    say(`  ${(LABELS[s] ?? s).padEnd(26)} worst p90 across cells: ${worst.toFixed(1)}s`);
   }
 
   // ── COST ──────────────────────────────────────────────────────────────────
   const totalCost = rows.reduce((a, r) => a + (r.costUsd ?? 0), 0);
   say("");
-  say(`Total metered spend across all recorded runs: $${totalCost.toFixed(2)}`);
+  say(
+    `Metered spend across recorded runs: $${totalCost.toFixed(2)} ` +
+      `(under-counts: arm D's audio tokens and arm B's Azure OpenAI tokens are not metered here)`,
+  );
 
   const failures = rows.filter((r) => r.error);
   if (failures.length) {

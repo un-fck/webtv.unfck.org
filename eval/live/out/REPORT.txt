@@ -15,31 +15,60 @@ It is primary here, and WER/CER are secondary, for two concrete reasons:
 
 cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+S/PV.10156 en         89.6                    85.8                    14.0                       —                    
+S/PV.10156 zh         20.3                    32.1                    14.2                       —                    
 S/PV.10161 ar         42.7                    52.2                    39.3                    6.7                     
 S/PV.10161 en         79.6                    82.0                    47.0                       —                    
 S/PV.10161 es         64.6                    74.1                    65.9                       —                    
 S/PV.10161 fr         65.1                    77.9                    61.1                    11.8                    
 S/PV.10161 zh         25.0                    33.6                    18.3                       —                    
+S/PV.10168 en         81.1                    83.9                    50.5                       —                    
+S/PV.10168 fr         69.8                    79.9                    67.5                       —                    
+S/PV.10168 ru         61.7                    71.9                    57.1                       —                    
+S/PV.10168 zh         27.4                    37.2                    24.4                       —                    
+
+Coverage: how much of the record the system actually produced (%).
+Distinguishes saying WRONG things from not saying MOST things.
+
+cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+S/PV.10156 en         101%                    99%                     17%                        —                    
+S/PV.10156 zh         75%                     60%                     47%                        —                    
+S/PV.10161 ar            —                       —                    71%                     10%                     
+S/PV.10161 en            —                       —                    58%                        —                    
+S/PV.10161 es            —                       —                    90%                        —                    
+S/PV.10161 fr            —                       —                    81%                     13%                     
+S/PV.10161 zh            —                       —                    69%                        —                    
+S/PV.10168 en         98%                     100%                    58%                        —                    
+S/PV.10168 fr         94%                     98%                     86%                        —                    
+S/PV.10168 ru         87%                     95%                     79%                        —                    
+S/PV.10168 zh         90%                     90%                     91%                        —                    
 
 Mean chrF++ difference vs the human baseline, paired within each cell:
 (positive = the machine preserved more of the record than the human did)
 
-  Floor ASR → Azure MT       +8.6 chrF++  (n=5 cells, 5 wins)
-  Soniox live translate      -9.1 chrF++  (n=5 cells, 1 wins)
+  Floor ASR → Azure MT       +7.6 chrF++  (n=11 cells, 10 wins)
+  Soniox live translate      -15.2 chrF++  (n=11 cells, 1 wins)
   OpenAI Realtime S2S        -44.6 chrF++  (n=2 cells, 0 wins)
 
 Semantic adequacy (0-100), judged on content preserved, ignoring wording:
 
 cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+S/PV.10156 en         92.4                    89.8                    5.1                        —                    
+S/PV.10156 zh         26.9                    25.6                    11.1                       —                    
 S/PV.10161 ar         55.1                    66.0                    52.0                    7.8                     
 S/PV.10161 en         87.3                    89.4                    45.4                       —                    
 S/PV.10161 es         80.1                    90.3                    80.1                       —                    
 S/PV.10161 fr         78.3                    88.4                    63.6                    7.1                     
 S/PV.10161 zh         40.5                    31.8                    41.6                       —                    
+S/PV.10168 en         79.1                    92.5                    37.8                       —                    
+S/PV.10168 fr         70.3                    83.6                    60.0                       —                    
+S/PV.10168 ru         55.8                    67.8                    56.5                       —                    
+S/PV.10168 zh         54.8                    69.9                    42.5                       —                    
 
-  Floor ASR → Azure MT       +4.9 adequacy  (n=5)
-  Soniox live translate      -11.7 adequacy  (n=5)
+  Floor ASR → Azure MT       +6.8 adequacy  (n=11)
+  Soniox live translate      -20.4 adequacy  (n=11)
   OpenAI Realtime S2S        -59.3 adequacy  (n=2)
 
 ════ LATENCY (independent of quality) ════
@@ -49,14 +78,29 @@ Human interpreter baseline, measured in Phase 1: 1.6 s median
 
 Offline arms have no latency by construction and are omitted here.
 
-system                      lang  median    p90       ATD       vs human
-────────────────────────────────────────────────────────────────────────────────
-Soniox live translate       ar    0.7s      18.6s     4.8s      0.4× slower
-Soniox live translate       en    0.7s      21.0s     6.2s      0.4× slower
-Soniox live translate       es    0.6s      16.7s     4.2s      0.4× slower
-Soniox live translate       fr    0.7s      22.5s     5.9s      0.4× slower
-Soniox live translate       zh    0.6s      18.7s     4.8s      0.4× slower
-OpenAI Realtime S2S         ar    3.6s      7.3s      4.5s      2.2× slower
-OpenAI Realtime S2S         fr    3.2s      6.0s      3.8s      2.0× slower
+'measured' is what the provider's own token stream exposes.
+'end-to-end' adds latency incurred before that instrumentation can see it
+(for Soniox, +2.4 s of ASR finalization, measured by probe-srclag.ts).
+End-to-end is the number comparable to the human booths.
 
-Total metered spend across all recorded runs: $0.25
+system                    session      lang measured  end-to-end  vs human
+──────────────────────────────────────────────────────────────────────────────────────────
+Soniox live translate     S/PV.10156   en   0.8s      3.2s        2.0× slower than human
+Soniox live translate     S/PV.10156   zh   0.6s      2.9s        1.8× slower than human
+Soniox live translate     S/PV.10161   ar   0.7s      3.0s        1.9× slower than human
+Soniox live translate     S/PV.10161   en   0.7s      3.1s        1.9× slower than human
+Soniox live translate     S/PV.10161   es   0.6s      3.0s        1.9× slower than human
+Soniox live translate     S/PV.10161   fr   0.7s      3.0s        1.9× slower than human
+Soniox live translate     S/PV.10161   zh   0.6s      3.0s        1.9× slower than human
+Soniox live translate     S/PV.10168   en   0.6s      2.9s        1.8× slower than human
+Soniox live translate     S/PV.10168   fr   0.6s      3.0s        1.8× slower than human
+Soniox live translate     S/PV.10168   ru   0.6s      3.0s        1.9× slower than human
+Soniox live translate     S/PV.10168   zh   0.6s      2.9s        1.8× slower than human
+OpenAI Realtime S2S       S/PV.10161   ar   3.6s      3.6s        2.2× slower than human
+OpenAI Realtime S2S       S/PV.10161   fr   3.2s      3.2s        2.0× slower than human
+
+p90 tells a harsher story than the median for the live text model:
+  Soniox live translate      worst p90 across cells: 22.5s
+  OpenAI Realtime S2S        worst p90 across cells: 7.3s
+
+Metered spend across recorded runs: $0.94 (under-counts: arm D's audio tokens and arm B's Azure OpenAI tokens are not metered here)

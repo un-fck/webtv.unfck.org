@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T11:06:03.817Z",
+  "generatedAt": "2026-07-21T12:33:04.825Z",
   "rows": [
     {
       "system": "A-human",
@@ -250,7 +250,8 @@
       "medianLagS": null,
       "p90LagS": null,
       "atdS": null,
-      "costUsd": null
+      "costUsd": null,
+      "adequacy": 92.375
     },
     {
       "system": "A-human",
@@ -263,7 +264,8 @@
       "medianLagS": null,
       "p90LagS": null,
       "atdS": null,
-      "costUsd": null
+      "costUsd": null,
+      "adequacy": 26.875
     },
     {
       "system": "B-pivot",
@@ -276,7 +278,8 @@
       "medianLagS": null,
       "p90LagS": null,
       "atdS": null,
-      "costUsd": null
+      "costUsd": null,
+      "adequacy": 89.75
     },
     {
       "system": "B-pivot",
@@ -289,7 +292,8 @@
       "medianLagS": null,
       "p90LagS": null,
       "atdS": null,
-      "costUsd": null
+      "costUsd": null,
+      "adequacy": 25.625
     },
     {
       "system": "C-soniox-rt-v5",
@@ -302,7 +306,8 @@
       "medianLagS": 0.812,
       "p90LagS": 2.226,
       "atdS": 1.14224115755627,
-      "costUsd": 0.018396395833333332
+      "costUsd": 0.018396395833333332,
+      "adequacy": 5.125
     },
     {
       "system": "C-soniox-rt-v5",
@@ -315,7 +320,8 @@
       "medianLagS": 0.564,
       "p90LagS": 0.649,
       "atdS": 0.5850697674418605,
-      "costUsd": 0.018396395833333332
+      "costUsd": 0.018396395833333332,
+      "adequacy": 11.125
     },
     {
       "system": "A-human",
@@ -328,7 +334,8 @@
       "medianLagS": null,
       "p90LagS": null,
       "atdS": null,
-      "costUsd": null
+      "costUsd": null,
+      "adequacy": 79.125
     },
     {
       "system": "A-human",
@@ -341,7 +348,148 @@
       "medianLagS": null,
       "p90LagS": null,
       "atdS": null,
-      "costUsd": null
+      "costUsd": null,
+      "adequacy": 70.25
+    },
+    {
+      "system": "A-human",
+      "arm": "A-human",
+      "symbol": "S/PV.10168",
+      "language": "ru",
+      "errorRate": 0.7725350545292677,
+      "errorMetric": "WER",
+      "chrf": 61.70946060507273,
+      "medianLagS": null,
+      "p90LagS": null,
+      "atdS": null,
+      "costUsd": null,
+      "adequacy": 55.75
+    },
+    {
+      "system": "A-human",
+      "arm": "A-human",
+      "symbol": "S/PV.10168",
+      "language": "zh",
+      "errorRate": 0.6685854770042574,
+      "errorMetric": "CER",
+      "chrf": 27.363789625971236,
+      "medianLagS": null,
+      "p90LagS": null,
+      "atdS": null,
+      "costUsd": null,
+      "adequacy": 54.75
+    },
+    {
+      "system": "B-pivot",
+      "arm": "B-pivot",
+      "symbol": "S/PV.10168",
+      "language": "en",
+      "errorRate": 0.33827088779165454,
+      "errorMetric": "WER",
+      "chrf": 83.9421432947359,
+      "medianLagS": null,
+      "p90LagS": null,
+      "atdS": null,
+      "costUsd": null,
+      "adequacy": 92.5
+    },
+    {
+      "system": "B-pivot",
+      "arm": "B-pivot",
+      "symbol": "S/PV.10168",
+      "language": "fr",
+      "errorRate": 0.497255223269152,
+      "errorMetric": "WER",
+      "chrf": 79.87511624124498,
+      "medianLagS": null,
+      "p90LagS": null,
+      "atdS": null,
+      "costUsd": null,
+      "adequacy": 83.625
+    },
+    {
+      "system": "B-pivot",
+      "arm": "B-pivot",
+      "symbol": "S/PV.10168",
+      "language": "ru",
+      "errorRate": 0.6510126864010684,
+      "errorMetric": "WER",
+      "chrf": 71.86726608500481,
+      "medianLagS": null,
+      "p90LagS": null,
+      "atdS": null,
+      "costUsd": null,
+      "adequacy": 67.75
+    },
+    {
+      "system": "B-pivot",
+      "arm": "B-pivot",
+      "symbol": "S/PV.10168",
+      "language": "zh",
+      "errorRate": 0.4602746297295677,
+      "errorMetric": "CER",
+      "chrf": 37.172414919957674,
+      "medianLagS": null,
+      "p90LagS": null,
+      "atdS": null,
+      "costUsd": null,
+      "adequacy": 69.875
+    },
+    {
+      "system": "C-soniox-rt-v5",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10168",
+      "language": "en",
+      "errorRate": 0.8340594442830864,
+      "errorMetric": "WER",
+      "chrf": 50.511116382535256,
+      "medianLagS": 0.568,
+      "p90LagS": 0.641,
+      "atdS": 0.5972910048266783,
+      "costUsd": 0.1632509875,
+      "adequacy": 37.75
+    },
+    {
+      "system": "C-soniox-rt-v5",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10168",
+      "language": "fr",
+      "errorRate": 0.7046292503072511,
+      "errorMetric": "WER",
+      "chrf": 67.47128824810446,
+      "medianLagS": 0.572,
+      "p90LagS": 0.641,
+      "atdS": 0.5828355250972401,
+      "costUsd": 0.1632509875,
+      "adequacy": 60
+    },
+    {
+      "system": "C-soniox-rt-v5",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10168",
+      "language": "ru",
+      "errorRate": 0.8002448252837747,
+      "errorMetric": "WER",
+      "chrf": 57.11104606694831,
+      "medianLagS": 0.582,
+      "p90LagS": 0.654,
+      "atdS": 0.6097040056096065,
+      "costUsd": 0.1632509875,
+      "adequacy": 56.5
+    },
+    {
+      "system": "C-soniox-rt-v5",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10168",
+      "language": "zh",
+      "errorRate": 0.7787371829465731,
+      "errorMetric": "CER",
+      "chrf": 24.374432551862483,
+      "medianLagS": 0.559,
+      "p90LagS": 0.623,
+      "atdS": 0.5633111791730474,
+      "costUsd": 0.1632509875,
+      "adequacy": 42.5
     }
   ]
 }

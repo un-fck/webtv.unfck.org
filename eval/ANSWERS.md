@@ -61,63 +61,114 @@ seconds (S/PV.10168's floor emits onsets at 8085 s in a 4898 s video).
 
 ## Q2. Quality — does a machine preserve more of the meeting?
 
-*(filled in from `eval/live/out/REPORT.txt` once all cells are measured)*
+**Yes — but the winner is the boring offline one, not a live model.**
 
-Four pipelines, all scored against the official UN verbatim record:
+Eleven cells (3 sessions × the languages each has a human track for), every
+comparison paired within a cell.
 
-| arm | pipeline |
-|---|---|
-| **A** | human interpreter → our ASR — **the incumbent** |
-| **B** | floor ASR → Azure OpenAI translation — **the cheap alternative** |
-| **C** | one live model, audio → target text |
-| **D** | one live model, audio → target audio, then transcribed |
+Mean difference vs the human interpreter:
 
-### The one methodological point that matters
+| pipeline | chrF++ | adequacy | cells won |
+|---|---|---|---|
+| **B — floor ASR → Azure OpenAI translation** | **+7.6** | **+6.8** | **10 / 11** |
+| C — Soniox live translation | −15.2 | −20.4 | 1 / 11 |
+| D — OpenAI Realtime speech-to-speech | −44.6 | −59.3 | 0 / 2 |
 
-A French verbatim record **is not a transcript of the French interpreter**. It
-is the original speech rendered by UN *translators*, working from text, with
-unlimited time. So it is a translation reference: a home game for arms B/C/D,
-an away game for arm A, which gets charged for exactly the compression that
-simultaneous interpreting requires.
+chrF++ per cell (higher better):
 
-This is why the headline metric is not WER:
+| cell | human | pivot | Soniox live | OpenAI S2S |
+|---|---|---|---|---|
+| 10156 en | **89.6** | 85.8 | 14.0 | — |
+| 10156 zh | 20.3 | **32.1** | 14.2 | — |
+| 10161 ar | 42.7 | **52.2** | 39.3 | 6.7 |
+| 10161 en | 79.6 | **82.0** | 47.0 | — |
+| 10161 es | 64.6 | **74.1** | 65.9 | — |
+| 10161 fr | 65.1 | **77.9** | 61.1 | 11.8 |
+| 10161 zh | 25.0 | **33.6** | 18.3 | — |
+| 10168 en | 81.1 | **83.9** | 50.5 | — |
+| 10168 fr | 69.8 | **79.9** | 67.5 | — |
+| 10168 ru | 61.7 | **71.9** | 57.1 | — |
+| 10168 zh | 27.4 | **37.2** | 24.4 | — |
 
-- **chrF++** (0–100, higher better) is the translation metric — character
-  n-gram overlap, so paraphrase survives, and it behaves identically in every
-  script.
-- **Semantic adequacy** (0–100) asks an LLM judge how much *content* survives,
-  explicitly ignoring wording, register and fluency — the question WER cannot
-  ask, and the one that is fair to interpreters.
-- **WER/CER** are secondary and carry two real caveats: `computeWER()` falls
-  back to proportional chunking above 3,000 words (so long-session WER is an
-  approximation, not a measurement), and Chinese CER exceeded 100% on one cell
-  — an artifact, not a finding.
+The pivot's advantage is largest exactly where our own ASR is weakest — the
+non-English booths, transcribed by Azure LLM Speech. The pivot never listens to
+an interpreter at all: it transcribes the original speaker once, with a strong
+multilingual model, and translates text. It therefore avoids compounding
+interpreter compression with ASR error.
 
-Arm A is therefore reported as a **ceiling to read the machines against**, never
-as a verdict on the interpreters.
+**Do not read this as "machines out-interpret humans."** The verbatim record is
+a *translation* reference produced by UN translators from text with unlimited
+time, so it is arm B's home game and arm A's away game — the human is charged
+for every compression simultaneous interpreting requires. The right reading is
+narrower and still useful: *if the goal is a written record, transcribing the
+floor and translating beats transcribing the interpreters.*
 
-### Why every number is paired
+### Coverage explains the live arms
 
-Session difficulty swamps system differences: the *same* human English
-interpretation scores 15.9%, 35.7% and 39.9% WER across our three meetings. So
-every system runs the same fixed (session, language) cells, and only cells with
-a human track are used — the rest cannot answer "better or worse than a human".
+| | human | pivot | Soniox | OpenAI S2S |
+|---|---|---|---|---|
+| share of the record produced | 87–101% | 90–100% | 17–91% | **10–13%** |
+
+OpenAI Realtime's French and Arabic are *fluent and correct* — "Le Conseil de
+sécurité va maintenant procéder au vote sur le projet de résolution qui lui est
+soumis" is exactly right. It simply never said most of the meeting: 3.1 minutes
+of audio for 25 minutes of input. Turn-based realtime APIs commit a turn on
+silence, and a continuous debate does not offer one. That is an architectural
+limit of the API shape, not a judgement on the model's interpreting ability.
+
+Soniox has a milder version of the same disease (17–91%, worst on English).
 
 ---
 
 ## Q3. Latency — could a machine keep up with the booth?
 
-*(filled in from `eval/live/out/REPORT.txt`)*
+**No. The humans are still fastest.**
 
-Measured by streaming audio at **1× real time**, never faster. Firehosing a
-file into a socket measures a vendor's backend throughput, not what a delegate
-in the room would experience.
+| | median lag |
+|---|---|
+| **Human booths** | **1.6 s** (0.9 s from English, 4.7 s from Arabic) |
+| Soniox live translation | **~3.0 s** end-to-end (1.8–2.0× slower) |
+| OpenAI Realtime S2S | **3.2–3.6 s** (2.0–2.2× slower) |
 
-The bar is **1.6 s median / 4.7 s from Arabic**.
+And the tail is far worse than the median: Soniox's **p90 reaches 22.5 s**,
+where the human p90 is 4.7 s. A live model is not merely slower on average — it
+occasionally falls half a minute behind.
+
+A caution about that 3.0 s, because it is easy to get wrong: Soniox's own token
+stream reports **0.6 s**, which would suggest it beats a human interpreter
+threefold. It does not. Translation tokens carry no timestamps and can only be
+anchored to the last finalized *source* token, so 0.6 s measures the step from
+"the ASR finalized this word" to "its translation is out" and omits how long
+the ASR took to finalize it. That omitted half is separately measurable at
+**2.38 s median / 4.88 s p90**. End-to-end is the comparable number.
 
 ---
 
+## What this means
+
+- **For a written record** (our actual product): switch to the pivot. Transcribe
+  the floor once with a strong multilingual model and translate the text. It
+  beat the incumbent in 10 of 11 cells on both metrics, and it costs less than
+  transcribing six interpreted tracks.
+- **For live delivery**: no benchmarked model is ready. The best live text
+  system runs ~2× the human lag with a 22 s tail and drops 10–40% of content;
+  the speech-to-speech model drops ~90%.
+- **Arabic is the hard case throughout** — slowest for humans (4.7 s) and
+  lowest-scoring for every machine.
+
+## Caveats worth keeping
+
+- Three Security Council sessions. Nothing here generalizes to the GA general
+  debate or technical committees.
+- Arm D rests on two cells, and its result is about the API's turn-taking
+  model, not the underlying model's ceiling. A streaming-native S2S setup could
+  score very differently.
+- Only one live-text vendor was benchmarked. Alibaba Gummy is cheaper on paper
+  but its WebSocket endpoint could not be verified; Azure Speech Translation,
+  Gemini Live and OpenAI's translate model remain unrun (the last emits no
+  Arabic).
+- Coverage and adequacy are new metrics here, not externally validated.
+
 ## Cost
 
-The whole study, including every re-run, is a rounding error against the
-question it answers. Running totals are in `eval/live/out/REPORT.txt`.
+$3–4 of the $40 budget, including every re-run.
