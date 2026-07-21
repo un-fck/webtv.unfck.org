@@ -58,11 +58,16 @@ function resample(buf: Buffer): Buffer {
   return out;
 }
 
-export function openaiRealtimeS2S(targetOnly?: string[]): StreamingProvider {
+export function openaiRealtime(
+  opts: { mode: "audio" | "text"; targets?: string[] } = { mode: "audio" },
+): StreamingProvider {
+  const isText = opts.mode === "text";
   return {
-    name: "openai-realtime-s2s",
-    label: "OpenAI Realtime (speech-to-speech)",
-    supportedTargets: targetOnly ?? ["en", "fr", "es", "ar", "zh", "ru"],
+    name: isText ? "openai-realtime-text" : "openai-realtime-s2s",
+    label: isText
+      ? "OpenAI Realtime (speech→text translation)"
+      : "OpenAI Realtime (speech-to-speech)",
+    supportedTargets: opts.targets ?? ["en", "fr", "es", "ar", "zh", "ru"],
     translates: true,
     missingKey: () => (process.env.OPENAI_API_KEY ? null : "OPENAI_API_KEY"),
 
@@ -80,7 +85,7 @@ export function openaiRealtimeS2S(targetOnly?: string[]): StreamingProvider {
       );
 
       const run: StreamingRun = {
-        provider: "openai-realtime-s2s",
+        provider: isText ? "openai-realtime-text" : "openai-realtime-s2s",
         targetLanguage,
         events,
         fullText: "",
@@ -117,7 +122,7 @@ export function openaiRealtimeS2S(targetOnly?: string[]): StreamingProvider {
               type: "session.update",
               session: {
                 type: "realtime",
-                output_modalities: ["audio"],
+                output_modalities: [isText ? "text" : "audio"],
                 audio: {
                   input: {
                     format: { type: "audio/pcm", rate: SAMPLE_RATE },
@@ -189,7 +194,19 @@ export function openaiRealtimeS2S(targetOnly?: string[]): StreamingProvider {
             speechStartedMs = Date.now() - t0;
             awaitingFirstAudio = true;
           }
-          if (msg.type === "response.output_audio.delta" && msg.delta) {
+          if (isText && msg.type === "response.output_text.delta" && msg.delta) {
+            run.fullText += msg.delta;
+            if (awaitingFirstAudio && speechStartedMs != null) {
+              events.push({
+                text: msg.delta,
+                audioTimeMs: speechStartedMs,
+                emitMs: Date.now() - t0,
+                isFinal: true,
+              });
+              awaitingFirstAudio = false;
+            }
+          }
+          if (!isText && msg.type === "response.output_audio.delta" && msg.delta) {
             const buf = Buffer.from(msg.delta, "base64");
             audioChunks.push(buf);
             if (awaitingFirstAudio && speechStartedMs != null) {
@@ -228,3 +245,7 @@ export function openaiRealtimeS2S(targetOnly?: string[]): StreamingProvider {
     },
   };
 }
+
+/** Back-compat alias: speech-to-speech mode. */
+export const openaiRealtimeS2S = (targets?: string[]) =>
+  openaiRealtime({ mode: "audio", targets });

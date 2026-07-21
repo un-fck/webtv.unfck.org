@@ -72,7 +72,12 @@ Mean difference vs the human interpreter:
 |---|---|---|---|
 | **B — floor ASR → Azure OpenAI translation** | **+7.6** | **+6.8** | **10 / 11** |
 | C — Soniox live translation | −15.2 | −20.4 | 1 / 11 |
-| D — OpenAI Realtime speech-to-speech | −44.6 | −59.3 | 0 / 2 |
+| C — OpenAI Realtime, text out | −28.5 | −37.8 | 0 / 4 |
+| D — OpenAI Realtime, speech-to-speech | −44.6 | −59.3 | 0 / 2 |
+
+Two independent live vendors, same verdict. That matters: the "live models
+lose" claim initially rested on Soniox alone, so OpenAI Realtime was run in
+text mode specifically to try to overturn it. It did not — it scored worse.
 
 chrF++ per cell (higher better):
 
@@ -105,9 +110,14 @@ floor and translating beats transcribing the interpreters.*
 
 ### Coverage explains the live arms
 
-| | human | pivot | Soniox | OpenAI S2S |
-|---|---|---|---|---|
-| share of the record produced | 87–101% | 90–100% | 17–91% | **10–13%** |
+| | human | pivot | Soniox | OpenAI text | OpenAI S2S |
+|---|---|---|---|---|---|
+| share of the record produced | 87–101% | 90–100% | 17–91% | **33–43%** | **10–13%** |
+
+The pattern is the real finding: **both offline arms produce essentially the
+whole meeting; every live arm drops most of it.** OpenAI in text mode loses
+~60% of the record, and in speech-to-speech mode ~90% — same session, same
+audio, same API, differing only in output modality.
 
 OpenAI Realtime's French and Arabic are *fluent and correct* — "Le Conseil de
 sécurité va maintenant procéder au vote sur le projet de résolution qui lui est
@@ -128,7 +138,8 @@ Soniox has a milder version of the same disease (17–91%, worst on English).
 |---|---|
 | **Human booths** | **1.6 s** (0.9 s from English, 4.7 s from Arabic) |
 | Soniox live translation | **~3.0 s** end-to-end (1.8–2.0× slower) |
-| OpenAI Realtime S2S | **3.2–3.6 s** (2.0–2.2× slower) |
+| OpenAI Realtime, text out | **3.1–3.6 s** (1.9–2.3× slower) |
+| OpenAI Realtime, speech-to-speech | **3.2–3.6 s** (2.0–2.2× slower) |
 
 And the tail is far worse than the median: Soniox's **p90 reaches 22.5 s**,
 where the human p90 is 4.7 s. A live model is not merely slower on average — it
@@ -150,9 +161,11 @@ the ASR took to finalize it. That omitted half is separately measurable at
   the floor once with a strong multilingual model and translate the text. It
   beat the incumbent in 10 of 11 cells on both metrics, and it costs less than
   transcribing six interpreted tracks.
-- **For live delivery**: no benchmarked model is ready. The best live text
-  system runs ~2× the human lag with a 22 s tail and drops 10–40% of content;
-  the speech-to-speech model drops ~90%.
+- **For live delivery**: no benchmarked model is ready, and the binding
+  constraint is coverage, not accuracy. Every live system tested — two vendors,
+  three configurations — runs ~2× the human lag AND silently drops between 10%
+  and 60% of what was said. Dropping content without signalling it is worse
+  than being slow, because a listener cannot tell it happened.
 - **Arabic is the hard case throughout** — slowest for humans (4.7 s) and
   lowest-scoring for every machine.
 
@@ -163,10 +176,10 @@ the ASR took to finalize it. That omitted half is separately measurable at
 - Arm D rests on two cells, and its result is about the API's turn-taking
   model, not the underlying model's ceiling. A streaming-native S2S setup could
   score very differently.
-- Only one live-text vendor was benchmarked. Alibaba Gummy is cheaper on paper
-  but its WebSocket endpoint could not be verified; Azure Speech Translation,
-  Gemini Live and OpenAI's translate model remain unrun (the last emits no
-  Arabic).
+- Two live vendors benchmarked (Soniox, OpenAI Realtime in two modes). Alibaba
+  Gummy is cheaper on paper but its WebSocket endpoint could not be verified;
+  Azure Speech Translation and Gemini Live remain unrun. OpenAI's text mode was
+  run on four languages — it does not emit Arabic.
 - Coverage and adequacy are new metrics here, not externally validated.
 
 ## Cost

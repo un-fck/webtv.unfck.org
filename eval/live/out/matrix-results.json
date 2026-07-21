@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T12:33:04.825Z",
+  "generatedAt": "2026-07-21T13:03:18.208Z",
   "rows": [
     {
       "system": "A-human",
@@ -490,6 +490,62 @@
       "atdS": 0.5633111791730474,
       "costUsd": 0.1632509875,
       "adequacy": 42.5
+    },
+    {
+      "system": "C-openai-realtime-text",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10161",
+      "language": "en",
+      "errorRate": 0.7832024581768522,
+      "errorMetric": "WER",
+      "chrf": 32.34015259529195,
+      "medianLagS": 3.603,
+      "p90LagS": 10.298,
+      "atdS": 5.047835294117648,
+      "costUsd": null,
+      "adequacy": 32
+    },
+    {
+      "system": "C-openai-realtime-text",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10161",
+      "language": "es",
+      "errorRate": 0.8257707969749855,
+      "errorMetric": "WER",
+      "chrf": 35.19711610744274,
+      "medianLagS": 3.067,
+      "p90LagS": 6.109,
+      "atdS": 3.72659375,
+      "costUsd": null,
+      "adequacy": 31.875
+    },
+    {
+      "system": "C-openai-realtime-text",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10161",
+      "language": "fr",
+      "errorRate": 0.7848918843021623,
+      "errorMetric": "WER",
+      "chrf": 37.6477326114753,
+      "medianLagS": 3.236,
+      "p90LagS": 10.266,
+      "atdS": 4.882990291262136,
+      "costUsd": null,
+      "adequacy": 43.375
+    },
+    {
+      "system": "C-openai-realtime-text",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10161",
+      "language": "zh",
+      "errorRate": 0.7562951609371579,
+      "errorMetric": "CER",
+      "chrf": 15.177237779399624,
+      "medianLagS": 3.419,
+      "p90LagS": 10.426,
+      "atdS": 4.888945652173913,
+      "costUsd": null,
+      "adequacy": 27.625
     }
   ]
 }

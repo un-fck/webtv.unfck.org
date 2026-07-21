@@ -91,6 +91,7 @@ const LABELS: Record<string, string> = {
   "B-pivot": "Floor ASR → Azure MT",
   "C-soniox-rt-v5": "Soniox live translate",
   "D-openai-realtime-s2s": "OpenAI Realtime S2S",
+  "C-openai-realtime-text": "OpenAI Realtime text",
 };
 
 const f1 = (v: number | null | undefined, suffix = "") =>

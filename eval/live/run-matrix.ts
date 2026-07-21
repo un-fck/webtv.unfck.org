@@ -37,7 +37,7 @@ import {
   type RunContext,
 } from "./systems";
 import { sonioxRealtime } from "./providers/soniox-rt";
-import { openaiRealtimeS2S } from "./providers/openai-realtime";
+import { openaiRealtimeS2S, openaiRealtime } from "./providers/openai-realtime";
 
 const OUT = path.join(__dirname, "out");
 const AUDIO_CACHE = path.join(__dirname, "cache", "audio");
@@ -55,6 +55,10 @@ const SYSTEMS: System[] = [
   // (audio tokens both directions), so it is restricted to two contrasting
   // targets: French (Latin script, close to the floor languages) and Arabic
   // (different script and word order, the pair humans find hardest at 4.7s).
+  // Second live-text vendor. The "live models lose" conclusion rested on a
+  // single vendor; this tests it. Arabic is excluded because OpenAI's realtime
+  // translation does not emit it.
+  liveTextSystem(openaiRealtime({ mode: "text", targets: ["en", "es", "fr", "zh"] }), 2.04),
   liveAudioSystem(openaiRealtimeS2S(["fr", "ar"]), 2.5),
 ];
 
