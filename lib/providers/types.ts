@@ -5,6 +5,10 @@ export interface TranscriptWord {
   end: number; // ms
   confidence?: number;
   speaker?: string; // opaque label, carried as ASR hint
+  /** Per-word language label. Only multilingual models emit this (Speechmatics
+   * Melia does); it identifies the language actually being spoken, which is how
+   * a floor track reveals each speaker's original language. */
+  language?: string;
 }
 
 /** A speaker turn / utterance — contiguous speech from one speaker */

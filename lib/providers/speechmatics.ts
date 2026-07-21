@@ -163,6 +163,10 @@ function makeSpeechmatics(
             end: endMs,
             confidence: alt.confidence,
             speaker,
+            // Melia labels every word with the language actually spoken. On the
+            // floor track that is the only direct signal of a speaker's original
+            // language, so carry it through instead of dropping it.
+            language: alt.language,
           };
           const last = utterances[utterances.length - 1];
           if (last && last.speaker === speaker) {
