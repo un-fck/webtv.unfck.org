@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T06:02:12.681Z",
+  "generatedAt": "2026-07-21T06:26:42.626Z",
   "rows": [
     {
       "symbol": "S/PV.10156",
@@ -25,6 +25,50 @@
     },
     {
       "symbol": "S/PV.10156",
+      "language": "fr",
+      "arm": "B-pivot",
+      "wer": 0.3820018365472911,
+      "normalizedWer": 0.3648180242634315,
+      "cer": 0.2919945261717414,
+      "normalizedCer": 0.28998242530755713,
+      "refWords": 1089,
+      "hypWords": 1097
+    },
+    {
+      "symbol": "S/PV.10156",
+      "language": "es",
+      "arm": "B-pivot",
+      "wer": 0.4079646017699115,
+      "normalizedWer": 0.38475177304964536,
+      "cer": 0.3128170443016571,
+      "normalizedCer": 0.31008155474579213,
+      "refWords": 1130,
+      "hypWords": 1100
+    },
+    {
+      "symbol": "S/PV.10156",
+      "language": "ar",
+      "arm": "B-pivot",
+      "wer": 0.7983777520278099,
+      "normalizedWer": 0.7927927927927928,
+      "cer": 0.5826718076661375,
+      "normalizedCer": 0.5756292637026582,
+      "refWords": 863,
+      "hypWords": 745
+    },
+    {
+      "symbol": "S/PV.10156",
+      "language": "ru",
+      "arm": "B-pivot",
+      "wer": 0.5329512893982808,
+      "normalizedWer": 0.5190114068441065,
+      "cer": 0.5140953966932318,
+      "normalizedCer": 0.4231267078958723,
+      "refWords": 1047,
+      "hypWords": 797
+    },
+    {
+      "symbol": "S/PV.10156",
       "language": "zh",
       "arm": "A-interpreter",
       "wer": 0.9479166666666666,
@@ -44,6 +88,237 @@
       "normalizedCer": 0.7026116259477675,
       "refWords": 96,
       "hypWords": 3
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "en",
+      "arm": "A-interpreter",
+      "wer": 0.38328729281767954,
+      "normalizedWer": 0.3571184704677364,
+      "cer": 0.3219628215559867,
+      "normalizedCer": 0.3112443395624721,
+      "refWords": 2896,
+      "hypWords": 2992
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "en",
+      "arm": "B-pivot",
+      "wer": 0.331146408839779,
+      "normalizedWer": 0.30351655855240695,
+      "cer": 0.2531764411341303,
+      "normalizedCer": 0.24446712162765483,
+      "refWords": 2896,
+      "hypWords": 2940
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "fr",
+      "arm": "A-interpreter",
+      "wer": 0.6511013215859031,
+      "normalizedWer": 0.6310025273799494,
+      "cer": 0.48143221372353395,
+      "normalizedCer": 0.4715146690925631,
+      "refWords": 3405,
+      "hypWords": 3153
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "fr",
+      "arm": "B-pivot",
+      "wer": 0.42701908957415563,
+      "normalizedWer": 0.40718899185622015,
+      "cer": 0.32950892362265827,
+      "normalizedCer": 0.32317489197179894,
+      "refWords": 3405,
+      "hypWords": 3373
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "es",
+      "arm": "A-interpreter",
+      "wer": 0.662303664921466,
+      "normalizedWer": 0.6230366492146597,
+      "cer": 0.5159168199810448,
+      "normalizedCer": 0.5040738419463279,
+      "refWords": 3438,
+      "hypWords": 3189
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "es",
+      "arm": "B-pivot",
+      "wer": 0.4697498545666085,
+      "normalizedWer": 0.4560791157649796,
+      "cer": 0.37782237832413446,
+      "normalizedCer": 0.3714888040567489,
+      "refWords": 3438,
+      "hypWords": 3271
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "ar",
+      "arm": "A-interpreter",
+      "wer": 0.8431061806656102,
+      "normalizedWer": 0.8250773993808049,
+      "cer": 0.6272632051473889,
+      "normalizedCer": 0.6218229286646701,
+      "refWords": 2524,
+      "hypWords": 2162
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "ar",
+      "arm": "B-pivot",
+      "wer": 0.7840729001584786,
+      "normalizedWer": 0.7658668730650154,
+      "cer": 0.5902289390992069,
+      "normalizedCer": 0.579973892344314,
+      "refWords": 2524,
+      "hypWords": 2344
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "ru",
+      "arm": "B-pivot",
+      "wer": 0.5135617416131335,
+      "normalizedWer": 0.4934513274336283,
+      "cer": 0.39655533451994557,
+      "normalizedCer": 0.3903287994002356,
+      "refWords": 2802,
+      "hypWords": 2405
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "zh",
+      "arm": "A-interpreter",
+      "wer": 0.9954954954954955,
+      "normalizedWer": 0.9431818181818182,
+      "cer": 0.6482675261885577,
+      "normalizedCer": 0.6292971315962339,
+      "refWords": 222,
+      "hypWords": 215
+    },
+    {
+      "symbol": "S/PV.10161",
+      "language": "zh",
+      "arm": "B-pivot",
+      "wer": 2.328828828828829,
+      "normalizedWer": 1.3825757575757576,
+      "cer": 0.41800966962127317,
+      "normalizedCer": 0.4057368075322969,
+      "refWords": 222,
+      "hypWords": 518
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "en",
+      "arm": "A-interpreter",
+      "wer": 0.4323105577884521,
+      "normalizedWer": 0.3989737631910156,
+      "cer": 0.3426591825995439,
+      "normalizedCer": 0.33098213326649717,
+      "refWords": 10201,
+      "hypWords": 10534
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "en",
+      "arm": "B-pivot",
+      "wer": 0.37064993628075676,
+      "normalizedWer": 0.33827088779165454,
+      "cer": 0.28189791264690406,
+      "normalizedCer": 0.27437430627663,
+      "refWords": 10201,
+      "hypWords": 10586
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "fr",
+      "arm": "A-interpreter",
+      "wer": 0.6913433847196341,
+      "normalizedWer": 0.6720196640721016,
+      "cer": 0.5118391177424586,
+      "normalizedCer": 0.5060292442081276,
+      "refWords": 11806,
+      "hypWords": 11672
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "fr",
+      "arm": "B-pivot",
+      "wer": 0.4981365407419956,
+      "normalizedWer": 0.497255223269152,
+      "cer": 0.37526836878118097,
+      "normalizedCer": 0.37192999113811875,
+      "refWords": 11806,
+      "hypWords": 11806
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "es",
+      "arm": "B-pivot",
+      "wer": 0.47863457760314343,
+      "normalizedWer": 0.4552965235173824,
+      "cer": 0.37686966628941976,
+      "normalizedCer": 0.3716612225122298,
+      "refWords": 12216,
+      "hypWords": 11738
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "ar",
+      "arm": "B-pivot",
+      "wer": 0.8363776408450704,
+      "normalizedWer": 0.8154949472997935,
+      "cer": 0.6221438099746116,
+      "normalizedCer": 0.6077970461702222,
+      "refWords": 9088,
+      "hypWords": 8592
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "ru",
+      "arm": "A-interpreter",
+      "wer": 0.8037967615857063,
+      "normalizedWer": 0.7725350545292677,
+      "cer": 0.6534707667281885,
+      "normalizedCer": 0.6405179846752022,
+      "refWords": 8955,
+      "hypWords": 8155
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "ru",
+      "arm": "B-pivot",
+      "wer": 0.6779452819653825,
+      "normalizedWer": 0.6510126864010684,
+      "cer": 0.6172146275846967,
+      "normalizedCer": 0.6380777302380062,
+      "refWords": 8955,
+      "hypWords": 8693
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "zh",
+      "arm": "A-interpreter",
+      "wer": 1.0930599369085174,
+      "normalizedWer": 0.9538461538461539,
+      "cer": 0.682827167310878,
+      "normalizedCer": 0.6685854770042574,
+      "refWords": 634,
+      "hypWords": 694
+    },
+    {
+      "symbol": "S/PV.10168",
+      "language": "zh",
+      "arm": "B-pivot",
+      "wer": 1.0473186119873816,
+      "normalizedWer": 0.9846153846153847,
+      "cer": 0.4665378244064053,
+      "normalizedCer": 0.4602746297295677,
+      "refWords": 634,
+      "hypWords": 664
     }
   ]
 }
