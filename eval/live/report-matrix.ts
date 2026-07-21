@@ -18,6 +18,35 @@ import fs from "fs";
 import path from "path";
 
 const OUT = path.join(__dirname, "out");
+const PV_CACHE = path.join(__dirname, "cache", "pv");
+const TEXTS = path.join(OUT, "system-texts.json");
+
+/**
+ * Coverage — how much of the record the system actually produced, by
+ * non-whitespace character count.
+ *
+ * This separates the two ways a system can score badly, which every overlap
+ * metric conflates: saying wrong things, and not saying most things. A
+ * turn-based speech-to-speech model scored 7/100 on adequacy here not because
+ * its interpretation was wrong — it was fluent and correct — but because it
+ * emitted only a tenth of the meeting. Without this column that looks like a
+ * quality failure instead of what it is.
+ */
+function coverageMap(): Record<string, number> {
+  if (!fs.existsSync(TEXTS)) return {};
+  const texts = JSON.parse(fs.readFileSync(TEXTS, "utf8")) as Record<string, string>;
+  const norm = (x: string) => x.replace(/\s+/g, "");
+  const out: Record<string, number> = {};
+  for (const [k, hyp] of Object.entries(texts)) {
+    const [, sym, lang] = k.split("|");
+    const p = path.join(PV_CACHE, `${sym.replace(/\//g, "_")}_${lang}.txt`);
+    if (!fs.existsSync(p)) continue;
+    const ref = norm(fs.readFileSync(p, "utf8"));
+    if (!ref.length) continue;
+    out[k] = (norm(hyp).length / ref.length) * 100;
+  }
+  return out;
+}
 
 interface Row {
   system: string;
@@ -98,6 +127,27 @@ function main() {
         );
     }
     say(line);
+  }
+
+  // Coverage table — the explanatory column.
+  const cov = coverageMap();
+  if (Object.keys(cov).length) {
+    say("");
+    say("Coverage: how much of the record the system actually produced (%).");
+    say("Distinguishes saying WRONG things from not saying MOST things.");
+    say("");
+    let h = "cell".padEnd(22) + systems.map((s) => s.padEnd(24)).join("");
+    say(h);
+    say("─".repeat(h.length));
+    for (const cell of cells.sort()) {
+      const [sym, lang] = cell.split("|");
+      let line = `${sym} ${lang}`.padEnd(22);
+      for (const s of systems) {
+        const v = cov[`${s}|${sym}|${lang}`];
+        line += (v == null ? "   —  " : v.toFixed(0) + "%").padEnd(24);
+      }
+      say(line);
+    }
   }
 
   // Paired deltas vs the human baseline — the only valid aggregate.
