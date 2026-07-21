@@ -72,8 +72,15 @@ function main() {
   say("");
   say("chrF++ against the official verbatim record. Higher is better.");
   say("chrF++ is the translation metric: it scores character n-gram overlap,");
-  say("so it survives legitimate paraphrase and works the same in every script");
-  say("(unlike WER, which is meaningless for Chinese and unstable for Arabic).");
+  say("so it survives legitimate paraphrase and works the same in every script.");
+  say("");
+  say("It is primary here, and WER/CER are secondary, for two concrete reasons:");
+  say("  - computeWER() falls back to PROPORTIONAL CHUNKING above 3,000 words,");
+  say("    comparing chunk i of the reference to chunk i of the hypothesis. Any");
+  say("    drift between them inflates the score, so WER on the 82-minute");
+  say("    session is an approximation. chrF++ has no such cutoff.");
+  say("  - Chinese has no word boundaries, so word-level WER is noise, and its");
+  say("    CER exceeded 100% on one cell — an artifact, not a measurement.");
   say("");
 
   const header =
