@@ -60,10 +60,9 @@ export const sonioxRealtime: StreamingProvider = {
     // and is unbiased. (Using "the last source token seen when the translation
     // arrived" instead would only ever give a lower bound on the lag, since the
     // source stream always runs ahead.)
-    const srcCurve: Array<{ chars: number; timeMs: number }> = [];
-    let srcChars = 0;
-    let outChars = 0;
-    const pending: Array<{ chars: number; emitMs: number; text: string }> = [];
+    // Audio position of the most recently finalized SOURCE token. This is the
+    // anchor for translation tokens, which carry no timestamps of their own.
+    let lastSrcEndMs = 0;
     let audioSent = false;
 
     await new Promise<void>((resolve) => {
@@ -158,16 +157,22 @@ export const sonioxRealtime: StreamingProvider = {
           // ("translation"). Keep only the latter as output, or we would be
           // scoring the floor transcript as if it were the translation.
           if (tk.translation_status === "translation") {
-            outChars += tk.text.length;
-            pending.push({
-              chars: outChars,
-              emitMs: Date.now() - t0,
+            // Anchor the translation to the latest source audio position seen.
+            // The source transcription stream runs slightly ahead of the
+            // translation, so this UNDER-estimates the true lag — but only by
+            // the transcription-to-translation gap, which is seconds. The
+            // proportional-mapping alternative tried first was wrong by
+            // MINUTES: it assumed output accrues uniformly against source
+            // time, and when the translation stream ends before the audio does
+            // it reports lags of -116s.
+            events.push({
               text: tk.text,
+              audioTimeMs: lastSrcEndMs,
+              emitMs: Date.now() - t0,
+              isFinal: true,
             });
-          } else {
-            srcChars += tk.text.length;
-            if (tk.end_ms != null)
-              srcCurve.push({ chars: srcChars, timeMs: tk.end_ms });
+          } else if (tk.end_ms != null) {
+            lastSrcEndMs = Math.max(lastSrcEndMs, tk.end_ms);
           }
         }
         if (msg.finished) {
@@ -183,27 +188,10 @@ export const sonioxRealtime: StreamingProvider = {
       };
     });
 
-    // Map output positions onto the source timeline.
-    //
-    // Mapping by cumulative CHARACTERS fails here: the floor switches language
-    // mid-meeting, and Chinese packs roughly one character per word where
-    // French takes five, so a meeting that is 20% Chinese by character count
-    // may be 50% of it by time. Anchoring on the source TIMELINE instead is
-    // language-neutral — it assumes only that output accumulates at a roughly
-    // constant rate against elapsed source speech, which holds across a
-    // language switch in a way that character counts do not.
-    const srcStart = srcCurve.length ? srcCurve[0].timeMs : 0;
-    const srcEnd = srcCurve.length ? srcCurve[srcCurve.length - 1].timeMs : 0;
-    const totalOutChars = pending.length ? pending[pending.length - 1].chars : 0;
-    for (const pnd of pending) {
-      const f = totalOutChars > 0 ? pnd.chars / totalOutChars : 0;
-      events.push({
-        text: pnd.text,
-        audioTimeMs: srcStart + f * (srcEnd - srcStart),
-        emitMs: pnd.emitMs,
-        isFinal: true,
-      });
-    }
+    // If the 1x pacing slipped (event-loop congestion when many streams run
+    // at once), every latency number is suspect; surface it rather than hide it.
+    (run as StreamingRun & { pacingDriftMs?: number }).pacingDriftMs =
+      run.wallMs - audioDurationMs;
 
     run.fullText = events
       .map((e) => e.text)
