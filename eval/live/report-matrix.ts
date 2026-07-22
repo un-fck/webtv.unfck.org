@@ -360,15 +360,19 @@ function main() {
     say("units — it is not a captioning system, and anyone shipping it as one");
     say("must add segmentation, line-breaking and timing themselves.");
     say("");
+    say("Systems run before this metric existed have no row here; that is a");
+    say("data gap, not a pass. Soniox and OpenAI Realtime both emit token");
+    say("fragments and would report 'segmented: no' if re-run.");
+    say("");
     say(
-      "system".padEnd(34) +
+      "system".padEnd(38) +
         "segmented".padEnd(11) +
         "chars/cap".padEnd(11) +
         "caps/min".padEnd(10) +
         "read rate".padEnd(11) +
         "over limit",
     );
-    say("─".repeat(92));
+    say("─".repeat(96));
     const seen = new Set<string>();
     for (const r of capRows) {
       if (seen.has(r.system)) continue;
@@ -380,7 +384,7 @@ function main() {
       };
       const seg = same.some((x) => x.captionSegmented);
       say(
-        (LABELS[r.system] ?? r.system).padEnd(34) +
+        (LABELS[r.system] ?? r.system).padEnd(38) +
           (seg ? "yes" : "NO").padEnd(11) +
           f1(avg((x) => x.captionMeanChars)).padEnd(11) +
           f1(avg((x) => x.captionsPerMinute)).padEnd(10) +

@@ -172,8 +172,12 @@ ceiling; above it, line one is still being read when line two arrives.
 units — it is not a captioning system, and anyone shipping it as one
 must add segmentation, line-breaking and timing themselves.
 
-system                            segmented  chars/cap  caps/min  read rate  over limit
-────────────────────────────────────────────────────────────────────────────────────────────
-Deepgram(multi)→GTranslate [YouTube]yes        38.3       8.1       11.4/s     28%
+Systems run before this metric existed have no row here; that is a
+data gap, not a pass. Soniox and OpenAI Realtime both emit token
+fragments and would report 'segmented: no' if re-run.
+
+system                                segmented  chars/cap  caps/min  read rate  over limit
+────────────────────────────────────────────────────────────────────────────────────────────────
+Deepgram(multi)→GTranslate [YouTube]  yes        38.3       8.1       11.4/s     28%
 
 Metered spend across recorded runs: $4.88 (under-counts: arm D's audio tokens and arm B's Azure OpenAI tokens are not metered here)
