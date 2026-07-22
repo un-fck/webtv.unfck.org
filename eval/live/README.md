@@ -70,13 +70,10 @@ WER/CER are secondary and must be read with two caveats:
   artifact of scoring, not a finding: the transcript was 1754 CJK characters
   against the record's 1815, with matching content.
 
-**Semantic adequacy** (`judge.ts`), 0–100, is the metric that asks what the
-surface metrics cannot: how much of what the speaker said survives, explicitly
-ignoring wording, register and fluency. This matters because interpreters are
-*trained* to compress and paraphrase, and WER punishes them for it.
-
-**Semantic adequacy** (`judge.ts`), 0–100 — how much content survives, ignoring
-wording. Fair to interpreters, whose craft is compression.
+**Semantic adequacy** (`judge.ts`), 0–100, asks what the surface metrics cannot:
+how much of what the speaker said survives, explicitly ignoring wording,
+register and fluency. This matters because interpreters are *trained* to
+compress and paraphrase, and WER punishes them for it.
 
 **NTR** (`ntr.ts`), 0–100 — the model broadcasters actually certify live
 subtitles with. Errors weighted by meaning damage (minor 0.25 / standard 0.5 /
@@ -112,7 +109,7 @@ tsx eval/interp-lag/report.ts               # → FINDINGS-phase1.md numbers
 tsx eval/live/run-matrix.ts --tier=1 --dry-run   # always estimates first
 tsx eval/live/run-matrix.ts --tier=1
 tsx eval/live/run-matrix.ts --tier=2 --systems=A-human,B-pivot,C-soniox-rt-v5
-tsx eval/live/run-judge.ts                  # adds adequacy scores
+tsx eval/live/run-judge.ts                  # adds adequacy + NTR scores
 tsx eval/live/report-matrix.ts              # → out/REPORT.txt
 ```
 
