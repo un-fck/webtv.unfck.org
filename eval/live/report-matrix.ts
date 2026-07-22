@@ -100,7 +100,8 @@ const LABELS: Record<string, string> = {
   "C-soniox-rt-v5": "Soniox live translate",
   "D-openai-realtime-s2s": "OpenAI Realtime S2S",
   "C-openai-realtime-text": "OpenAI Realtime text",
-  "C-caption-deepgram-multi-gtranslate": "Deepgram→GTranslate [YouTube]",
+  "C-caption-deepgram-multi-gtranslate": "Deepgram(multi)→GTranslate [YouTube]",
+  "C-caption-deepgram-en-gtranslate": "Deepgram(en)→GTranslate [control]",
   "C-azure-speech-translation-en": "Azure Speech translation [Teams]",
 };
 

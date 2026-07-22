@@ -67,6 +67,11 @@ const SYSTEMS: System[] = [
   // so it is measured as its own thing rather than assumed equivalent to a
   // single-model live translator.
   liveTextSystem(captionPipeline({ asrLanguage: "multi" }), 0.29 + 0.15),
+  // Control for the above. The "multi" variant produces nonsense on a
+  // multilingual floor ("Le message secret est...") at 35-41% coverage, but
+  // that could be the ARCHITECTURE or just its language detection. Pinning the
+  // ASR to English isolates it: same pipeline, same MT, one variable changed.
+  liveTextSystem(captionPipeline({ asrLanguage: "en" }), 0.29 + 0.15),
   // The engine behind Teams' live translated captions, and the same Azure
   // Speech service our production pipeline already uses for fr/es/ar/ru.
   liveTextSystem(azureSpeechTranslation({ sourceLanguage: "en" }), 2.5),
