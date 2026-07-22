@@ -17,7 +17,7 @@ import { getProvider } from "../../lib/providers/registry";
 import { Pool } from "pg";
 import type { Cell } from "./matrix";
 import type { LatencyMetrics } from "./streaming-types";
-import { computeLatency, type StreamingProvider } from "./streaming-types";
+import { computeLatency, type StreamingProvider, type StreamingRun } from "./streaming-types";
 import { captionQuality, type CaptionQuality } from "./caption-quality";
 import { pivotTranslate, type FloorSegment } from "./translate-pivot";
 
@@ -27,6 +27,8 @@ export type Arm = "A-human" | "B-pivot" | "C-live-text" | "D-live-audio";
 
 export interface SystemOutput {
   text: string;
+  /** Raw timed events, persisted so runs can be exported as WebVTT. */
+  events?: StreamingRun["events"];
   latency?: LatencyMetrics;
   /** Readability of the emitted caption units; absent for offline arms. */
   caption?: CaptionQuality;
@@ -131,6 +133,7 @@ export function liveTextSystem(
       if (run.error) return { text: run.fullText, error: run.error };
       return {
         text: run.fullText,
+        events: run.events,
         latency: computeLatency(run),
         caption: captionQuality(run.events, run.audioDurationMs),
         costUsd: run.costUsd,

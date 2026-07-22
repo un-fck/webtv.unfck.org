@@ -264,6 +264,22 @@ async function main() {
         texts[`${sys.id}|${cell.symbol}|${cell.language}`] = o.text;
         fs.writeFileSync(TEXTS, JSON.stringify(texts, null, 1));
 
+        // Persist timed events so a run can be exported as WebVTT — the format
+        // a captioning system actually has to emit to be attached to a player.
+        if (o.events?.length) {
+          fs.writeFileSync(
+            path.join(
+              OUT,
+              `stream_${cell.symbol.replace(/\//g, "_")}_${sys.id}_${cell.language}.json`,
+            ),
+            JSON.stringify(
+              { provider: sys.id, targetLanguage: cell.language, events: o.events },
+              null,
+              1,
+            ),
+          );
+        }
+
         const pv = await getPVText(cell.symbol, cell.language);
         const m = computeMetrics(pv, o.text, cell.language);
         const chrf = computeChrF(pv, o.text).score;
