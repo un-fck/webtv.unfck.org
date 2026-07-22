@@ -1,7 +1,8 @@
 # UN interpretation: how far behind, and could a machine do better?
 
 Start here. Detail lives in `eval/interp-lag/FINDINGS-phase1.md` (the human
-measurement) and `eval/live/README.md` (the benchmark design).
+measurement), `eval/live/README.md` (the benchmark design), and
+`eval/live/FINDINGS-captioning.md` (live captioning, YouTube-style).
 
 Two questions, answered separately, because they have different answers:
 
@@ -182,6 +183,37 @@ the ASR took to finalize it. That omitted half is separately measurable at
   run on four languages — it does not emit Arabic.
 - Coverage and adequacy are new metrics here, not externally validated.
 
+---
+
+## Q4. Could we just use live captioning, the way YouTube does?
+
+**Not from YouTube, and not from any platform.**
+
+YouTube's automatic captions are **English-only for live streams**. Auto-
+translate works on a caption track that already exists, so a live non-English
+UN meeting produces nothing to translate. Google Meet, Teams and Zoom all have
+live translated captions but essentially none exposes the live caption stream
+through an API (Zoom's Video SDK is the lone exception). Kaltura — which we
+already use for UN Web TV — does no ASR itself: it brokers to partner vendors
+through its REACH module, and only for Webcasting-scheduled events.
+
+So the choice is cloud building blocks you assemble. Those come in two shapes,
+and the difference decides everything for UN audio:
+
+| | caption-then-translate | single-model live translation |
+|---|---|---|
+| used by | YouTube, Meet, Teams, Zoom, broadcast vendors | Soniox, OpenAI Realtime, Azure Speech Translation |
+| language | ASR must **commit to one source language** | often natively multilingual |
+
+A UN floor switches language every few minutes, so a stack that must pick one
+is wrong for part of every meeting. Measured: the caption-then-translate arm
+produced actual nonsense — *"Le message secret est…"* — at 35–41% coverage,
+because the ASR's language detection failed and the translator faithfully
+rendered the nonsense.
+
+Full detail, including the metric traps found along the way, in
+`eval/live/FINDINGS-captioning.md`.
+
 ## Cost
 
-$3–4 of the $40 budget, including every re-run.
+Roughly $10 of the $40 budget, including every re-run.
