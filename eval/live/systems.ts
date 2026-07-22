@@ -18,6 +18,7 @@ import { Pool } from "pg";
 import type { Cell } from "./matrix";
 import type { LatencyMetrics } from "./streaming-types";
 import { computeLatency, type StreamingProvider } from "./streaming-types";
+import { captionQuality, type CaptionQuality } from "./caption-quality";
 import { pivotTranslate, type FloorSegment } from "./translate-pivot";
 
 const FLOOR_CACHE = path.join(__dirname, "..", "interp-lag", "cache", "floor");
@@ -27,6 +28,8 @@ export type Arm = "A-human" | "B-pivot" | "C-live-text" | "D-live-audio";
 export interface SystemOutput {
   text: string;
   latency?: LatencyMetrics;
+  /** Readability of the emitted caption units; absent for offline arms. */
+  caption?: CaptionQuality;
   costUsd?: number;
   error?: string;
 }
@@ -129,6 +132,7 @@ export function liveTextSystem(
       return {
         text: run.fullText,
         latency: computeLatency(run),
+        caption: captionQuality(run.events, run.audioDurationMs),
         costUsd: run.costUsd,
       };
     },

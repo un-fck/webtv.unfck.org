@@ -60,6 +60,11 @@ interface Row {
   medianLagS: number | null;
   p90LagS: number | null;
   atdS: number | null;
+  captionSegmented?: boolean | null;
+  captionMeanChars?: number | null;
+  captionsPerMinute?: number | null;
+  captionReadingRate?: number | null;
+  captionShareOverLimit?: number | null;
   costUsd: number | null;
   error?: string;
 }
@@ -92,6 +97,7 @@ const LABELS: Record<string, string> = {
   "C-soniox-rt-v5": "Soniox live translate",
   "D-openai-realtime-s2s": "OpenAI Realtime S2S",
   "C-openai-realtime-text": "OpenAI Realtime text",
+  "C-caption-deepgram-multi-gtranslate": "Deepgram→GTranslate [YouTube]",
 };
 
 const f1 = (v: number | null | undefined, suffix = "") =>
@@ -279,6 +285,53 @@ function main() {
     if (!vals.length) continue;
     const worst = Math.max(...vals);
     say(`  ${(LABELS[s] ?? s).padEnd(26)} worst p90 across cells: ${worst.toFixed(1)}s`);
+  }
+
+  // ── CAPTION READABILITY ───────────────────────────────────────────────────
+  const capRows = rows.filter((r) => r.captionSegmented != null);
+  if (capRows.length) {
+    say("");
+    say("════ CAPTION READABILITY ════");
+    say("");
+    say("A stream of correct words is not captioning. Live-subtitle practice");
+    say("judges whether a viewer can READ the result: how much text lands at");
+    say("once and how fast it is replaced. ~21 chars/sec is the usual adult");
+    say("ceiling; above it, line one is still being read when line two arrives.");
+    say("");
+    say("'segmented: no' means the system emits token fragments, not caption");
+    say("units — it is not a captioning system, and anyone shipping it as one");
+    say("must add segmentation, line-breaking and timing themselves.");
+    say("");
+    say(
+      "system".padEnd(34) +
+        "segmented".padEnd(11) +
+        "chars/cap".padEnd(11) +
+        "caps/min".padEnd(10) +
+        "read rate".padEnd(11) +
+        "over limit",
+    );
+    say("─".repeat(92));
+    const seen = new Set<string>();
+    for (const r of capRows) {
+      if (seen.has(r.system)) continue;
+      seen.add(r.system);
+      const same = capRows.filter((x) => x.system === r.system);
+      const avg = (f: (x: Row) => number | null | undefined) => {
+        const v = same.map(f).filter((n): n is number => n != null && !Number.isNaN(n));
+        return v.length ? v.reduce((a, b) => a + b, 0) / v.length : NaN;
+      };
+      const seg = same.some((x) => x.captionSegmented);
+      say(
+        (LABELS[r.system] ?? r.system).padEnd(34) +
+          (seg ? "yes" : "NO").padEnd(11) +
+          f1(avg((x) => x.captionMeanChars)).padEnd(11) +
+          f1(avg((x) => x.captionsPerMinute)).padEnd(10) +
+          (seg ? f1(avg((x) => x.captionReadingRate)) + "/s" : "   n/a").padEnd(11) +
+          (seg
+            ? (avg((x) => x.captionShareOverLimit) * 100).toFixed(0) + "%"
+            : "n/a"),
+      );
+    }
   }
 
   // ── COST ──────────────────────────────────────────────────────────────────

@@ -38,6 +38,7 @@ import {
 } from "./systems";
 import { sonioxRealtime } from "./providers/soniox-rt";
 import { openaiRealtimeS2S, openaiRealtime } from "./providers/openai-realtime";
+import { captionPipeline } from "./providers/caption-pipeline";
 
 const OUT = path.join(__dirname, "out");
 const AUDIO_CACHE = path.join(__dirname, "cache", "audio");
@@ -60,6 +61,11 @@ const SYSTEMS: System[] = [
   // translation does not emit it.
   liveTextSystem(openaiRealtime({ mode: "text", targets: ["en", "es", "fr", "zh"] }), 2.04),
   liveAudioSystem(openaiRealtimeS2S(["fr", "ar"]), 2.5),
+  // The YouTube architecture: caption first, translate the captions. Every
+  // platform captioning stack (YouTube, Meet, Teams, Zoom) is shaped this way,
+  // so it is measured as its own thing rather than assumed equivalent to a
+  // single-model live translator.
+  liveTextSystem(captionPipeline({ asrLanguage: "multi" }), 0.29 + 0.15),
 ];
 
 /** Chinese has no spaces, so word-level WER is noise; CER is the substitute. */
@@ -78,6 +84,12 @@ export interface ResultRow {
   medianLagS: number | null;
   p90LagS: number | null;
   atdS: number | null;
+  /** Caption readability — null for offline arms. */
+  captionSegmented: boolean | null;
+  captionMeanChars: number | null;
+  captionsPerMinute: number | null;
+  captionReadingRate: number | null;
+  captionShareOverLimit: number | null;
   costUsd: number | null;
   error?: string;
 }
@@ -228,6 +240,11 @@ async function main() {
             medianLagS: null,
             p90LagS: null,
             atdS: null,
+            captionSegmented: null,
+            captionMeanChars: null,
+            captionsPerMinute: null,
+            captionReadingRate: null,
+            captionShareOverLimit: null,
             costUsd: o.costUsd ?? null,
             error: o.error ?? "empty output",
           });
@@ -256,6 +273,11 @@ async function main() {
           medianLagS: o.latency?.medianLagS ?? null,
           p90LagS: o.latency?.p90LagS ?? null,
           atdS: o.latency?.atdS ?? null,
+          captionSegmented: o.caption?.segmented ?? null,
+          captionMeanChars: o.caption?.meanChars ?? null,
+          captionsPerMinute: o.caption?.captionsPerMinute ?? null,
+          captionReadingRate: o.caption?.medianReadingRate ?? null,
+          captionShareOverLimit: o.caption?.shareOverLimit ?? null,
           costUsd: o.costUsd ?? null,
           error: o.error,
         });
