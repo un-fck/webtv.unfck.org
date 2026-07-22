@@ -1,0 +1,972 @@
+{
+ "provider": "C-caption-deepgram-multi-gtranslate",
+ "targetLanguage": "fr",
+ "events": [
+  {
+   "text": "Je ne",
+   "audioTimeMs": 4760,
+   "emitMs": 5786,
+   "isFinal": true
+  },
+  {
+   "text": "Le message secret est...",
+   "audioTimeMs": 6600,
+   "emitMs": 7407,
+   "isFinal": true
+  },
+  {
+   "text": "La première capacité d'observation est de cent, ce qui correspond à une autonomie complète.",
+   "audioTimeMs": 9190,
+   "emitMs": 9915,
+   "isFinal": true
+  },
+  {
+   "text": "Cependant, la vue d'ensemble est",
+   "audioTimeMs": 10280,
+   "emitMs": 11017,
+   "isFinal": true
+  },
+  {
+   "text": "Les différentes parties de l'auto-rassemblement ne forment qu'une seule entité complète.",
+   "audioTimeMs": 16180,
+   "emitMs": 16901,
+   "isFinal": true
+  },
+  {
+   "text": "C'est toi qui peux parler et parler encore, et c'est toi qui peux parler.",
+   "audioTimeMs": 19640.001,
+   "emitMs": 20424,
+   "isFinal": true
+  },
+  {
+   "text": "Un ou quoi ?",
+   "audioTimeMs": 20310,
+   "emitMs": 22618,
+   "isFinal": true
+  },
+  {
+   "text": "安就啦会，一是会做的",
+   "audioTimeMs": 27900,
+   "emitMs": 28815,
+   "isFinal": true
+  },
+  {
+   "text": "J'ai une question à laquelle je peux répondre comme à une grande question.",
+   "audioTimeMs": 31160,
+   "emitMs": 32034,
+   "isFinal": true
+  },
+  {
+   "text": "Juste, devrait, devrait",
+   "audioTimeMs": 34769.996999999996,
+   "emitMs": 35730,
+   "isFinal": true
+  },
+  {
+   "text": "Et que vous ayez envie ou non de parler de la vie...",
+   "audioTimeMs": 41110,
+   "emitMs": 42014,
+   "isFinal": true
+  },
+  {
+   "text": "Je pense à toi quand je vis.",
+   "audioTimeMs": 42290,
+   "emitMs": 43119,
+   "isFinal": true
+  },
+  {
+   "text": "Ils peuvent résoudre les problèmes eux-mêmes.",
+   "audioTimeMs": 46910,
+   "emitMs": 47721,
+   "isFinal": true
+  },
+  {
+   "text": "Su Zai De Hao Ren Ti",
+   "audioTimeMs": 49930,
+   "emitMs": 50828,
+   "isFinal": true
+  },
+  {
+   "text": "Ceci, ceci,",
+   "audioTimeMs": 51940,
+   "emitMs": 52737,
+   "isFinal": true
+  },
+  {
+   "text": "Une seule décision doit être prise.",
+   "audioTimeMs": 53289.997,
+   "emitMs": 54027,
+   "isFinal": true
+  },
+  {
+   "text": "Et il réfléchirait à ce qu'il faudrait faire, à ce qu'il faudrait faire, alors.",
+   "audioTimeMs": 59110,
+   "emitMs": 59645,
+   "isFinal": true
+  },
+  {
+   "text": "Comparaison rapide des cœurs",
+   "audioTimeMs": 60230,
+   "emitMs": 61022,
+   "isFinal": true
+  },
+  {
+   "text": "Je veux faire quoi ?",
+   "audioTimeMs": 66060,
+   "emitMs": 66830,
+   "isFinal": true
+  },
+  {
+   "text": "Il s'agit simplement de comparer les variétés.",
+   "audioTimeMs": 67530,
+   "emitMs": 68020,
+   "isFinal": true
+  },
+  {
+   "text": "Trois deviennent un seul soi, observez devrait, devrait devrait devrait devrait",
+   "audioTimeMs": 73300,
+   "emitMs": 74049,
+   "isFinal": true
+  },
+  {
+   "text": "Cette ville",
+   "audioTimeMs": 77450.005,
+   "emitMs": 78037,
+   "isFinal": true
+  },
+  {
+   "text": "Les gens sont divisés en piau",
+   "audioTimeMs": 122690,
+   "emitMs": 123312,
+   "isFinal": true
+  },
+  {
+   "text": "Si c'est le cas",
+   "audioTimeMs": 125190,
+   "emitMs": 125808,
+   "isFinal": true
+  },
+  {
+   "text": "Et d d d d d d d,",
+   "audioTimeMs": 135330,
+   "emitMs": 136930,
+   "isFinal": true
+  },
+  {
+   "text": ". un .",
+   "audioTimeMs": 137030,
+   "emitMs": 137533,
+   "isFinal": true
+  },
+  {
+   "text": "Je veux réussir, je veux être compétitif, c'est bien, et tu réussiras.",
+   "audioTimeMs": 146640,
+   "emitMs": 147119,
+   "isFinal": true
+  },
+  {
+   "text": "Fa Ya.",
+   "audioTimeMs": 147300,
+   "emitMs": 147823,
+   "isFinal": true
+  },
+  {
+   "text": "La ville a organisé une autre grande compétition.",
+   "audioTimeMs": 151220,
+   "emitMs": 151734,
+   "isFinal": true
+  },
+  {
+   "text": "， ， ，",
+   "audioTimeMs": 152170,
+   "emitMs": 152350,
+   "isFinal": true
+  },
+  {
+   "text": "Merci.",
+   "audioTimeMs": 157340,
+   "emitMs": 158098,
+   "isFinal": true
+  },
+  {
+   "text": "Les États-Unis saluent ce renouveau",
+   "audioTimeMs": 160450,
+   "emitMs": 161099,
+   "isFinal": true
+  },
+  {
+   "text": "du régime de sanctions contre le Soudan du Sud, y compris la prolongation du panel",
+   "audioTimeMs": 164820,
+   "emitMs": 166011,
+   "isFinal": true
+  },
+  {
+   "text": "mandat des experts",
+   "audioTimeMs": 165930.01,
+   "emitMs": 166506,
+   "isFinal": true
+  },
+  {
+   "text": "et le renouvellement de l'embargo sur les armes",
+   "audioTimeMs": 167989.99000000002,
+   "emitMs": 168514,
+   "isFinal": true
+  },
+  {
+   "text": "Interdiction de voyager",
+   "audioTimeMs": 168890,
+   "emitMs": 169610,
+   "isFinal": true
+  },
+  {
+   "text": "et des mesures de gel des avoirs pour une durée supplémentaire de douze mois.",
+   "audioTimeMs": 172070,
+   "emitMs": 172715,
+   "isFinal": true
+  },
+  {
+   "text": "Nous nous félicitons également de cette opportunité.",
+   "audioTimeMs": 174680.01,
+   "emitMs": 175304,
+   "isFinal": true
+  },
+  {
+   "text": "réviser les points de référence",
+   "audioTimeMs": 176220,
+   "emitMs": 176810,
+   "isFinal": true
+  },
+  {
+   "text": "pour refléter les réalités actuelles",
+   "audioTimeMs": 177930.01,
+   "emitMs": 178607,
+   "isFinal": true
+  },
+  {
+   "text": "et j'attends avec intérêt les recommandations",
+   "audioTimeMs": 180230,
+   "emitMs": 180821,
+   "isFinal": true
+  },
+  {
+   "text": "sur la meilleure façon de procéder",
+   "audioTimeMs": 181790,
+   "emitMs": 182410,
+   "isFinal": true
+  },
+  {
+   "text": "du secrétaire général en consultation",
+   "audioTimeMs": 184440,
+   "emitMs": 185202,
+   "isFinal": true
+  },
+  {
+   "text": "avec la mission de l'ONU au Soudan du Sud.",
+   "audioTimeMs": 187000,
+   "emitMs": 187515,
+   "isFinal": true
+  },
+  {
+   "text": "Et le panel d'experts.",
+   "audioTimeMs": 188480,
+   "emitMs": 189408,
+   "isFinal": true
+  },
+  {
+   "text": "Nous sommes toutefois déçus,",
+   "audioTimeMs": 190650.01,
+   "emitMs": 191320,
+   "isFinal": true
+  },
+  {
+   "text": "par le manque de progrès",
+   "audioTimeMs": 192180,
+   "emitMs": 192809,
+   "isFinal": true
+  },
+  {
+   "text": "sur les points de référence",
+   "audioTimeMs": 193270,
+   "emitMs": 193914,
+   "isFinal": true
+  },
+  {
+   "text": "et la détérioration continue",
+   "audioTimeMs": 195760.00999999998,
+   "emitMs": 196417,
+   "isFinal": true
+  },
+  {
+   "text": "du politique",
+   "audioTimeMs": 196790.01,
+   "emitMs": 197401,
+   "isFinal": true
+  },
+  {
+   "text": "et situation sécuritaire",
+   "audioTimeMs": 198530,
+   "emitMs": 199302,
+   "isFinal": true
+  },
+  {
+   "text": "Soudan du Sud.",
+   "audioTimeMs": 199720,
+   "emitMs": 200203,
+   "isFinal": true
+  },
+  {
+   "text": "Soyons clairs.",
+   "audioTimeMs": 201290.01,
+   "emitMs": 201815,
+   "isFinal": true
+  },
+  {
+   "text": "Ce manque de progrès est dû à un manque de richesse politique",
+   "audioTimeMs": 205080,
+   "emitMs": 205613,
+   "isFinal": true
+  },
+  {
+   "text": "par le président Kirk,",
+   "audioTimeMs": 206450,
+   "emitMs": 207008,
+   "isFinal": true
+  },
+  {
+   "text": "ainsi que d'autres",
+   "audioTimeMs": 207720,
+   "emitMs": 208309,
+   "isFinal": true
+  },
+  {
+   "text": "Les dirigeants du Sud-Soudan.",
+   "audioTimeMs": 209230,
+   "emitMs": 209909,
+   "isFinal": true
+  },
+  {
+   "text": "Les dirigeants du Soudan du Sud doivent renouer avec le dialogue direct.",
+   "audioTimeMs": 213960,
+   "emitMs": 214606,
+   "isFinal": true
+  },
+  {
+   "text": "désamorcer la situation",
+   "audioTimeMs": 215400,
+   "emitMs": 215903,
+   "isFinal": true
+  },
+  {
+   "text": "la violence actuelle.",
+   "audioTimeMs": 216599.99,
+   "emitMs": 217408,
+   "isFinal": true
+  },
+  {
+   "text": "C'est une farce.",
+   "audioTimeMs": 218360,
+   "emitMs": 218906,
+   "isFinal": true
+  },
+  {
+   "text": "suggérer qu'un tel dialogue a lieu alors que l'un des signataires de l'accord de paix de 2018",
+   "audioTimeMs": 224780,
+   "emitMs": 225608,
+   "isFinal": true
+  },
+  {
+   "text": "est assigné à résidence",
+   "audioTimeMs": 226510,
+   "emitMs": 227107,
+   "isFinal": true
+  },
+  {
+   "text": "et en procès.",
+   "audioTimeMs": 227590.01,
+   "emitMs": 228603,
+   "isFinal": true
+  },
+  {
+   "text": "Le conseil ne peut accepter l'obstruction du processus de paix",
+   "audioTimeMs": 232160,
+   "emitMs": 232632,
+   "isFinal": true
+  },
+  {
+   "text": "ou des actions qui menacent",
+   "audioTimeMs": 233690,
+   "emitMs": 234127,
+   "isFinal": true
+  },
+  {
+   "text": "des accords de transition ou saper le processus politique au Soudan du Sud.",
+   "audioTimeMs": 237940,
+   "emitMs": 238338,
+   "isFinal": true
+  },
+  {
+   "text": "Nous exhortons donc le gouvernement de transition à prendre toutes les mesures nécessaires au rétablissement de la paix.",
+   "audioTimeMs": 244690,
+   "emitMs": 245135,
+   "isFinal": true
+  },
+  {
+   "text": "y compris la déclaration d'un cessez-le-feu national",
+   "audioTimeMs": 247630,
+   "emitMs": 248132,
+   "isFinal": true
+  },
+  {
+   "text": "libérer les détenus,",
+   "audioTimeMs": 249420,
+   "emitMs": 249937,
+   "isFinal": true
+  },
+  {
+   "text": "renoncer à l'usage de la violence à des fins politiques,",
+   "audioTimeMs": 252460,
+   "emitMs": 254939,
+   "isFinal": true
+  },
+  {
+   "text": "et commencer à utiliser les recettes publiques de manière appropriée",
+   "audioTimeMs": 255840.01,
+   "emitMs": 256528,
+   "isFinal": true
+  },
+  {
+   "text": "pour soutenir les citoyens du Soudan du Sud.",
+   "audioTimeMs": 258399.99999999997,
+   "emitMs": 258829,
+   "isFinal": true
+  },
+  {
+   "text": "Pendant des années avant l'indépendance du Soudan du Sud,",
+   "audioTimeMs": 262550.02,
+   "emitMs": 262936,
+   "isFinal": true
+  },
+  {
+   "text": "Le mouvement de libération du peuple soudanais prétendait vouloir mettre fin à la marginalisation.",
+   "audioTimeMs": 266940,
+   "emitMs": 267842,
+   "isFinal": true
+  },
+  {
+   "text": "des Sud-Soudanais par les dirigeants à Khartoum.",
+   "audioTimeMs": 270120,
+   "emitMs": 270535,
+   "isFinal": true
+  },
+  {
+   "text": "En raison d'une mauvaise gouvernance et d'un détournement des recettes,",
+   "audioTimeMs": 273259.98,
+   "emitMs": 273734,
+   "isFinal": true
+  },
+  {
+   "text": "Cette marginalisation persiste.",
+   "audioTimeMs": 275470,
+   "emitMs": 276033,
+   "isFinal": true
+  },
+  {
+   "text": "Imposée par les propres dirigeants du Soudan du Sud.",
+   "audioTimeMs": 278310,
+   "emitMs": 278831,
+   "isFinal": true
+  },
+  {
+   "text": "Merci.",
+   "audioTimeMs": 279560,
+   "emitMs": 280032,
+   "isFinal": true
+  },
+  {
+   "text": "Monsieur le président, j'ai l'honneur de présenter cette explication de vote au nom des",
+   "audioTimeMs": 298330,
+   "emitMs": 299070,
+   "isFinal": true
+  },
+  {
+   "text": "à savoir",
+   "audioTimeMs": 299510,
+   "emitMs": 300071,
+   "isFinal": true
+  },
+  {
+   "text": "le libéral, la Somalie et mon propre pays la République démocratique du Congo.",
+   "audioTimeMs": 304060,
+   "emitMs": 304380,
+   "isFinal": true
+  },
+  {
+   "text": "Les A trois se sont abstenus lors du vote sur la",
+   "audioTimeMs": 307990.02,
+   "emitMs": 309379,
+   "isFinal": true
+  },
+  {
+   "text": "renouvelant",
+   "audioTimeMs": 309210,
+   "emitMs": 309575,
+   "isFinal": true
+  },
+  {
+   "text": "le régime des sanctions à l'encontre du Soudan du Sud.",
+   "audioTimeMs": 312130,
+   "emitMs": 312485,
+   "isFinal": true
+  },
+  {
+   "text": "Notre position reflète des préoccupations de principes",
+   "audioTimeMs": 315900,
+   "emitMs": 316175,
+   "isFinal": true
+  },
+  {
+   "text": "de longue date concernant l'efficacité du régime de sanctions",
+   "audioTimeMs": 319840,
+   "emitMs": 320273,
+   "isFinal": true
+  },
+  {
+   "text": "actuel et le recours continu à des mesures restrictives",
+   "audioTimeMs": 323570,
+   "emitMs": 323873,
+   "isFinal": true
+  },
+  {
+   "text": "comme principal outil pour faire face",
+   "audioTimeMs": 326360,
+   "emitMs": 326791,
+   "isFinal": true
+  },
+  {
+   "text": "à la situation au Soudan du Sud.",
+   "audioTimeMs": 328510,
+   "emitMs": 328770,
+   "isFinal": true
+  },
+  {
+   "text": "Bien que le régime des sanctions soit en place depuis plusieurs années,",
+   "audioTimeMs": 333240.02,
+   "emitMs": 333674,
+   "isFinal": true
+  },
+  {
+   "text": "la situation politique et sécuritaire du pays continue de faire face",
+   "audioTimeMs": 337270.01999999996,
+   "emitMs": 337676,
+   "isFinal": true
+  },
+  {
+   "text": "à de graves défis.",
+   "audioTimeMs": 338630,
+   "emitMs": 338978,
+   "isFinal": true
+  },
+  {
+   "text": "Cela remet en question la mesure dans laquelle",
+   "audioTimeMs": 342120,
+   "emitMs": 342472,
+   "isFinal": true
+  },
+  {
+   "text": "les mesures actuelles contribuent",
+   "audioTimeMs": 345270,
+   "emitMs": 345566,
+   "isFinal": true
+  },
+  {
+   "text": "efficacement à une paix durable,",
+   "audioTimeMs": 347630,
+   "emitMs": 348091,
+   "isFinal": true
+  },
+  {
+   "text": "à la stabilisation et au renforcement des institutions nationales",
+   "audioTimeMs": 351310,
+   "emitMs": 351696,
+   "isFinal": true
+  },
+  {
+   "text": "au Soudan du sud.",
+   "audioTimeMs": 352650,
+   "emitMs": 352895,
+   "isFinal": true
+  },
+  {
+   "text": "Les A trois demeurent préoccupés",
+   "audioTimeMs": 355190,
+   "emitMs": 355596,
+   "isFinal": true
+  },
+  {
+   "text": "par les implications plus larges des régimes de sanctions",
+   "audioTimeMs": 358340,
+   "emitMs": 359003,
+   "isFinal": true
+  },
+  {
+   "text": "dans le contexte spécifique du Soudan du Sud.",
+   "audioTimeMs": 361069.98,
+   "emitMs": 361295,
+   "isFinal": true
+  },
+  {
+   "text": "Réaffirmons donc la nécessité d'un réexamen en temps opportun des mesures actuelles",
+   "audioTimeMs": 367669.98,
+   "emitMs": 367995,
+   "isFinal": true
+  },
+  {
+   "text": "y compris l'embargo sur les armes,",
+   "audioTimeMs": 370090,
+   "emitMs": 370397,
+   "isFinal": true
+  },
+  {
+   "text": "afin de garantir que le régime des sanctions soutienne",
+   "audioTimeMs": 373320,
+   "emitMs": 373799,
+   "isFinal": true
+  },
+  {
+   "text": "plutôt qu'il n'effreine",
+   "audioTimeMs": 375120,
+   "emitMs": 375494,
+   "isFinal": true
+  },
+  {
+   "text": "les efforts menés",
+   "audioTimeMs": 376560,
+   "emitMs": 376894,
+   "isFinal": true
+  },
+  {
+   "text": "au niveau national",
+   "audioTimeMs": 377669.98,
+   "emitMs": 378113,
+   "isFinal": true
+  },
+  {
+   "text": "en faveur de la consolidation de la paix",
+   "audioTimeMs": 380080.02,
+   "emitMs": 380499,
+   "isFinal": true
+  },
+  {
+   "text": "de la réconciliation",
+   "audioTimeMs": 381750,
+   "emitMs": 382193,
+   "isFinal": true
+  },
+  {
+   "text": "du développement institutionnel",
+   "audioTimeMs": 383080.02,
+   "emitMs": 384197,
+   "isFinal": true
+  },
+  {
+   "text": "et de la mise en oeuvre de l'accord revitalisé.",
+   "audioTimeMs": 386560,
+   "emitMs": 386899,
+   "isFinal": true
+  },
+  {
+   "text": "Nous sommes particulièrement conscients",
+   "audioTimeMs": 389580.02,
+   "emitMs": 390100,
+   "isFinal": true
+  },
+  {
+   "text": "des défis posés par l'embargo",
+   "audioTimeMs": 391909.97,
+   "emitMs": 392402,
+   "isFinal": true
+  },
+  {
+   "text": "sur les armes et dans le contexte de la mise en oeuvre.",
+   "audioTimeMs": 394690,
+   "emitMs": 395111,
+   "isFinal": true
+  },
+  {
+   "text": "Des arrangements de sécurité transitoires",
+   "audioTimeMs": 397690,
+   "emitMs": 398205,
+   "isFinal": true
+  },
+  {
+   "text": "et de l'unification",
+   "audioTimeMs": 399120.02999999997,
+   "emitMs": 399799,
+   "isFinal": true
+  },
+  {
+   "text": "du déploiement",
+   "audioTimeMs": 400390,
+   "emitMs": 400803,
+   "isFinal": true
+  },
+  {
+   "text": "des forces unifiées",
+   "audioTimeMs": 402669.98,
+   "emitMs": 403204,
+   "isFinal": true
+  },
+  {
+   "text": "nécessaires",
+   "audioTimeMs": 403630,
+   "emitMs": 404193,
+   "isFinal": true
+  },
+  {
+   "text": "qui reste fondamentale pour faire avancer",
+   "audioTimeMs": 406530,
+   "emitMs": 407094,
+   "isFinal": true
+  },
+  {
+   "text": "le processus de paix",
+   "audioTimeMs": 408180,
+   "emitMs": 408597,
+   "isFinal": true
+  },
+  {
+   "text": "et renforcer la capacité du pays à relever",
+   "audioTimeMs": 410840,
+   "emitMs": 411398,
+   "isFinal": true
+  },
+  {
+   "text": "ces défis en matière de sécurité.",
+   "audioTimeMs": 413060.02999999997,
+   "emitMs": 413503,
+   "isFinal": true
+  },
+  {
+   "text": "Monsieur le président,",
+   "audioTimeMs": 414639.98,
+   "emitMs": 415298,
+   "isFinal": true
+  },
+  {
+   "text": "la position de l'Union africaine sur le Soudan Du Sud a toujours appelé à la levée progressive.",
+   "audioTimeMs": 420540,
+   "emitMs": 421007,
+   "isFinal": true
+  },
+  {
+   "text": "Du régime des sanctions",
+   "audioTimeMs": 422139.98,
+   "emitMs": 422599,
+   "isFinal": true
+  },
+  {
+   "text": "y compris de l'embargo sur les armes,",
+   "audioTimeMs": 424439.97000000003,
+   "emitMs": 424909,
+   "isFinal": true
+  },
+  {
+   "text": "afin de soutenir",
+   "audioTimeMs": 425870.02999999997,
+   "emitMs": 426401,
+   "isFinal": true
+  },
+  {
+   "text": "la mise en oeuvre de l'accord revitalisé",
+   "audioTimeMs": 428419.98,
+   "emitMs": 428911,
+   "isFinal": true
+  },
+  {
+   "text": "et de renforcer la capacité des institutions nationales",
+   "audioTimeMs": 431700,
+   "emitMs": 432205,
+   "isFinal": true
+  },
+  {
+   "text": "à relever plus efficacement les défis de sécurité du pays. À cet égard, les A trois estiment que, le Conseil devrait s'orienter progressivement",
+   "audioTimeMs": 440889.98,
+   "emitMs": 441503,
+   "isFinal": true
+  },
+  {
+   "text": "vers une approche plus favorable",
+   "audioTimeMs": 443560,
+   "emitMs": 444201,
+   "isFinal": true
+  },
+  {
+   "text": "et plus propice",
+   "audioTimeMs": 444940,
+   "emitMs": 445495,
+   "isFinal": true
+  },
+  {
+   "text": "qui renforce les efforts des mises en oeuvre",
+   "audioTimeMs": 447440,
+   "emitMs": 447799,
+   "isFinal": true
+  },
+  {
+   "text": "et l'engagement politique",
+   "audioTimeMs": 448980,
+   "emitMs": 449401,
+   "isFinal": true
+  },
+  {
+   "text": "plutôt que de continuer",
+   "audioTimeMs": 451010,
+   "emitMs": 451595,
+   "isFinal": true
+  },
+  {
+   "text": "à s'appuyer sur des mesures restrictives",
+   "audioTimeMs": 453460,
+   "emitMs": 453999,
+   "isFinal": true
+  },
+  {
+   "text": "qui sont en place depuis de nombreuses années,",
+   "audioTimeMs": 456020.01999999996,
+   "emitMs": 456603,
+   "isFinal": true
+  },
+  {
+   "text": "sans produire les résultats escomptés.",
+   "audioTimeMs": 458320,
+   "emitMs": 458704,
+   "isFinal": true
+  },
+  {
+   "text": "Nous restons déterminés à coopérer de manière",
+   "audioTimeMs": 461060.02999999997,
+   "emitMs": 461605,
+   "isFinal": true
+  },
+  {
+   "text": "constructive avec tous les membres du Conseil",
+   "audioTimeMs": 463680,
+   "emitMs": 464109,
+   "isFinal": true
+  },
+  {
+   "text": "les parties prenantes régionales",
+   "audioTimeMs": 465800,
+   "emitMs": 466303,
+   "isFinal": true
+  },
+  {
+   "text": "afin de soutenir une paix durable",
+   "audioTimeMs": 468250,
+   "emitMs": 468804,
+   "isFinal": true
+  },
+  {
+   "text": "la stabilité",
+   "audioTimeMs": 469550,
+   "emitMs": 470694,
+   "isFinal": true
+  },
+  {
+   "text": "et des progrès politiques durables",
+   "audioTimeMs": 472000,
+   "emitMs": 472891,
+   "isFinal": true
+  },
+  {
+   "text": "Au Soudan Du Sud. Je vous remercie.",
+   "audioTimeMs": 474130,
+   "emitMs": 475096,
+   "isFinal": true
+  },
+  {
+   "text": "Monsieur le Président, puisque nous espérons que cette séance publique du Conseil de sécurité est la dernière de ce mois-ci sous votre présidence, je tiens à remercier la délégation chinoise pour son professionnalisme et sa présidence réussie en mai. Je souhaite également bonne chance à la Colombie le mois prochain. Monsieur le Président, la Fédération de Russie s'est abstenue lors du vote sur la résolution du Conseil de sécurité, présentée par les États-Unis, visant à prolonger d'un an le régime applicable à la République du Soudan du Sud.",
+   "audioTimeMs": 518950.00000000006,
+   "emitMs": 519806,
+   "isFinal": true
+  },
+  {
+   "text": "Nous notons que cette année, les auteurs ont préféré se limiter au texte.",
+   "audioTimeMs": 523959.96,
+   "emitMs": 524810,
+   "isFinal": true
+  },
+  {
+   "text": "ce qui implique en réalité une extension technique des restrictions,",
+   "audioTimeMs": 527890,
+   "emitMs": 529810,
+   "isFinal": true
+  },
+  {
+   "text": "et n'a pas suivi l'exemple des délégations individuelles",
+   "audioTimeMs": 530750,
+   "emitMs": 531597,
+   "isFinal": true
+  },
+  {
+   "text": "proposé d'enrichir le document de nouvelles formulations",
+   "audioTimeMs": 534589.97,
+   "emitMs": 536604,
+   "isFinal": true
+  },
+  {
+   "text": "dans une tentative infondée d'accroître la pression sur les Sud-Soudanais.",
+   "audioTimeMs": 538620,
+   "emitMs": 539309,
+   "isFinal": true
+  },
+  {
+   "text": "Parallèlement, la Russie ne pouvait pas soutenir le projet.",
+   "audioTimeMs": 542920,
+   "emitMs": 544308,
+   "isFinal": true
+  },
+  {
+   "text": "Malgré les critiques adressées au gouvernement sud-soudanais, ce dernier reste submergé d'analyses de la situation politique. Nous sommes particulièrement insatisfaits du lien direct établi entre l'embargo sur les armes et les processus internes du pays, à travers le prisme de la violence politique. Le refus de reconnaître officiellement le gouvernement légitime à Juba est également préoccupant. Nous sommes convaincus que les Sud-Soudanais sont capables de trouver par eux-mêmes des solutions à l'instabilité interne actuelle et de définir les modalités de mise en œuvre de l'accord de paix actualisé. À ce stade crucial pour le pays, marqué notamment par les élections prévues en décembre, la question de la stabilisation et du maintien de l'ordre public est primordiale. Pour ce faire, le gouvernement et ses forces de sécurité doivent disposer de tous les moyens nécessaires, y compris des capacités techniques et un personnel qualifié. La formation d'une armée unifiée est encore loin d'être acquise.",
+   "audioTimeMs": 607029.9700000001,
+   "emitMs": 607965,
+   "isFinal": true
+  },
+  {
+   "text": "et la police nationale est tenue de remplir ce rôle.",
+   "audioTimeMs": 610730.04,
+   "emitMs": 611604,
+   "isFinal": true
+  },
+  {
+   "text": "Toutefois, les sanctions imposées par le Conseil de sécurité à la Cour du Sud",
+   "audioTimeMs": 615220.0299999999,
+   "emitMs": 615999,
+   "isFinal": true
+  },
+  {
+   "text": "représente une limitation sérieuse dans ce sens.",
+   "audioTimeMs": 618910.03,
+   "emitMs": 619800,
+   "isFinal": true
+  },
+  {
+   "text": "À cause d'eux, Juba est privée de la possibilité d'acheter",
+   "audioTimeMs": 623180,
+   "emitMs": 624702,
+   "isFinal": true
+  },
+  {
+   "text": "même une nomenclature aussi simple que celle d'un uniforme militaire.",
+   "audioTimeMs": 625970,
+   "emitMs": 626807,
+   "isFinal": true
+  },
+  {
+   "text": "Il convient également de rappeler que les sanctions entravent le développement économique du pays. Elles dissuadent les investisseurs étrangers de s'engager auprès des Sud-Soudanais. Nous estimons insuffisantes les exemptions ciblées prévues par la résolution adoptée. Bien sûr, il est prématuré d'envisager une levée immédiate du régime du Conseil de sécurité de 2020. Toutefois, un assouplissement plus substantiel est attendu depuis trop longtemps. La Russie a toujours plaidé, et continuera de plaider, en faveur d'un allègement des restrictions imposées au Soudan du Sud. Cette position est pleinement conforme à la politique panafricaine de démantèlement progressif du Conseil de sécurité sur le continent, politique que nos partenaires occidentaux ignorent cyniquement année après année.",
+   "audioTimeMs": 671850,
+   "emitMs": 675749,
+   "isFinal": true
+  }
+ ]
+}

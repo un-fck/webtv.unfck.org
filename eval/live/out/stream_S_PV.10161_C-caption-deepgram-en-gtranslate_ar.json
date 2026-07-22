@@ -1,0 +1,1494 @@
+{
+ "provider": "C-caption-deepgram-en-gtranslate",
+ "targetLanguage": "ar",
+ "events": [
+  {
+   "text": "شكرًا لك.",
+   "audioTimeMs": 157260,
+   "emitMs": 158051,
+   "isFinal": true
+  },
+  {
+   "text": "ترحب الولايات المتحدة بالتجديد",
+   "audioTimeMs": 160450,
+   "emitMs": 161053,
+   "isFinal": true
+  },
+  {
+   "text": "فيما يتعلق بنظام العقوبات المفروضة على جنوب السودان، بما في ذلك تمديد اللجنة",
+   "audioTimeMs": 164820,
+   "emitMs": 166087,
+   "isFinal": true
+  },
+  {
+   "text": "تفويض الخبراء",
+   "audioTimeMs": 165930.01,
+   "emitMs": 166571,
+   "isFinal": true
+  },
+  {
+   "text": "وتجديد حظر الأسلحة",
+   "audioTimeMs": 167989.99000000002,
+   "emitMs": 168569,
+   "isFinal": true
+  },
+  {
+   "text": "حظر السفر",
+   "audioTimeMs": 168890,
+   "emitMs": 169674,
+   "isFinal": true
+  },
+  {
+   "text": "وتدابير تجميد الأصول لمدة اثني عشر شهراً إضافية.",
+   "audioTimeMs": 172070,
+   "emitMs": 172782,
+   "isFinal": true
+  },
+  {
+   "text": "كما نرحب بهذه الفرصة",
+   "audioTimeMs": 174680.01,
+   "emitMs": 175363,
+   "isFinal": true
+  },
+  {
+   "text": "مراجعة المعايير",
+   "audioTimeMs": 176220,
+   "emitMs": 176870,
+   "isFinal": true
+  },
+  {
+   "text": "ليعكس الواقع الحالي",
+   "audioTimeMs": 177850,
+   "emitMs": 178654,
+   "isFinal": true
+  },
+  {
+   "text": "ونتطلع إلى التوصيات",
+   "audioTimeMs": 179989.99000000002,
+   "emitMs": 180866,
+   "isFinal": true
+  },
+  {
+   "text": "حول أفضل السبل للقيام بذلك",
+   "audioTimeMs": 181790,
+   "emitMs": 182450,
+   "isFinal": true
+  },
+  {
+   "text": "من الأمين العام بالتشاور",
+   "audioTimeMs": 184440,
+   "emitMs": 185266,
+   "isFinal": true
+  },
+  {
+   "text": "مع بعثة الأمم المتحدة في جنوب السودان وفريق الخبراء.",
+   "audioTimeMs": 188400,
+   "emitMs": 189478,
+   "isFinal": true
+  },
+  {
+   "text": "لكننا نشعر بخيبة أمل.",
+   "audioTimeMs": 190730,
+   "emitMs": 191380,
+   "isFinal": true
+  },
+  {
+   "text": "بسبب انعدام التقدم",
+   "audioTimeMs": 192099.99,
+   "emitMs": 192858,
+   "isFinal": true
+  },
+  {
+   "text": "على المعايير",
+   "audioTimeMs": 193190,
+   "emitMs": 193916,
+   "isFinal": true
+  },
+  {
+   "text": "والتدهور المستمر",
+   "audioTimeMs": 195600,
+   "emitMs": 196434,
+   "isFinal": true
+  },
+  {
+   "text": "من السياسة",
+   "audioTimeMs": 196790.01,
+   "emitMs": 197420,
+   "isFinal": true
+  },
+  {
+   "text": "والوضع الأمني",
+   "audioTimeMs": 198530,
+   "emitMs": 199320,
+   "isFinal": true
+  },
+  {
+   "text": "جنوب السودان.",
+   "audioTimeMs": 199640,
+   "emitMs": 200224,
+   "isFinal": true
+  },
+  {
+   "text": "لنكن واضحين.",
+   "audioTimeMs": 201290.01,
+   "emitMs": 201832,
+   "isFinal": true
+  },
+  {
+   "text": "ويعود هذا التخلف في التقدم إلى نقص الموارد السياسية.",
+   "audioTimeMs": 205080,
+   "emitMs": 205644,
+   "isFinal": true
+  },
+  {
+   "text": "بقلم الرئيس كير،",
+   "audioTimeMs": 206370,
+   "emitMs": 207026,
+   "isFinal": true
+  },
+  {
+   "text": "بالإضافة إلى غيرها",
+   "audioTimeMs": 207640,
+   "emitMs": 208320,
+   "isFinal": true
+  },
+  {
+   "text": "قادة جنوب السودان.",
+   "audioTimeMs": 209230,
+   "emitMs": 209914,
+   "isFinal": true
+  },
+  {
+   "text": "يجب على قادة جنوب السودان العودة إلى الحوار المباشر",
+   "audioTimeMs": 213960,
+   "emitMs": 214628,
+   "isFinal": true
+  },
+  {
+   "text": "لتهدئة الوضع",
+   "audioTimeMs": 215319.99,
+   "emitMs": 215922,
+   "isFinal": true
+  },
+  {
+   "text": "العنف الحالي.",
+   "audioTimeMs": 216599.99,
+   "emitMs": 217497,
+   "isFinal": true
+  },
+  {
+   "text": "إنه أمر مثير للسخرية",
+   "audioTimeMs": 218360,
+   "emitMs": 218928,
+   "isFinal": true
+  },
+  {
+   "text": "أن يوحي بأن مثل هذا الحوار يجري في حين أن أحد الموقعين على اتفاقية السلام لعام 2018",
+   "audioTimeMs": 224780,
+   "emitMs": 225623,
+   "isFinal": true
+  },
+  {
+   "text": "يخضع للإقامة الجبرية",
+   "audioTimeMs": 226510,
+   "emitMs": 227198,
+   "isFinal": true
+  },
+  {
+   "text": "ويخضع للمحاكمة.",
+   "audioTimeMs": 227590.01,
+   "emitMs": 228636,
+   "isFinal": true
+  },
+  {
+   "text": "لا يمكن للمجلس أن يقبل عرقلة عملية السلام",
+   "audioTimeMs": 232080,
+   "emitMs": 232786,
+   "isFinal": true
+  },
+  {
+   "text": "أو أفعال تهدد",
+   "audioTimeMs": 233690,
+   "emitMs": 234270,
+   "isFinal": true
+  },
+  {
+   "text": "الاتفاقات الانتقالية أو تقويض العملية السياسية في جنوب السودان.",
+   "audioTimeMs": 237940,
+   "emitMs": 238493,
+   "isFinal": true
+  },
+  {
+   "text": "لذا نحث الحكومة الانتقالية على اتخاذ جميع الخطوات اللازمة لاستعادة السلام",
+   "audioTimeMs": 244610,
+   "emitMs": 245273,
+   "isFinal": true
+  },
+  {
+   "text": "بما في ذلك إعلان وقف إطلاق النار على مستوى البلاد،",
+   "audioTimeMs": 247630,
+   "emitMs": 248290,
+   "isFinal": true
+  },
+  {
+   "text": "إطلاق سراح المحتجزين",
+   "audioTimeMs": 249420,
+   "emitMs": 250084,
+   "isFinal": true
+  },
+  {
+   "text": "نبذ استخدام العنف لأغراض سياسية،",
+   "audioTimeMs": 252460,
+   "emitMs": 255091,
+   "isFinal": true
+  },
+  {
+   "text": "والبدء في استخدام الإيرادات العامة بشكل مناسب",
+   "audioTimeMs": 255760.00999999998,
+   "emitMs": 256672,
+   "isFinal": true
+  },
+  {
+   "text": "لدعم مواطني جنوب السودان.",
+   "audioTimeMs": 258399.99999999997,
+   "emitMs": 258987,
+   "isFinal": true
+  },
+  {
+   "text": "لسنوات قبل استقلال جنوب السودان،",
+   "audioTimeMs": 262470,
+   "emitMs": 263091,
+   "isFinal": true
+  },
+  {
+   "text": "زعمت الحركة الشعبية لتحرير السودان أنها تسعى إلى إنهاء التهميش",
+   "audioTimeMs": 266940,
+   "emitMs": 267992,
+   "isFinal": true
+  },
+  {
+   "text": "من جانب قادة جنوب السودان في الخرطوم.",
+   "audioTimeMs": 270199.98,
+   "emitMs": 270690,
+   "isFinal": true
+  },
+  {
+   "text": "من خلال سوء الإدارة وإساءة استخدام الإيرادات،",
+   "audioTimeMs": 273259.98,
+   "emitMs": 273900,
+   "isFinal": true
+  },
+  {
+   "text": "يستمر هذا التهميش.",
+   "audioTimeMs": 275470,
+   "emitMs": 276194,
+   "isFinal": true
+  },
+  {
+   "text": "فرضها قادة جنوب السودان أنفسهم.",
+   "audioTimeMs": 278310,
+   "emitMs": 278974,
+   "isFinal": true
+  },
+  {
+   "text": "شكرًا لك.",
+   "audioTimeMs": 279560,
+   "emitMs": 280191,
+   "isFinal": true
+  },
+  {
+   "text": "الذي - التي",
+   "audioTimeMs": 320550,
+   "emitMs": 320784,
+   "isFinal": true
+  },
+  {
+   "text": "مبدأ المقارنة، وهو ما يفضل السرعة.",
+   "audioTimeMs": 326440,
+   "emitMs": 327020,
+   "isFinal": true
+  },
+  {
+   "text": "ال",
+   "audioTimeMs": 362970,
+   "emitMs": 365481,
+   "isFinal": true
+  },
+  {
+   "text": "شعر سودانير بالإهانة",
+   "audioTimeMs": 426340,
+   "emitMs": 428991,
+   "isFinal": true
+  },
+  {
+   "text": "شكراً جزيلاً لك، سيدي الرئيس.",
+   "audioTimeMs": 707339.97,
+   "emitMs": 707996,
+   "isFinal": true
+  },
+  {
+   "text": "نص القرار المتعلق بنظام العقوبات في جنوب السودان هو نسخة فنية من القرار الصادر العام الماضي.",
+   "audioTimeMs": 713700,
+   "emitMs": 714220,
+   "isFinal": true
+  },
+  {
+   "text": "امتنعت باكستان عن التصويت على القرار في العام الماضي.",
+   "audioTimeMs": 717230,
+   "emitMs": 717814,
+   "isFinal": true
+  },
+  {
+   "text": "إن تمديدنا اليوم يتماشى مع هذا الموقف.",
+   "audioTimeMs": 720910,
+   "emitMs": 721598,
+   "isFinal": true
+  },
+  {
+   "text": "لا تزال باكستان ملتزمة بتحقيق السلام والاستقرار الدائمين في جنوب السودان.",
+   "audioTimeMs": 725930,
+   "emitMs": 726419,
+   "isFinal": true
+  },
+  {
+   "text": "نواصل دعم الاتفاقية المُجددة",
+   "audioTimeMs": 729120,
+   "emitMs": 729810,
+   "isFinal": true
+  },
+  {
+   "text": "باعتبارها الإطار الوحيد القابل للتطبيق والمتفق عليه لتحقيق السلام.",
+   "audioTimeMs": 732200,
+   "emitMs": 732712,
+   "isFinal": true
+  },
+  {
+   "text": "نعتقد",
+   "audioTimeMs": 733270,
+   "emitMs": 733900,
+   "isFinal": true
+  },
+  {
+   "text": "إن العقوبات أداة مهمة في متناول مجلس الأمن.",
+   "audioTimeMs": 737430.05,
+   "emitMs": 738016,
+   "isFinal": true
+  },
+  {
+   "text": "لكن ينبغي استخدامها بحكمة.",
+   "audioTimeMs": 740040.0399999999,
+   "emitMs": 740615,
+   "isFinal": true
+  },
+  {
+   "text": "تتم مراجعتها دورياً،",
+   "audioTimeMs": 741660,
+   "emitMs": 742297,
+   "isFinal": true
+  },
+  {
+   "text": "ولا ينبغي أن تصبح مفتوحة النهاية",
+   "audioTimeMs": 743790.0399999999,
+   "emitMs": 744363,
+   "isFinal": true
+  },
+  {
+   "text": "أو ذات طبيعة عقابية.",
+   "audioTimeMs": 745029.9700000001,
+   "emitMs": 745765,
+   "isFinal": true
+  },
+  {
+   "text": "ينبغي أن يكون هدفهم دعم الحلول السياسية وجهود تحقيق الاستقرار.",
+   "audioTimeMs": 749990,
+   "emitMs": 750774,
+   "isFinal": true
+  },
+  {
+   "text": "ونشير أيضاً إلى موقف الاتحاد الأفريقي المعارض",
+   "audioTimeMs": 753190,
+   "emitMs": 755747,
+   "isFinal": true
+  },
+  {
+   "text": "استمرار العقوبات المفروضة على جنوب السودان.",
+   "audioTimeMs": 755250,
+   "emitMs": 756057,
+   "isFinal": true
+  },
+  {
+   "text": "تدهور الوضع السياسي والأمني ​​على أرض الواقع",
+   "audioTimeMs": 759380,
+   "emitMs": 759974,
+   "isFinal": true
+  },
+  {
+   "text": "يثير هذا الأمر تساؤلات مهمة بشأن فعالية نظام العقوبات الحالي.",
+   "audioTimeMs": 763730,
+   "emitMs": 764362,
+   "isFinal": true
+  },
+  {
+   "text": "على الرغم من سنوات من القيود،",
+   "audioTimeMs": 765740.05,
+   "emitMs": 766557,
+   "isFinal": true
+  },
+  {
+   "text": "لا يزال عدم الاستقرار قائماً، وتطبيق",
+   "audioTimeMs": 769090,
+   "emitMs": 771567,
+   "isFinal": true
+  },
+  {
+   "text": "لا تزال الترتيبات الانتقالية الرئيسية غير مكتملة.",
+   "audioTimeMs": 771710,
+   "emitMs": 772559,
+   "isFinal": true
+  },
+  {
+   "text": "سيتم تطوير قطعة دائمة في جنوب السودان",
+   "audioTimeMs": 774839.97,
+   "emitMs": 775453,
+   "isFinal": true
+  },
+  {
+   "text": "من خلال المشاركة السياسية المستمرة،",
+   "audioTimeMs": 777030,
+   "emitMs": 777760,
+   "isFinal": true
+  },
+  {
+   "text": "تنفيذ الاتفاقية المُجددة،",
+   "audioTimeMs": 779790.0399999999,
+   "emitMs": 780490,
+   "isFinal": true
+  },
+  {
+   "text": "ودعم الجهود الإقليمية التي يقودها الاتحاد الأفريقي،",
+   "audioTimeMs": 783360,
+   "emitMs": 783959,
+   "isFinal": true
+  },
+  {
+   "text": "و إيغاد.",
+   "audioTimeMs": 784350,
+   "emitMs": 785162,
+   "isFinal": true
+  },
+  {
+   "text": "سنواصل التعاون بشكل بنّاء مع جميع الشركاء",
+   "audioTimeMs": 787759.95,
+   "emitMs": 788471,
+   "isFinal": true
+  },
+  {
+   "text": "دعماً للسلام الدائم",
+   "audioTimeMs": 790060,
+   "emitMs": 790494,
+   "isFinal": true
+  },
+  {
+   "text": "والاستقرار",
+   "audioTimeMs": 791170,
+   "emitMs": 791692,
+   "isFinal": true
+  },
+  {
+   "text": "في جنوب السودان.",
+   "audioTimeMs": 792290,
+   "emitMs": 792806,
+   "isFinal": true
+  },
+  {
+   "text": "وأخيراً، سيدي الرئيس،",
+   "audioTimeMs": 794100,
+   "emitMs": 794915,
+   "isFinal": true
+  },
+  {
+   "text": "اسمحوا لي أن أختتم بتهنئة لكم على حسن سيركم ونجاحكم.",
+   "audioTimeMs": 798990,
+   "emitMs": 799919,
+   "isFinal": true
+  },
+  {
+   "text": "من الرئاسة التي تبنتها الصين هذا الشهر.",
+   "audioTimeMs": 800970.0299999999,
+   "emitMs": 801518,
+   "isFinal": true
+  },
+  {
+   "text": "وأتمنى لكم كل التوفيق",
+   "audioTimeMs": 802890,
+   "emitMs": 803428,
+   "isFinal": true
+  },
+  {
+   "text": "إلى زملائنا الكولومبيين",
+   "audioTimeMs": 804640,
+   "emitMs": 805115,
+   "isFinal": true
+  },
+  {
+   "text": "بينما يتولون هذا الدور.",
+   "audioTimeMs": 806010,
+   "emitMs": 806510,
+   "isFinal": true
+  },
+  {
+   "text": "ابتداءً من يوم الاثنين.",
+   "audioTimeMs": 807170.0399999999,
+   "emitMs": 807612,
+   "isFinal": true
+  },
+  {
+   "text": "أتمنى للجميع عطلة نهاية أسبوع سعيدة وخالية من الأحداث.",
+   "audioTimeMs": 810870,
+   "emitMs": 811290,
+   "isFinal": true
+  },
+  {
+   "text": "شكرًا لك.",
+   "audioTimeMs": 811769.96,
+   "emitMs": 813516,
+   "isFinal": true
+  },
+  {
+   "text": "السودان، الفياضير، جال السليوم، فاصلة،",
+   "audioTimeMs": 865399.96,
+   "emitMs": 867300,
+   "isFinal": true
+  },
+  {
+   "text": "آخر",
+   "audioTimeMs": 936910.03,
+   "emitMs": 937393,
+   "isFinal": true
+  },
+  {
+   "text": "السيد الرئيس،",
+   "audioTimeMs": 1112400,
+   "emitMs": 1112997,
+   "isFinal": true
+  },
+  {
+   "text": "أنا",
+   "audioTimeMs": 1113550,
+   "emitMs": 1113981,
+   "isFinal": true
+  },
+  {
+   "text": "شكراً لك، وأهنئك أيضاً على إنهاء هذا الأمر",
+   "audioTimeMs": 1116840,
+   "emitMs": 1117531,
+   "isFinal": true
+  },
+  {
+   "text": "التعيين",
+   "audioTimeMs": 1118110.1,
+   "emitMs": 1118521,
+   "isFinal": true
+  },
+  {
+   "text": "معنا منذ البداية.",
+   "audioTimeMs": 1119740,
+   "emitMs": 1120536,
+   "isFinal": true
+  },
+  {
+   "text": "يود وفدي أن يعرب عن رغبته في التعبير عن",
+   "audioTimeMs": 1123740,
+   "emitMs": 1124229,
+   "isFinal": true
+  },
+  {
+   "text": "إنه تقدير",
+   "audioTimeMs": 1125640,
+   "emitMs": 1126117,
+   "isFinal": true
+  },
+  {
+   "text": "بالرغم من،",
+   "audioTimeMs": 1126700,
+   "emitMs": 1127728,
+   "isFinal": true
+  },
+  {
+   "text": "الخدعة الواضحة",
+   "audioTimeMs": 1128580.0999999999,
+   "emitMs": 1129224,
+   "isFinal": true
+  },
+  {
+   "text": "بديهي",
+   "audioTimeMs": 1129490,
+   "emitMs": 1130408,
+   "isFinal": true
+  },
+  {
+   "text": "عدم التشاور،",
+   "audioTimeMs": 1132260,
+   "emitMs": 1132719,
+   "isFinal": true
+  },
+  {
+   "text": "ما زلنا نرغب في",
+   "audioTimeMs": 1133950,
+   "emitMs": 1134514,
+   "isFinal": true
+  },
+  {
+   "text": "يُقَدِّر",
+   "audioTimeMs": 1134780,
+   "emitMs": 1135123,
+   "isFinal": true
+  },
+  {
+   "text": "ملكنا",
+   "audioTimeMs": 1135279.9,
+   "emitMs": 1135727,
+   "isFinal": true
+  },
+  {
+   "text": "تقدير",
+   "audioTimeMs": 1137429.9000000001,
+   "emitMs": 1137909,
+   "isFinal": true
+  },
+  {
+   "text": "ل",
+   "audioTimeMs": 1138190.1,
+   "emitMs": 1138611,
+   "isFinal": true
+  },
+  {
+   "text": "حامل القلم الخاص به هو",
+   "audioTimeMs": 1140390,
+   "emitMs": 1140706,
+   "isFinal": true
+  },
+  {
+   "text": "جهد",
+   "audioTimeMs": 1141460,
+   "emitMs": 1141916,
+   "isFinal": true
+  },
+  {
+   "text": "طوال فترة المفاوضات.",
+   "audioTimeMs": 1143270,
+   "emitMs": 1143912,
+   "isFinal": true
+  },
+  {
+   "text": "و",
+   "audioTimeMs": 1144220,
+   "emitMs": 1144902,
+   "isFinal": true
+  },
+  {
+   "text": "مقابل الوقت والجهد المبذولين",
+   "audioTimeMs": 1146429.9000000001,
+   "emitMs": 1147100,
+   "isFinal": true
+  },
+  {
+   "text": "في تسهيل المناقشات بين أعضاء المجلس.",
+   "audioTimeMs": 1149840,
+   "emitMs": 1150525,
+   "isFinal": true
+  },
+  {
+   "text": "كما نتقدم بالشكر لجميع الوفود",
+   "audioTimeMs": 1153539.9,
+   "emitMs": 1154125,
+   "isFinal": true
+  },
+  {
+   "text": "ذلك الذي شارك بشكل بنّاء في العملية",
+   "audioTimeMs": 1158090,
+   "emitMs": 1158727,
+   "isFinal": true
+  },
+  {
+   "text": "و",
+   "audioTimeMs": 1158630,
+   "emitMs": 1159297,
+   "isFinal": true
+  },
+  {
+   "text": "ابقَ ملتزماً",
+   "audioTimeMs": 1160190,
+   "emitMs": 1160808,
+   "isFinal": true
+  },
+  {
+   "text": "للحوار والخداع",
+   "audioTimeMs": 1161770,
+   "emitMs": 1162318,
+   "isFinal": true
+  },
+  {
+   "text": "بناء التوافق.",
+   "audioTimeMs": 1163299.9,
+   "emitMs": 1163933,
+   "isFinal": true
+  },
+  {
+   "text": "مع أننا نقر بذلك،",
+   "audioTimeMs": 1165610,
+   "emitMs": 1166317,
+   "isFinal": true
+  },
+  {
+   "text": "يأسف وفدنا",
+   "audioTimeMs": 1168480.1,
+   "emitMs": 1169017,
+   "isFinal": true
+  },
+  {
+   "text": "ل",
+   "audioTimeMs": 1168900,
+   "emitMs": 1169806,
+   "isFinal": true
+  },
+  {
+   "text": "التبني",
+   "audioTimeMs": 1170340,
+   "emitMs": 1170909,
+   "isFinal": true
+  },
+  {
+   "text": "قرار تجديد نظام العقوبات",
+   "audioTimeMs": 1173000,
+   "emitMs": 1173703,
+   "isFinal": true
+  },
+  {
+   "text": "والحظر",
+   "audioTimeMs": 1174640,
+   "emitMs": 1175189,
+   "isFinal": true
+  },
+  {
+   "text": "بشأن جمهورية جنوب السودان.",
+   "audioTimeMs": 1176650,
+   "emitMs": 1177102,
+   "isFinal": true
+  },
+  {
+   "text": "نرى أن",
+   "audioTimeMs": 1179350,
+   "emitMs": 1180014,
+   "isFinal": true
+  },
+  {
+   "text": "الصيانة المستمرة",
+   "audioTimeMs": 1182210.1,
+   "emitMs": 1182797,
+   "isFinal": true
+  },
+  {
+   "text": "من الذراع",
+   "audioTimeMs": 1183360,
+   "emitMs": 1183887,
+   "isFinal": true
+  },
+  {
+   "text": "حظر الأسلحة",
+   "audioTimeMs": 1184480,
+   "emitMs": 1185004,
+   "isFinal": true
+  },
+  {
+   "text": "يتزايد",
+   "audioTimeMs": 1186370,
+   "emitMs": 1187094,
+   "isFinal": true
+  },
+  {
+   "text": "غير متسق مع",
+   "audioTimeMs": 1188059.9,
+   "emitMs": 1188699,
+   "isFinal": true
+  },
+  {
+   "text": "الحقائق",
+   "audioTimeMs": 1189400,
+   "emitMs": 1189989,
+   "isFinal": true
+  },
+  {
+   "text": "والتحديات التي تواجهها",
+   "audioTimeMs": 1192060,
+   "emitMs": 1192702,
+   "isFinal": true
+  },
+  {
+   "text": "البلاد اليوم.",
+   "audioTimeMs": 1193210,
+   "emitMs": 1193709,
+   "isFinal": true
+  },
+  {
+   "text": "بدلاً من الدعم",
+   "audioTimeMs": 1196180,
+   "emitMs": 1196809,
+   "isFinal": true
+  },
+  {
+   "text": "وتعزيز الدولة،",
+   "audioTimeMs": 1198840,
+   "emitMs": 1199913,
+   "isFinal": true
+  },
+  {
+   "text": "المؤسسات،",
+   "audioTimeMs": 1200769.9,
+   "emitMs": 1201506,
+   "isFinal": true
+  },
+  {
+   "text": "يحد ذلك",
+   "audioTimeMs": 1203100,
+   "emitMs": 1203695,
+   "isFinal": true
+  },
+  {
+   "text": "الأهلية المشروعة",
+   "audioTimeMs": 1204630,
+   "emitMs": 1205306,
+   "isFinal": true
+  },
+  {
+   "text": "من جانب الحكومة لحماية",
+   "audioTimeMs": 1207760,
+   "emitMs": 1208384,
+   "isFinal": true
+  },
+  {
+   "text": "مدنيون",
+   "audioTimeMs": 1209760,
+   "emitMs": 1210398,
+   "isFinal": true
+  },
+  {
+   "text": "تأمين حدودها،",
+   "audioTimeMs": 1211330.0999999999,
+   "emitMs": 1211917,
+   "isFinal": true
+  },
+  {
+   "text": "والاستجابة بفعالية.",
+   "audioTimeMs": 1213560,
+   "emitMs": 1214211,
+   "isFinal": true
+  },
+  {
+   "text": "إلى التهديدات",
+   "audioTimeMs": 1215049.9,
+   "emitMs": 1215687,
+   "isFinal": true
+  },
+  {
+   "text": "تم طرحه بواسطة",
+   "audioTimeMs": 1216170,
+   "emitMs": 1216698,
+   "isFinal": true
+  },
+  {
+   "text": "الجماعات المسلحة.",
+   "audioTimeMs": 1217500,
+   "emitMs": 1218217,
+   "isFinal": true
+  },
+  {
+   "text": "وغيرهم من الجهات الفاعلة غير الحكومية.",
+   "audioTimeMs": 1220010,
+   "emitMs": 1220708,
+   "isFinal": true
+  },
+  {
+   "text": "ونحن نلتقي اليوم،",
+   "audioTimeMs": 1222720,
+   "emitMs": 1223422,
+   "isFinal": true
+  },
+  {
+   "text": "تعيش العائلات في جميع أنحاء جنوب السودان حالة حداد.",
+   "audioTimeMs": 1227100,
+   "emitMs": 1227714,
+   "isFinal": true
+  },
+  {
+   "text": "الفقدان المأساوي لخمسة مهندسين مدنيين لقوا حتفهم",
+   "audioTimeMs": 1232260,
+   "emitMs": 1233018,
+   "isFinal": true
+  },
+  {
+   "text": "بينما",
+   "audioTimeMs": 1233360,
+   "emitMs": 1234198,
+   "isFinal": true
+  },
+  {
+   "text": "القيام بأعمال بناء الطرق",
+   "audioTimeMs": 1236120,
+   "emitMs": 1236704,
+   "isFinal": true
+  },
+  {
+   "text": "في مقاطعة المغرب، ضيعة سينترا الاستوائية.",
+   "audioTimeMs": 1240470,
+   "emitMs": 1241113,
+   "isFinal": true
+  },
+  {
+   "text": "هؤلاء الأفراد",
+   "audioTimeMs": 1242480,
+   "emitMs": 1243292,
+   "isFinal": true
+  },
+  {
+   "text": "كانوا يساهمون",
+   "audioTimeMs": 1244610.1,
+   "emitMs": 1245387,
+   "isFinal": true
+  },
+  {
+   "text": "للتنمية الوطنية",
+   "audioTimeMs": 1246500,
+   "emitMs": 1247096,
+   "isFinal": true
+  },
+  {
+   "text": "الاتصال،",
+   "audioTimeMs": 1247750,
+   "emitMs": 1248349,
+   "isFinal": true
+  },
+  {
+   "text": "والانتعاش الاقتصادي.",
+   "audioTimeMs": 1249330.0999999999,
+   "emitMs": 1249861,
+   "isFinal": true
+  },
+  {
+   "text": "موتهم",
+   "audioTimeMs": 1251669.9000000001,
+   "emitMs": 1252356,
+   "isFinal": true
+  },
+  {
+   "text": "اخدمنا",
+   "audioTimeMs": 1252970,
+   "emitMs": 1253745,
+   "isFinal": true
+  },
+  {
+   "text": "بصفته صاحب السيادة",
+   "audioTimeMs": 1254230.1,
+   "emitMs": 1254835,
+   "isFinal": true
+  },
+  {
+   "text": "تذكير بـ",
+   "audioTimeMs": 1255779.9,
+   "emitMs": 1256341,
+   "isFinal": true
+  },
+  {
+   "text": "التحدي الأمني ​​الذي لا يزال قائماً",
+   "audioTimeMs": 1258250,
+   "emitMs": 1258838,
+   "isFinal": true
+  },
+  {
+   "text": "مع التأكيد على أهمية ضمان",
+   "audioTimeMs": 1260420,
+   "emitMs": 1261053,
+   "isFinal": true
+  },
+  {
+   "text": "الذي - التي",
+   "audioTimeMs": 1261390,
+   "emitMs": 1261941,
+   "isFinal": true
+  },
+  {
+   "text": "وطني",
+   "audioTimeMs": 1262320,
+   "emitMs": 1262948,
+   "isFinal": true
+  },
+  {
+   "text": "المؤسسات",
+   "audioTimeMs": 1263550,
+   "emitMs": 1264243,
+   "isFinal": true
+  },
+  {
+   "text": "مجهزة بشكل كافٍ",
+   "audioTimeMs": 1265430,
+   "emitMs": 1265937,
+   "isFinal": true
+  },
+  {
+   "text": "لحماية المدنيين",
+   "audioTimeMs": 1267350.1,
+   "emitMs": 1267951,
+   "isFinal": true
+  },
+  {
+   "text": "والدعم",
+   "audioTimeMs": 1268330,
+   "emitMs": 1268753,
+   "isFinal": true
+  },
+  {
+   "text": "تطوير.",
+   "audioTimeMs": 1269210,
+   "emitMs": 1269665,
+   "isFinal": true
+  },
+  {
+   "text": "جهود.",
+   "audioTimeMs": 1270080,
+   "emitMs": 1270657,
+   "isFinal": true
+  },
+  {
+   "text": "سيدي الرئيس،",
+   "audioTimeMs": 1271820,
+   "emitMs": 1272575,
+   "isFinal": true
+  },
+  {
+   "text": "يؤمن جنوب السودان إيماناً راسخاً بأن",
+   "audioTimeMs": 1275030,
+   "emitMs": 1275564,
+   "isFinal": true
+  },
+  {
+   "text": "سلام مستدام",
+   "audioTimeMs": 1276740,
+   "emitMs": 1277374,
+   "isFinal": true
+  },
+  {
+   "text": "الأفضل هو المتقدم",
+   "audioTimeMs": 1278470,
+   "emitMs": 1279063,
+   "isFinal": true
+  },
+  {
+   "text": "من خلال مؤسسات وطنية قوية،",
+   "audioTimeMs": 1281250,
+   "emitMs": 1282080,
+   "isFinal": true
+  },
+  {
+   "text": "ترتيبات أمنية فعالة،",
+   "audioTimeMs": 1284019.9,
+   "emitMs": 1284681,
+   "isFinal": true
+  },
+  {
+   "text": "وأصلي",
+   "audioTimeMs": 1286060,
+   "emitMs": 1286668,
+   "isFinal": true
+  },
+  {
+   "text": "الملكية الوطنية.",
+   "audioTimeMs": 1287820,
+   "emitMs": 1288274,
+   "isFinal": true
+  },
+  {
+   "text": "من عملية السلام.",
+   "audioTimeMs": 1289179.9000000001,
+   "emitMs": 1289773,
+   "isFinal": true
+  },
+  {
+   "text": "التدابير التي",
+   "audioTimeMs": 1291440,
+   "emitMs": 1291976,
+   "isFinal": true
+  },
+  {
+   "text": "عن غير قصد",
+   "audioTimeMs": 1292560,
+   "emitMs": 1293165,
+   "isFinal": true
+  },
+  {
+   "text": "إضعاف قدرة الدولة",
+   "audioTimeMs": 1295100,
+   "emitMs": 1295672,
+   "isFinal": true
+  },
+  {
+   "text": "مع فشلها في الردع",
+   "audioTimeMs": 1297409.9000000001,
+   "emitMs": 1297972,
+   "isFinal": true
+  },
+  {
+   "text": "حرق للأحداث",
+   "audioTimeMs": 1299110,
+   "emitMs": 1299668,
+   "isFinal": true
+  },
+  {
+   "text": "مذكرة",
+   "audioTimeMs": 1299930,
+   "emitMs": 1300468,
+   "isFinal": true
+  },
+  {
+   "text": "إعادة نظر متأنية.",
+   "audioTimeMs": 1302510,
+   "emitMs": 1303178,
+   "isFinal": true
+  },
+  {
+   "text": "في هذا الصدد،",
+   "audioTimeMs": 1305370.1,
+   "emitMs": 1306896,
+   "isFinal": true
+  },
+  {
+   "text": "نحن نحترم",
+   "audioTimeMs": 1307669.9000000001,
+   "emitMs": 1308570,
+   "isFinal": true
+  },
+  {
+   "text": "أكرر",
+   "audioTimeMs": 1309040,
+   "emitMs": 1309782,
+   "isFinal": true
+  },
+  {
+   "text": "ندعو مجلس الأمن إلى منح",
+   "audioTimeMs": 1312990.1,
+   "emitMs": 1313693,
+   "isFinal": true
+  },
+  {
+   "text": "الاعتبار الواجب",
+   "audioTimeMs": 1315030,
+   "emitMs": 1315775,
+   "isFinal": true
+  },
+  {
+   "text": "تماشياً مع الموقف الثابت للاتحاد الأفريقي وهيئة توليد الكهرباء في تايلاند (EGAT) والجهات الإقليمية الأخرى المعنية، لدينا",
+   "audioTimeMs": 1323460.1,
+   "emitMs": 1324188,
+   "isFinal": true
+  },
+  {
+   "text": "مرارا",
+   "audioTimeMs": 1325020,
+   "emitMs": 1325777,
+   "isFinal": true
+  },
+  {
+   "text": "دعا إلى رفع",
+   "audioTimeMs": 1327530,
+   "emitMs": 1328272,
+   "isFinal": true
+  },
+  {
+   "text": "نظام العقوبات",
+   "audioTimeMs": 1329320.0999999999,
+   "emitMs": 1329978,
+   "isFinal": true
+  },
+  {
+   "text": "وحظر الأسلحة",
+   "audioTimeMs": 1330870,
+   "emitMs": 1331492,
+   "isFinal": true
+  },
+  {
+   "text": "بشأن جنوب السودان.",
+   "audioTimeMs": 1332340.0999999999,
+   "emitMs": 1333007,
+   "isFinal": true
+  },
+  {
+   "text": "وجهة نظر أقرب الناس",
+   "audioTimeMs": 1335950,
+   "emitMs": 1336796,
+   "isFinal": true
+  },
+  {
+   "text": "لا تزال معرفة الوضع على أرض الواقع ذات قيمة",
+   "audioTimeMs": 1340620,
+   "emitMs": 1341403,
+   "isFinal": true
+  },
+  {
+   "text": "في إبلاغ المجلس",
+   "audioTimeMs": 1343640,
+   "emitMs": 1344190,
+   "isFinal": true
+  },
+  {
+   "text": "التداول.",
+   "audioTimeMs": 1344670,
+   "emitMs": 1345389,
+   "isFinal": true
+  },
+  {
+   "text": "سيدي الرئيس،",
+   "audioTimeMs": 1346340,
+   "emitMs": 1347089,
+   "isFinal": true
+  },
+  {
+   "text": "لا يزال جنوب السودان مكتملاً",
+   "audioTimeMs": 1348500,
+   "emitMs": 1349036,
+   "isFinal": true
+  },
+  {
+   "text": "ملتزم",
+   "audioTimeMs": 1349409.9000000001,
+   "emitMs": 1350035,
+   "isFinal": true
+  },
+  {
+   "text": "ل",
+   "audioTimeMs": 1350470.1,
+   "emitMs": 1351138,
+   "isFinal": true
+  },
+  {
+   "text": "التعاون البنّاء مع الأمم المتحدة والاتحاد الأفريقي",
+   "audioTimeMs": 1354630,
+   "emitMs": 1355248,
+   "isFinal": true
+  },
+  {
+   "text": "هيئة توليد الكهرباء في تايلاند (EGAT)، و",
+   "audioTimeMs": 1356890,
+   "emitMs": 1357541,
+   "isFinal": true
+  },
+  {
+   "text": "جميع الشركاء الدوليين في تعزيز السلام.",
+   "audioTimeMs": 1359940.1,
+   "emitMs": 1360643,
+   "isFinal": true
+  },
+  {
+   "text": "مصالحة،",
+   "audioTimeMs": 1361460,
+   "emitMs": 1362231,
+   "isFinal": true
+  },
+  {
+   "text": "مبنى المؤسسة،",
+   "audioTimeMs": 1363450,
+   "emitMs": 1364135,
+   "isFinal": true
+  },
+  {
+   "text": "والتنمية المستدامة.",
+   "audioTimeMs": 1365549.9,
+   "emitMs": 1366143,
+   "isFinal": true
+  },
+  {
+   "text": "ما زلنا نشعر بالتفاؤل إزاء استمرار",
+   "audioTimeMs": 1369660,
+   "emitMs": 1370237,
+   "isFinal": true
+  },
+  {
+   "text": "دعم المجتمع الدولي",
+   "audioTimeMs": 1371880,
+   "emitMs": 1372619,
+   "isFinal": true
+  },
+  {
+   "text": "والثقة بأن",
+   "audioTimeMs": 1373460,
+   "emitMs": 1374038,
+   "isFinal": true
+  },
+  {
+   "text": "العمل معًا",
+   "audioTimeMs": 1374960.1,
+   "emitMs": 1375730,
+   "isFinal": true
+  },
+  {
+   "text": "يمكننا التغلب على ما تبقى",
+   "audioTimeMs": 1378130,
+   "emitMs": 1378734,
+   "isFinal": true
+  },
+  {
+   "text": "التحدي والإبداع",
+   "audioTimeMs": 1379960,
+   "emitMs": 1380640,
+   "isFinal": true
+  },
+  {
+   "text": "الشروط اللازمة لـ",
+   "audioTimeMs": 1382140,
+   "emitMs": 1382833,
+   "isFinal": true
+  },
+  {
+   "text": "سلام",
+   "audioTimeMs": 1383280,
+   "emitMs": 1383785,
+   "isFinal": true
+  },
+  {
+   "text": "مستقر، و",
+   "audioTimeMs": 1384760,
+   "emitMs": 1385296,
+   "isFinal": true
+  },
+  {
+   "text": "مزدهر",
+   "audioTimeMs": 1385810,
+   "emitMs": 1386297,
+   "isFinal": true
+  },
+  {
+   "text": "مستقبل.",
+   "audioTimeMs": 1386570.0999999999,
+   "emitMs": 1387110,
+   "isFinal": true
+  },
+  {
+   "text": "إلى جميع سكان جنوب السودان.",
+   "audioTimeMs": 1388740,
+   "emitMs": 1389210,
+   "isFinal": true
+  },
+  {
+   "text": "وختاماً،",
+   "audioTimeMs": 1391890,
+   "emitMs": 1392508,
+   "isFinal": true
+  },
+  {
+   "text": "يعرب وفدي عن خالص تقديره",
+   "audioTimeMs": 1395399.9,
+   "emitMs": 1397404,
+   "isFinal": true
+  },
+  {
+   "text": "إلى أعضاء مجلس الأمن الذين يواصلون",
+   "audioTimeMs": 1398750,
+   "emitMs": 1399429,
+   "isFinal": true
+  },
+  {
+   "text": "لدعم",
+   "audioTimeMs": 1399980,
+   "emitMs": 1400605,
+   "isFinal": true
+  },
+  {
+   "text": "متوازن",
+   "audioTimeMs": 1400950.1,
+   "emitMs": 1401597,
+   "isFinal": true
+  },
+  {
+   "text": "بناء",
+   "audioTimeMs": 1402289.9,
+   "emitMs": 1402782,
+   "isFinal": true
+  },
+  {
+   "text": "وتطلع إلى المستقبل",
+   "audioTimeMs": 1403870,
+   "emitMs": 1404397,
+   "isFinal": true
+  },
+  {
+   "text": "النهج المتبع تجاه جنوب السودان.",
+   "audioTimeMs": 1406080,
+   "emitMs": 1406418,
+   "isFinal": true
+  },
+  {
+   "text": "نحن نقدر",
+   "audioTimeMs": 1407710,
+   "emitMs": 1408403,
+   "isFinal": true
+  },
+  {
+   "text": "شراكتهم",
+   "audioTimeMs": 1409330,
+   "emitMs": 1410000,
+   "isFinal": true
+  },
+  {
+   "text": "ويبقى",
+   "audioTimeMs": 1410419.9000000001,
+   "emitMs": 1410993,
+   "isFinal": true
+  },
+  {
+   "text": "ملتزم",
+   "audioTimeMs": 1411270,
+   "emitMs": 1411599,
+   "isFinal": true
+  },
+  {
+   "text": "العمل التعاوني",
+   "audioTimeMs": 1412820,
+   "emitMs": 1413308,
+   "isFinal": true
+  },
+  {
+   "text": "مع جميع الأعضاء.",
+   "audioTimeMs": 1414500,
+   "emitMs": 1414919,
+   "isFinal": true
+  },
+  {
+   "text": "من هذا المجلس في سعيه إلى",
+   "audioTimeMs": 1417230,
+   "emitMs": 1417713,
+   "isFinal": true
+  },
+  {
+   "text": "هدفنا المشترك",
+   "audioTimeMs": 1419590,
+   "emitMs": 1420024,
+   "isFinal": true
+  },
+  {
+   "text": "من أجل حياة سلمية وآمنة",
+   "audioTimeMs": 1422000,
+   "emitMs": 1422515,
+   "isFinal": true
+  },
+  {
+   "text": "وجنوب السودان المستقر.",
+   "audioTimeMs": 1424210,
+   "emitMs": 1424530,
+   "isFinal": true
+  },
+  {
+   "text": "حاضر.",
+   "audioTimeMs": 1439910,
+   "emitMs": 1440120,
+   "isFinal": true
+  }
+ ]
+}

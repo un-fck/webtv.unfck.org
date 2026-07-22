@@ -1,0 +1,972 @@
+{
+ "provider": "C-caption-deepgram-multi-gtranslate",
+ "targetLanguage": "ar",
+ "events": [
+  {
+   "text": "أنا لا",
+   "audioTimeMs": 4760,
+   "emitMs": 5880,
+   "isFinal": true
+  },
+  {
+   "text": "الرسالة السرية هي...",
+   "audioTimeMs": 6600,
+   "emitMs": 7495,
+   "isFinal": true
+  },
+  {
+   "text": "القدرة الأولى على الملاحظة هي مئة، وهي قدرة على الاعتماد على الذات.",
+   "audioTimeMs": 9190,
+   "emitMs": 10006,
+   "isFinal": true
+  },
+  {
+   "text": "لكن المنظر العام هو",
+   "audioTimeMs": 10280,
+   "emitMs": 11110,
+   "isFinal": true
+  },
+  {
+   "text": "الأجزاء المختلفة للتجمع الذاتي هي جزء واحد، وهو كيان كامل.",
+   "audioTimeMs": 16180,
+   "emitMs": 16987,
+   "isFinal": true
+  },
+  {
+   "text": "أنت من يستطيع الكلام والكلام، وأنت من يستطيع الكلام.",
+   "audioTimeMs": 19640.001,
+   "emitMs": 20507,
+   "isFinal": true
+  },
+  {
+   "text": "واحد أم ماذا؟",
+   "audioTimeMs": 20310,
+   "emitMs": 22702,
+   "isFinal": true
+  },
+  {
+   "text": "أفضل الأسعار",
+   "audioTimeMs": 27900,
+   "emitMs": 28911,
+   "isFinal": true
+  },
+  {
+   "text": "لدي سؤال يمكنني الإجابة عليه كسؤال كبير.",
+   "audioTimeMs": 31160,
+   "emitMs": 32112,
+   "isFinal": true
+  },
+  {
+   "text": "فقط، ينبغي، ينبغي",
+   "audioTimeMs": 34769.996999999996,
+   "emitMs": 35812,
+   "isFinal": true
+  },
+  {
+   "text": "وبغض النظر عما إذا كنت ترغب في التحدث عن الحياة...",
+   "audioTimeMs": 41110,
+   "emitMs": 42111,
+   "isFinal": true
+  },
+  {
+   "text": "مع كل لحظة من حياتي أفكر فيك،",
+   "audioTimeMs": 42290,
+   "emitMs": 43210,
+   "isFinal": true
+  },
+  {
+   "text": "بإمكانهم حل المشاكل بأنفسهم.",
+   "audioTimeMs": 46910,
+   "emitMs": 47816,
+   "isFinal": true
+  },
+  {
+   "text": "سو زاي دي هاو رن تي",
+   "audioTimeMs": 49930,
+   "emitMs": 50914,
+   "isFinal": true
+  },
+  {
+   "text": "هذا، هذا،",
+   "audioTimeMs": 51940,
+   "emitMs": 52825,
+   "isFinal": true
+  },
+  {
+   "text": "يجب اتخاذ قرار واحد فقط.",
+   "audioTimeMs": 53289.997,
+   "emitMs": 54120,
+   "isFinal": true
+  },
+  {
+   "text": "وسيفكر فيما يجب فعله، وما يجب فعله حينها.",
+   "audioTimeMs": 59110,
+   "emitMs": 59839,
+   "isFinal": true
+  },
+  {
+   "text": "مقارنة سريعة للقلب",
+   "audioTimeMs": 60230,
+   "emitMs": 61227,
+   "isFinal": true
+  },
+  {
+   "text": "ماذا أريد أن أفعل؟",
+   "audioTimeMs": 66060,
+   "emitMs": 67031,
+   "isFinal": true
+  },
+  {
+   "text": "الأمر يتعلق فقط بمقارنة الأنواع.",
+   "audioTimeMs": 67530,
+   "emitMs": 68220,
+   "isFinal": true
+  },
+  {
+   "text": "ثلاثة يصبحون ذاتًا واحدة، راقب ما ينبغي، ينبغي ينبغي ينبغي ينبغي ينبغي",
+   "audioTimeMs": 73300,
+   "emitMs": 74240,
+   "isFinal": true
+  },
+  {
+   "text": "حقًا",
+   "audioTimeMs": 77290,
+   "emitMs": 78229,
+   "isFinal": true
+  },
+  {
+   "text": "ينقسم الناس إلى بياو",
+   "audioTimeMs": 122690,
+   "emitMs": 123514,
+   "isFinal": true
+  },
+  {
+   "text": "إذا كان",
+   "audioTimeMs": 125190,
+   "emitMs": 126014,
+   "isFinal": true
+  },
+  {
+   "text": "و د د د د د د د،",
+   "audioTimeMs": 135330,
+   "emitMs": 137137,
+   "isFinal": true
+  },
+  {
+   "text": ". واحد .",
+   "audioTimeMs": 137030,
+   "emitMs": 137723,
+   "isFinal": true
+  },
+  {
+   "text": "أريد أن أنجح، أريد أن أنافس، وهذا جيد، وستنجح أنت أيضاً.",
+   "audioTimeMs": 146640,
+   "emitMs": 147320,
+   "isFinal": true
+  },
+  {
+   "text": "فا يا.",
+   "audioTimeMs": 147300,
+   "emitMs": 148026,
+   "isFinal": true
+  },
+  {
+   "text": "أقامت المدينة مسابقة كبرى أخرى.",
+   "audioTimeMs": 151220,
+   "emitMs": 151933,
+   "isFinal": true
+  },
+  {
+   "text": "، ، ،",
+   "audioTimeMs": 152170,
+   "emitMs": 152548,
+   "isFinal": true
+  },
+  {
+   "text": "شكرًا لك.",
+   "audioTimeMs": 157340,
+   "emitMs": 158300,
+   "isFinal": true
+  },
+  {
+   "text": "ترحب الولايات المتحدة بالتجديد",
+   "audioTimeMs": 160450,
+   "emitMs": 161301,
+   "isFinal": true
+  },
+  {
+   "text": "فيما يتعلق بنظام العقوبات المفروضة على جنوب السودان، بما في ذلك تمديد اللجنة",
+   "audioTimeMs": 164820,
+   "emitMs": 166247,
+   "isFinal": true
+  },
+  {
+   "text": "تفويض الخبراء",
+   "audioTimeMs": 165930.01,
+   "emitMs": 166739,
+   "isFinal": true
+  },
+  {
+   "text": "وتجديد حظر الأسلحة",
+   "audioTimeMs": 167989.99000000002,
+   "emitMs": 168740,
+   "isFinal": true
+  },
+  {
+   "text": "حظر السفر",
+   "audioTimeMs": 168890,
+   "emitMs": 169844,
+   "isFinal": true
+  },
+  {
+   "text": "وتدابير تجميد الأصول لمدة اثني عشر شهراً إضافية.",
+   "audioTimeMs": 172070,
+   "emitMs": 172955,
+   "isFinal": true
+  },
+  {
+   "text": "كما نرحب بهذه الفرصة",
+   "audioTimeMs": 174680.01,
+   "emitMs": 175542,
+   "isFinal": true
+  },
+  {
+   "text": "مراجعة المعايير",
+   "audioTimeMs": 176220,
+   "emitMs": 177042,
+   "isFinal": true
+  },
+  {
+   "text": "ليعكس الواقع الحالي",
+   "audioTimeMs": 177930.01,
+   "emitMs": 178841,
+   "isFinal": true
+  },
+  {
+   "text": "ونتطلع إلى التوصيات",
+   "audioTimeMs": 180230,
+   "emitMs": 181040,
+   "isFinal": true
+  },
+  {
+   "text": "حول أفضل السبل للقيام بذلك",
+   "audioTimeMs": 181790,
+   "emitMs": 182641,
+   "isFinal": true
+  },
+  {
+   "text": "من الأمين العام بالتشاور",
+   "audioTimeMs": 184440,
+   "emitMs": 185439,
+   "isFinal": true
+  },
+  {
+   "text": "مع بعثة الأمم المتحدة في جنوب السودان.",
+   "audioTimeMs": 187000,
+   "emitMs": 187746,
+   "isFinal": true
+  },
+  {
+   "text": "وفريق الخبراء.",
+   "audioTimeMs": 188480,
+   "emitMs": 189640,
+   "isFinal": true
+  },
+  {
+   "text": "لكننا نشعر بخيبة أمل.",
+   "audioTimeMs": 190650.01,
+   "emitMs": 191549,
+   "isFinal": true
+  },
+  {
+   "text": "بسبب انعدام التقدم",
+   "audioTimeMs": 192180,
+   "emitMs": 193046,
+   "isFinal": true
+  },
+  {
+   "text": "على المعايير",
+   "audioTimeMs": 193270,
+   "emitMs": 194141,
+   "isFinal": true
+  },
+  {
+   "text": "والتدهور المستمر",
+   "audioTimeMs": 195760.00999999998,
+   "emitMs": 196467,
+   "isFinal": true
+  },
+  {
+   "text": "من السياسة",
+   "audioTimeMs": 196790.01,
+   "emitMs": 197462,
+   "isFinal": true
+  },
+  {
+   "text": "والوضع الأمني",
+   "audioTimeMs": 198530,
+   "emitMs": 199357,
+   "isFinal": true
+  },
+  {
+   "text": "جنوب السودان.",
+   "audioTimeMs": 199720,
+   "emitMs": 200262,
+   "isFinal": true
+  },
+  {
+   "text": "لنكن واضحين.",
+   "audioTimeMs": 201290.01,
+   "emitMs": 201862,
+   "isFinal": true
+  },
+  {
+   "text": "ويعود هذا التخلف في التقدم إلى نقص الموارد السياسية.",
+   "audioTimeMs": 205080,
+   "emitMs": 205671,
+   "isFinal": true
+  },
+  {
+   "text": "بقلم الرئيس كيرك،",
+   "audioTimeMs": 206450,
+   "emitMs": 207067,
+   "isFinal": true
+  },
+  {
+   "text": "بالإضافة إلى غيرها",
+   "audioTimeMs": 207720,
+   "emitMs": 208359,
+   "isFinal": true
+  },
+  {
+   "text": "قادة جنوب السودان.",
+   "audioTimeMs": 209230,
+   "emitMs": 209968,
+   "isFinal": true
+  },
+  {
+   "text": "يجب على قادة جنوب السودان العودة إلى الحوار المباشر",
+   "audioTimeMs": 213960,
+   "emitMs": 214663,
+   "isFinal": true
+  },
+  {
+   "text": "لتهدئة الوضع",
+   "audioTimeMs": 215400,
+   "emitMs": 215964,
+   "isFinal": true
+  },
+  {
+   "text": "العنف الحالي.",
+   "audioTimeMs": 216599.99,
+   "emitMs": 217466,
+   "isFinal": true
+  },
+  {
+   "text": "إنه أمر مثير للسخرية",
+   "audioTimeMs": 218360,
+   "emitMs": 218962,
+   "isFinal": true
+  },
+  {
+   "text": "أن يوحي بأن مثل هذا الحوار يجري في حين أن أحد الموقعين على اتفاقية السلام لعام 2018",
+   "audioTimeMs": 224780,
+   "emitMs": 225665,
+   "isFinal": true
+  },
+  {
+   "text": "يخضع للإقامة الجبرية",
+   "audioTimeMs": 226510,
+   "emitMs": 227166,
+   "isFinal": true
+  },
+  {
+   "text": "ويخضع للمحاكمة.",
+   "audioTimeMs": 227590.01,
+   "emitMs": 228663,
+   "isFinal": true
+  },
+  {
+   "text": "لا يمكن للمجلس أن يقبل عرقلة عملية السلام",
+   "audioTimeMs": 232160,
+   "emitMs": 233075,
+   "isFinal": true
+  },
+  {
+   "text": "أو أفعال تهدد",
+   "audioTimeMs": 233690,
+   "emitMs": 234571,
+   "isFinal": true
+  },
+  {
+   "text": "الاتفاقات الانتقالية أو تقويض العملية السياسية في جنوب السودان.",
+   "audioTimeMs": 237940,
+   "emitMs": 238781,
+   "isFinal": true
+  },
+  {
+   "text": "لذا، نحث الحكومة الانتقالية على اتخاذ جميع الخطوات اللازمة لاستعادة السلام",
+   "audioTimeMs": 244690,
+   "emitMs": 245572,
+   "isFinal": true
+  },
+  {
+   "text": "بما في ذلك إعلان وقف إطلاق النار على المستوى الوطني",
+   "audioTimeMs": 247630,
+   "emitMs": 248571,
+   "isFinal": true
+  },
+  {
+   "text": "إطلاق سراح المحتجزين،",
+   "audioTimeMs": 249420,
+   "emitMs": 250371,
+   "isFinal": true
+  },
+  {
+   "text": "نبذ استخدام العنف لأغراض سياسية،",
+   "audioTimeMs": 252460,
+   "emitMs": 255375,
+   "isFinal": true
+  },
+  {
+   "text": "والبدء في استخدام الإيرادات العامة بشكل مناسب",
+   "audioTimeMs": 255840.01,
+   "emitMs": 256969,
+   "isFinal": true
+  },
+  {
+   "text": "لدعم مواطني جنوب السودان.",
+   "audioTimeMs": 258399.99999999997,
+   "emitMs": 259273,
+   "isFinal": true
+  },
+  {
+   "text": "لسنوات قبل استقلال جنوب السودان،",
+   "audioTimeMs": 262550.02,
+   "emitMs": 263381,
+   "isFinal": true
+  },
+  {
+   "text": "زعمت حركة تحرير الشعب السوداني أنها تسعى إلى إنهاء التهميش",
+   "audioTimeMs": 266940,
+   "emitMs": 268279,
+   "isFinal": true
+  },
+  {
+   "text": "من جانب قادة جنوب السودان في الخرطوم.",
+   "audioTimeMs": 270120,
+   "emitMs": 270990,
+   "isFinal": true
+  },
+  {
+   "text": "من خلال سوء الإدارة وإساءة استخدام الإيرادات،",
+   "audioTimeMs": 273259.98,
+   "emitMs": 274181,
+   "isFinal": true
+  },
+  {
+   "text": "يستمر هذا التهميش.",
+   "audioTimeMs": 275470,
+   "emitMs": 276472,
+   "isFinal": true
+  },
+  {
+   "text": "فرضها قادة جنوب السودان أنفسهم.",
+   "audioTimeMs": 278310,
+   "emitMs": 279274,
+   "isFinal": true
+  },
+  {
+   "text": "شكرًا لك.",
+   "audioTimeMs": 279560,
+   "emitMs": 280482,
+   "isFinal": true
+  },
+  {
+   "text": "سيدي الرئيس، يشرفني أن أقدم هذا التفسير للتصويت نيابة عن",
+   "audioTimeMs": 298330,
+   "emitMs": 299665,
+   "isFinal": true
+  },
+  {
+   "text": "أي",
+   "audioTimeMs": 299510,
+   "emitMs": 300663,
+   "isFinal": true
+  },
+  {
+   "text": "الليبرالية، الصومال، وبلدي جمهورية الكونغو الديمقراطية.",
+   "audioTimeMs": 304060,
+   "emitMs": 304976,
+   "isFinal": true
+  },
+  {
+   "text": "امتنعت الشركات الثلاث التي تبدأ بحرف \"أ\" عن التصويت خلال عملية التصويت على",
+   "audioTimeMs": 307990.02,
+   "emitMs": 309972,
+   "isFinal": true
+  },
+  {
+   "text": "تجديد",
+   "audioTimeMs": 309210,
+   "emitMs": 310164,
+   "isFinal": true
+  },
+  {
+   "text": "نظام العقوبات المفروضة على جنوب السودان.",
+   "audioTimeMs": 312130,
+   "emitMs": 313073,
+   "isFinal": true
+  },
+  {
+   "text": "موقفنا يعكس مخاوف مبدئية",
+   "audioTimeMs": 315900,
+   "emitMs": 316774,
+   "isFinal": true
+  },
+  {
+   "text": "مخاوف طويلة الأمد بشأن فعالية نظام العقوبات",
+   "audioTimeMs": 319840,
+   "emitMs": 320870,
+   "isFinal": true
+  },
+  {
+   "text": "الوضع الراهن واستمرار استخدام التدابير التقييدية",
+   "audioTimeMs": 323570,
+   "emitMs": 324464,
+   "isFinal": true
+  },
+  {
+   "text": "باعتبارها الأداة الرئيسية للتكيف",
+   "audioTimeMs": 326360,
+   "emitMs": 327431,
+   "isFinal": true
+  },
+  {
+   "text": "فيما يتعلق بالوضع في جنوب السودان.",
+   "audioTimeMs": 328510,
+   "emitMs": 329366,
+   "isFinal": true
+  },
+  {
+   "text": "على الرغم من أن نظام العقوبات مطبق منذ عدة سنوات،",
+   "audioTimeMs": 333240.02,
+   "emitMs": 334271,
+   "isFinal": true
+  },
+  {
+   "text": "لا يزال الوضع السياسي والأمني ​​في البلاد يواجه صعوبات",
+   "audioTimeMs": 337270.01999999996,
+   "emitMs": 338268,
+   "isFinal": true
+  },
+  {
+   "text": "لمواجهة تحديات خطيرة.",
+   "audioTimeMs": 338630,
+   "emitMs": 339566,
+   "isFinal": true
+  },
+  {
+   "text": "وهذا يثير التساؤل حول مدى",
+   "audioTimeMs": 342120,
+   "emitMs": 343066,
+   "isFinal": true
+  },
+  {
+   "text": "تساهم التدابير الحالية",
+   "audioTimeMs": 345270,
+   "emitMs": 346162,
+   "isFinal": true
+  },
+  {
+   "text": "بشكل فعال نحو سلام دائم،",
+   "audioTimeMs": 347630,
+   "emitMs": 348529,
+   "isFinal": true
+  },
+  {
+   "text": "لتحقيق الاستقرار وتعزيز المؤسسات الوطنية",
+   "audioTimeMs": 351310,
+   "emitMs": 352134,
+   "isFinal": true
+  },
+  {
+   "text": "في جنوب السودان.",
+   "audioTimeMs": 352650,
+   "emitMs": 353330,
+   "isFinal": true
+  },
+  {
+   "text": "لا تزال فرق الفئة الأولى قلقة",
+   "audioTimeMs": 355190,
+   "emitMs": 356029,
+   "isFinal": true
+  },
+  {
+   "text": "من خلال الآثار الأوسع لأنظمة العقوبات",
+   "audioTimeMs": 358340,
+   "emitMs": 359434,
+   "isFinal": true
+  },
+  {
+   "text": "في سياق جنوب السودان تحديداً.",
+   "audioTimeMs": 361069.98,
+   "emitMs": 361733,
+   "isFinal": true
+  },
+  {
+   "text": "لذا دعونا نؤكد مجدداً على ضرورة إجراء مراجعة في الوقت المناسب للإجراءات الحالية",
+   "audioTimeMs": 367669.98,
+   "emitMs": 368427,
+   "isFinal": true
+  },
+  {
+   "text": "بما في ذلك حظر الأسلحة،",
+   "audioTimeMs": 370090,
+   "emitMs": 370836,
+   "isFinal": true
+  },
+  {
+   "text": "وذلك لضمان دعم نظام العقوبات",
+   "audioTimeMs": 373320,
+   "emitMs": 374234,
+   "isFinal": true
+  },
+  {
+   "text": "بل إنه مخيف",
+   "audioTimeMs": 375120,
+   "emitMs": 375930,
+   "isFinal": true
+  },
+  {
+   "text": "الجهود المبذولة",
+   "audioTimeMs": 376560,
+   "emitMs": 377325,
+   "isFinal": true
+  },
+  {
+   "text": "على المستوى الوطني",
+   "audioTimeMs": 377669.98,
+   "emitMs": 378529,
+   "isFinal": true
+  },
+  {
+   "text": "مؤيداً لبناء السلام",
+   "audioTimeMs": 380080.02,
+   "emitMs": 380938,
+   "isFinal": true
+  },
+  {
+   "text": "مصالحة",
+   "audioTimeMs": 381750,
+   "emitMs": 382627,
+   "isFinal": true
+  },
+  {
+   "text": "التطوير المؤسسي",
+   "audioTimeMs": 383080.02,
+   "emitMs": 384629,
+   "isFinal": true
+  },
+  {
+   "text": "وتنفيذ الاتفاقية المُجددة.",
+   "audioTimeMs": 386560,
+   "emitMs": 387341,
+   "isFinal": true
+  },
+  {
+   "text": "نحن ندرك ذلك بشكل خاص",
+   "audioTimeMs": 389580.02,
+   "emitMs": 390542,
+   "isFinal": true
+  },
+  {
+   "text": "التحديات التي يفرضها الحظر",
+   "audioTimeMs": 391909.97,
+   "emitMs": 392845,
+   "isFinal": true
+  },
+  {
+   "text": "بشأن الأسلحة وفي سياق التنفيذ.",
+   "audioTimeMs": 394690,
+   "emitMs": 395552,
+   "isFinal": true
+  },
+  {
+   "text": "ترتيبات أمنية انتقالية",
+   "audioTimeMs": 397690,
+   "emitMs": 398643,
+   "isFinal": true
+  },
+  {
+   "text": "والتوحيد",
+   "audioTimeMs": 399120.02999999997,
+   "emitMs": 400240,
+   "isFinal": true
+  },
+  {
+   "text": "نشر",
+   "audioTimeMs": 400390,
+   "emitMs": 401238,
+   "isFinal": true
+  },
+  {
+   "text": "القوات الموحدة",
+   "audioTimeMs": 402669.98,
+   "emitMs": 403641,
+   "isFinal": true
+  },
+  {
+   "text": "ضروري",
+   "audioTimeMs": 403630,
+   "emitMs": 404634,
+   "isFinal": true
+  },
+  {
+   "text": "وهو ما يظل أساسياً لتحقيق التقدم",
+   "audioTimeMs": 406530,
+   "emitMs": 407539,
+   "isFinal": true
+  },
+  {
+   "text": "عملية السلام",
+   "audioTimeMs": 408180,
+   "emitMs": 409041,
+   "isFinal": true
+  },
+  {
+   "text": "وتعزيز قدرة البلاد على الاستجابة",
+   "audioTimeMs": 410840,
+   "emitMs": 411840,
+   "isFinal": true
+  },
+  {
+   "text": "هذه التحديات الأمنية.",
+   "audioTimeMs": 413060.02999999997,
+   "emitMs": 413945,
+   "isFinal": true
+  },
+  {
+   "text": "السيد الرئيس،",
+   "audioTimeMs": 414639.98,
+   "emitMs": 415740,
+   "isFinal": true
+  },
+  {
+   "text": "لطالما دعا موقف الاتحاد الأفريقي بشأن جنوب السودان إلى رفع العقوبات تدريجياً.",
+   "audioTimeMs": 420540,
+   "emitMs": 421448,
+   "isFinal": true
+  },
+  {
+   "text": "نظام العقوبات",
+   "audioTimeMs": 422139.98,
+   "emitMs": 423041,
+   "isFinal": true
+  },
+  {
+   "text": "بما في ذلك حظر الأسلحة،",
+   "audioTimeMs": 424439.97000000003,
+   "emitMs": 425352,
+   "isFinal": true
+  },
+  {
+   "text": "من أجل الدعم",
+   "audioTimeMs": 425870.02999999997,
+   "emitMs": 426962,
+   "isFinal": true
+  },
+  {
+   "text": "تنفيذ الاتفاقية المُجددة",
+   "audioTimeMs": 428419.98,
+   "emitMs": 429468,
+   "isFinal": true
+  },
+  {
+   "text": "ولتعزيز قدرات المؤسسات الوطنية",
+   "audioTimeMs": 431700,
+   "emitMs": 432767,
+   "isFinal": true
+  },
+  {
+   "text": "لمعالجة التحديات الأمنية التي تواجه البلاد بشكل أكثر فعالية. وفي هذا الصدد، ترى الجهات الثلاث أن المجلس يجب أن يتحرك تدريجياً نحو",
+   "audioTimeMs": 440889.98,
+   "emitMs": 442069,
+   "isFinal": true
+  },
+  {
+   "text": "نحو نهج أكثر ملاءمة",
+   "audioTimeMs": 443560,
+   "emitMs": 444763,
+   "isFinal": true
+  },
+  {
+   "text": "وأكثر ملاءمة",
+   "audioTimeMs": 444940,
+   "emitMs": 446057,
+   "isFinal": true
+  },
+  {
+   "text": "مما يعزز جهود التنفيذ",
+   "audioTimeMs": 447440,
+   "emitMs": 448362,
+   "isFinal": true
+  },
+  {
+   "text": "والمشاركة السياسية",
+   "audioTimeMs": 448980,
+   "emitMs": 449963,
+   "isFinal": true
+  },
+  {
+   "text": "بدلاً من الاستمرار",
+   "audioTimeMs": 451010,
+   "emitMs": 452164,
+   "isFinal": true
+  },
+  {
+   "text": "الاعتماد على التدابير التقييدية",
+   "audioTimeMs": 453460,
+   "emitMs": 454562,
+   "isFinal": true
+  },
+  {
+   "text": "والتي كانت قائمة منذ سنوات عديدة،",
+   "audioTimeMs": 456020.01999999996,
+   "emitMs": 457170,
+   "isFinal": true
+  },
+  {
+   "text": "دون تحقيق النتائج المرجوة.",
+   "audioTimeMs": 458320,
+   "emitMs": 459270,
+   "isFinal": true
+  },
+  {
+   "text": "ما زلنا ملتزمين بالتعاون بطريقة",
+   "audioTimeMs": 461060.02999999997,
+   "emitMs": 462172,
+   "isFinal": true
+  },
+  {
+   "text": "بناء مع جميع أعضاء المجلس",
+   "audioTimeMs": 463680,
+   "emitMs": 464669,
+   "isFinal": true
+  },
+  {
+   "text": "أصحاب المصلحة الإقليميون",
+   "audioTimeMs": 465800,
+   "emitMs": 466865,
+   "isFinal": true
+  },
+  {
+   "text": "من أجل دعم السلام الدائم",
+   "audioTimeMs": 468250,
+   "emitMs": 469362,
+   "isFinal": true
+  },
+  {
+   "text": "استقرار",
+   "audioTimeMs": 469550,
+   "emitMs": 470767,
+   "isFinal": true
+  },
+  {
+   "text": "والتقدم السياسي الدائم",
+   "audioTimeMs": 472000,
+   "emitMs": 472967,
+   "isFinal": true
+  },
+  {
+   "text": "في جنوب السودان. شكراً لكم.",
+   "audioTimeMs": 474130,
+   "emitMs": 475170,
+   "isFinal": true
+  },
+  {
+   "text": "السيد الرئيس، بما أننا نأمل أن يكون هذا آخر اجتماع علني لمجلس الأمن هذا الشهر في ظل رئاستكم، أود أن أشكر الوفد الصيني على عملهم الاحترافي ورئاستهم الناجحة في مايو/أيار. كما أتمنى لكولومبيا التوفيق في الشهر المقبل. السيد الرئيس، امتنعت روسيا الاتحادية عن التصويت على قرار مجلس الأمن الذي ترعاه الولايات المتحدة لتمديد النظام المفروض على جمهورية جنوب السودان لمدة عام.",
+   "audioTimeMs": 518950.00000000006,
+   "emitMs": 519885,
+   "isFinal": true
+  },
+  {
+   "text": "نلاحظ أن المؤلفين فضلوا هذا العام الاقتصار على النصوص.",
+   "audioTimeMs": 523959.96,
+   "emitMs": 524884,
+   "isFinal": true
+  },
+  {
+   "text": "وهذا يعني في الواقع توسيعاً تقنياً للقيود،",
+   "audioTimeMs": 527890,
+   "emitMs": 529880,
+   "isFinal": true
+  },
+  {
+   "text": "ولم يتبعوا نهج الوفود الفردية",
+   "audioTimeMs": 530750,
+   "emitMs": 531671,
+   "isFinal": true
+  },
+  {
+   "text": "اقترح إثراء الوثيقة بصياغات جديدة",
+   "audioTimeMs": 534589.97,
+   "emitMs": 536672,
+   "isFinal": true
+  },
+  {
+   "text": "في محاولة لا أساس لها لزيادة الضغط على جنوب السودان.",
+   "audioTimeMs": 538620,
+   "emitMs": 539377,
+   "isFinal": true
+  },
+  {
+   "text": "وفي الوقت نفسه، لم تستطع روسيا دعم المشروع.",
+   "audioTimeMs": 542920,
+   "emitMs": 544380,
+   "isFinal": true
+  },
+  {
+   "text": "وسط الانتقادات الموجهة لحكومة جنوب السودان، لا تزال مثقلة بتقييمات الوضع السياسي. ونحن مستاؤون بشكل خاص من الربط المباشر بين حظر الأسلحة والعمليات الداخلية في البلاد من خلال منظور العنف السياسي، ورفض تسمية الحكومة الشرعية في جوبا. نحن على يقين بأن شعب جنوب السودان قادر على إيجاد حلول مستقلة لعدم الاستقرار الداخلي الراهن، وتحديد مسار تنفيذ اتفاقية السلام المُحدَّثة. في هذه المرحلة الحاسمة للبلاد، والتي تشمل الانتخابات المقررة في ديسمبر، تُعدّ مسألة الاستقرار والحفاظ على النظام العام ملحة. ولتحقيق ذلك، يجب أن تمتلك الحكومة وقواتها الأمنية كافة الأدوات اللازمة، بما في ذلك القدرات التقنية وكوادر مدربة. ولا يزال تشكيل جيش موحد بعيد المنال. والقوات المسلحة الحكومية",
+   "audioTimeMs": 607029.9700000001,
+   "emitMs": 608045,
+   "isFinal": true
+  },
+  {
+   "text": "والشرطة الوطنية ملزمة بالقيام بهذا الدور.",
+   "audioTimeMs": 610730.04,
+   "emitMs": 611674,
+   "isFinal": true
+  },
+  {
+   "text": "إلا أن العقوبات التي فرضها مجلس الأمن على المحكمة الجنوبية",
+   "audioTimeMs": 615220.0299999999,
+   "emitMs": 616075,
+   "isFinal": true
+  },
+  {
+   "text": "يمثل ذلك قيداً خطيراً في هذا الاتجاه.",
+   "audioTimeMs": 618910.03,
+   "emitMs": 619882,
+   "isFinal": true
+  },
+  {
+   "text": "وبسببهم، تُحرم جوبا من فرصة الشراء",
+   "audioTimeMs": 623180,
+   "emitMs": 624775,
+   "isFinal": true
+  },
+  {
+   "text": "حتى تسمية بسيطة مثل الزي العسكري.",
+   "audioTimeMs": 625970,
+   "emitMs": 626878,
+   "isFinal": true
+  },
+  {
+   "text": "من الجدير بالذكر أيضاً أن العقوبات تعيق التنمية الاقتصادية للبلاد، وتُثني المستثمرين الأجانب عن التعامل مع جنوب السودان. ونحن نرى أن الاستثناءات المحددة الواردة في القرار المُعتمد غير كافية. بالطبع، من السابق لأوانه الحديث عن رفع نظام مجلس الأمن لعام 2020 فوراً، إلا أن تخفيفاً جوهرياً للعقوبات بات ضرورياً. لطالما دعت روسيا، وستواصل دعوتها، إلى تخفيف القيود المفروضة على جنوب السودان. وهذا ينسجم تماماً مع السياسة الأفريقية الشاملة الرامية إلى تفكيك مجلس الأمن تدريجياً في القارة، والتي يتجاهلها شركاؤنا الغربيون بسخرية عاماً بعد عام.",
+   "audioTimeMs": 671850,
+   "emitMs": 675640,
+   "isFinal": true
+  }
+ ]
+}

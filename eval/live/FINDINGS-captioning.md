@@ -52,18 +52,43 @@ This distinction turns out to be the whole story for UN audio.
 
 ## What broke, and why it matters
 
-**The caption-then-translate arm produced nonsense.** Deepgram's multilingual
-mode, fed the UN floor, emits things like *"Le message secret est…"* and stray
-`安就啦会，一是会做的`, at **35–41% coverage** on the five-language session.
-The translation layer then faithfully renders nonsense into nonsense.
+**The caption-then-translate arm loses roughly two-thirds of the meeting.**
+Deepgram's multilingual mode reaches only **35–41% coverage** on the
+five-language session, and on the most multilingual session (S/PV.10168, six
+languages on the floor) it collapses to chrF++ **5.1–13.6**.
 
-On the most multilingual session (S/PV.10168, floor switching between six
-languages) it collapses further still: chrF++ **5.1–13.6**.
+### The control run, and the hypothesis it killed
 
-The failure is in **language detection**, not translation and not the
-architecture. A control run pins the same pipeline's ASR to English, changing
-one variable, to quantify exactly how much of the damage is attributable to
-that stage.
+I predicted the culprit was *language detection*: `multi` misreads the
+non-English floor, so pinning the ASR to a single known language should
+recover most of the loss. A control run — same pipeline, same MT, one variable
+changed — says otherwise:
+
+| | coverage (5-lang session) | chrF++ fr |
+|---|---|---|
+| Deepgram `multi` | 35–41% | 35.3 |
+| Deepgram pinned to `en` | 32–35% | 30.5 |
+
+Pinning is **slightly worse**, not better. The hypothesis is falsified.
+
+What the control *did* establish is subtler and more useful. Where the pinned
+model produces output at all it is clean and accurate — *"Merci. Les États-Unis
+saluent ce renouveau du régime de sanctions contre le Soudan du Sud…"* — it
+simply produces nothing for the ~60% of the meeting that is not English. The
+`multi` model covers marginally more but degrades on non-English passages
+rather than skipping them.
+
+A correction to my own earlier reading, too: I called the `multi` output
+"nonsense" on the strength of its first 320 characters. That passage is the
+Chinese-speaking president opening the meeting. The model garbles non-English
+speech and handles English acceptably — quoting the opening as representative
+overstated the case.
+
+So the binding constraint is not a broken detector. It is that **no
+configuration of this ASR covers a multilingual floor**: commit to one language
+and you lose the rest, or accept a "multilingual" mode that does not in fact
+span our six languages. Either way about two-thirds of a UN meeting goes
+unsaid.
 
 This is the same constraint every platform captioning product operates under:
 a caption track has one language. On a floor that switches language every few

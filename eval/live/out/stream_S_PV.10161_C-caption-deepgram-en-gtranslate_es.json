@@ -1,0 +1,1494 @@
+{
+ "provider": "C-caption-deepgram-en-gtranslate",
+ "targetLanguage": "es",
+ "events": [
+  {
+   "text": "Gracias.",
+   "audioTimeMs": 157260,
+   "emitMs": 157880,
+   "isFinal": true
+  },
+  {
+   "text": "Estados Unidos celebra la renovación.",
+   "audioTimeMs": 160450,
+   "emitMs": 160882,
+   "isFinal": true
+  },
+  {
+   "text": "del régimen de sanciones de Sudán del Sur, incluida la extensión del panel",
+   "audioTimeMs": 164820,
+   "emitMs": 165890,
+   "isFinal": true
+  },
+  {
+   "text": "mandato de expertos",
+   "audioTimeMs": 165930.01,
+   "emitMs": 166385,
+   "isFinal": true
+  },
+  {
+   "text": "y la renovación del embargo de armas",
+   "audioTimeMs": 167989.99000000002,
+   "emitMs": 168388,
+   "isFinal": true
+  },
+  {
+   "text": "prohibición de viajar",
+   "audioTimeMs": 168890,
+   "emitMs": 169483,
+   "isFinal": true
+  },
+  {
+   "text": "y medidas de congelación de activos durante doce meses adicionales.",
+   "audioTimeMs": 172070,
+   "emitMs": 172598,
+   "isFinal": true
+  },
+  {
+   "text": "También nos complace la oportunidad",
+   "audioTimeMs": 174680.01,
+   "emitMs": 175187,
+   "isFinal": true
+  },
+  {
+   "text": "revisar los puntos de referencia",
+   "audioTimeMs": 176220,
+   "emitMs": 176686,
+   "isFinal": true
+  },
+  {
+   "text": "para reflejar las realidades actuales",
+   "audioTimeMs": 177850,
+   "emitMs": 178482,
+   "isFinal": true
+  },
+  {
+   "text": "y espero con interés las recomendaciones.",
+   "audioTimeMs": 179989.99000000002,
+   "emitMs": 180683,
+   "isFinal": true
+  },
+  {
+   "text": "sobre la mejor manera de hacerlo",
+   "audioTimeMs": 181790,
+   "emitMs": 182282,
+   "isFinal": true
+  },
+  {
+   "text": "del secretario general en consulta",
+   "audioTimeMs": 184440,
+   "emitMs": 185085,
+   "isFinal": true
+  },
+  {
+   "text": "con la misión de la ONU en Sudán del Sur y el panel de expertos.",
+   "audioTimeMs": 188400,
+   "emitMs": 189290,
+   "isFinal": true
+  },
+  {
+   "text": "Estamos desanimados, sin embargo,",
+   "audioTimeMs": 190730,
+   "emitMs": 191189,
+   "isFinal": true
+  },
+  {
+   "text": "por la falta de progreso",
+   "audioTimeMs": 192099.99,
+   "emitMs": 192689,
+   "isFinal": true
+  },
+  {
+   "text": "en los puntos de referencia",
+   "audioTimeMs": 193190,
+   "emitMs": 193856,
+   "isFinal": true
+  },
+  {
+   "text": "y el continuo deterioro",
+   "audioTimeMs": 195600,
+   "emitMs": 196359,
+   "isFinal": true
+  },
+  {
+   "text": "de la política",
+   "audioTimeMs": 196790.01,
+   "emitMs": 197357,
+   "isFinal": true
+  },
+  {
+   "text": "y situación de seguridad",
+   "audioTimeMs": 198530,
+   "emitMs": 199255,
+   "isFinal": true
+  },
+  {
+   "text": "Sudán del Sur.",
+   "audioTimeMs": 199640,
+   "emitMs": 200158,
+   "isFinal": true
+  },
+  {
+   "text": "Seamos claros.",
+   "audioTimeMs": 201290.01,
+   "emitMs": 201758,
+   "isFinal": true
+  },
+  {
+   "text": "Esta falta de progreso se debe a la falta de riqueza política.",
+   "audioTimeMs": 205080,
+   "emitMs": 205569,
+   "isFinal": true
+  },
+  {
+   "text": "por el presidente Keir,",
+   "audioTimeMs": 206370,
+   "emitMs": 206961,
+   "isFinal": true
+  },
+  {
+   "text": "así como otros",
+   "audioTimeMs": 207640,
+   "emitMs": 208259,
+   "isFinal": true
+  },
+  {
+   "text": "Líderes de Sudán del Sur.",
+   "audioTimeMs": 209230,
+   "emitMs": 209858,
+   "isFinal": true
+  },
+  {
+   "text": "Los líderes de Sudán del Sur deben retomar el diálogo directo.",
+   "audioTimeMs": 213960,
+   "emitMs": 214564,
+   "isFinal": true
+  },
+  {
+   "text": "para reducir la tensión",
+   "audioTimeMs": 215319.99,
+   "emitMs": 215886,
+   "isFinal": true
+  },
+  {
+   "text": "la violencia actual.",
+   "audioTimeMs": 216599.99,
+   "emitMs": 217369,
+   "isFinal": true
+  },
+  {
+   "text": "Es una farsa.",
+   "audioTimeMs": 218360,
+   "emitMs": 218854,
+   "isFinal": true
+  },
+  {
+   "text": "sugerir que dicho diálogo se está produciendo cuando uno de los signatarios del acuerdo de paz de 2018",
+   "audioTimeMs": 224780,
+   "emitMs": 225563,
+   "isFinal": true
+  },
+  {
+   "text": "está bajo arresto domiciliario",
+   "audioTimeMs": 226510,
+   "emitMs": 227073,
+   "isFinal": true
+  },
+  {
+   "text": "y en juicio.",
+   "audioTimeMs": 227590.01,
+   "emitMs": 228750,
+   "isFinal": true
+  },
+  {
+   "text": "El consejo no puede aceptar la obstrucción del proceso de paz.",
+   "audioTimeMs": 232080,
+   "emitMs": 232755,
+   "isFinal": true
+  },
+  {
+   "text": "o acciones que amenazan",
+   "audioTimeMs": 233690,
+   "emitMs": 234249,
+   "isFinal": true
+  },
+  {
+   "text": "Los acuerdos de transición socavan el proceso político en Sudán del Sur.",
+   "audioTimeMs": 237940,
+   "emitMs": 238463,
+   "isFinal": true
+  },
+  {
+   "text": "Por lo tanto, instamos al gobierno de transición a que tome todas las medidas necesarias para restablecer la paz.",
+   "audioTimeMs": 244610,
+   "emitMs": 245255,
+   "isFinal": true
+  },
+  {
+   "text": "incluyendo la declaración de un alto el fuego nacional,",
+   "audioTimeMs": 247630,
+   "emitMs": 248258,
+   "isFinal": true
+  },
+  {
+   "text": "liberación de detenidos",
+   "audioTimeMs": 249420,
+   "emitMs": 250052,
+   "isFinal": true
+  },
+  {
+   "text": "renunciando al uso de la violencia con fines políticos,",
+   "audioTimeMs": 252460,
+   "emitMs": 255061,
+   "isFinal": true
+  },
+  {
+   "text": "y comenzar a utilizar los ingresos públicos de manera apropiada.",
+   "audioTimeMs": 255760.00999999998,
+   "emitMs": 256652,
+   "isFinal": true
+  },
+  {
+   "text": "para apoyar a los ciudadanos de Sudán del Sur.",
+   "audioTimeMs": 258399.99999999997,
+   "emitMs": 258956,
+   "isFinal": true
+  },
+  {
+   "text": "Durante años antes de la independencia de Sudán del Sur,",
+   "audioTimeMs": 262470,
+   "emitMs": 263058,
+   "isFinal": true
+  },
+  {
+   "text": "El Movimiento de Liberación del Pueblo Sudanés afirmó buscar el fin de la marginación.",
+   "audioTimeMs": 266940,
+   "emitMs": 267960,
+   "isFinal": true
+  },
+  {
+   "text": "de los sudaneses del sur por parte de los líderes en Jartum.",
+   "audioTimeMs": 270199.98,
+   "emitMs": 270659,
+   "isFinal": true
+  },
+  {
+   "text": "Debido a la mala gestión y al mal uso de los ingresos,",
+   "audioTimeMs": 273259.98,
+   "emitMs": 273862,
+   "isFinal": true
+  },
+  {
+   "text": "Esa marginación continúa.",
+   "audioTimeMs": 275470,
+   "emitMs": 276156,
+   "isFinal": true
+  },
+  {
+   "text": "Impuesto por los propios líderes de Sudán del Sur.",
+   "audioTimeMs": 278310,
+   "emitMs": 278957,
+   "isFinal": true
+  },
+  {
+   "text": "Gracias.",
+   "audioTimeMs": 279560,
+   "emitMs": 279980,
+   "isFinal": true
+  },
+  {
+   "text": "Eso",
+   "audioTimeMs": 320550,
+   "emitMs": 320572,
+   "isFinal": true
+  },
+  {
+   "text": "principio comp, que es preferible rápido.",
+   "audioTimeMs": 326440,
+   "emitMs": 326783,
+   "isFinal": true
+  },
+  {
+   "text": "El",
+   "audioTimeMs": 362970,
+   "emitMs": 365272,
+   "isFinal": true
+  },
+  {
+   "text": "Sudanir ofendido",
+   "audioTimeMs": 426340,
+   "emitMs": 428774,
+   "isFinal": true
+  },
+  {
+   "text": "Muchas gracias, señor presidente.",
+   "audioTimeMs": 707339.97,
+   "emitMs": 707778,
+   "isFinal": true
+  },
+  {
+   "text": "El texto de la resolución sobre el régimen de sanciones en Sudán del Sur es una prórroga técnica del año pasado.",
+   "audioTimeMs": 713700,
+   "emitMs": 713985,
+   "isFinal": true
+  },
+  {
+   "text": "Pakistán se había abstenido en la votación de la resolución el año pasado.",
+   "audioTimeMs": 717230,
+   "emitMs": 717588,
+   "isFinal": true
+  },
+  {
+   "text": "Nuestra prórroga de hoy es coherente con esa postura.",
+   "audioTimeMs": 720910,
+   "emitMs": 721385,
+   "isFinal": true
+  },
+  {
+   "text": "Pakistán mantiene su compromiso con la paz y la estabilidad duraderas en Sudán del Sur.",
+   "audioTimeMs": 725930,
+   "emitMs": 726186,
+   "isFinal": true
+  },
+  {
+   "text": "Seguimos apoyando el acuerdo revitalizado.",
+   "audioTimeMs": 729120,
+   "emitMs": 729582,
+   "isFinal": true
+  },
+  {
+   "text": "como el único marco viable y consensuado para la paz.",
+   "audioTimeMs": 732200,
+   "emitMs": 732485,
+   "isFinal": true
+  },
+  {
+   "text": "Creemos",
+   "audioTimeMs": 733270,
+   "emitMs": 733683,
+   "isFinal": true
+  },
+  {
+   "text": "que las sanciones son una herramienta importante de la que dispone el Consejo de Seguridad.",
+   "audioTimeMs": 737430.05,
+   "emitMs": 737792,
+   "isFinal": true
+  },
+  {
+   "text": "Pero deben usarse con prudencia.",
+   "audioTimeMs": 740040.0399999999,
+   "emitMs": 740381,
+   "isFinal": true
+  },
+  {
+   "text": "revisado periódicamente,",
+   "audioTimeMs": 741660,
+   "emitMs": 742084,
+   "isFinal": true
+  },
+  {
+   "text": "y no debería quedar abierto",
+   "audioTimeMs": 743790.0399999999,
+   "emitMs": 744164,
+   "isFinal": true
+  },
+  {
+   "text": "o de carácter punitivo.",
+   "audioTimeMs": 745029.9700000001,
+   "emitMs": 745565,
+   "isFinal": true
+  },
+  {
+   "text": "Su propósito debería ser apoyar las soluciones políticas y los esfuerzos de estabilización.",
+   "audioTimeMs": 749990,
+   "emitMs": 750572,
+   "isFinal": true
+  },
+  {
+   "text": "También tomamos nota de la posición de la Unión Africana en contra de",
+   "audioTimeMs": 753190,
+   "emitMs": 755567,
+   "isFinal": true
+  },
+  {
+   "text": "Continuación de las sanciones contra Sudán del Sur.",
+   "audioTimeMs": 755250,
+   "emitMs": 755869,
+   "isFinal": true
+  },
+  {
+   "text": "El deterioro de la situación política y de seguridad sobre el terreno",
+   "audioTimeMs": 759380,
+   "emitMs": 759767,
+   "isFinal": true
+  },
+  {
+   "text": "Esto plantea importantes interrogantes sobre la eficacia del actual régimen de sanciones.",
+   "audioTimeMs": 763730,
+   "emitMs": 764169,
+   "isFinal": true
+  },
+  {
+   "text": "A pesar de años de restricciones,",
+   "audioTimeMs": 765740.05,
+   "emitMs": 766366,
+   "isFinal": true
+  },
+  {
+   "text": "La inestabilidad persiste y la implementación de",
+   "audioTimeMs": 769090,
+   "emitMs": 771365,
+   "isFinal": true
+  },
+  {
+   "text": "Aún no se han completado los acuerdos transitorios clave.",
+   "audioTimeMs": 771710,
+   "emitMs": 772369,
+   "isFinal": true
+  },
+  {
+   "text": "Se avanzará en una pieza duradera en Sudán del Sur.",
+   "audioTimeMs": 774839.97,
+   "emitMs": 775268,
+   "isFinal": true
+  },
+  {
+   "text": "a través de un compromiso político sostenido,",
+   "audioTimeMs": 777030,
+   "emitMs": 777569,
+   "isFinal": true
+  },
+  {
+   "text": "implementación del acuerdo revitalizado,",
+   "audioTimeMs": 779790.0399999999,
+   "emitMs": 780268,
+   "isFinal": true
+  },
+  {
+   "text": "y apoyando los esfuerzos regionales liderados por la Unión Africana,",
+   "audioTimeMs": 783360,
+   "emitMs": 783769,
+   "isFinal": true
+  },
+  {
+   "text": "y EGAD.",
+   "audioTimeMs": 784350,
+   "emitMs": 784966,
+   "isFinal": true
+  },
+  {
+   "text": "Continuaremos colaborando de manera constructiva con todos los socios.",
+   "audioTimeMs": 787759.95,
+   "emitMs": 788270,
+   "isFinal": true
+  },
+  {
+   "text": "en apoyo de una paz duradera",
+   "audioTimeMs": 790060,
+   "emitMs": 790589,
+   "isFinal": true
+  },
+  {
+   "text": "y estabilidad",
+   "audioTimeMs": 791170,
+   "emitMs": 791789,
+   "isFinal": true
+  },
+  {
+   "text": "en Sudán del Sur.",
+   "audioTimeMs": 792290,
+   "emitMs": 792894,
+   "isFinal": true
+  },
+  {
+   "text": "Por último, señor presidente,",
+   "audioTimeMs": 794100,
+   "emitMs": 794993,
+   "isFinal": true
+  },
+  {
+   "text": "Permítanme concluir felicitándolos por una conducta muy exitosa y fluida.",
+   "audioTimeMs": 798990,
+   "emitMs": 799998,
+   "isFinal": true
+  },
+  {
+   "text": "de la presidencia por China este mes.",
+   "audioTimeMs": 800970.0299999999,
+   "emitMs": 801600,
+   "isFinal": true
+  },
+  {
+   "text": "Y les deseo todo lo mejor.",
+   "audioTimeMs": 802890,
+   "emitMs": 803494,
+   "isFinal": true
+  },
+  {
+   "text": "a nuestros colegas colombianos",
+   "audioTimeMs": 804640,
+   "emitMs": 805196,
+   "isFinal": true
+  },
+  {
+   "text": "a medida que asumen este papel.",
+   "audioTimeMs": 806010,
+   "emitMs": 806595,
+   "isFinal": true
+  },
+  {
+   "text": "A partir del lunes.",
+   "audioTimeMs": 807170.0399999999,
+   "emitMs": 807696,
+   "isFinal": true
+  },
+  {
+   "text": "Les deseo a todos un fin de semana muy feliz y tranquilo.",
+   "audioTimeMs": 810870,
+   "emitMs": 811402,
+   "isFinal": true
+  },
+  {
+   "text": "Gracias.",
+   "audioTimeMs": 811769.96,
+   "emitMs": 813597,
+   "isFinal": true
+  },
+  {
+   "text": "Sudán, Fiadhir, Jal Sallium, coma,",
+   "audioTimeMs": 865399.96,
+   "emitMs": 867409,
+   "isFinal": true
+  },
+  {
+   "text": "Otro",
+   "audioTimeMs": 936910.03,
+   "emitMs": 937482,
+   "isFinal": true
+  },
+  {
+   "text": "Señor Señor Presidente,",
+   "audioTimeMs": 1112400,
+   "emitMs": 1113084,
+   "isFinal": true
+  },
+  {
+   "text": "I",
+   "audioTimeMs": 1113550,
+   "emitMs": 1114084,
+   "isFinal": true
+  },
+  {
+   "text": "Gracias, y también te felicito por terminar esto.",
+   "audioTimeMs": 1116840,
+   "emitMs": 1117576,
+   "isFinal": true
+  },
+  {
+   "text": "tenencia",
+   "audioTimeMs": 1118110.1,
+   "emitMs": 1118578,
+   "isFinal": true
+  },
+  {
+   "text": "Con nosotros desde el principio.",
+   "audioTimeMs": 1119740,
+   "emitMs": 1120578,
+   "isFinal": true
+  },
+  {
+   "text": "Mi delegación desea expresar",
+   "audioTimeMs": 1123740,
+   "emitMs": 1124283,
+   "isFinal": true
+  },
+  {
+   "text": "es aprecio",
+   "audioTimeMs": 1125640,
+   "emitMs": 1126174,
+   "isFinal": true
+  },
+  {
+   "text": "a pesar de,",
+   "audioTimeMs": 1126700,
+   "emitMs": 1127780,
+   "isFinal": true
+  },
+  {
+   "text": "la obvia estafa",
+   "audioTimeMs": 1128580.0999999999,
+   "emitMs": 1129275,
+   "isFinal": true
+  },
+  {
+   "text": "obvio",
+   "audioTimeMs": 1129490,
+   "emitMs": 1130472,
+   "isFinal": true
+  },
+  {
+   "text": "falta de consulta,",
+   "audioTimeMs": 1132260,
+   "emitMs": 1132776,
+   "isFinal": true
+  },
+  {
+   "text": "aún deseamos",
+   "audioTimeMs": 1133950,
+   "emitMs": 1134572,
+   "isFinal": true
+  },
+  {
+   "text": "agradecer",
+   "audioTimeMs": 1134780,
+   "emitMs": 1135171,
+   "isFinal": true
+  },
+  {
+   "text": "nuestro",
+   "audioTimeMs": 1135279.9,
+   "emitMs": 1135771,
+   "isFinal": true
+  },
+  {
+   "text": "apreciación",
+   "audioTimeMs": 1137429.9000000001,
+   "emitMs": 1137973,
+   "isFinal": true
+  },
+  {
+   "text": "a",
+   "audioTimeMs": 1138190.1,
+   "emitMs": 1138668,
+   "isFinal": true
+  },
+  {
+   "text": "el portalápices para ello es",
+   "audioTimeMs": 1140390,
+   "emitMs": 1140776,
+   "isFinal": true
+  },
+  {
+   "text": "esfuerzo",
+   "audioTimeMs": 1141460,
+   "emitMs": 1141975,
+   "isFinal": true
+  },
+  {
+   "text": "durante toda la negociación.",
+   "audioTimeMs": 1143270,
+   "emitMs": 1143916,
+   "isFinal": true
+  },
+  {
+   "text": "Y",
+   "audioTimeMs": 1144220,
+   "emitMs": 1144912,
+   "isFinal": true
+  },
+  {
+   "text": "por el tiempo y el compromiso invertidos",
+   "audioTimeMs": 1146429.9000000001,
+   "emitMs": 1147116,
+   "isFinal": true
+  },
+  {
+   "text": "para facilitar los debates entre los miembros del consejo.",
+   "audioTimeMs": 1149840,
+   "emitMs": 1150525,
+   "isFinal": true
+  },
+  {
+   "text": "También agradecemos a todas las delegaciones.",
+   "audioTimeMs": 1153539.9,
+   "emitMs": 1154120,
+   "isFinal": true
+  },
+  {
+   "text": "que participaron de manera constructiva en el proceso",
+   "audioTimeMs": 1158090,
+   "emitMs": 1158720,
+   "isFinal": true
+  },
+  {
+   "text": "y",
+   "audioTimeMs": 1158630,
+   "emitMs": 1159312,
+   "isFinal": true
+  },
+  {
+   "text": "permanecer comprometidos",
+   "audioTimeMs": 1160190,
+   "emitMs": 1160817,
+   "isFinal": true
+  },
+  {
+   "text": "dialogar y con",
+   "audioTimeMs": 1161770,
+   "emitMs": 1162321,
+   "isFinal": true
+  },
+  {
+   "text": "construcción de consenso.",
+   "audioTimeMs": 1163299.9,
+   "emitMs": 1163924,
+   "isFinal": true
+  },
+  {
+   "text": "Si bien reconocemos que,",
+   "audioTimeMs": 1165610,
+   "emitMs": 1166317,
+   "isFinal": true
+  },
+  {
+   "text": "mi delegación lamenta",
+   "audioTimeMs": 1168480.1,
+   "emitMs": 1169017,
+   "isFinal": true
+  },
+  {
+   "text": "a",
+   "audioTimeMs": 1168900,
+   "emitMs": 1169818,
+   "isFinal": true
+  },
+  {
+   "text": "la adopción",
+   "audioTimeMs": 1170340,
+   "emitMs": 1170917,
+   "isFinal": true
+  },
+  {
+   "text": "de la resolución que renueva el régimen de sanciones",
+   "audioTimeMs": 1173000,
+   "emitMs": 1173719,
+   "isFinal": true
+  },
+  {
+   "text": "y embargo",
+   "audioTimeMs": 1174640,
+   "emitMs": 1175217,
+   "isFinal": true
+  },
+  {
+   "text": "en la República de Sudán del Sur.",
+   "audioTimeMs": 1176650,
+   "emitMs": 1177007,
+   "isFinal": true
+  },
+  {
+   "text": "En nuestra opinión,",
+   "audioTimeMs": 1179350,
+   "emitMs": 1179904,
+   "isFinal": true
+  },
+  {
+   "text": "el mantenimiento continuo",
+   "audioTimeMs": 1182210.1,
+   "emitMs": 1182701,
+   "isFinal": true
+  },
+  {
+   "text": "del brazo",
+   "audioTimeMs": 1183360,
+   "emitMs": 1183803,
+   "isFinal": true
+  },
+  {
+   "text": "embargo de armas",
+   "audioTimeMs": 1184480,
+   "emitMs": 1184900,
+   "isFinal": true
+  },
+  {
+   "text": "cada vez es más",
+   "audioTimeMs": 1186370,
+   "emitMs": 1187000,
+   "isFinal": true
+  },
+  {
+   "text": "incompatible con",
+   "audioTimeMs": 1188059.9,
+   "emitMs": 1188599,
+   "isFinal": true
+  },
+  {
+   "text": "las realidades",
+   "audioTimeMs": 1189400,
+   "emitMs": 1189897,
+   "isFinal": true
+  },
+  {
+   "text": "y el desafío que enfrenta",
+   "audioTimeMs": 1192060,
+   "emitMs": 1192601,
+   "isFinal": true
+  },
+  {
+   "text": "el país hoy.",
+   "audioTimeMs": 1193210,
+   "emitMs": 1193601,
+   "isFinal": true
+  },
+  {
+   "text": "En lugar de apoyar",
+   "audioTimeMs": 1196180,
+   "emitMs": 1196698,
+   "isFinal": true
+  },
+  {
+   "text": "y fortaleciendo el estado,",
+   "audioTimeMs": 1198840,
+   "emitMs": 1199809,
+   "isFinal": true
+  },
+  {
+   "text": "instituciones,",
+   "audioTimeMs": 1200769.9,
+   "emitMs": 1201401,
+   "isFinal": true
+  },
+  {
+   "text": "Limita",
+   "audioTimeMs": 1203100,
+   "emitMs": 1203598,
+   "isFinal": true
+  },
+  {
+   "text": "la capacidad legítima",
+   "audioTimeMs": 1204630,
+   "emitMs": 1205204,
+   "isFinal": true
+  },
+  {
+   "text": "del gobierno para proteger su",
+   "audioTimeMs": 1207760,
+   "emitMs": 1208306,
+   "isFinal": true
+  },
+  {
+   "text": "civiles",
+   "audioTimeMs": 1209760,
+   "emitMs": 1210209,
+   "isFinal": true
+  },
+  {
+   "text": "asegurar sus fronteras,",
+   "audioTimeMs": 1211330.0999999999,
+   "emitMs": 1211713,
+   "isFinal": true
+  },
+  {
+   "text": "y responder eficazmente.",
+   "audioTimeMs": 1213560,
+   "emitMs": 1214012,
+   "isFinal": true
+  },
+  {
+   "text": "A las amenazas",
+   "audioTimeMs": 1215049.9,
+   "emitMs": 1215509,
+   "isFinal": true
+  },
+  {
+   "text": "planteado por",
+   "audioTimeMs": 1216170,
+   "emitMs": 1216507,
+   "isFinal": true
+  },
+  {
+   "text": "grupos armados.",
+   "audioTimeMs": 1217500,
+   "emitMs": 1218009,
+   "isFinal": true
+  },
+  {
+   "text": "Y otros actores no estatales.",
+   "audioTimeMs": 1220010,
+   "emitMs": 1220516,
+   "isFinal": true
+  },
+  {
+   "text": "Al reunirnos hoy,",
+   "audioTimeMs": 1222720,
+   "emitMs": 1223214,
+   "isFinal": true
+  },
+  {
+   "text": "Familias de todo Sudán del Sur están de luto.",
+   "audioTimeMs": 1227100,
+   "emitMs": 1227513,
+   "isFinal": true
+  },
+  {
+   "text": "La trágica pérdida de cinco ingenieros civiles que fallecieron.",
+   "audioTimeMs": 1232260,
+   "emitMs": 1232808,
+   "isFinal": true
+  },
+  {
+   "text": "mientras",
+   "audioTimeMs": 1233360,
+   "emitMs": 1234006,
+   "isFinal": true
+  },
+  {
+   "text": "realizar trabajos de construcción de carreteras",
+   "audioTimeMs": 1236120,
+   "emitMs": 1236513,
+   "isFinal": true
+  },
+  {
+   "text": "en el condado de Marruecos, finca ecuatorial de Sintra.",
+   "audioTimeMs": 1240470,
+   "emitMs": 1240912,
+   "isFinal": true
+  },
+  {
+   "text": "Estas personas",
+   "audioTimeMs": 1242480,
+   "emitMs": 1243113,
+   "isFinal": true
+  },
+  {
+   "text": "estaban contribuyendo",
+   "audioTimeMs": 1244610.1,
+   "emitMs": 1245210,
+   "isFinal": true
+  },
+  {
+   "text": "al desarrollo nacional",
+   "audioTimeMs": 1246500,
+   "emitMs": 1246904,
+   "isFinal": true
+  },
+  {
+   "text": "conectividad,",
+   "audioTimeMs": 1247750,
+   "emitMs": 1248203,
+   "isFinal": true
+  },
+  {
+   "text": "y la recuperación económica.",
+   "audioTimeMs": 1249330.0999999999,
+   "emitMs": 1249704,
+   "isFinal": true
+  },
+  {
+   "text": "Su muerte",
+   "audioTimeMs": 1251669.9000000001,
+   "emitMs": 1252199,
+   "isFinal": true
+  },
+  {
+   "text": "sírvenos",
+   "audioTimeMs": 1252970,
+   "emitMs": 1253600,
+   "isFinal": true
+  },
+  {
+   "text": "como soberano",
+   "audioTimeMs": 1254230.1,
+   "emitMs": 1254697,
+   "isFinal": true
+  },
+  {
+   "text": "recordatorio de",
+   "audioTimeMs": 1255779.9,
+   "emitMs": 1256197,
+   "isFinal": true
+  },
+  {
+   "text": "el desafío de seguridad que aún persiste",
+   "audioTimeMs": 1258250,
+   "emitMs": 1258699,
+   "isFinal": true
+  },
+  {
+   "text": "bajo la importancia de garantizar",
+   "audioTimeMs": 1260420,
+   "emitMs": 1260903,
+   "isFinal": true
+  },
+  {
+   "text": "eso",
+   "audioTimeMs": 1261390,
+   "emitMs": 1261799,
+   "isFinal": true
+  },
+  {
+   "text": "nacional",
+   "audioTimeMs": 1262320,
+   "emitMs": 1262800,
+   "isFinal": true
+  },
+  {
+   "text": "instituciones",
+   "audioTimeMs": 1263550,
+   "emitMs": 1264099,
+   "isFinal": true
+  },
+  {
+   "text": "están adecuadamente equipados",
+   "audioTimeMs": 1265430,
+   "emitMs": 1265797,
+   "isFinal": true
+  },
+  {
+   "text": "para proteger a los civiles",
+   "audioTimeMs": 1267350.1,
+   "emitMs": 1267800,
+   "isFinal": true
+  },
+  {
+   "text": "y apoyo",
+   "audioTimeMs": 1268330,
+   "emitMs": 1268604,
+   "isFinal": true
+  },
+  {
+   "text": "desarrollo.",
+   "audioTimeMs": 1269210,
+   "emitMs": 1269505,
+   "isFinal": true
+  },
+  {
+   "text": "Esfuerzos.",
+   "audioTimeMs": 1270080,
+   "emitMs": 1270506,
+   "isFinal": true
+  },
+  {
+   "text": "Señor presidente,",
+   "audioTimeMs": 1271820,
+   "emitMs": 1272525,
+   "isFinal": true
+  },
+  {
+   "text": "Sudán del Sur cree firmemente que",
+   "audioTimeMs": 1275030,
+   "emitMs": 1275525,
+   "isFinal": true
+  },
+  {
+   "text": "paz sostenible",
+   "audioTimeMs": 1276740,
+   "emitMs": 1277320,
+   "isFinal": true
+  },
+  {
+   "text": "es mejor avanzado",
+   "audioTimeMs": 1278470,
+   "emitMs": 1279025,
+   "isFinal": true
+  },
+  {
+   "text": "a través de instituciones nacionales sólidas,",
+   "audioTimeMs": 1281250,
+   "emitMs": 1282025,
+   "isFinal": true
+  },
+  {
+   "text": "medidas de seguridad eficaces,",
+   "audioTimeMs": 1284019.9,
+   "emitMs": 1284624,
+   "isFinal": true
+  },
+  {
+   "text": "y genuino",
+   "audioTimeMs": 1286060,
+   "emitMs": 1286619,
+   "isFinal": true
+  },
+  {
+   "text": "propiedad nacional.",
+   "audioTimeMs": 1287820,
+   "emitMs": 1288226,
+   "isFinal": true
+  },
+  {
+   "text": "Del proceso de paz.",
+   "audioTimeMs": 1289179.9000000001,
+   "emitMs": 1289723,
+   "isFinal": true
+  },
+  {
+   "text": "Medidas que",
+   "audioTimeMs": 1291440,
+   "emitMs": 1291921,
+   "isFinal": true
+  },
+  {
+   "text": "por inadvertencia",
+   "audioTimeMs": 1292560,
+   "emitMs": 1293122,
+   "isFinal": true
+  },
+  {
+   "text": "debilitar la capacidad del Estado",
+   "audioTimeMs": 1295100,
+   "emitMs": 1295624,
+   "isFinal": true
+  },
+  {
+   "text": "al tiempo que no logra disuadir",
+   "audioTimeMs": 1297409.9000000001,
+   "emitMs": 1297921,
+   "isFinal": true
+  },
+  {
+   "text": "los spoilers",
+   "audioTimeMs": 1299110,
+   "emitMs": 1299621,
+   "isFinal": true
+  },
+  {
+   "text": "orden",
+   "audioTimeMs": 1299930,
+   "emitMs": 1300417,
+   "isFinal": true
+  },
+  {
+   "text": "reconsideraciones cuidadosas.",
+   "audioTimeMs": 1302510,
+   "emitMs": 1303125,
+   "isFinal": true
+  },
+  {
+   "text": "A este respecto,",
+   "audioTimeMs": 1305370.1,
+   "emitMs": 1306745,
+   "isFinal": true
+  },
+  {
+   "text": "respetuosamente",
+   "audioTimeMs": 1307669.9000000001,
+   "emitMs": 1308440,
+   "isFinal": true
+  },
+  {
+   "text": "reiterar",
+   "audioTimeMs": 1309040,
+   "emitMs": 1309641,
+   "isFinal": true
+  },
+  {
+   "text": "nuestro llamamiento al Consejo de Seguridad para que dé",
+   "audioTimeMs": 1312990.1,
+   "emitMs": 1313543,
+   "isFinal": true
+  },
+  {
+   "text": "la debida consideración",
+   "audioTimeMs": 1315030,
+   "emitMs": 1315644,
+   "isFinal": true
+  },
+  {
+   "text": "En consonancia con la posición consistente de la EGAT de la Unión Africana y otras partes interesadas regionales, tenemos",
+   "audioTimeMs": 1323460.1,
+   "emitMs": 1324050,
+   "isFinal": true
+  },
+  {
+   "text": "repetidamente",
+   "audioTimeMs": 1325020,
+   "emitMs": 1325644,
+   "isFinal": true
+  },
+  {
+   "text": "abogó por el levantamiento",
+   "audioTimeMs": 1327530,
+   "emitMs": 1328138,
+   "isFinal": true
+  },
+  {
+   "text": "del régimen de sanciones",
+   "audioTimeMs": 1329320.0999999999,
+   "emitMs": 1329843,
+   "isFinal": true
+  },
+  {
+   "text": "y embargo de armas",
+   "audioTimeMs": 1330870,
+   "emitMs": 1331344,
+   "isFinal": true
+  },
+  {
+   "text": "en Sudán del Sur.",
+   "audioTimeMs": 1332340.0999999999,
+   "emitMs": 1332847,
+   "isFinal": true
+  },
+  {
+   "text": "La perspectiva de los más cercanos",
+   "audioTimeMs": 1335950,
+   "emitMs": 1336645,
+   "isFinal": true
+  },
+  {
+   "text": "para la situación sobre el terreno sigue siendo valioso",
+   "audioTimeMs": 1340620,
+   "emitMs": 1341246,
+   "isFinal": true
+  },
+  {
+   "text": "al informar al consejo",
+   "audioTimeMs": 1343640,
+   "emitMs": 1344042,
+   "isFinal": true
+  },
+  {
+   "text": "deliberación.",
+   "audioTimeMs": 1344670,
+   "emitMs": 1345243,
+   "isFinal": true
+  },
+  {
+   "text": "Señor presidente,",
+   "audioTimeMs": 1346340,
+   "emitMs": 1346945,
+   "isFinal": true
+  },
+  {
+   "text": "Sudán del Sur permanece completamente",
+   "audioTimeMs": 1348500,
+   "emitMs": 1348763,
+   "isFinal": true
+  },
+  {
+   "text": "comprometido",
+   "audioTimeMs": 1349409.9000000001,
+   "emitMs": 1349760,
+   "isFinal": true
+  },
+  {
+   "text": "a",
+   "audioTimeMs": 1350470.1,
+   "emitMs": 1350860,
+   "isFinal": true
+  },
+  {
+   "text": "cooperación constructiva con las Naciones Unidas, la Unión Africana,",
+   "audioTimeMs": 1354630,
+   "emitMs": 1354970,
+   "isFinal": true
+  },
+  {
+   "text": "EGAT y",
+   "audioTimeMs": 1356890,
+   "emitMs": 1357267,
+   "isFinal": true
+  },
+  {
+   "text": "Todos los socios internacionales en el avance de la paz.",
+   "audioTimeMs": 1359940.1,
+   "emitMs": 1360367,
+   "isFinal": true
+  },
+  {
+   "text": "Reconciliación,",
+   "audioTimeMs": 1361460,
+   "emitMs": 1361967,
+   "isFinal": true
+  },
+  {
+   "text": "construcción institucional,",
+   "audioTimeMs": 1363450,
+   "emitMs": 1363863,
+   "isFinal": true
+  },
+  {
+   "text": "y el desarrollo sostenible.",
+   "audioTimeMs": 1365549.9,
+   "emitMs": 1365868,
+   "isFinal": true
+  },
+  {
+   "text": "Seguimos siendo alentados por la continua",
+   "audioTimeMs": 1369660,
+   "emitMs": 1369965,
+   "isFinal": true
+  },
+  {
+   "text": "apoyo de la comunidad internacional",
+   "audioTimeMs": 1371880,
+   "emitMs": 1372360,
+   "isFinal": true
+  },
+  {
+   "text": "y confianza en que",
+   "audioTimeMs": 1373460,
+   "emitMs": 1373759,
+   "isFinal": true
+  },
+  {
+   "text": "trabajando juntos",
+   "audioTimeMs": 1374960.1,
+   "emitMs": 1375462,
+   "isFinal": true
+  },
+  {
+   "text": "podemos superar lo que queda",
+   "audioTimeMs": 1378130,
+   "emitMs": 1378464,
+   "isFinal": true
+  },
+  {
+   "text": "desafío y creación",
+   "audioTimeMs": 1379960,
+   "emitMs": 1380363,
+   "isFinal": true
+  },
+  {
+   "text": "condiciones necesarias para",
+   "audioTimeMs": 1382140,
+   "emitMs": 1382568,
+   "isFinal": true
+  },
+  {
+   "text": "una pacífica",
+   "audioTimeMs": 1383280,
+   "emitMs": 1383819,
+   "isFinal": true
+  },
+  {
+   "text": "estable y",
+   "audioTimeMs": 1384760,
+   "emitMs": 1385321,
+   "isFinal": true
+  },
+  {
+   "text": "próspero",
+   "audioTimeMs": 1385810,
+   "emitMs": 1386318,
+   "isFinal": true
+  },
+  {
+   "text": "futuro.",
+   "audioTimeMs": 1386570.0999999999,
+   "emitMs": 1387120,
+   "isFinal": true
+  },
+  {
+   "text": "Para todos los sursudaneses.",
+   "audioTimeMs": 1388740,
+   "emitMs": 1389224,
+   "isFinal": true
+  },
+  {
+   "text": "Para concluir,",
+   "audioTimeMs": 1391890,
+   "emitMs": 1392523,
+   "isFinal": true
+  },
+  {
+   "text": "Mi delegación les expresa su sincero agradecimiento.",
+   "audioTimeMs": 1395399.9,
+   "emitMs": 1397423,
+   "isFinal": true
+  },
+  {
+   "text": "a aquellos miembros del Consejo de Seguridad que continúan",
+   "audioTimeMs": 1398750,
+   "emitMs": 1399424,
+   "isFinal": true
+  },
+  {
+   "text": "para apoyar",
+   "audioTimeMs": 1399980,
+   "emitMs": 1400618,
+   "isFinal": true
+  },
+  {
+   "text": "equilibrado",
+   "audioTimeMs": 1400950.1,
+   "emitMs": 1401619,
+   "isFinal": true
+  },
+  {
+   "text": "constructivo",
+   "audioTimeMs": 1402289.9,
+   "emitMs": 1402816,
+   "isFinal": true
+  },
+  {
+   "text": "y con visión de futuro",
+   "audioTimeMs": 1403870,
+   "emitMs": 1404415,
+   "isFinal": true
+  },
+  {
+   "text": "acercamiento hacia Sudán del Sur.",
+   "audioTimeMs": 1406080,
+   "emitMs": 1406420,
+   "isFinal": true
+  },
+  {
+   "text": "Valoramos",
+   "audioTimeMs": 1407710,
+   "emitMs": 1408420,
+   "isFinal": true
+  },
+  {
+   "text": "su asociación",
+   "audioTimeMs": 1409330,
+   "emitMs": 1410018,
+   "isFinal": true
+  },
+  {
+   "text": "y permanecer",
+   "audioTimeMs": 1410419.9000000001,
+   "emitMs": 1411015,
+   "isFinal": true
+  },
+  {
+   "text": "comprometido",
+   "audioTimeMs": 1411270,
+   "emitMs": 1411573,
+   "isFinal": true
+  },
+  {
+   "text": "trabajar en colaboración",
+   "audioTimeMs": 1412820,
+   "emitMs": 1413276,
+   "isFinal": true
+  },
+  {
+   "text": "con todos los miembros.",
+   "audioTimeMs": 1414500,
+   "emitMs": 1414878,
+   "isFinal": true
+  },
+  {
+   "text": "De este consejo en pos de",
+   "audioTimeMs": 1417230,
+   "emitMs": 1417676,
+   "isFinal": true
+  },
+  {
+   "text": "nuestro objetivo común",
+   "audioTimeMs": 1419590,
+   "emitMs": 1419978,
+   "isFinal": true
+  },
+  {
+   "text": "de una paz segura,",
+   "audioTimeMs": 1422000,
+   "emitMs": 1422481,
+   "isFinal": true
+  },
+  {
+   "text": "y un Sudán del Sur estable.",
+   "audioTimeMs": 1424210,
+   "emitMs": 1424483,
+   "isFinal": true
+  },
+  {
+   "text": "Presente.",
+   "audioTimeMs": 1439910,
+   "emitMs": 1440081,
+   "isFinal": true
+  }
+ ]
+}
