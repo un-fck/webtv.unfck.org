@@ -1,0 +1,318 @@
+{
+ "provider": "C-azure-speech-translation-en",
+ "targetLanguage": "fr",
+ "events": [
+  {
+   "text": "Shambu Anchuan Li Shuhui était-elle en argent ?",
+   "audioTimeMs": 10760,
+   "emitMs": 11310,
+   "isFinal": true
+  },
+  {
+   "text": "J’y vais.",
+   "audioTimeMs": 19880,
+   "emitMs": 20490,
+   "isFinal": true
+  },
+  {
+   "text": "Tu ne peux pas, Congo.",
+   "audioTimeMs": 21790,
+   "emitMs": 24445,
+   "isFinal": true
+  },
+  {
+   "text": "Et la seule façon de changer est plus grande que le titre.",
+   "audioTimeMs": 28990,
+   "emitMs": 29820,
+   "isFinal": true
+  },
+  {
+   "text": "Julian Jedi.",
+   "audioTimeMs": 35070,
+   "emitMs": 36449,
+   "isFinal": true
+  },
+  {
+   "text": "Angeles.",
+   "audioTimeMs": 41870,
+   "emitMs": 42686,
+   "isFinal": true
+  },
+  {
+   "text": "Quelque part au four.",
+   "audioTimeMs": 53280,
+   "emitMs": 54285,
+   "isFinal": true
+  },
+  {
+   "text": "Seule question, c’est tout. Changer la Belgique.",
+   "audioTimeMs": 60400,
+   "emitMs": 61347,
+   "isFinal": true
+  },
+  {
+   "text": "Sanchez.",
+   "audioTimeMs": 71790,
+   "emitMs": 74015,
+   "isFinal": true
+  },
+  {
+   "text": "A financé Shinjuku.",
+   "audioTimeMs": 92770,
+   "emitMs": 93816,
+   "isFinal": true
+  },
+  {
+   "text": "Alors.",
+   "audioTimeMs": 99260,
+   "emitMs": 99842,
+   "isFinal": true
+  },
+  {
+   "text": "Joe Pyo, Sancho.",
+   "audioTimeMs": 120380,
+   "emitMs": 121041,
+   "isFinal": true
+  },
+  {
+   "text": "Journée de plaisir de Ling Piao.",
+   "audioTimeMs": 122990,
+   "emitMs": 123604,
+   "isFinal": true
+  },
+  {
+   "text": "Liu piao Qi Quan.",
+   "audioTimeMs": 125440,
+   "emitMs": 126251,
+   "isFinal": true
+  },
+  {
+   "text": "Dr Bar, êtes-vous Arling ? Tu es How, Jay ?",
+   "audioTimeMs": 136660,
+   "emitMs": 137755,
+   "isFinal": true
+  },
+  {
+   "text": "Feu.",
+   "audioTimeMs": 147430,
+   "emitMs": 148146,
+   "isFinal": true
+  },
+  {
+   "text": "Feu.",
+   "audioTimeMs": 151300,
+   "emitMs": 152600,
+   "isFinal": true
+  },
+  {
+   "text": "Merci.",
+   "audioTimeMs": 157880,
+   "emitMs": 158263,
+   "isFinal": true
+  },
+  {
+   "text": "Les États-Unis saluent le renouvellement du régime de sanctions contre le Soudan du Sud, y compris la prolongation du mandat des experts du Panel et le renouvellement de l’embargo sur les armes, de l’interdiction de voyager et des mesures de gel des avoirs pour douze mois supplémentaires.",
+   "audioTimeMs": 172430,
+   "emitMs": 173544,
+   "isFinal": true
+  },
+  {
+   "text": "Nous accueillons également favorablement l’opportunité de réviser les références pour refléter les réalités actuelles et attendons avec intérêt les recommandations du Secrétaire général sur la meilleure manière de procéder, en consultation avec la Mission des Nations Unies au Soudan du Sud et le Panel d’experts.",
+   "audioTimeMs": 188870,
+   "emitMs": 190177,
+   "isFinal": true
+  },
+  {
+   "text": "Nous sommes cependant découragés par le manque de progrès sur les critères et la détérioration continue de la situation politique et sécuritaire au Soudan du Sud.",
+   "audioTimeMs": 199910,
+   "emitMs": 200791,
+   "isFinal": true
+  },
+  {
+   "text": "Soyons clairs, ce manque de progrès est dû à un manque de richesse politique du président Kiir ainsi que d’autres dirigeants sud-soudanais.",
+   "audioTimeMs": 209670,
+   "emitMs": 210418,
+   "isFinal": true
+  },
+  {
+   "text": "Les dirigeants sud-soudanais doivent revenir au dialogue direct pour désamorcer la violence actuelle. Il est absurde de suggérer qu’un tel dialogue a lieu alors que l’un des signataires de l’accord de paix de 2018 est assigné à résidence et en procès.",
+   "audioTimeMs": 227990,
+   "emitMs": 229213,
+   "isFinal": true
+  },
+  {
+   "text": "Le Conseil ne peut accepter l’entrave au processus de paix ni les actions menaçant les accords transitoires ou sapant le processus politique au Soudan du Sud.",
+   "audioTimeMs": 238350,
+   "emitMs": 239702,
+   "isFinal": true
+  },
+  {
+   "text": "A exhorté le gouvernement de transition à prendre toutes les mesures nécessaires pour rétablir la paix, y compris la déclaration d’un cessez-le-feu national, la libération des détenus, le renonciation à l’usage de la violence à des fins politiques, et le début d’utilisation appropriée des recettes publiques pour soutenir les citoyens du Soudan du Sud. Pendant des années avant l’indépendance du Soudan du Sud, le Mouvement de libération du peuple soudanais affirmait vouloir mettre fin à la marginalisation des Sud-Soudanais par les dirigeants.",
+   "audioTimeMs": 269390,
+   "emitMs": 270252,
+   "isFinal": true
+  },
+  {
+   "text": "À Khartoum.",
+   "audioTimeMs": 270310,
+   "emitMs": 271113,
+   "isFinal": true
+  },
+  {
+   "text": "Par une mauvaise gouvernance et un mauvais usage des recettes, cette marginalisation se poursuit, imposée par les dirigeants sud-soudaniens eux-mêmes.",
+   "audioTimeMs": 278750,
+   "emitMs": 279935,
+   "isFinal": true
+  },
+  {
+   "text": "Monsieur le Président, honorez la satisfaction présente, vote ou non, l’atrois A savoir le Liberia, la Somalie, la République démocratique du Congo.",
+   "audioTimeMs": 304270,
+   "emitMs": 305201,
+   "isFinal": true
+  },
+  {
+   "text": "Le Atois new Lord diversio la resolution renovant le régime de sanction et contredit le Soudan.",
+   "audioTimeMs": 312350,
+   "emitMs": 313258,
+   "isFinal": true
+  },
+  {
+   "text": "Aucune proposition ne reflète la préoccupation des principes depuis longtemps que la question de la procédure de régime de sanction réelle continue à la mesure de la rémunération exécutive principale UTI préfère la situation Ala Soudan émise.",
+   "audioTimeMs": 328750,
+   "emitMs": 329841,
+   "isFinal": true
+  },
+  {
+   "text": "Régime de sanction ainsi que le peuple.",
+   "audioTimeMs": 333670,
+   "emitMs": 334952,
+   "isFinal": true
+  },
+  {
+   "text": "La situation, la sécurité politique, poursuivit le Fairfax à la taxe de gravité.",
+   "audioTimeMs": 342240,
+   "emitMs": 342733,
+   "isFinal": true
+  },
+  {
+   "text": "Contribuer à l’efficacité de la procédure nationale ou soudanaise de la question.",
+   "audioTimeMs": 353040,
+   "emitMs": 353675,
+   "isFinal": true
+  },
+  {
+   "text": "Le atroid de Mer préoccupy occupy palace implications en grande partie le régime de sanction le seul contexte spécifique au district du Soudan Noria Fermat Dong la nécessité de ne pas réexaminer Anton opéra de mesures embargo actuel surlez bras offensé régime garanti. Les sanctions contre Tien Pluton ayant tué une amie Lisa pour de nombreuses raisons nationales et de la consolidation lape de la réconciliation du développement.",
+   "audioTimeMs": 383510,
+   "emitMs": 384270,
+   "isFinal": true
+  },
+  {
+   "text": "Avec une certaine préoccupation, la Defi posse palam a abordé le contexte où Amis sur la sécurité terrestre transitoire de lunification, le diplôme, le premier unificateur nécessaire, le reste fondamental profanse, les processus, la capacité, la rémunération sont pertinents pour la sécurité amateur.",
+   "audioTimeMs": 413470,
+   "emitMs": 414809,
+   "isFinal": true
+  },
+  {
+   "text": "Michelle président la position del Reno African devait le faire.",
+   "audioTimeMs": 418520,
+   "emitMs": 418967,
+   "isFinal": true
+  },
+  {
+   "text": "À la manière du régime progressiste, la sanction qu’il a achevée pour l’armure lambargo sulez offensée près de Lamiza, jamais de lacoe revitalisé pour la vente d’une institution capable, défaite nationale, sécurité payée.",
+   "audioTimeMs": 434990,
+   "emitMs": 436285,
+   "isFinal": true
+  },
+  {
+   "text": "J’ai dit.",
+   "audioTimeMs": 436550,
+   "emitMs": 438882,
+   "isFinal": true
+  },
+  {
+   "text": "Progressistes, plus leur propre approche, préférable. Un plébiscite pour la politique d’allongement de Misano, Pluton, la continuation, comme apprécier la mesure restrictive que brontan plus de π de nombre Zane sampradiola résulta escante no restaurant de terminia Co père de Manuel constructeur alecteur le mambro di conseil à le parti prenant régional.",
+   "audioTimeMs": 466160,
+   "emitMs": 466978,
+   "isFinal": true
+  },
+  {
+   "text": "J’ai trouvé un costume près de Pedro Habla la stabilité de progre politique durable ou le sujet soudan ?",
+   "audioTimeMs": 474230,
+   "emitMs": 475246,
+   "isFinal": true
+  },
+  {
+   "text": "L’incendie.",
+   "audioTimeMs": 479480,
+   "emitMs": 480284,
+   "isFinal": true
+  },
+  {
+   "text": "Feu.",
+   "audioTimeMs": 483160,
+   "emitMs": 485685,
+   "isFinal": true
+  },
+  {
+   "text": "I.",
+   "audioTimeMs": 487230,
+   "emitMs": 491506,
+   "isFinal": true
+  },
+  {
+   "text": "Attaque le Brésil à Columbia Udati.",
+   "audioTimeMs": 507710,
+   "emitMs": 508889,
+   "isFinal": true
+  },
+  {
+   "text": "La présidence qui s’étend.",
+   "audioTimeMs": 509910,
+   "emitMs": 512631,
+   "isFinal": true
+  },
+  {
+   "text": "Régime de la machine publique à l’appareil. Eugene Sudan, Nadine Good.",
+   "audioTimeMs": 519040,
+   "emitMs": 520151,
+   "isFinal": true
+  },
+  {
+   "text": "À mon avis, James Tovey Tam gadu après le textum, les enseignants gardent des restrictions techniques dans le pashley Napoléon délégué le document municipal de la formule novome de Kumi Najima Sudansev.",
+   "audioTimeMs": 538710,
+   "emitMs": 540015,
+   "isFinal": true
+  },
+  {
+   "text": "Photoshop rimer Je vois nimaglapa deja prakt est un schéma de Billy shikritic Viper nashani private soudana on astayati pirigrushinam at senkami politics kasitozzi vasubinastinas news driver at primaioviaska arjuna vembarga mestrani chiris prisma politiciskova nasilia at kasat karikno nomming navani eligitimno providistov Juba.",
+   "audioTimeMs": 565510,
+   "emitMs": 567316,
+   "isFinal": true
+  },
+  {
+   "text": "L’obésité doit utiliser le Nouveau Soudanais au 19e.",
+   "audioTimeMs": 572550,
+   "emitMs": 577656,
+   "isFinal": true
+  },
+  {
+   "text": "La planificatrice, Cabrera Asubo. État Austro Stabilizazi.",
+   "audioTimeMs": 586280,
+   "emitMs": 589153,
+   "isFinal": true
+  },
+  {
+   "text": "Vasilao instructure dausnia bladat Siem naborum instrumentev cluchette if Nichivas Morninstein.",
+   "audioTimeMs": 597160,
+   "emitMs": 598162,
+   "isFinal": true
+  },
+  {
+   "text": "Complet.",
+   "audioTimeMs": 599150,
+   "emitMs": 600903,
+   "isFinal": true
+  }
+ ]
+}

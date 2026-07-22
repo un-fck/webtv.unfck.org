@@ -1,0 +1,318 @@
+{
+ "provider": "C-azure-speech-translation-en",
+ "targetLanguage": "zh",
+ "events": [
+  {
+   "text": "Shambu Anchuan 李书辉评估是现金吗？",
+   "audioTimeMs": 10760,
+   "emitMs": 11415,
+   "isFinal": true
+  },
+  {
+   "text": "我走。",
+   "audioTimeMs": 19880,
+   "emitMs": 20493,
+   "isFinal": true
+  },
+  {
+   "text": "你不行，刚果。",
+   "audioTimeMs": 21790,
+   "emitMs": 24450,
+   "isFinal": true
+  },
+  {
+   "text": "而唯一改变的方式就是更棒的称号。",
+   "audioTimeMs": 28990,
+   "emitMs": 29828,
+   "isFinal": true
+  },
+  {
+   "text": "朱利安·绝地。",
+   "audioTimeMs": 35070,
+   "emitMs": 36458,
+   "isFinal": true
+  },
+  {
+   "text": "安赫莱斯。",
+   "audioTimeMs": 41870,
+   "emitMs": 42724,
+   "isFinal": true
+  },
+  {
+   "text": "去烤箱的某个地方。",
+   "audioTimeMs": 53280,
+   "emitMs": 54217,
+   "isFinal": true
+  },
+  {
+   "text": "唯一的问题就是这样。变革比利时。",
+   "audioTimeMs": 60400,
+   "emitMs": 61331,
+   "isFinal": true
+  },
+  {
+   "text": "桑切斯。",
+   "audioTimeMs": 71790,
+   "emitMs": 74002,
+   "isFinal": true
+  },
+  {
+   "text": "新宿基金田。",
+   "audioTimeMs": 92770,
+   "emitMs": 93821,
+   "isFinal": true
+  },
+  {
+   "text": "所以。",
+   "audioTimeMs": 99260,
+   "emitMs": 99850,
+   "isFinal": true
+  },
+  {
+   "text": "乔·彪，桑乔。",
+   "audioTimeMs": 120380,
+   "emitMs": 121048,
+   "isFinal": true
+  },
+  {
+   "text": "凌飘的欢乐日。",
+   "audioTimeMs": 122990,
+   "emitMs": 123564,
+   "isFinal": true
+  },
+  {
+   "text": "刘淣奇权。",
+   "audioTimeMs": 125440,
+   "emitMs": 126208,
+   "isFinal": true
+  },
+  {
+   "text": "巴尔医生，你是阿林吗？你怎么会这样，杰？",
+   "audioTimeMs": 136660,
+   "emitMs": 137737,
+   "isFinal": true
+  },
+  {
+   "text": "开火。",
+   "audioTimeMs": 147430,
+   "emitMs": 148169,
+   "isFinal": true
+  },
+  {
+   "text": "开火。",
+   "audioTimeMs": 151300,
+   "emitMs": 152603,
+   "isFinal": true
+  },
+  {
+   "text": "谢谢。",
+   "audioTimeMs": 157880,
+   "emitMs": 158273,
+   "isFinal": true
+  },
+  {
+   "text": "美国欢迎南苏丹制裁机制的续期，包括延长专家小组的授权，以及武器禁运、旅行禁令和资产冻结措施的续期，延长12个月。",
+   "audioTimeMs": 172430,
+   "emitMs": 173517,
+   "isFinal": true
+  },
+  {
+   "text": "我们也欢迎修订基准以反映当前现实的机会，并期待秘书长在与联合国南苏丹特派团及专家小组协商后，提出最佳的建议。",
+   "audioTimeMs": 188870,
+   "emitMs": 190111,
+   "isFinal": true
+  },
+  {
+   "text": "然而，我们对基准指标的缺乏进展以及南苏丹政治和安全形势持续恶化感到沮丧。",
+   "audioTimeMs": 199910,
+   "emitMs": 200748,
+   "isFinal": true
+  },
+  {
+   "text": "需要明确的是，这种进展缓慢是由于基尔总统以及其他苏丹领导人缺乏政治财富。",
+   "audioTimeMs": 209670,
+   "emitMs": 210463,
+   "isFinal": true
+  },
+  {
+   "text": "南苏丹领导人必须恢复直接对话，以缓和当前的暴力局势。在2018年和平协议签署国之一被软禁并受审时，声称这种对话正在进行是荒谬的。",
+   "audioTimeMs": 227990,
+   "emitMs": 229241,
+   "isFinal": true
+  },
+  {
+   "text": "安理会不能接受阻挠和平进程或威胁过渡协议或破坏南苏丹政治进程的行为。",
+   "audioTimeMs": 238350,
+   "emitMs": 239648,
+   "isFinal": true
+  },
+  {
+   "text": "敦促过渡政府采取一切必要措施恢复和平，包括宣布全国停火、释放被拘留者、放弃政治手段，并开始适当使用公共财政支持南苏丹公民。在南苏丹独立之前的多年里，苏丹人民解放运动声称寻求结束领导人对南苏丹人的边缘化。",
+   "audioTimeMs": 269390,
+   "emitMs": 270199,
+   "isFinal": true
+  },
+  {
+   "text": "在喀土穆。",
+   "audioTimeMs": 270310,
+   "emitMs": 271113,
+   "isFinal": true
+  },
+  {
+   "text": "通过糟糕的治理和财政滥用，这种边缘化仍在继续，由南苏丹自己的领导人强加。",
+   "audioTimeMs": 278750,
+   "emitMs": 279917,
+   "isFinal": true
+  },
+  {
+   "text": "总统先生，无论投票与否，请尊重当前的满意，这一切都是利比里亚、索马里、刚果民主共和国推进国的好运。",
+   "audioTimeMs": 304270,
+   "emitMs": 305205,
+   "isFinal": true
+  },
+  {
+   "text": "勒阿托瓦的新主爵员对决议改革制裁体制并反对苏丹。",
+   "audioTimeMs": 312350,
+   "emitMs": 313276,
+   "isFinal": true
+  },
+  {
+   "text": "该提案不反映原则的关注，长期关注的制裁制度实际救济措施仍在执行委员会原则上，苏丹发布了更倾向于阿拉的情况。",
+   "audioTimeMs": 328750,
+   "emitMs": 329751,
+   "isFinal": true
+  },
+  {
+   "text": "制裁制度，以及人民。",
+   "audioTimeMs": 333670,
+   "emitMs": 334948,
+   "isFinal": true
+  },
+  {
+   "text": "情况、政治安全，继续费尔法克斯在重力费用上。",
+   "audioTimeMs": 342240,
+   "emitMs": 342700,
+   "isFinal": true
+  },
+  {
+   "text": "贡献有效性、国家或苏丹问题。",
+   "audioTimeMs": 353040,
+   "emitMs": 353652,
+   "isFinal": true
+  },
+  {
+   "text": "海上的行动占领宫殿，主要影响了制裁政权，唯一特定的情境是苏丹区诺里亚·费尔马特·东，必须不要重新审视安东的实际禁运，苏尔雷兹武装被冒犯的保证政权。天普鲁托杀害朋友丽莎的制裁，涉及许多未完成的国家和巩固和解发展。",
+   "audioTimeMs": 383510,
+   "emitMs": 384289,
+   "isFinal": true
+  },
+  {
+   "text": "出于某种特别的担忧，Defi posse palam在背景下提出了一个背景，认为法律安全过渡、文凭、第一统一者、其余基本的信件、流程、能力、薪酬都是业余安全相关内容。",
+   "audioTimeMs": 413470,
+   "emitMs": 414824,
+   "isFinal": true
+  },
+  {
+   "text": "米歇尔总统，雷诺非洲人的位置必须这样做。",
+   "audioTimeMs": 418520,
+   "emitMs": 418969,
+   "isFinal": true
+  },
+  {
+   "text": "一个进步的征收，政权制裁，他完成了兰巴戈苏莱兹装甲，拉米扎附近冒犯了诉讼，拉科从未振兴出售一个有能力的机构，国家失败安全支付。",
+   "audioTimeMs": 434990,
+   "emitMs": 436237,
+   "isFinal": true
+  },
+  {
+   "text": "我说。",
+   "audioTimeMs": 436550,
+   "emitMs": 438884,
+   "isFinal": true
+  },
+  {
+   "text": "进步更倾向于他们自己的方法，更倾向于公投，关于米萨诺延长政治，冥王星继续欣赏限制性措施，日晒，加上π赞恩的名额，赞恩的桑普拉迪尔，结果是埃斯坎特，没有餐厅，终点，曼努埃尔的建造性管理者，使得曼布罗的议会在地区地区中划分。",
+   "audioTimeMs": 466160,
+   "emitMs": 466973,
+   "isFinal": true
+  },
+  {
+   "text": "我在佩德罗附近找到一套西装，谈到政治稳定还是苏丹问题？",
+   "audioTimeMs": 474230,
+   "emitMs": 475252,
+   "isFinal": true
+  },
+  {
+   "text": "火灾。",
+   "audioTimeMs": 479480,
+   "emitMs": 480281,
+   "isFinal": true
+  },
+  {
+   "text": "开火。",
+   "audioTimeMs": 483160,
+   "emitMs": 485694,
+   "isFinal": true
+  },
+  {
+   "text": "I.",
+   "audioTimeMs": 487230,
+   "emitMs": 491534,
+   "isFinal": true
+  },
+  {
+   "text": "在哥伦比亚乌达蒂攻击巴西号。",
+   "audioTimeMs": 507710,
+   "emitMs": 508874,
+   "isFinal": true
+  },
+  {
+   "text": "扩展总统职位。",
+   "audioTimeMs": 509910,
+   "emitMs": 512623,
+   "isFinal": true
+  },
+  {
+   "text": "机器公共的管理。尤金·苏丹，纳丁·古德。",
+   "audioTimeMs": 519040,
+   "emitMs": 520187,
+   "isFinal": true
+  },
+  {
+   "text": "在我面前，詹姆斯·托维·塔姆·加杜，文本事实后，教师们在拿破仑代表团中保持技术限制，城市文件新公式，库米·纳吉马·苏丹塞夫。",
+   "audioTimeMs": 538710,
+   "emitMs": 539994,
+   "isFinal": true
+  },
+  {
+   "text": "Photoshop rimer I see nimaglapa deja prakt is a Billy shikritic scheme Viper nashani private sudana on astayati pirigrushinam at senkami politics kasitozzi vasubinastinas news driver at primaioviaska arjuna vembarga mestrani chiris prisma politiciskova nasilia at kasat karikno naming navani eligitimno providistov Juba.",
+   "audioTimeMs": 565510,
+   "emitMs": 567407,
+   "isFinal": true
+  },
+  {
+   "text": "肥胖问题需要在19世纪使用新苏丹语。",
+   "audioTimeMs": 572550,
+   "emitMs": 577665,
+   "isFinal": true
+  },
+  {
+   "text": "策划者，卡布雷拉·阿苏博。Austro State Vapor Stabilizazi。",
+   "audioTimeMs": 586280,
+   "emitMs": 589152,
+   "isFinal": true
+  },
+  {
+   "text": "Vasilao instructure dausnia bladat Siem naborum instrumentev cluchette if Nichivas Morninstein.",
+   "audioTimeMs": 597160,
+   "emitMs": 598149,
+   "isFinal": true
+  },
+  {
+   "text": "完整。",
+   "audioTimeMs": 599150,
+   "emitMs": 600890,
+   "isFinal": true
+  }
+ ]
+}

@@ -31,15 +31,22 @@ which is what Phase 2 measures.
 Every captioning stack in the survey is one of two shapes, and they fail
 differently enough that they must be measured separately.
 
-| | **Caption-then-translate** | **Single-model live translation** |
-|---|---|---|
-| shape | streaming ASR → MT on the captions | audio in, target text out, one model |
-| who uses it | YouTube, Meet, Teams, Zoom, AWS reference architecture, most broadcast vendors | Soniox, OpenAI Realtime, Azure Speech Translation |
-| language handling | ASR must **commit to one source language** | often multilingual natively |
-| latency | ASR finalization + MT round trip, both observable | opaque; output tokens usually carry no timestamps |
-| tested here | Deepgram nova-3 → Google Translate | Soniox, OpenAI Realtime, Azure Speech Translation |
+The dividing line is **not** pipeline-vs-single-model, which is what I assumed
+at first and had to correct after measuring. It is whether the system must
+**commit to one source language**:
 
-The architectural distinction turns out to be the whole story for UN audio.
+| | **Fixed source language** | **Natively multilingual** |
+|---|---|---|
+| shape | ASR→MT pipelines, *and* single models that take a `from` parameter | one model, many source languages at once |
+| who uses it | YouTube, Meet, Teams, Zoom, AWS reference architecture, broadcast vendors, **Azure Speech Translation** | Soniox, OpenAI Realtime |
+| tested here | Deepgram→Google Translate; Azure Speech Translation | Soniox, OpenAI Realtime |
+| result on a 5-language floor | **collapse** — 23–41% coverage, nonsense output | degraded but coherent |
+
+Azure Speech Translation is a single model, yet its API requires `from`, and it
+fails exactly like the pipelines do. That is why the architectural axis that
+matters is source-language handling, not model count.
+
+This distinction turns out to be the whole story for UN audio.
 
 ---
 
@@ -62,9 +69,17 @@ This is the same constraint every platform captioning product operates under:
 a caption track has one language. On a floor that switches language every few
 minutes, whatever the ASR commits to is wrong for part of every meeting.
 
-**The single-model translators do not have this problem** — Soniox takes
-language hints for all six UN languages at once — which is why they hold up
-better on this content despite being slower.
+**Azure Speech Translation fails the same way, and it is not a pipeline.**
+Probed on a 45-second English passage it looked like the best system tested:
+1.13 s median, clean French. Run over the whole five-language session with
+`from=en-US` it drops to **23–28% coverage** and emits *"Shambu Anchuan Li
+Shuhui était-elle en argent ?"* — English phonetics imposed on Chinese speech,
+then fluently translated. A short monolingual probe would have sold it.
+
+**The natively multilingual systems do not have this problem.** Soniox takes
+language hints for all six UN languages simultaneously, which is why it holds
+up on this content despite being slower and despite scoring worse on any
+single monolingual excerpt.
 
 ---
 

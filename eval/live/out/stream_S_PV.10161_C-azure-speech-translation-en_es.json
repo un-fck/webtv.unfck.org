@@ -1,0 +1,318 @@
+{
+ "provider": "C-azure-speech-translation-en",
+ "targetLanguage": "es",
+ "events": [
+  {
+   "text": "¿Era dinero la evaluación de Shambu Anchuan Li Shuhui?",
+   "audioTimeMs": 10760,
+   "emitMs": 11275,
+   "isFinal": true
+  },
+  {
+   "text": "Voy.",
+   "audioTimeMs": 19880,
+   "emitMs": 20492,
+   "isFinal": true
+  },
+  {
+   "text": "No lo haces, Congo.",
+   "audioTimeMs": 21790,
+   "emitMs": 24415,
+   "isFinal": true
+  },
+  {
+   "text": "Y la única forma de cambiar es mayor que el título.",
+   "audioTimeMs": 28990,
+   "emitMs": 29815,
+   "isFinal": true
+  },
+  {
+   "text": "Julian Jedi.",
+   "audioTimeMs": 35070,
+   "emitMs": 36438,
+   "isFinal": true
+  },
+  {
+   "text": "Ángeles.",
+   "audioTimeMs": 41870,
+   "emitMs": 42689,
+   "isFinal": true
+  },
+  {
+   "text": "A algún sitio para el horno.",
+   "audioTimeMs": 53280,
+   "emitMs": 54205,
+   "isFinal": true
+  },
+  {
+   "text": "Es la única pregunta, eso es todo. Cambiando Bélgica.",
+   "audioTimeMs": 60400,
+   "emitMs": 61325,
+   "isFinal": true
+  },
+  {
+   "text": "Sánchez.",
+   "audioTimeMs": 71790,
+   "emitMs": 73997,
+   "isFinal": true
+  },
+  {
+   "text": "Financiado en Shinjuku.",
+   "audioTimeMs": 92770,
+   "emitMs": 93812,
+   "isFinal": true
+  },
+  {
+   "text": "Así que.",
+   "audioTimeMs": 99260,
+   "emitMs": 99843,
+   "isFinal": true
+  },
+  {
+   "text": "Joe Pyo, Sancho.",
+   "audioTimeMs": 120380,
+   "emitMs": 121012,
+   "isFinal": true
+  },
+  {
+   "text": "Día divertido de Ling Piao.",
+   "audioTimeMs": 122990,
+   "emitMs": 123544,
+   "isFinal": true
+  },
+  {
+   "text": "Liu piao Qi Quan.",
+   "audioTimeMs": 125440,
+   "emitMs": 126230,
+   "isFinal": true
+  },
+  {
+   "text": "Dr. Bar, ¿es usted Arling? ¿Estás How, Jay?",
+   "audioTimeMs": 136660,
+   "emitMs": 137732,
+   "isFinal": true
+  },
+  {
+   "text": "Fuego.",
+   "audioTimeMs": 147430,
+   "emitMs": 148102,
+   "isFinal": true
+  },
+  {
+   "text": "Fuego.",
+   "audioTimeMs": 151300,
+   "emitMs": 152590,
+   "isFinal": true
+  },
+  {
+   "text": "Gracias.",
+   "audioTimeMs": 157880,
+   "emitMs": 158259,
+   "isFinal": true
+  },
+  {
+   "text": "Estados Unidos celebra la renovación del régimen de sanciones contra Sudán del Sur, incluyendo la prórroga del mandato del Panel de Expertos y la renovación de las medidas de embargo de armas, prohibición de viajes y congelación de activos por 12 meses adicionales.",
+   "audioTimeMs": 172430,
+   "emitMs": 173465,
+   "isFinal": true
+  },
+  {
+   "text": "También celebramos la oportunidad de revisar los puntos de referencia para reflejar las realidades actuales y esperamos recomendaciones sobre la mejor manera de hacerlo por parte del Secretario General, en consulta con la Misión de la ONU en Sudán del Sur y el Panel de Expertos.",
+   "audioTimeMs": 188870,
+   "emitMs": 190149,
+   "isFinal": true
+  },
+  {
+   "text": "Sin embargo, nos desanima la falta de avances en los puntos de referencia y el continuo deterioro de la situación política y de seguridad en Sudán del Sur.",
+   "audioTimeMs": 199910,
+   "emitMs": 200779,
+   "isFinal": true
+  },
+  {
+   "text": "Seamos claros, esta falta de progreso se debe a la falta de riqueza política del presidente Kiir y de otros líderes sudaneses del Sur.",
+   "audioTimeMs": 209670,
+   "emitMs": 210436,
+   "isFinal": true
+  },
+  {
+   "text": "Los líderes sursudaneses deben volver al diálogo directo para desescalar la violencia actual. Es absurdo sugerir que tal diálogo está ocurriendo cuando uno de los firmantes del acuerdo de paz de 2018 está bajo arresto domiciliario y siendo juzgado.",
+   "audioTimeMs": 227990,
+   "emitMs": 229162,
+   "isFinal": true
+  },
+  {
+   "text": "El Consejo no puede aceptar obstrucción al proceso de paz ni acciones que amenacen acuerdos transitorios o socaven el proceso político en Sudán del Sur.",
+   "audioTimeMs": 238350,
+   "emitMs": 239653,
+   "isFinal": true
+  },
+  {
+   "text": "Instó al gobierno de transición a dar todas las medidas necesarias para restaurar la paz, incluyendo la declaración de un alto el fuego nacional, la liberación de los detenidos, la renuncia al uso de la violencia con fines políticos y el inicio de la utilización adecuada de los ingresos públicos para apoyar a los ciudadanos de Sudán del Sur. Durante años antes de la independencia de Sudán del Sur, el Movimiento de Liberación del Pueblo Sudanés afirmaba buscar el fin de la marginación de los sudaneses del sur por parte de los líderes.",
+   "audioTimeMs": 269390,
+   "emitMs": 270071,
+   "isFinal": true
+  },
+  {
+   "text": "En Jartum.",
+   "audioTimeMs": 270310,
+   "emitMs": 271102,
+   "isFinal": true
+  },
+  {
+   "text": "A través de la mala gobernanza y el mal uso de los ingresos, esa marginación continúa, impuesta por los propios líderes de Sudán del Sur.",
+   "audioTimeMs": 278750,
+   "emitMs": 279915,
+   "isFinal": true
+  },
+  {
+   "text": "Señor Presidente, no respete la presente satisfacción, el voto o no, el atrois A savoir the Liberia, la Somalia, la República Democrática del Congo.",
+   "audioTimeMs": 304270,
+   "emitMs": 305181,
+   "isFinal": true
+  },
+  {
+   "text": "Le Atois new Lord diversio la resolution renovant le regime de sanction y contradice a Sudán.",
+   "audioTimeMs": 312350,
+   "emitMs": 313197,
+   "isFinal": true
+  },
+  {
+   "text": "No la proposición refleja la preocupación por los principios, el tiempo que respecto a la eficacita de régimen de sanción, el recurso real continúa en la medida de la compensación ejecutiva principal UTI prefiere la situación de Sudán emitida.",
+   "audioTimeMs": 328750,
+   "emitMs": 329771,
+   "isFinal": true
+  },
+  {
+   "text": "Régimen de sanción así y más el pueblo.",
+   "audioTimeMs": 333670,
+   "emitMs": 334977,
+   "isFinal": true
+  },
+  {
+   "text": "La situación, la seguridad política, continuó el Fairfax en la tasa de gravedad.",
+   "audioTimeMs": 342240,
+   "emitMs": 342696,
+   "isFinal": true
+  },
+  {
+   "text": "Contribuir a la eficacia para la destitución nacional o en Sudán.",
+   "audioTimeMs": 353040,
+   "emitMs": 353653,
+   "isFinal": true
+  },
+  {
+   "text": "Le atroid de Mer preoccupy occupy palace implicación en gran medida el régimen de sanciones el único contexto específico del distrito de Sudán Noria Fermat Dong la necesidad de no reexaminar Anton opera de mesures embargo actual surlez arm ofendido régimen garantizado. Las sanciones a Tien Plutón matando a una amiga Lisa por muchos años de consolidación y de la consolidación de la reconciliación del desarrollo.",
+   "audioTimeMs": 383510,
+   "emitMs": 384302,
+   "isFinal": true
+  },
+  {
+   "text": "Con cierta preocupación particular, la Defi posse palam se basó en el contexto de que Amis en la seguridad terrestre transitoire de lunification, el diploma, el primer unificador necesario, el resto fundamental profanse, los procesos, la capacidad, el salario son relevantes para cedefi amateur de seguridad.",
+   "audioTimeMs": 413470,
+   "emitMs": 414892,
+   "isFinal": true
+  },
+  {
+   "text": "Michelle presidente la posición del Reno African tuvo que hacerlo.",
+   "audioTimeMs": 418520,
+   "emitMs": 421964,
+   "isFinal": true
+  },
+  {
+   "text": "A la leña progresista, el régimen la sanción completó la armadura lambargo sulez ofendida cerca de Lamiza nunca lacoe revitalizar para la venta una institución capacitada para derrota nacional y seguridad paga.",
+   "audioTimeMs": 434990,
+   "emitMs": 436260,
+   "isFinal": true
+  },
+  {
+   "text": "Dije.",
+   "audioTimeMs": 436550,
+   "emitMs": 438908,
+   "isFinal": true
+  },
+  {
+   "text": "Progresistas más su propio enfoque preferible. Un plebiscito para la política de elongación de misano, Plutón, el continuo como aprecia la medida restrictiva que broncan plus de π de nombre Zane sampradiola resulta escante no restaurant de terminia Co padre de Manuel constructive alector, le mambro di conseil a le parti prenant regional.",
+   "audioTimeMs": 466160,
+   "emitMs": 466912,
+   "isFinal": true
+  },
+  {
+   "text": "Encontré un traje cerca de Pedro Habla la estabilidad de la política duradera o ¿problema sudán?",
+   "audioTimeMs": 474230,
+   "emitMs": 475262,
+   "isFinal": true
+  },
+  {
+   "text": "El fuego.",
+   "audioTimeMs": 479480,
+   "emitMs": 480272,
+   "isFinal": true
+  },
+  {
+   "text": "Fuego.",
+   "audioTimeMs": 483160,
+   "emitMs": 485694,
+   "isFinal": true
+  },
+  {
+   "text": "I.",
+   "audioTimeMs": 487230,
+   "emitMs": 491478,
+   "isFinal": true
+  },
+  {
+   "text": "Ataca al Brasil en Columbia Udati.",
+   "audioTimeMs": 507710,
+   "emitMs": 508843,
+   "isFinal": true
+  },
+  {
+   "text": "La presidencia que se expande.",
+   "audioTimeMs": 509910,
+   "emitMs": 512624,
+   "isFinal": true
+  },
+  {
+   "text": "Régimen de maquinaria pública. Eugene Sudan, Nadine Good.",
+   "audioTimeMs": 519040,
+   "emitMs": 520134,
+   "isFinal": true
+  },
+  {
+   "text": "En mí, James Tovey Tam gadu después de los hechos, los profesores mantienen técnicas restringidas en pashley Napoleón delega la ciudad documento de la ciudad fórmula novoma de Kumi Najima Sudansev.",
+   "audioTimeMs": 538710,
+   "emitMs": 540051,
+   "isFinal": true
+  },
+  {
+   "text": "Photoshop rimer Veo nimaglapa deja prakt es un esquema de Billy shikritic Viper nashani private sudana on astayati pirigrushinam en senkami politics kasitozzi vasubinastinas news driver at primaioviaska arjuna vembarga mestrani chiris prisma politicskova nasilia at kasat karikno nombrando navani eligitimno providistov Juba.",
+   "audioTimeMs": 565510,
+   "emitMs": 567219,
+   "isFinal": true
+  },
+  {
+   "text": "La obesidad necesita usar a los nuevos sudaneses en el siglo XIX.",
+   "audioTimeMs": 572550,
+   "emitMs": 577664,
+   "isFinal": true
+  },
+  {
+   "text": "La organizadora, Cabrera Asubo. Estado Austro Vapor Stabilizazi.",
+   "audioTimeMs": 586280,
+   "emitMs": 589133,
+   "isFinal": true
+  },
+  {
+   "text": "Vasilao instructure dausnia bladat Siem naborum instrumentev cluchette if Nichivas Morninstein.",
+   "audioTimeMs": 597160,
+   "emitMs": 598146,
+   "isFinal": true
+  },
+  {
+   "text": "Completo.",
+   "audioTimeMs": 599150,
+   "emitMs": 600912,
+   "isFinal": true
+  }
+ ]
+}

@@ -13,36 +13,36 @@ It is primary here, and WER/CER are secondary, for two concrete reasons:
   - Chinese has no word boundaries, so word-level WER is noise, and its
     CER exceeded 100% on one cell — an artifact, not a measurement.
 
-cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   C-openai-realtime-text  C-caption-deepgram-multi-gtranslate
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-S/PV.10156 en         89.6                    85.8                    14.0                       —                       —                    66.7                    
-S/PV.10156 zh         20.3                    32.1                    14.2                       —                       —                    15.3                    
-S/PV.10161 ar         42.7                    52.2                    39.3                    6.7                        —                    23.4                    
-S/PV.10161 en         79.6                    82.0                    47.0                       —                    32.3                    36.7                    
-S/PV.10161 es         64.6                    74.1                    65.9                       —                    35.2                    33.6                    
-S/PV.10161 fr         65.1                    77.9                    61.1                    11.8                    37.6                    35.3                    
-S/PV.10161 zh         25.0                    33.6                    18.3                       —                    15.2                    11.6                    
-S/PV.10168 en         81.1                    83.9                    50.5                       —                       —                    13.6                    
-S/PV.10168 fr         69.8                    79.9                    67.5                       —                       —                    12.7                    
-S/PV.10168 ru         61.7                    71.9                    57.1                       —                       —                    11.7                    
-S/PV.10168 zh         27.4                    37.2                    24.4                       —                       —                    5.1                     
+cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   C-openai-realtime-text  C-caption-deepgram-multi-gtranslateC-azure-speech-translation-en
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+S/PV.10156 en         89.6                    85.8                    14.0                       —                       —                    66.7                       —                    
+S/PV.10156 zh         20.3                    32.1                    14.2                       —                       —                    15.3                       —                    
+S/PV.10161 ar         42.7                    52.2                    39.3                    6.7                        —                    23.4                    12.9                    
+S/PV.10161 en         79.6                    82.0                    47.0                       —                    32.3                    36.7                    (no data)               
+S/PV.10161 es         64.6                    74.1                    65.9                       —                    35.2                    33.6                    18.1                    
+S/PV.10161 fr         65.1                    77.9                    61.1                    11.8                    37.6                    35.3                    18.7                    
+S/PV.10161 zh         25.0                    33.6                    18.3                       —                    15.2                    11.6                    6.3                     
+S/PV.10168 en         81.1                    83.9                    50.5                       —                       —                    13.6                       —                    
+S/PV.10168 fr         69.8                    79.9                    67.5                       —                       —                    12.7                       —                    
+S/PV.10168 ru         61.7                    71.9                    57.1                       —                       —                    11.7                       —                    
+S/PV.10168 zh         27.4                    37.2                    24.4                       —                       —                    5.1                        —                    
 
 Coverage: how much of the record the system actually produced (%).
 Distinguishes saying WRONG things from not saying MOST things.
 
-cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   C-openai-realtime-text  C-caption-deepgram-multi-gtranslate
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-S/PV.10156 en         101%                    99%                     17%                        —                       —                    86%                     
-S/PV.10156 zh         75%                     60%                     47%                        —                       —                    55%                     
-S/PV.10161 ar            —                       —                    71%                     10%                        —                    35%                     
-S/PV.10161 en            —                       —                    58%                        —                    36%                     41%                     
-S/PV.10161 es            —                       —                    90%                        —                    41%                     40%                     
-S/PV.10161 fr            —                       —                    81%                     13%                     43%                     41%                     
-S/PV.10161 zh            —                       —                    69%                        —                    33%                     35%                     
-S/PV.10168 en         98%                     100%                    58%                        —                       —                    14%                     
-S/PV.10168 fr         94%                     98%                     86%                        —                       —                    13%                     
-S/PV.10168 ru         87%                     95%                     79%                        —                       —                    13%                     
-S/PV.10168 zh         90%                     90%                     91%                        —                       —                    13%                     
+cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   C-openai-realtime-text  C-caption-deepgram-multi-gtranslateC-azure-speech-translation-en
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+S/PV.10156 en         101%                    99%                     17%                        —                       —                    86%                        —                    
+S/PV.10156 zh         75%                     60%                     47%                        —                       —                    55%                        —                    
+S/PV.10161 ar            —                       —                    71%                     10%                        —                    35%                     23%                     
+S/PV.10161 en            —                       —                    58%                        —                    36%                     41%                        —                    
+S/PV.10161 es            —                       —                    90%                        —                    41%                     40%                     24%                     
+S/PV.10161 fr            —                       —                    81%                     13%                     43%                     41%                     25%                     
+S/PV.10161 zh            —                       —                    69%                        —                    33%                     35%                     28%                     
+S/PV.10168 en         98%                     100%                    58%                        —                       —                    14%                        —                    
+S/PV.10168 fr         94%                     98%                     86%                        —                       —                    13%                        —                    
+S/PV.10168 ru         87%                     95%                     79%                        —                       —                    13%                        —                    
+S/PV.10168 zh         90%                     90%                     91%                        —                       —                    13%                        —                    
 
 Mean chrF++ difference vs the human baseline, paired within each cell:
 (positive = the machine preserved more of the record than the human did)
@@ -52,28 +52,30 @@ Mean chrF++ difference vs the human baseline, paired within each cell:
   OpenAI Realtime S2S        -44.6 chrF++  (n=2 cells, 0 wins)
   OpenAI Realtime text       -28.5 chrF++  (n=4 cells, 0 wins)
   Deepgram(multi)→GTranslate [YouTube] -32.8 chrF++  (n=11 cells, 0 wins)
+  Azure Speech translation [Teams] -35.4 chrF++  (n=4 cells, 0 wins)
 
 Semantic adequacy (0-100), judged on content preserved, ignoring wording:
 
-cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   C-openai-realtime-text  C-caption-deepgram-multi-gtranslate
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-S/PV.10156 en         92.4                    89.8                    5.1                        —                       —                    68.9                    
-S/PV.10156 zh         26.9                    25.6                    11.1                       —                       —                    14.0                    
-S/PV.10161 ar         55.1                    66.0                    52.0                    7.8                        —                    26.8                    
-S/PV.10161 en         87.3                    89.4                    45.4                       —                    32.0                    20.0                    
-S/PV.10161 es         80.1                    90.3                    80.1                       —                    31.9                    20.9                    
-S/PV.10161 fr         78.3                    88.4                    63.6                    7.1                     43.4                    21.9                    
-S/PV.10161 zh         40.5                    31.8                    41.6                       —                    27.6                    26.4                    
-S/PV.10168 en         79.1                    92.5                    37.8                       —                       —                    17.8                    
-S/PV.10168 fr         70.3                    83.6                    60.0                       —                       —                    12.5                    
-S/PV.10168 ru         55.8                    67.8                    56.5                       —                       —                    17.0                    
-S/PV.10168 zh         54.8                    69.9                    42.5                       —                       —                    6.8                     
+cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   C-openai-realtime-text  C-caption-deepgram-multi-gtranslateC-azure-speech-translation-en
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+S/PV.10156 en         92.4                    89.8                    5.1                        —                       —                    68.9                       —                    
+S/PV.10156 zh         26.9                    25.6                    11.1                       —                       —                    14.0                       —                    
+S/PV.10161 ar         55.1                    66.0                    52.0                    7.8                        —                    26.8                    13.6                    
+S/PV.10161 en         87.3                    89.4                    45.4                       —                    32.0                    20.0                       —                    
+S/PV.10161 es         80.1                    90.3                    80.1                       —                    31.9                    20.9                    8.6                     
+S/PV.10161 fr         78.3                    88.4                    63.6                    7.1                     43.4                    21.9                    7.8                     
+S/PV.10161 zh         40.5                    31.8                    41.6                       —                    27.6                    26.4                    6.8                     
+S/PV.10168 en         79.1                    92.5                    37.8                       —                       —                    17.8                       —                    
+S/PV.10168 fr         70.3                    83.6                    60.0                       —                       —                    12.5                       —                    
+S/PV.10168 ru         55.8                    67.8                    56.5                       —                       —                    17.0                       —                    
+S/PV.10168 zh         54.8                    69.9                    42.5                       —                       —                    6.8                        —                    
 
   Floor ASR → Azure MT       +6.8 adequacy  (n=11)
   Soniox live translate      -20.4 adequacy  (n=11)
   OpenAI Realtime S2S        -59.3 adequacy  (n=2)
   OpenAI Realtime text       -37.8 adequacy  (n=4)
   Deepgram(multi)→GTranslate [YouTube] -42.5 adequacy  (n=11)
+  Azure Speech translation [Teams] -54.3 adequacy  (n=4)
 
 NTR — the model broadcasters actually certify live subtitles with.
 Errors are weighted by how much MEANING they destroy (minor 0.25,
@@ -90,19 +92,19 @@ broadcast threshold is 98.
   subtitles that appeared' — a real question, but meaningless without
   coverage, and actively misleading when coverage is low.
 
-cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   C-openai-realtime-text  C-caption-deepgram-multi-gtranslate
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-S/PV.10156 en         99.6                    99.3                    (cov 17%)                  —                       —                    96.9                    
-S/PV.10156 zh         (cov 75%)               (cov 60%)               (cov 47%)                  —                       —                    (cov 55%)               
-S/PV.10161 ar         96.5                    99.2                    (cov 71%)               (cov 10%)                  —                    (cov 35%)               
-S/PV.10161 en         99.3                    99.5                    (cov 58%)                  —                    (cov 36%)               (cov 41%)               
-S/PV.10161 es         98.5                    99.6                    98.7                       —                    (cov 41%)               (cov 40%)               
-S/PV.10161 fr         98.6                    99.8                    98.2                    (cov 13%)               (cov 43%)               (cov 41%)               
-S/PV.10161 zh         96.6                    98.6                    (cov 69%)                  —                    (cov 33%)               (cov 35%)               
-S/PV.10168 en         99.5                    99.7                    (cov 58%)                  —                       —                    (cov 14%)               
-S/PV.10168 fr         97.3                    99.7                    98.8                       —                       —                    (cov 13%)               
-S/PV.10168 ru         97.3                    99.6                    (cov 79%)                  —                       —                    (cov 13%)               
-S/PV.10168 zh         96.4                    99.7                    98.7                       —                       —                    (cov 13%)               
+cell                  A-human                 B-pivot                 C-soniox-rt-v5          D-openai-realtime-s2s   C-openai-realtime-text  C-caption-deepgram-multi-gtranslateC-azure-speech-translation-en
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+S/PV.10156 en         99.6                    99.3                    (cov 17%)                  —                       —                    96.9                       —                    
+S/PV.10156 zh         (cov 75%)               (cov 60%)               (cov 47%)                  —                       —                    (cov 55%)                  —                    
+S/PV.10161 ar         96.5                    99.2                    (cov 71%)               (cov 10%)                  —                    (cov 35%)               (cov 23%)               
+S/PV.10161 en         99.3                    99.5                    (cov 58%)                  —                    (cov 36%)               (cov 41%)                  —                    
+S/PV.10161 es         98.5                    99.6                    98.7                       —                    (cov 41%)               (cov 40%)               (cov 24%)               
+S/PV.10161 fr         98.6                    99.8                    98.2                    (cov 13%)               (cov 43%)               (cov 41%)               (cov 25%)               
+S/PV.10161 zh         96.6                    98.6                    (cov 69%)                  —                    (cov 33%)               (cov 35%)               (cov 28%)               
+S/PV.10168 en         99.5                    99.7                    (cov 58%)                  —                       —                    (cov 14%)                  —                    
+S/PV.10168 fr         97.3                    99.7                    98.8                       —                       —                    (cov 13%)                  —                    
+S/PV.10168 ru         97.3                    99.6                    (cov 79%)                  —                       —                    (cov 13%)                  —                    
+S/PV.10168 zh         96.4                    99.7                    98.7                       —                       —                    (cov 13%)                  —                    
 
 Where the loss comes from (mean points lost per system):
   Human interpreter → ASR        translation −1.3   recognition −1.2
@@ -111,6 +113,7 @@ Where the loss comes from (mean points lost per system):
   OpenAI Realtime S2S            translation −5.1   recognition −3.6
   OpenAI Realtime text           translation −1.7   recognition −1.3
   Deepgram(multi)→GTranslate [YouTube] translation −2.6   recognition −3.6
+  Azure Speech translation [Teams] translation −1.0   recognition −9.0
 
 ════ LATENCY (independent of quality) ════
 
@@ -154,12 +157,17 @@ Deepgram(multi)→GTranslate [YouTube]S/PV.10168   en   0.4s      0.4s        4.
 Deepgram(multi)→GTranslate [YouTube]S/PV.10168   fr   0.4s      0.4s        4.4× faster than human
 Deepgram(multi)→GTranslate [YouTube]S/PV.10168   ru   0.4s      0.4s        4.1× faster than human
 Deepgram(multi)→GTranslate [YouTube]S/PV.10168   zh   0.4s      0.4s        4.4× faster than human
+Azure Speech translation [Teams]S/PV.10161   ar   1.0s      1.0s        1.6× faster than human
+Azure Speech translation [Teams]S/PV.10161   es   1.0s      1.0s        1.5× faster than human
+Azure Speech translation [Teams]S/PV.10161   fr   1.0s      1.0s        1.5× faster than human
+Azure Speech translation [Teams]S/PV.10161   zh   1.0s      1.0s        1.6× faster than human
 
 p90 tells a harsher story than the median for the live text model:
   Soniox live translate      worst p90 across cells: 22.5s
   OpenAI Realtime S2S        worst p90 across cells: 7.3s
   OpenAI Realtime text       worst p90 across cells: 10.4s
   Deepgram(multi)→GTranslate [YouTube] worst p90 across cells: 1.2s
+  Azure Speech translation [Teams] worst p90 across cells: 2.6s
 
 ════ CAPTION READABILITY ════
 
@@ -179,5 +187,9 @@ fragments and would report 'segmented: no' if re-run.
 system                                segmented  chars/cap  caps/min  read rate  over limit
 ────────────────────────────────────────────────────────────────────────────────────────────────
 Deepgram(multi)→GTranslate [YouTube]  yes        38.3       8.1       11.4/s     28%
+Azure Speech translation [Teams]      yes        79.3       2.1       4.0/s      14%
 
-Metered spend across recorded runs: $4.88 (under-counts: arm D's audio tokens and arm B's Azure OpenAI tokens are not metered here)
+Metered spend across recorded runs: $9.05 (under-counts: arm D's audio tokens and arm B's Azure OpenAI tokens are not metered here)
+
+Cells with problems:
+  C-azure-speech-translation-en S/PV.10161 en: target equals source language

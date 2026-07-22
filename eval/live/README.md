@@ -22,12 +22,15 @@ exactly the trade-off worth knowing about.
 Arm C contains two *architectures*, which fail differently enough that the
 distinction matters more than the vendor choice:
 
-- **Single-model live translation** — Soniox, OpenAI Realtime, Azure Speech
-  Translation. Often natively multilingual.
-- **Caption-then-translate** — streaming ASR → MT over the captions. This is
-  the YouTube shape, and the shape of Meet, Teams, Zoom and the AWS reference
-  architecture. Its ASR must **commit to one source language**, which on a UN
-  floor is wrong for part of every meeting.
+The axis that matters is **source-language handling**, not model count:
+
+- **Natively multilingual** — Soniox, OpenAI Realtime. Take hints for all six
+  UN languages at once.
+- **Fixed source language** — caption-then-translate pipelines (the YouTube /
+  Meet / Teams / Zoom / AWS shape) *and* single models that require a `from`
+  parameter, notably **Azure Speech Translation**. On a floor that switches
+  language every few minutes, all of these are wrong for part of every meeting,
+  and all collapse to 23–41% coverage with nonsense output.
 
 Arm D emits audio, so it is transcribed afterwards to be scorable. That ASR
 pass adds errors the model is not responsible for — a delegate hears the audio
