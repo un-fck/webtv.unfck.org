@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T05:47:09.253Z",
+  "generatedAt": "2026-07-22T06:00:15.073Z",
   "rows": [
     {
       "system": "A-human",
@@ -13,7 +13,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 55.125
+      "adequacy": 55.125,
+      "ntr": 96.49553571428572,
+      "ntrTranslationLoss": 1.7968749999999998,
+      "ntrRecognitionLoss": 1.7075892857142856
     },
     {
       "system": "A-human",
@@ -27,7 +30,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 87.25
+      "adequacy": 87.25,
+      "ntr": 99.33537832310839,
+      "ntrTranslationLoss": 0.5623721881390593,
+      "ntrRecognitionLoss": 0.10224948875255625
     },
     {
       "system": "A-human",
@@ -41,7 +47,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 80.125
+      "adequacy": 80.125,
+      "ntr": 98.52336448598132,
+      "ntrTranslationLoss": 0.9065420560747663,
+      "ntrRecognitionLoss": 0.5700934579439252
     },
     {
       "system": "A-human",
@@ -55,7 +64,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 78.25
+      "adequacy": 78.25,
+      "ntr": 98.5978225008248,
+      "ntrTranslationLoss": 0.8083140877598153,
+      "ntrRecognitionLoss": 0.5938634114153745
     },
     {
       "system": "A-human",
@@ -69,7 +81,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 40.5
+      "adequacy": 40.5,
+      "ntr": 96.64048865619547,
+      "ntrTranslationLoss": 2.283304246655032,
+      "ntrRecognitionLoss": 1.0762070971495055
     },
     {
       "system": "B-pivot",
@@ -83,7 +98,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 66
+      "adequacy": 66,
+      "ntr": 99.23908690428514,
+      "ntrTranslationLoss": 0.6607929515418502,
+      "ntrRecognitionLoss": 0.1001201441730076
     },
     {
       "system": "B-pivot",
@@ -97,7 +115,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 89.375
+      "adequacy": 89.375,
+      "ntr": 99.46329639889197,
+      "ntrTranslationLoss": 0.3462603878116343,
+      "ntrRecognitionLoss": 0.1904432132963989
     },
     {
       "system": "B-pivot",
@@ -111,7 +132,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 90.25
+      "adequacy": 90.25,
+      "ntr": 99.61246440999683,
+      "ntrTranslationLoss": 0.36380892122745967,
+      "ntrRecognitionLoss": 0.02372666877570389
     },
     {
       "system": "B-pivot",
@@ -125,7 +149,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 88.375
+      "adequacy": 88.375,
+      "ntr": 99.76531942633638,
+      "ntrTranslationLoss": 0.18904823989569752,
+      "ntrRecognitionLoss": 0.04563233376792699
     },
     {
       "system": "B-pivot",
@@ -139,7 +166,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 31.75
+      "adequacy": 31.75,
+      "ntr": 98.62052274927396,
+      "ntrTranslationLoss": 0.9438528557599225,
+      "ntrRecognitionLoss": 0.43562439496611816
     },
     {
       "system": "C-soniox-rt-v5",
@@ -153,7 +183,10 @@
       "p90LagS": 18.646,
       "atdS": 4.789212502311818,
       "costUsd": 0.04998172708333333,
-      "adequacy": 52
+      "adequacy": 52,
+      "ntr": 96.97327044025157,
+      "ntrTranslationLoss": 2.1750524109014675,
+      "ntrRecognitionLoss": 0.8516771488469601
     },
     {
       "system": "C-soniox-rt-v5",
@@ -167,7 +200,10 @@
       "p90LagS": 20.964,
       "atdS": 6.1613719912472655,
       "costUsd": 0.04998172708333333,
-      "adequacy": 45.375
+      "adequacy": 45.375,
+      "ntr": 97.51594048884165,
+      "ntrTranslationLoss": 1.926142401700319,
+      "ntrRecognitionLoss": 0.5579171094580234
     },
     {
       "system": "C-soniox-rt-v5",
@@ -181,7 +217,10 @@
       "p90LagS": 16.676,
       "atdS": 4.22674795361528,
       "costUsd": 0.04998172708333333,
-      "adequacy": 80.125
+      "adequacy": 80.125,
+      "ntr": 98.71428571428571,
+      "ntrTranslationLoss": 0.894736842105263,
+      "ntrRecognitionLoss": 0.3909774436090226
     },
     {
       "system": "C-soniox-rt-v5",
@@ -195,7 +234,10 @@
       "p90LagS": 22.498,
       "atdS": 5.921943915343915,
       "costUsd": 0.04998172708333333,
-      "adequacy": 63.625
+      "adequacy": 63.625,
+      "ntr": 98.22834645669292,
+      "ntrTranslationLoss": 1.2092238470191226,
+      "ntrRecognitionLoss": 0.562429696287964
     },
     {
       "system": "C-soniox-rt-v5",
@@ -209,7 +251,10 @@
       "p90LagS": 18.683,
       "atdS": 4.800919692552346,
       "costUsd": 0.04998172708333333,
-      "adequacy": 41.625
+      "adequacy": 41.625,
+      "ntr": 95.84171696847753,
+      "ntrTranslationLoss": 3.085177733065057,
+      "ntrRecognitionLoss": 1.0731052984574112
     },
     {
       "system": "D-openai-realtime-s2s",
@@ -223,7 +268,10 @@
       "p90LagS": 7.326,
       "atdS": 4.478603448275862,
       "costUsd": null,
-      "adequacy": 7.75
+      "adequacy": 7.75,
+      "ntr": 92.02453987730061,
+      "ntrTranslationLoss": 5.214723926380368,
+      "ntrRecognitionLoss": 2.7607361963190185
     },
     {
       "system": "D-openai-realtime-s2s",
@@ -237,7 +285,10 @@
       "p90LagS": 5.958,
       "atdS": 3.8153333333333337,
       "costUsd": null,
-      "adequacy": 7.125
+      "adequacy": 7.125,
+      "ntr": 90.53610503282276,
+      "ntrTranslationLoss": 4.978118161925601,
+      "ntrRecognitionLoss": 4.485776805251642
     },
     {
       "system": "A-human",
@@ -251,7 +302,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 92.375
+      "adequacy": 92.375,
+      "ntr": 99.6244131455399,
+      "ntrTranslationLoss": 0.18779342723004694,
+      "ntrRecognitionLoss": 0.18779342723004694
     },
     {
       "system": "A-human",
@@ -265,7 +319,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 26.875
+      "adequacy": 26.875,
+      "ntr": 93.15514993481095,
+      "ntrTranslationLoss": 3.748370273794003,
+      "ntrRecognitionLoss": 3.0964797913950455
     },
     {
       "system": "B-pivot",
@@ -279,7 +336,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 89.75
+      "adequacy": 89.75,
+      "ntr": 99.34367541766109,
+      "ntrTranslationLoss": 0.29832935560859186,
+      "ntrRecognitionLoss": 0.35799522673031026
     },
     {
       "system": "B-pivot",
@@ -293,7 +353,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 25.625
+      "adequacy": 25.625,
+      "ntr": 98.38709677419355,
+      "ntrTranslationLoss": 0.38402457757296465,
+      "ntrRecognitionLoss": 1.228878648233487
     },
     {
       "system": "C-soniox-rt-v5",
@@ -307,7 +370,10 @@
       "p90LagS": 2.226,
       "atdS": 1.14224115755627,
       "costUsd": 0.018396395833333332,
-      "adequacy": 5.125
+      "adequacy": 5.125,
+      "ntr": 90.08875739644971,
+      "ntrTranslationLoss": 7.840236686390532,
+      "ntrRecognitionLoss": 2.0710059171597637
     },
     {
       "system": "C-soniox-rt-v5",
@@ -321,7 +387,10 @@
       "p90LagS": 0.649,
       "atdS": 0.5850697674418605,
       "costUsd": 0.018396395833333332,
-      "adequacy": 11.125
+      "adequacy": 11.125,
+      "ntr": 93.08797127468583,
+      "ntrTranslationLoss": 4.174147217235189,
+      "ntrRecognitionLoss": 2.7378815080789947
     },
     {
       "system": "A-human",
@@ -335,7 +404,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 79.125
+      "adequacy": 79.125,
+      "ntr": 99.49393977258528,
+      "ntrTranslationLoss": 0.24053479945020617,
+      "ntrRecognitionLoss": 0.26552542796451334
     },
     {
       "system": "A-human",
@@ -349,7 +421,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 70.25
+      "adequacy": 70.25,
+      "ntr": 97.26986849628359,
+      "ntrTranslationLoss": 1.0863350485991996,
+      "ntrRecognitionLoss": 1.6437964551172097
     },
     {
       "system": "A-human",
@@ -363,7 +438,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 55.75
+      "adequacy": 55.75,
+      "ntr": 97.34892787524366,
+      "ntrTranslationLoss": 1.1111111111111112,
+      "ntrRecognitionLoss": 1.5399610136452242
     },
     {
       "system": "A-human",
@@ -377,7 +455,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 54.75
+      "adequacy": 54.75,
+      "ntr": 96.44380140115749,
+      "ntrTranslationLoss": 1.5991471215351813,
+      "ntrRecognitionLoss": 1.9570514773073409
     },
     {
       "system": "B-pivot",
@@ -391,7 +472,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 92.5
+      "adequacy": 92.5,
+      "ntr": 99.71561751625043,
+      "ntrTranslationLoss": 0.16036606226479644,
+      "ntrRecognitionLoss": 0.12401642148477592
     },
     {
       "system": "B-pivot",
@@ -405,7 +489,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 83.625
+      "adequacy": 83.625,
+      "ntr": 99.66184545332798,
+      "ntrTranslationLoss": 0.2343645372974421,
+      "ntrRecognitionLoss": 0.1037900093745815
     },
     {
       "system": "B-pivot",
@@ -419,7 +506,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 67.75
+      "adequacy": 67.75,
+      "ntr": 99.58172458172459,
+      "ntrTranslationLoss": 0.22165022165022163,
+      "ntrRecognitionLoss": 0.19662519662519662
     },
     {
       "system": "B-pivot",
@@ -433,7 +523,10 @@
       "p90LagS": null,
       "atdS": null,
       "costUsd": null,
-      "adequacy": 69.875
+      "adequacy": 69.875,
+      "ntr": 99.72211636178862,
+      "ntrTranslationLoss": 0.15402693089430894,
+      "ntrRecognitionLoss": 0.12385670731707317
     },
     {
       "system": "C-soniox-rt-v5",
@@ -447,7 +540,10 @@
       "p90LagS": 0.641,
       "atdS": 0.5972910048266783,
       "costUsd": 0.1632509875,
-      "adequacy": 37.75
+      "adequacy": 37.75,
+      "ntr": 98.78930817610063,
+      "ntrTranslationLoss": 0.7180293501048218,
+      "ntrRecognitionLoss": 0.4926624737945493
     },
     {
       "system": "C-soniox-rt-v5",
@@ -461,7 +557,10 @@
       "p90LagS": 0.641,
       "atdS": 0.5828355250972401,
       "costUsd": 0.1632509875,
-      "adequacy": 60
+      "adequacy": 60,
+      "ntr": 98.78147436545657,
+      "ntrTranslationLoss": 0.6219031246839923,
+      "ntrRecognitionLoss": 0.5966225098594398
     },
     {
       "system": "C-soniox-rt-v5",
@@ -475,7 +574,10 @@
       "p90LagS": 0.654,
       "atdS": 0.6097040056096065,
       "costUsd": 0.1632509875,
-      "adequacy": 56.5
+      "adequacy": 56.5,
+      "ntr": 96.38349514563107,
+      "ntrTranslationLoss": 1.9720873786407769,
+      "ntrRecognitionLoss": 1.6444174757281553
     },
     {
       "system": "C-soniox-rt-v5",
@@ -489,7 +591,10 @@
       "p90LagS": 0.623,
       "atdS": 0.5633111791730474,
       "costUsd": 0.1632509875,
-      "adequacy": 42.5
+      "adequacy": 42.5,
+      "ntr": 98.69098186570821,
+      "ntrTranslationLoss": 0.6228557425257311,
+      "ntrRecognitionLoss": 0.6861623917660513
     },
     {
       "system": "C-openai-realtime-text",
@@ -503,7 +608,10 @@
       "p90LagS": 10.298,
       "atdS": 5.047835294117648,
       "costUsd": null,
-      "adequacy": 32
+      "adequacy": 32,
+      "ntr": 96.50411280846063,
+      "ntrTranslationLoss": 1.527614571092832,
+      "ntrRecognitionLoss": 1.9682726204465335
     },
     {
       "system": "C-openai-realtime-text",
@@ -517,7 +625,10 @@
       "p90LagS": 6.109,
       "atdS": 3.72659375,
       "costUsd": null,
-      "adequacy": 31.875
+      "adequacy": 31.875,
+      "ntr": 97.54793510324484,
+      "ntrTranslationLoss": 1.898967551622419,
+      "ntrRecognitionLoss": 0.5530973451327433
     },
     {
       "system": "C-openai-realtime-text",
@@ -531,7 +642,10 @@
       "p90LagS": 10.266,
       "atdS": 4.882990291262136,
       "costUsd": null,
-      "adequacy": 43.375
+      "adequacy": 43.375,
+      "ntr": 97.02970297029702,
+      "ntrTranslationLoss": 1.9801980198019802,
+      "ntrRecognitionLoss": 0.9900990099009901
     },
     {
       "system": "C-openai-realtime-text",
@@ -545,7 +659,10 @@
       "p90LagS": 10.426,
       "atdS": 4.888945652173913,
       "costUsd": null,
-      "adequacy": 27.625
+      "adequacy": 27.625,
+      "ntr": 96.60647571606475,
+      "ntrTranslationLoss": 1.5877957658779578,
+      "ntrRecognitionLoss": 1.805728518057285
     },
     {
       "system": "C-caption-deepgram-multi-gtranslate",
@@ -558,7 +675,11 @@
       "medianLagS": 0.3258125,
       "p90LagS": 0.5762399999999906,
       "atdS": 0.4028999689441,
-      "costUsd": 0.2679291737847222
+      "costUsd": 0.2679291737847222,
+      "adequacy": 26.75,
+      "ntr": 93.67724867724868,
+      "ntrTranslationLoss": 3.201058201058201,
+      "ntrRecognitionLoss": 3.1216931216931214
     },
     {
       "system": "C-caption-deepgram-multi-gtranslate",
@@ -571,7 +692,11 @@
       "medianLagS": 0.3228125,
       "p90LagS": 0.5735,
       "atdS": 0.39743413043478326,
-      "costUsd": 0.2679291737847222
+      "costUsd": 0.2679291737847222,
+      "adequacy": 20,
+      "ntr": 95.86656997824511,
+      "ntrTranslationLoss": 2.2480058013052937,
+      "ntrRecognitionLoss": 1.885424220449601
     },
     {
       "system": "C-caption-deepgram-multi-gtranslate",
@@ -584,7 +709,11 @@
       "medianLagS": 0.3255324999999721,
       "p90LagS": 0.5756149999999907,
       "atdS": 0.4036328881987584,
-      "costUsd": 0.2679291737847222
+      "costUsd": 0.2679291737847222,
+      "adequacy": 20.875,
+      "ntr": 96.51624548736461,
+      "ntrTranslationLoss": 2.0397111913357397,
+      "ntrRecognitionLoss": 1.444043321299639
     },
     {
       "system": "C-caption-deepgram-multi-gtranslate",
@@ -597,7 +726,11 @@
       "medianLagS": 0.3243449999999721,
       "p90LagS": 0.574375,
       "atdS": 0.40143413043478327,
-      "costUsd": 0.2679291737847222
+      "costUsd": 0.2679291737847222,
+      "adequacy": 21.875,
+      "ntr": 96.03815113719736,
+      "ntrTranslationLoss": 2.292736610418195,
+      "ntrRecognitionLoss": 1.669112252384446
     },
     {
       "system": "C-caption-deepgram-multi-gtranslate",
@@ -610,7 +743,11 @@
       "medianLagS": 0.328125,
       "p90LagS": 0.5873024999999907,
       "atdS": 0.4050738819875783,
-      "costUsd": 0.2679291737847222
+      "costUsd": 0.2679291737847222,
+      "adequacy": 26.375,
+      "ntr": 91.04781281790437,
+      "ntrTranslationLoss": 3.3316378433367246,
+      "ntrRecognitionLoss": 5.620549338758901
     },
     {
       "system": "C-caption-deepgram-multi-gtranslate",
@@ -628,7 +765,11 @@
       "captionsPerMinute": 20.112635287482718,
       "captionReadingRate": 10.794680506000649,
       "captionShareOverLimit": 0.23369565217391305,
-      "costUsd": 0.13929795659722222
+      "costUsd": 0.13929795659722222,
+      "adequacy": 68.875,
+      "ntr": 96.92101740294511,
+      "ntrTranslationLoss": 0.535475234270415,
+      "ntrRecognitionLoss": 2.5435073627844713
     },
     {
       "system": "C-caption-deepgram-multi-gtranslate",
@@ -646,7 +787,99 @@
       "captionsPerMinute": 20.112635287482718,
       "captionReadingRate": null,
       "captionShareOverLimit": null,
-      "costUsd": 0.13929795659722222
+      "costUsd": 0.13929795659722222,
+      "adequacy": 14,
+      "ntr": 90.7089552238806,
+      "ntrTranslationLoss": 3.582089552238806,
+      "ntrRecognitionLoss": 5.708955223880597
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10168",
+      "language": "en",
+      "errorRate": 0.9466550488914706,
+      "errorMetric": "WER",
+      "chrf": 13.59605791632805,
+      "medianLagS": 0.38958250000001865,
+      "p90LagS": 1.2365625,
+      "atdS": 0.6400660790419183,
+      "captionSegmented": true,
+      "captionMeanChars": 57.67664670658683,
+      "captionsPerMinute": 2.0459294312078815,
+      "captionReadingRate": 14.360313315926893,
+      "captionShareOverLimit": 0.35542168674698793,
+      "costUsd": 0.5813032197916667,
+      "adequacy": 17.75,
+      "ntr": 94.10919540229885,
+      "ntrTranslationLoss": 3.3205619412515963,
+      "ntrRecognitionLoss": 2.570242656449553
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10168",
+      "language": "fr",
+      "errorRate": 0.951986890618599,
+      "errorMetric": "WER",
+      "chrf": 12.71593487894998,
+      "medianLagS": 0.3610625,
+      "p90LagS": 1.183375,
+      "atdS": 0.6096948215568861,
+      "captionSegmented": true,
+      "captionMeanChars": 61.68862275449102,
+      "captionsPerMinute": 2.0459294312078815,
+      "captionReadingRate": 15.005359056806002,
+      "captionShareOverLimit": 0.4121212121212121,
+      "costUsd": 0.5813032197916667,
+      "adequacy": 12.5,
+      "ntr": 94.35009797517962,
+      "ntrTranslationLoss": 1.9921619856303068,
+      "ntrRecognitionLoss": 3.6577400391900716
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10168",
+      "language": "ru",
+      "errorRate": 0.9630536389939907,
+      "errorMetric": "WER",
+      "chrf": 11.7443945357875,
+      "medianLagS": 0.3908125,
+      "p90LagS": 1.2430625,
+      "atdS": 0.6427726658682648,
+      "captionSegmented": true,
+      "captionMeanChars": 56.5748502994012,
+      "captionsPerMinute": 2.0459294312078815,
+      "captionReadingRate": 13.190034196384953,
+      "captionShareOverLimit": 0.34545454545454546,
+      "costUsd": 0.5813032197916667,
+      "adequacy": 17,
+      "ntr": 93.39866863905326,
+      "ntrTranslationLoss": 2.7366863905325447,
+      "ntrRecognitionLoss": 3.8646449704142016
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10168",
+      "language": "zh",
+      "errorRate": 0.9499310427534928,
+      "errorMetric": "CER",
+      "chrf": 5.145901622392823,
+      "medianLagS": 0.3635625,
+      "p90LagS": 1.1738125,
+      "atdS": 0.6114792526946141,
+      "captionSegmented": true,
+      "captionMeanChars": 16.622754491017965,
+      "captionsPerMinute": 2.0459294312078815,
+      "captionReadingRate": 3.607937462417318,
+      "captionShareOverLimit": 0.04819277108433735,
+      "costUsd": 0.5813032197916667,
+      "adequacy": 6.75,
+      "ntr": 89.26592797783933,
+      "ntrTranslationLoss": 3.0932594644506,
+      "ntrRecognitionLoss": 7.640812557710065
     }
   ]
 }

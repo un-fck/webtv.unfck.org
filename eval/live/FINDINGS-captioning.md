@@ -50,6 +50,9 @@ mode, fed the UN floor, emits things like *"Le message secret est…"* and stray
 `安就啦会，一是会做的`, at **35–41% coverage** on the five-language session.
 The translation layer then faithfully renders nonsense into nonsense.
 
+On the most multilingual session (S/PV.10168, floor switching between six
+languages) it collapses further still: chrF++ **5.1–13.6**.
+
 The failure is in **language detection**, not translation and not the
 architecture. A control run pins the same pipeline's ASR to English, changing
 one variable, to quantify exactly how much of the damage is attributable to
@@ -126,6 +129,12 @@ captions, yielding 0.3 s and making the pipeline look *faster than a human
 interpreter*. A caption waits the **whole** round trip, not a 1/16 share. The
 corrected figure still excludes queueing delay while a batch fills, so it
 remains a floor.
+
+Caption-arm latency is reported from the tier-1 cells only. The tier-2 cells
+were measured before the accounting fix above and are excluded rather than
+mixed in — re-streaming 82 minutes to correct a latency figure on an arm whose
+quality is 5–14 chrF++ is not a good use of the budget, but silently reporting
+two different accountings in one column would be worse.
 
 Azure Speech Translation — the engine behind Teams' live translated captions —
 probed at **1.13 s median** with clean French output, the fastest credible
