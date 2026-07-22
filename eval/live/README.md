@@ -10,14 +10,24 @@ Quality and latency are kept apart throughout. A system can be excellent at one
 and hopeless at the other, and collapsing them into a single score would hide
 exactly the trade-off worth knowing about.
 
-## The four arms
+## The arms
 
 | arm | pipeline | has latency? |
 |---|---|---|
 | **A** | human interpreter → our production ASR | human EVS, from Phase 1 |
 | **B** | floor ASR (Speechmatics Melia) → Azure OpenAI translation | no (offline) |
-| **C** | one model, audio in → target **text** out, live | yes, measured |
-| **D** | one model, audio in → target **audio** out, live | yes, measured |
+| **C** | live, audio in → target **text** out | yes, measured |
+| **D** | live, audio in → target **audio** out | yes, measured |
+
+Arm C contains two *architectures*, which fail differently enough that the
+distinction matters more than the vendor choice:
+
+- **Single-model live translation** — Soniox, OpenAI Realtime, Azure Speech
+  Translation. Often natively multilingual.
+- **Caption-then-translate** — streaming ASR → MT over the captions. This is
+  the YouTube shape, and the shape of Meet, Teams, Zoom and the AWS reference
+  architecture. Its ASR must **commit to one source language**, which on a UN
+  floor is wrong for part of every meeting.
 
 Arm D emits audio, so it is transcribed afterwards to be scorable. That ASR
 pass adds errors the model is not responsible for — a delegate hears the audio
@@ -65,6 +75,26 @@ surface metrics cannot: how much of what the speaker said survives, explicitly
 ignoring wording, register and fluency. This matters because interpreters are
 *trained* to compress and paraphrase, and WER punishes them for it.
 
+**Semantic adequacy** (`judge.ts`), 0–100 — how much content survives, ignoring
+wording. Fair to interpreters, whose craft is compression.
+
+**NTR** (`ntr.ts`), 0–100 — the model broadcasters actually certify live
+subtitles with. Errors weighted by meaning damage (minor 0.25 / standard 0.5 /
+serious 1.0) and split into **T**ranslation vs **R**ecognition origin, so it
+says *which stage to fix*. Threshold 98. **Suppressed below 80% coverage**: its
+denominator is the candidate's own word count, so it scored a nonsense
+transcript at 96.6 before that guard existed.
+
+**Caption readability** (`caption-quality.ts`) — chars per caption, replacement
+rate, reading rate against the ~21 char/sec ceiling, and crucially whether the
+system emits caption units at all. Token-streaming translators report
+`segmented: no`: they are not captioning systems, and shipping one as such
+means building segmentation and timing yourself.
+
+**Coverage** — produced characters / reference characters. Separates *saying
+wrong things* from *not saying most things*, which every overlap metric
+conflates. This is what turned an uninterpretable arm-D result into a finding.
+
 **Latency** is measured by streaming audio at **1× real time** — never faster.
 Firehosing a file into a socket measures vendor backend throughput, not what a
 delegate in the room experiences. Reported as median/p90 emission lag plus ATD
@@ -103,6 +133,15 @@ Adapters live in `providers/`. Gaps found during the vendor survey
 - **Deepgram** and **AssemblyAI** have no translation feature.
 - **Alibaba Gummy** is the cheapest option on paper but its WebSocket endpoint
   could not be verified, so it is not implemented rather than guessed at.
+- **Speechmatics real-time rejects `language: multi`** — Melia is batch-only, so
+  our production floor model has no live equivalent and arm B cannot simply be
+  made live.
+- **Azure Speech Translation** answers only on `northeurope` for our key
+  (westeurope and eastus 401). Implemented against the raw WebSocket protocol,
+  no SDK dependency added.
+- **YouTube auto-captions are English-only for LIVE streams**, so there is no
+  caption track to auto-translate for a non-English live meeting. See
+  `FINDINGS-captioning.md`.
 - **Meta Seamless-Streaming** is CC-BY-NC with a repo stale since Nov 2024.
 
 `missingKey()` lets a system be implemented but skipped until a key exists, so
