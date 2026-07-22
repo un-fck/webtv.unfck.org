@@ -39,6 +39,7 @@ import {
 import { sonioxRealtime } from "./providers/soniox-rt";
 import { openaiRealtimeS2S, openaiRealtime } from "./providers/openai-realtime";
 import { captionPipeline } from "./providers/caption-pipeline";
+import { azureSpeechTranslation } from "./providers/azure-speech-translation";
 
 const OUT = path.join(__dirname, "out");
 const AUDIO_CACHE = path.join(__dirname, "cache", "audio");
@@ -66,6 +67,9 @@ const SYSTEMS: System[] = [
   // so it is measured as its own thing rather than assumed equivalent to a
   // single-model live translator.
   liveTextSystem(captionPipeline({ asrLanguage: "multi" }), 0.29 + 0.15),
+  // The engine behind Teams' live translated captions, and the same Azure
+  // Speech service our production pipeline already uses for fr/es/ar/ru.
+  liveTextSystem(azureSpeechTranslation({ sourceLanguage: "en" }), 2.5),
 ];
 
 /** Chinese has no spaces, so word-level WER is noise; CER is the substitute. */

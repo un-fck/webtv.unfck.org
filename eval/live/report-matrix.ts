@@ -101,6 +101,7 @@ const LABELS: Record<string, string> = {
   "D-openai-realtime-s2s": "OpenAI Realtime S2S",
   "C-openai-realtime-text": "OpenAI Realtime text",
   "C-caption-deepgram-multi-gtranslate": "Deepgram→GTranslate [YouTube]",
+  "C-azure-speech-translation-en": "Azure Speech translation [Teams]",
 };
 
 const f1 = (v: number | null | undefined, suffix = "") =>
