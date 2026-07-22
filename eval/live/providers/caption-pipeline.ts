@@ -8,12 +8,16 @@
  * measured as its own architecture rather than assumed equivalent to a
  * single-model live translator.
  *
- * The architecture has one large advantage for measurement: **every latency
- * component is separately observable**. Deepgram returns word-level timestamps
- * on final results, so the ASR half is exact (emit wall-clock minus the word's
- * own end time), and the MT half is a request we time ourselves. Nothing has
- * to be inferred, which is the opposite of the single-model translators whose
- * translated tokens carry no timestamps at all.
+ * Latency here is COMPOSED, not observed end-to-end: the ASR half is measured
+ * exactly (Deepgram returns word-level timestamps on finals, so it is emission
+ * wall-clock minus the word's own end time) and the MT half is a round trip we
+ * time ourselves. Summing them models an inline pipeline that translates each
+ * caption as it lands. It excludes the queueing delay a real batching
+ * implementation would add, so treat it as a floor.
+ *
+ * Even so, both halves are separately OBSERVABLE, which is the opposite of the
+ * single-model translators whose translated tokens carry no timestamps at all
+ * and had to be anchored indirectly.
  *
  * It also has a real weakness worth surfacing rather than engineering around:
  * the ASR must commit to a language. On a multilingual UN floor, whatever it
@@ -227,10 +231,12 @@ export function captionPipeline(opts: {
             targetLanguage,
             proj,
           );
-          // Per-caption MT latency: the batch round trip divided across it,
-          // which is what a caption in that batch actually waited.
-          const per = r.ms / group.length;
-          mtLatencies.push(...group.map(() => per));
+          // Each caption waits the FULL round trip, not a 1/N share of it —
+          // dividing the batch time across its members understates per-caption
+          // latency by the batch factor, which on a 16-caption batch is an
+          // order of magnitude. (Queueing delay while a batch fills is still
+          // excluded, so this remains a floor, not a ceiling.)
+          mtLatencies.push(...group.map(() => r.ms));
           outputs.push(...r.translations);
           chars += group.reduce((a, c) => a + c.text.length, 0);
         } catch (e) {

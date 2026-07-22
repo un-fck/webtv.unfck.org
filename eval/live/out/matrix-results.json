@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T13:03:18.208Z",
+  "generatedAt": "2026-07-22T05:47:09.253Z",
   "rows": [
     {
       "system": "A-human",
@@ -546,6 +546,107 @@
       "atdS": 4.888945652173913,
       "costUsd": null,
       "adequacy": 27.625
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10161",
+      "language": "ar",
+      "errorRate": 0.9214396284829721,
+      "errorMetric": "WER",
+      "chrf": 23.37431213798751,
+      "medianLagS": 0.3258125,
+      "p90LagS": 0.5762399999999906,
+      "atdS": 0.4028999689441,
+      "costUsd": 0.2679291737847222
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10161",
+      "language": "en",
+      "errorRate": 0.7504267668146125,
+      "errorMetric": "WER",
+      "chrf": 36.7418969529007,
+      "medianLagS": 0.3228125,
+      "p90LagS": 0.5735,
+      "atdS": 0.39743413043478326,
+      "costUsd": 0.2679291737847222
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10161",
+      "language": "es",
+      "errorRate": 0.8609656777196044,
+      "errorMetric": "WER",
+      "chrf": 33.560840361558036,
+      "medianLagS": 0.3255324999999721,
+      "p90LagS": 0.5756149999999907,
+      "atdS": 0.4036328881987584,
+      "costUsd": 0.2679291737847222
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10161",
+      "language": "fr",
+      "errorRate": 0.8565009828699803,
+      "errorMetric": "WER",
+      "chrf": 35.28893480814743,
+      "medianLagS": 0.3243449999999721,
+      "p90LagS": 0.574375,
+      "atdS": 0.40143413043478327,
+      "costUsd": 0.2679291737847222
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10161",
+      "language": "zh",
+      "errorRate": 0.8476023647908911,
+      "errorMetric": "CER",
+      "chrf": 11.621002201649336,
+      "medianLagS": 0.328125,
+      "p90LagS": 0.5873024999999907,
+      "atdS": 0.4050738819875783,
+      "costUsd": 0.2679291737847222
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10156",
+      "language": "en",
+      "errorRate": 0.34698275862068967,
+      "errorMetric": "WER",
+      "chrf": 66.7283061514383,
+      "medianLagS": 0.34925,
+      "p90LagS": 0.530125,
+      "atdS": 0.4179827983783764,
+      "captionSegmented": true,
+      "captionMeanChars": 28.44864864864865,
+      "captionsPerMinute": 20.112635287482718,
+      "captionReadingRate": 10.794680506000649,
+      "captionShareOverLimit": 0.23369565217391305,
+      "costUsd": 0.13929795659722222
+    },
+    {
+      "system": "C-caption-deepgram-multi-gtranslate",
+      "arm": "C-live-text",
+      "symbol": "S/PV.10156",
+      "language": "zh",
+      "errorRate": 1.0404380791912384,
+      "errorMetric": "CER",
+      "chrf": 15.336089266118982,
+      "medianLagS": 0.3648025000000198,
+      "p90LagS": 0.556625,
+      "atdS": 0.4325233389189195,
+      "captionSegmented": false,
+      "captionMeanChars": 8.908108108108108,
+      "captionsPerMinute": 20.112635287482718,
+      "captionReadingRate": null,
+      "captionShareOverLimit": null,
+      "costUsd": 0.13929795659722222
     }
   ]
 }
