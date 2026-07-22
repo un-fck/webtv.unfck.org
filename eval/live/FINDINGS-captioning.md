@@ -108,8 +108,15 @@ whether a viewer can *read* the output: characters per caption, how fast
 captions are replaced, and the resulting reading rate against the ~21 char/sec
 adult ceiling.
 
-This surfaces something WER completely hides: **a raw streaming translator is
-not a captioning system.** Soniox and OpenAI Realtime emit token fragments with
+Measured on the caption pipeline: 38.3 characters per caption, 8.1 captions per
+minute, median reading rate 11.4 chars/sec — comfortably inside the ceiling on
+average, but **28% of its captions are replaced faster than a person can read
+them.** More than a quarter of the output is, in captioning terms, unreadable
+regardless of whether the words are right. No accuracy metric of any kind would
+have surfaced that.
+
+This also surfaces something WER completely hides: **a raw streaming translator
+is not a captioning system.** Soniox and OpenAI Realtime emit token fragments with
 no caption-unit boundaries at all. Shipping either as captions means building
 segmentation, line-breaking and timing yourself. The report records that as
 `segmented: no` rather than pretending a number exists.
