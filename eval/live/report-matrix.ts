@@ -159,8 +159,8 @@ function main() {
     say(line);
   }
 
-  // Coverage table — the explanatory column.
   const cov = coverageMap();
+  // Coverage table — the explanatory column.
   if (Object.keys(cov).length) {
     say("");
     say("Coverage: how much of the record the system actually produced (%).");
@@ -247,10 +247,14 @@ function main() {
     say("origin: translation error vs speech-recognition error. The accepted");
     say("broadcast threshold is 98.");
     say("");
-    say("⚠ READ THIS WITH THE COVERAGE TABLE. NTR's denominator is the");
-    say("  candidate's OWN word count, so a system that drops half the meeting");
-    say("  but renders the rest cleanly still scores well. NTR says how good");
-    say("  the subtitles that appeared were; coverage says how much appeared.");
+    say("⚠ SUPPRESSED BELOW 80% COVERAGE ('cov' in the cell). NTR's denominator");
+    say("  is the candidate's OWN word count and its windows are proportional");
+    say("  slices, so a system emitting 40% of the meeting is graded on 40% of");
+    say("  the material against a reference slice it does not correspond to.");
+    say("  Measured: the Deepgram-multi pipeline scores 96.6 on French while its");
+    say("  output is nonsense at 41% coverage. NTR answers 'how good were the");
+    say("  subtitles that appeared' — a real question, but meaningless without");
+    say("  coverage, and actively misleading when coverage is low.");
     say("");
     let h = "cell".padEnd(22) + systems.map((s) => s.padEnd(24)).join("");
     say(h);
@@ -258,7 +262,17 @@ function main() {
     for (const cell of cells.sort()) {
       const [sym, lang] = cell.split("|");
       let line = `${sym} ${lang}`.padEnd(22);
-      for (const s of systems) line += f1(get(s, cell)?.ntr).padEnd(24);
+      for (const s of systems) {
+        const r = get(s, cell);
+        const c = cov[`${s}|${sym}|${lang}`];
+        const suppressed = c != null && c < 80;
+        line += (r?.ntr == null
+          ? "   —  "
+          : suppressed
+            ? `(cov ${c.toFixed(0)}%)`
+            : f1(r.ntr)
+        ).padEnd(24);
+      }
       say(line);
     }
     say("");

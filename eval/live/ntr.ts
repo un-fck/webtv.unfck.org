@@ -19,6 +19,17 @@
  * accepted quality threshold is **98%**, which is far stricter than it sounds
  * precisely because trivial errors are discounted.
  *
+ * ⚠ NTR IS ONLY INTERPRETABLE AT HIGH COVERAGE. Its denominator is the
+ * candidate's own word count, and the windows compared are proportional slices
+ * of each text, so a system that emits 40% of the meeting is scored on 40% of
+ * the material against a reference slice it does not actually correspond to.
+ * Measured directly: the Deepgram-multi caption pipeline scores NTR 96.6 on
+ * French while its actual output is nonsense ("Le message secret est...") at
+ * 41% coverage. The metric is not wrong — it is answering "how good were the
+ * subtitles that appeared", which is a real question — but quoting it without
+ * coverage beside it is indefensible. `MIN_COVERAGE_FOR_NTR` below is the bar
+ * under which the report suppresses it entirely.
+ *
  * Splitting T from R is what makes this worth the trouble here. Our four
  * architectures fail in different places — a pivot pipeline can only make
  * translation errors on top of whatever the ASR already got wrong, whereas a
@@ -27,6 +38,13 @@
  */
 import { AzureOpenAI } from "openai";
 import { getAnalysisModel } from "../../lib/providers/models";
+
+/**
+ * Coverage below which an NTR score is not reported. Chosen because live
+ * subtitling practice assumes near-complete output — the model was designed to
+ * grade professional respeakers, who do not silently drop 60% of a programme.
+ */
+export const MIN_COVERAGE_FOR_NTR = 0.8;
 
 const WINDOWS = 6;
 const MIN_WINDOW_CHARS = 250;
