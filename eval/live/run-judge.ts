@@ -14,6 +14,7 @@ import path from "path";
 import { fetchPVDocument } from "../ground-truth/documents-api";
 import { parsePVDocument } from "../ground-truth/pdf-parser";
 import { judgeAdequacy } from "./judge";
+import { scoreNTR } from "./ntr";
 import { Pool } from "pg";
 import { humanInterpreter, pivotSystem, loadFloorSegments } from "./systems";
 
@@ -40,7 +41,7 @@ async function main() {
     : {};
 
   const todo = data.rows.filter(
-    (r) => r.adequacy == null && !r.error && r.chrf != null,
+    (r) => (r.adequacy == null || r.ntr == null) && !r.error && r.chrf != null,
   );
   console.log(`[judge] ${todo.length} cell(s) to score`);
   if (dryRun) return;
@@ -76,10 +77,23 @@ async function main() {
     }
 
     const pv = await getPVText(String(r.symbol), String(r.language));
-    const res = await judgeAdequacy(pv, hyp, String(r.language));
-    r.adequacy = res?.meanScore ?? null;
+    if (r.adequacy == null) {
+      const res = await judgeAdequacy(pv, hyp, String(r.language));
+      r.adequacy = res?.meanScore ?? null;
+    }
+    // NTR: the metric broadcasters actually certify live subtitles with.
+    // Read it WITH coverage, never alone — its denominator is the candidate's
+    // own word count, so a system that drops half the meeting but renders the
+    // rest cleanly still scores well.
+    if (r.ntr == null) {
+      const n = await scoreNTR(pv, hyp, String(r.language));
+      r.ntr = n?.score ?? null;
+      r.ntrTranslationLoss = n?.translationLoss ?? null;
+      r.ntrRecognitionLoss = n?.recognitionLoss ?? null;
+    }
     console.log(
-      `  ${key}: adequacy ${res ? res.meanScore.toFixed(1) : "n/a"} (${res?.windows ?? 0} windows)`,
+      `  ${key}: adequacy ${r.adequacy != null ? Number(r.adequacy).toFixed(1) : "n/a"}` +
+        `  NTR ${r.ntr != null ? Number(r.ntr).toFixed(1) : "n/a"}`,
     );
     fs.writeFileSync(RESULTS, JSON.stringify(data, null, 2));
   }

@@ -57,6 +57,9 @@ interface Row {
   errorMetric: string;
   chrf: number | null;
   adequacy?: number | null;
+  ntr?: number | null;
+  ntrTranslationLoss?: number | null;
+  ntrRecognitionLoss?: number | null;
   medianLagS: number | null;
   p90LagS: number | null;
   atdS: number | null;
@@ -230,6 +233,45 @@ function main() {
           `  ${(LABELS[s] ?? s).padEnd(26)} ${(mean >= 0 ? "+" : "") + mean.toFixed(1)} adequacy  (n=${d.length})`,
         );
       }
+    }
+  }
+
+  // ── NTR ───────────────────────────────────────────────────────────────────
+  if (rows.some((r) => r.ntr != null)) {
+    say("");
+    say("NTR — the model broadcasters actually certify live subtitles with.");
+    say("Errors are weighted by how much MEANING they destroy (minor 0.25,");
+    say("standard 0.5, serious 1.0) instead of counted equally, and split by");
+    say("origin: translation error vs speech-recognition error. The accepted");
+    say("broadcast threshold is 98.");
+    say("");
+    say("⚠ READ THIS WITH THE COVERAGE TABLE. NTR's denominator is the");
+    say("  candidate's OWN word count, so a system that drops half the meeting");
+    say("  but renders the rest cleanly still scores well. NTR says how good");
+    say("  the subtitles that appeared were; coverage says how much appeared.");
+    say("");
+    let h = "cell".padEnd(22) + systems.map((s) => s.padEnd(24)).join("");
+    say(h);
+    say("─".repeat(h.length));
+    for (const cell of cells.sort()) {
+      const [sym, lang] = cell.split("|");
+      let line = `${sym} ${lang}`.padEnd(22);
+      for (const s of systems) line += f1(get(s, cell)?.ntr).padEnd(24);
+      say(line);
+    }
+    say("");
+    say("Where the loss comes from (mean points lost per system):");
+    for (const s of systems) {
+      const rs = cells.map((c) => get(s, c)).filter((r) => r?.ntr != null);
+      if (!rs.length) continue;
+      const mean = (f: (x: Row) => number | null | undefined) => {
+        const v = rs.map((r) => f(r!)).filter((n): n is number => n != null);
+        return v.length ? v.reduce((a, b) => a + b, 0) / v.length : NaN;
+      };
+      say(
+        `  ${(LABELS[s] ?? s).padEnd(30)} translation −${mean((x) => x.ntrTranslationLoss).toFixed(1)}   ` +
+          `recognition −${mean((x) => x.ntrRecognitionLoss).toFixed(1)}`,
+      );
     }
   }
 
