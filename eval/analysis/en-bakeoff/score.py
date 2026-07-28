@@ -193,6 +193,9 @@ def main():
 
     refs = {}
     for fn in os.listdir(a.refs):
+        # macOS AppleDouble sidecars on the exFAT volume are binary, not text.
+        if fn.startswith("._"):
+            continue
         if fn.endswith(".ref.txt"):
             refs[fn[:-len(".ref.txt")]] = open(os.path.join(a.refs, fn), encoding="utf-8").read()
 
