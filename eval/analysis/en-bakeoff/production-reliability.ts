@@ -61,7 +61,7 @@ async function q(sql: string, params: unknown[] = []) {
             count(*) filter (where status <> 'success') failures,
             count(*) filter (where status = 'success') successes
      from webtv.processing_usage_events
-     where stage = 'transcribing'
+     where stage = 'transcribing' and operation = 'transcribe'
      group by 1 order by attempts desc`,
   );
   console.log(
@@ -82,7 +82,7 @@ async function q(sql: string, params: unknown[] = []) {
             count(*) attempts,
             count(*) filter (where status <> 'success') failures
      from webtv.processing_usage_events
-     where stage = 'transcribing'
+     where stage = 'transcribing' and operation = 'transcribe'
        and created_at > now() - interval '90 days'
      group by 1 order by attempts desc`,
   );
@@ -99,7 +99,7 @@ async function q(sql: string, params: unknown[] = []) {
   const byday = await q(
     `select created_at::date d, status, count(*) n
      from webtv.processing_usage_events
-     where stage='transcribing' and provider='azure-speech'
+     where stage='transcribing' and operation='transcribe' and provider='azure-speech'
      group by 1,2 order by 1`,
   );
   for (const r of byday as any[])
@@ -109,7 +109,7 @@ async function q(sql: string, params: unknown[] = []) {
   const msgs = await q(
     `select provider, coalesce(error_message,'(null)') msg, count(*) n, max(created_at)::date last_seen
      from webtv.processing_usage_events
-     where stage='transcribing' and status='error'
+     where stage='transcribing' and operation='transcribe' and status='error'
      group by 1,2 order by n desc limit 25`,
   );
   for (const r of msgs as any[])
@@ -119,7 +119,7 @@ async function q(sql: string, params: unknown[] = []) {
   const fails = await q(
     `select provider, status, count(*) n, max(created_at)::date last_seen
      from webtv.processing_usage_events
-     where stage = 'transcribing' and status <> 'success'
+     where stage = 'transcribing' and operation = 'transcribe' and status <> 'success'
      group by 1,2 order by n desc limit 30`,
   );
   if (!fails.length) console.log("  (none)");
@@ -132,7 +132,7 @@ async function q(sql: string, params: unknown[] = []) {
             count(*) n,
             round(sum(coalesce(usage_hours,0))::numeric, 1) audio_hours
      from webtv.processing_usage_events
-     where stage = 'transcribing'
+     where stage = 'transcribing' and operation = 'transcribe'
      group by 1 order by audio_hours desc nulls last`,
   );
   for (const r of vol as any[])

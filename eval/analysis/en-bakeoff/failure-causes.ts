@@ -35,7 +35,7 @@ select provider,
   min(created_at)::date first_seen,
   max(created_at)::date last_seen
 from webtv.processing_usage_events
-where stage = 'transcribing' and status = 'error'
+where stage = 'transcribing' and operation = 'transcribe' and status = 'error'
 group by 1,2
 order by 1, n desc`;
 
@@ -43,7 +43,7 @@ const TOTALS = `
 select provider, count(*)::int attempts,
        count(*) filter (where status='error')::int failures
 from webtv.processing_usage_events
-where stage='transcribing' group by 1`;
+where stage='transcribing' and operation='transcribe' group by 1`;
 
 function wilson(k: number, n: number, z = 1.96): [number, number] {
   if (n === 0) return [0, 1];
