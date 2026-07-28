@@ -1,130 +1,141 @@
 # Recommendation
 
-> **VERDICT — MOVE ENGLISH TO `azure-llm-speech`, after four cheap fixes.**
-> It is the more accurate engine on the only pre-registered endpoint (+0.81 micro
-> WER on byte-identical audio, +0.98 against production as configured, winning
-> **17 of 17** sessions), and it is the only option that removes the personal-card
-> failure mode from **90% of production audio with no procurement at all** — the
-> resource is already on the UN's invoice and already serves four languages. The
-> vendor cost delta is **~$657/yr**. Required first: set `profanityFilterMode`,
-> raise `maxSpeakers` to 35, schedule the drift regression, and clear the §14.2
-> hallucination gate.
+> **VERDICT — KEEP ENGLISH ON ASSEMBLYAI, AND TURN ON `keyterms_prompt`. Solve the
+> payment problem institutionally, not by switching engine.**
 >
-> **This reverses my own first draft.** That draft recommended procuring
-> AssemblyAI, resting on a reliability number whose denominator was inflated ~7×
-> by counting polling ticks, and a cost projection that counted archive backfill
-> as growth. Both are corrected below.
+> One experiment decided this. AssemblyAI's keyterm biasing takes "UN80" — the
+> error class §15.5a called *"the single most decision-relevant thing"* — from
+> **10 correct / 25 mangled to 61 correct / 2 mangled** on a 171-minute meeting,
+> with no false positives. Azure renders it correctly **6** times and mangles it
+> into a real-but-wrong UN body **33** times, and has **no working mechanism to
+> fix it**: `phraseList` is accepted-and-ignored, the documented `prompt`
+> substitute returns `400`.
+>
+> Azure is genuinely the better raw engine — +0.98 WER, winning 17 of 17 sessions.
+> But that is a diffuse 3% relative gain, and it is bought at the cost of ~50
+> wrong UN institution names per long meeting that **cannot be corrected at
+> source**. In a UN record the institution being discussed *is* the content.
+>
+> Cost: **~$1,436/yr**. That is a funding problem with a funding solution, not a
+> reason to accept a materially worse record.
 
-## What changed under adversarial review
+### I changed my mind twice. Here is the audit trail.
 
-| my first draft | corrected | how |
+Recording it because the reversals were caused by errors worth knowing about.
+
+| draft | said | why it changed |
 | --- | --- | --- |
-| AssemblyAI 0.046% failures, n=8,662 | **0.284%, n=704** — and *raw* rates are tied (6.77% vs 6.82%) | 7,153 of those rows were `transcribe_poll` ticks from an old logging pattern, not attempts |
-| "$1,500–3,000/yr **and doubling**" | **~$1,436/yr**, growing 3.7%/month | 46% of July's processing was backfill of meetings back to June 2025; organic went 549 h → 570 h |
-| cost delta $674–1,350/yr | **~$657/yr** | follows from the above |
-| "no quality case for switching" | **the quality case is real** | the WER pillar held; only 1 of 3 §14/§15 pillars actually reversed |
+| 1st | procure AssemblyAI | rested on a reliability figure whose denominator was inflated ~7× (polling ticks counted as attempts) and a cost projection that read archive backfill as growth |
+| 2nd | **move to Azure** | with those corrected, Azure won accuracy and solved the payment problem with zero procurement — the evidence genuinely pointed there |
+| **final** | **keep AssemblyAI + `keyterms_prompt`** | the entity-biasing capability had never been *tested*. It works, decisively, and it is available on exactly one vendor. That was the missing variable in draft 2. |
 
-## The evidence, corrected
+## The measurement that decided it
 
-| | AssemblyAI U-3.5 Pro | azure-llm-speech |
+Full 171-minute clip, "UN80" spoken ~56 times:
+
+| arm | UN80 correct | → a **real** UN body (UNAT/UNAIDS) | → non-existent |
+| --- | ---: | ---: | ---: |
+| AssemblyAI, baseline | 10 | 22 | 3 |
+| **AssemblyAI + `keyterms_prompt`** | **61** | **0** | 2 |
+| AssemblyAI + `custom_spelling` | 25 | 7 | 2 |
+| AssemblyAI + `word_boost` | 11 | 21 | 3 |
+| **azure-llm-speech** | **6** | **33** | 16 |
+| azure + `phraseList` | *no effect — accepted and ignored* | | |
+| azure + `prompt` | *HTTP 400 — schema rejection* | | |
+
+**False-positive control:** all 61 renderings are legitimate in context —
+`UN80 initiative` ×32, `UN80 reform` ×5, `UN80 process` ×4, `UN80 steering`,
+`UN80 task force`. The biasing is not hallucinating the term into places it does
+not belong.
+
+§15.5a's original numbers were AssemblyAI 11 correct, Azure 6. Mine, 15 days
+later: 10 and 6. This is a stable property of the models, not noise.
+
+## Everything else, measured
+
+| | AssemblyAI | azure-llm-speech |
 | --- | --- | --- |
-| **WER, byte-identical input (n=17)** | 27.55% | **26.74%** — better by 0.81 micro / 0.64 macro, CI [+0.27,+1.09], wins 15/17 |
-| **WER vs production as configured** | 27.72% | **26.74%** — better by 0.98, wins **17/17**, sign test p≈8e-6 |
-| errors shared with the other arm | — | **86% co-located, 78% the identical wrong token** |
-| arm-unique errors | 2,607 | 1,734 — a **1.5 : 1** residue against the incumbent |
-| vendor-attributable failures | **0.284%** (n=704) | 6.8% (n=44, all on day one) |
-| raw production failure rate, matched window | 6.77% | 6.82% — **tied** |
+| WER, byte-identical input (n=17) | 27.55% | **26.74%** (better by 0.81 micro / 0.64 macro, CI [+0.27,+1.09]) |
+| WER vs production as configured | 27.72% | **26.74%** (better by 0.98, wins **17/17**) |
+| **UN80 entity rendering** | **61 correct / 2 mangled** *(with keyterms)* | 6 / 49 — **unfixable** |
+| errors shared with the other arm | — | **86% co-located, 78% identical token** |
+| hallucination gate (§14.2, Kanem) | **PASS** (0) | **PASS** (0) |
+| diarization, 171-min meetings | **1 and 2 speakers — fails** | 28 and 30 — fine |
+| diarization, ≤2h33m (n=12) | fine — 19 spk / 70 turns | fine |
+| vendor-attributable failures | **0.284%** (n=704) | 6.8% (n=44, all day one) |
+| raw failure rate, matched window | 6.77% | 6.82% — tied |
+| this run | 59/59 ok | 59/59 ok |
 | cost / audio-hour | **$0.21** | $0.306 |
-| cost / year at organic run-rate | **$1,436** *(personal card)* | $2,093 *(UN invoice)* |
-| speed, production config | 93× realtime | 66× — but mono input makes AssemblyAI 138× |
-| diarization, 60–120 min | 14 spk / 42 turns | 15 spk / 34 turns — equivalent |
-| entity slots correct | 4/11 | 3/11 — **not significant** (Fisher p=1.0) |
-| acronym recall | 69% | 66% — small; the script itself warns the absolute rate is not meaningful |
-| entity biasing | `keyterms_prompt`, `word_boost`, `custom_spelling` — **but untested** | **none that work** |
-| model identity | named, versioned | **unnamed, unpinnable** |
-| content filter | none | **profanity mask destroys UN entity names by default** |
-| serving region | **not measured** | North Europe, in-region |
+| cost / yr at organic run-rate | **$1,436** | $2,093 |
+| speed | **93× RT** (138× on mono) | 66× |
+| latency consistency (repeat CV) | 15.2% | **5.4%** |
+| determinism (identical request twice) | differs | **byte-identical** |
+| model identity | **named, pinnable** | unnamed, unpinnable |
+| content filter | none | **profanity mask destroys UN names by default** |
+| accented English (§14.4) | appalling ✓, Starobelsk 13 ✓ | — |
 
-## Why the conclusion flips
+## Why the entity result outweighs the WER result
 
-**1. Accuracy is the best-instrumented axis, and Azure wins it.** It is the only
-pre-registered endpoint, measured on the whole corpus with a scorer that passes
-22 of 22 negative controls. Every other axis is n=11, n=44, or an unaudited
-denominator. Azure wins 17 of 17 sessions against production as it stands.
+They are not commensurable, and WER treats them as if they were.
 
-**2. The funding fix points at Azure, not away from it.** The 15 balance-negative
-failures are the strongest finding in this exercise. English is **89.7% of
-production audio**. `AZURE_SPEECH_ENDPOINT` already points at
-`foundry-transcripts-notheurope` — the exact resource on the UN's `EOSG-DEV`
-invoice, serving fr/es/ar/ru in production since 2026-07-14. Moving English is a
-one-line change to `STT_ROUTING`. The personal card then disappears from 90% of
-the workload **today, with no procurement action**. Procuring AssemblyAI requires
-an institutional process that has not started *and* leaves Speechmatics and
-Alibaba on the same card.
+- The WER gap is **0.98 points on a 27% base** — a 3% relative improvement,
+  spread thinly across function words and ordinary mishearings.
+- The entity gap is **~50 occurrences per long meeting** where a reader is told
+  the *UN Appeals Tribunal* was discussed when the *UN80 reform initiative* was.
+  That is 0.2% of tokens — **invisible to WER**, which is exactly why §14/§15
+  reached the opposite conclusion.
 
-**3. The cost objection is ~$657/yr.** Less than the staff time of the
-procurement it would fund, and it moves the burden from an individual to an
-institution — which is the entire point of the exercise.
+A diplomat searching the archive for "UN80" finds 61 hits in one transcript and
+6 in the other. That is the product.
 
-**4. The governance objections are already accepted in production.** "Unnamed and
-unpinnable" and "the profanity mask destroys UN body names" are true, and are the
-conditions under which **four of the six official languages** have been served
-since 2026-07-14, with no proposal to change them. If they disqualify English
-they disqualify French, and the honest recommendation would then be to move
-fr/es/ar/ru *off* Azure — a much larger claim this evidence does not support.
+## The payment problem — solve it, don't trade quality for it
 
-## The case against, stated fairly
+The strongest operational finding stands: **15 production transcriptions failed
+in July because the personal card ran out**, more than either vendor caused. But:
 
-- **Entity biasing exists on exactly one vendor.** `keyterms_prompt` /
-  `word_boost` / `custom_spelling` work on AssemblyAI; on Azure `phraseList` is
-  accepted-and-ignored and the documented `prompt` substitute returns `400`. This
-  is the only *structural* fix for the entity weakness both vendors share. But it
-  is **untested** — nobody has shown it fixes the UN80 class. **Testing it is the
-  highest-value hour left in this exercise**, and if it works decisively this
-  recommendation should be revisited.
-- **Reliability still favours the incumbent** on vendor-attributable failures
-  (0.284% vs 6.8%), though on n=753 vs n=44 and with raw rates tied.
-- **Azure's failure mode at entity slots is a non-word; AssemblyAI's is a
-  plausible wrong institution** — 3 cases vs 1 across ten meetings. Directional,
-  not significant, and it is the one axis where the incumbent's errors are more
-  dangerous rather than merely more numerous.
-- **Migration is not free**, though it is small: one line in `STT_ROUTING` plus
-  the four fixes below.
+- the organic run-rate is **~6,840 h/yr → ~$1,436/yr**, growing **3.7%/month**
+  (July looked like doubling only because **46%** of it was archive backfill);
+- switching to Azure would move that bill to the UN **and cost ~$657/yr more**,
+  while giving up the entity fix;
+- AssemblyAI is **pay-as-you-go, no minimum, no commitment** — there is nothing
+  to be locked into, which directly addresses the "don't want to lock in" worry.
+  The lock-in risk is a property of *procurement processes*, not this vendor.
 
-## Required before the switch
+**If institutional funding genuinely cannot be arranged**, Azure is a defensible
+fallback — it is the better raw engine and it is already invoiced — but the
+decision should be recorded as *accepting a worse UN-entity record to solve a
+funding problem*, not as a quality choice.
 
-1. **`profanityFilterMode: "None"` or `"Tags"`** in `lib/providers/azure-llm-speech.ts`.
-   The default is destroying UN entity names *right now, in production, on four
-   languages*. **Fix this regardless of the English decision.**
-2. **`maxSpeakers: 35`** — production caps itself at 20 for no reason.
-3. **Schedule `regression-azure-llm.ts`.** The model is unpinnable; drift can only
-   be detected, and the guard has never run on a schedule.
-4. **Clear the §14.2 hallucination gate** — pre-registered as binary and
-   non-negotiable. *The verdict above is conditional on it.*
+## Do these regardless
 
-## Worth more than the vendor choice
+1. **Turn on `keyterms_prompt`** in `lib/providers/assemblyai.ts`, seeded from a
+   UN roster (current officeholders, body acronyms, initiative names, document
+   symbols). Measured: **+51 correct entity renderings, −23 wrong-institution
+   renderings on one meeting.** Highest-value change in this report.
+2. **Feed mono audio.** −0.27 WER points *and* 93× → 138× realtime. Free.
+3. **Detect degenerate diarization at the pipeline boundary.** AssemblyAI returned
+   1 speaker across 22,784 words of a 171-minute meeting, verified at the API
+   level. One speaker on >10 minutes of audio is always wrong; nothing notices
+   today. Re-run or fall back when it fires.
+4. **Set `profanityFilterMode`** in `lib/providers/azure-llm-speech.ts` — the
+   default is destroying UN entity names **in production right now on fr/es/ar/ru**
+   (`SCAD` → `****`). `Removed` is worse. This is unrelated to the English
+   decision and should ship immediately.
+5. **`maxSpeakers: 35`**, not 20.
+6. **Schedule `regression-azure-llm.ts`** — Azure still serves four languages on an
+   unpinnable model, and the guard has never run on a schedule.
+7. **Land the scorer fixes on `main`** (`[^:\n]` normalizer, chunked-WER
+   replacement, bootstrap RNG) or every future eval inherits a 16-point error.
+8. **Build the entity glossary / symbol validator anyway.** 86% of errors are
+   shared between vendors; only an external check touches those. One reading
+   agent: it removes 8 of 15 reader-harming errors in its session, on both arms.
 
-**86% of the errors are shared**, so no swap touches them. The highest-value work
-is external to both vendors:
+## What would change this again
 
-1. **A UN entity glossary + document-symbol/resolution-number validator.** One
-   reading agent's estimate: removes **8 of 15** reader-harming errors in its
-   session, *on both arms*. Every symbol has a checkable form; every officeholder
-   is on a published roster.
-2. **Feed whichever vendor mono audio** — worth −0.27 WER points and a third of
-   the latency on AssemblyAI, free.
-3. **Land the scorer fixes on `main`** (`[^:\n]` and the chunked-WER
-   replacement), or every future eval inherits a 16-point error and CIs from a
-   degenerate RNG.
-
-## What would reverse this again
-
-- **AssemblyAI's keyterm biasing demonstrably fixing the UN80 class.** One hour of
-  work; the strongest remaining argument for the incumbent.
-- **A Kanem-class failure by Azure** on the hallucination gate — disqualifying on
-  its own pre-registered terms.
-- **Azure model drift.** Unpinnable means this validation has a shelf life.
-- **Evidence that UN procurement of AssemblyAI is genuinely cheap.** "Pay-as-you-go
-  avoids lock-in" is true of the *vendor*; nobody has checked what the
-  *institution* requires. And AssemblyAI's processing region was never measured —
-  for a UN record that matters, and it is a real gap in this report.
+- **Azure shipping working entity biasing.** It would erase the deciding
+  argument. Watch `enhancedMode.phraseList` (ignored today) and `prompt` (400).
+- **`keyterms_prompt` not generalising** beyond UN80 — it was tested on one term
+  set, on one meeting. Re-test on a full roster across several meetings before
+  relying on it in production.
+- **AssemblyAI's diarization collapse spreading** beyond long GA-style debates.
+- **Volume past ~15,000 h/yr**, where the cost delta stops being trivial.

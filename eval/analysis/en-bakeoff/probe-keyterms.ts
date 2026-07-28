@@ -18,14 +18,16 @@
  * the fix has to be an external glossary — which helps both vendors equally and
  * therefore stops being a reason to prefer either.
  *
- * Uses the same 12-minute excerpt as probe-phraselist, so the two vendors'
- * biasing mechanisms are compared on identical audio.
+ * Runs on the FULL 171-minute clip, not the 12-minute excerpt: the excerpt turned
+ * out to contain only 1-2 UN80 mentions, so a +-1 move there was pure noise. On the
+ * full clip the unbiased baseline is 11 correct / 21 mangled, which is enough
+ * signal to see a real effect.
  */
 import "../../../lib/load-env";
 import fs from "fs";
 
 const KEY = process.env.ASSEMBLYAI_API_KEY!;
-const CLIP = "/Volumes/SSDAStorage/un-en-bakeoff/audio-derived/UN80-excerpt_64k.mp3";
+const CLIP = "/Volumes/SSDAStorage/un-en-bakeoff/audio-derived/UN80-Apr06-keita_en_64k.mp3";
 
 const KEYTERMS = [
   "UN80",
@@ -110,19 +112,8 @@ async function run(label: string, extra: Record<string, unknown>) {
     ],
   });
 
-  console.log("\n  A control first: is AssemblyAI deterministic on this clip?");
-  const base2 = await run("baseline again", {});
-  if (base && base2) {
-    console.log(
-      `  baseline vs baseline: identical text = ${base.t === base2.t}, ` +
-        `UN80 ${base.good} vs ${base2.good}`,
-    );
-    if (base.t !== base2.t)
-      console.log(
-        "  !! NON-DETERMINISTIC — a changed output is not evidence of biasing;\n" +
-          "     only a change in the TARGET COUNT beyond this noise floor counts.",
-      );
-  }
+  // Determinism was already established on the excerpt: AssemblyAI's text varies
+  // run to run, so only a change in the TARGET COUNT is admissible evidence.
 
   console.log("\n  VERDICT");
   for (const [name, r] of [["keyterms_prompt", kt], ["word_boost", wb], ["custom_spelling", cs]] as const) {
