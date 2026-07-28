@@ -1,5 +1,17 @@
 # Recommendation
 
+> **VERDICT — DO NOT SWITCH ON QUALITY GROUNDS; FIX THE PAYER INSTEAD.**
+> azure-llm-speech wins WER by 0.48 points (CI [+0.16,+1.00]) and loses on cost
+> (1.46× dearer, $0.306 vs $0.21/audio-hour), speed (67× vs 101× realtime),
+> proven reliability (n=44 vs n=8,662), acronym recall (66% vs 69%), entity
+> biasing (none that works vs four working fields) and model governance (unnamed
+> and unpinnable). **86% of the two vendors' errors are the same error**, so the
+> choice touches ~11% of what is wrong. Meanwhile the out-of-pocket arrangement
+> caused **15 production failures in July** — more than either vendor — at
+> **$1,500–3,000/yr and doubling**. Three of the four §14/§15 arguments for
+> switching did not survive re-testing, and the instrument that produced them was
+> defective.
+
 Three options were on the table: keep paying AssemblyAI personally, procure it
 properly, or move English to `azure-llm-speech` because Azure is already
 contracted. Here is what the evidence supports, with the trade-offs.
