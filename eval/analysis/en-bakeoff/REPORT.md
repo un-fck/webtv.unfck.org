@@ -15,7 +15,7 @@ Of the three pillars that supported "move English to `azure-llm-speech`" in
 | --- | --- |
 | azure-llm better by 1.0–1.3 WER points (macro) | **confirmed, similar magnitude**: 0.88 macro on production configs, 0.64 once AssemblyAI gets the same mono audio. The *absolute* level was badly wrong though — 27% not 43.5% |
 | azure-llm is "~$0 marginal, already procured" | azure-llm costs **$0.306/audio-hour** against AssemblyAI's **$0.21** — it is **1.46× dearer**, verified against our own invoice |
-| the incumbent stops diarizing on long meetings | **does not reproduce** — 0 of 10 sessions degenerate, both arms; 14 vs 15 speakers on 60–120 min |
+| the incumbent stops diarizing on long meetings | **does not reproduce** — 0 of 12 sessions degenerate, both arms. On the two sessions over 2 h, AssemblyAI returns **19 speakers / 70 turns** against Azure's 21 / 50 — it is *finer*-grained at turn level, not collapsed |
 
 And the measurement instrument that produced those conclusions was defective in
 two independent ways (§2 below).
