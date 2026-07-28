@@ -335,6 +335,77 @@ Not a vendor change. The cheapest, largest win is **external to both**:
    destroying UN body names.
 4. **Schedule the drift regression.** It exists, it costs 10 s, nobody runs it.
 
+## 9. The pre-registered battery — traps WER cannot see
+
+Three clips with no PV, run because they carry known traps. **This section
+changed the recommendation.**
+
+### 9.1 The hallucination gate (§14.2) — both arms PASS
+
+Pre-registered as the one binary, non-negotiable disqualifier: any Kanem-class
+substitution (a *different real person*, confidently) fails an arm for English
+regardless of WER.
+
+| probe, UN80-Apr06-keita (171 min) | AssemblyAI | azure-llm |
+| --- | ---: | ---: |
+| Keita (correct) | 6 | 3 |
+| **Kanem (the disqualifier)** | **0** | **0** |
+
+Neither is disqualified.
+
+### 9.2 The entity trap (§15.5a) — reproduced exactly, and it is fixable on one vendor only
+
+"UN80" is spoken ~56 times in that meeting.
+
+| arm | correct | → a **real** UN body | → non-existent |
+| --- | ---: | ---: | ---: |
+| AssemblyAI, baseline | 10 | 22 | 3 |
+| **AssemblyAI + `keyterms_prompt`** | **61** | **0** | 2 |
+| AssemblyAI + `custom_spelling` | 25 | 7 | 2 |
+| AssemblyAI + `word_boost` | 11 | 21 | 3 |
+| **azure-llm-speech** | **6** | **33** | 16 |
+| azure + `phraseList` | accepted and **ignored** | | |
+| azure + `prompt` | **HTTP 400** | | |
+
+§15.5a recorded 11 vs 6 correct; this run gets 10 vs 6 fifteen days later — a
+stable model property, not noise. **False-positive control:** all 61 biased
+renderings are legitimate in context (`UN80 initiative` ×32, `UN80 reform` ×5,
+`UN80 process` ×4), so the biasing is not inserting the term spuriously.
+
+This is 0.2% of tokens and therefore **invisible to WER** — which is exactly why
+§14/§15, which decided on WER, reached the opposite conclusion.
+
+### 9.3 §14.3's diarization collapse — real, and confined to the longest meetings
+
+| file | AssemblyAI | azure-llm |
+| --- | --- | --- |
+| UN80-Apr06 (171 min) | **1 speaker / 1 utterance**, 22,784 words | 28 spk / 1,040 |
+| UN80-Apr29 (171 min) | **2 speakers / 75 utterances** | 30 spk / 731 |
+| scored corpus, ≤2h33m (n=12) | fine — 19 spk / 70 turns | fine |
+
+Verified at the API level: `utterances: 1`, one word-level speaker `A`, spanning
+1,920 ms → 10,273,690 ms. So the defect is **real and catastrophic when it
+fires**, **rare** (2 of 13 files over an hour), and **not predicted by duration**.
+The mitigation is detection at the pipeline boundary, not avoiding long files.
+
+### 9.4 Accented English (§14.4) — AssemblyAI passes
+
+"appalling" ✓ (the U-2-era mishear "polling" ×0), "cold blood" ✓,
+"Starobelsk" ×13, patronymic ×0 — matching §14.4's column for this arm.
+
+## 10. Recommendation
+
+See `RECOMMENDATION.md`. In short: **keep English on AssemblyAI and turn on
+`keyterms_prompt`**; Azure is the better raw engine but its entity weakness
+cannot be fixed at source, and the payment problem is a funding problem with a
+funding solution.
+
 ---
 
-*Sections 9 (battery / hallucination gate) and 10 (recommendation) follow.*
+## Run integrity
+
+118 runs attempted, **118 successful, 0 failures, 0 retries**, $23.48 against a
+pre-registered $40 ceiling. Azure's billed seconds matched source audio to within
+2 s on all 33 metered runs. All 32 AssemblyAI runs served by `universal-3-5-pro`
+with no silent fallback. A0/A2 verified byte-identical by sha256 on every
+session.
