@@ -158,10 +158,18 @@ normalizer fixes, not a change in either provider.
 
 §14/§15 contain no latency number at all.
 
+n = 17 sessions per arm.
+
 | arm | median RTF | basis |
 | --- | ---: | --- |
-| AssemblyAI | **101× realtime** | job leg, *directly observed* |
-| azure-llm | **67× realtime** | upload removed via a paired estimator |
+| AssemblyAI @ 64k mono | **138× realtime** | job leg, *directly observed* |
+| AssemblyAI @ original AAC *(production)* | **93× realtime** | job leg, *directly observed* |
+| azure-llm | **66× realtime** | upload inside the POST, removed via a paired estimator |
+
+**Neither degrades on long files — both improve**, as the fixed per-request
+overhead amortizes: AssemblyAI 76× on files under 20 min and **148×** on files
+over an hour; Azure 47× and 89×. So there is no long-file latency cliff on either
+side.
 
 Azure's upload sits inside a single synchronous POST and cannot be timed
 directly. The pooled regression disagreed with itself across vendors (23.9 vs
