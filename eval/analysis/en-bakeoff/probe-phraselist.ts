@@ -118,10 +118,16 @@ async function call(label: string, definition: unknown) {
         `mangled ${a.unat} -> ${b.unat}   ` +
         `output byte-identical: ${a.t === b.t}`,
     );
+    // A differing output is NOT evidence of biasing unless the model is
+    // deterministic. probe-mai-determinism.ts shows mai-transcribe-1.5 is NOT:
+    // two identical requests differ ("towards stronger" vs "towards a stronger").
+    // So the only admissible evidence here is a change in the TARGET COUNT.
     console.log(
-      a.t === b.t
-        ? "  => phraseList had NO effect. Entity biasing is unavailable in practice on this endpoint."
-        : "  => phraseList DID change the output. Entity biasing is real in the Azure family.",
+      a.un80 === b.un80 && a.unat === b.unat
+        ? "  => phraseList did NOT improve UN80 recall. And mai-transcribe-1.5 is\n" +
+          "     non-deterministic (see probe-mai-determinism.ts), so a differing output\n" +
+          "     is run-to-run noise, not evidence of biasing. ENTITY BIASING UNPROVEN."
+        : "  => phraseList moved the TARGET COUNT. That is admissible evidence of biasing.",
     );
   }
 })();
