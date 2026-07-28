@@ -13,7 +13,7 @@ Of the three pillars that supported "move English to `azure-llm-speech`" in
 
 | §14/§15 said | this run finds |
 | --- | --- |
-| azure-llm better by 1.0–1.3 WER points | better by **0.48** on matched input — real, but a third to a half the size, on a much lower base (27% vs 43.5%) |
+| azure-llm better by 1.0–1.3 WER points (macro) | **confirmed, similar magnitude**: 0.88 macro on production configs, 0.64 once AssemblyAI gets the same mono audio. The *absolute* level was badly wrong though — 27% not 43.5% |
 | azure-llm is "~$0 marginal, already procured" | azure-llm costs **$0.306/audio-hour** against AssemblyAI's **$0.21** — it is **1.46× dearer**, verified against our own invoice |
 | the incumbent stops diarizing on long meetings | **does not reproduce** — 0 of 10 sessions degenerate, both arms; 14 vs 15 speakers on 60–120 min |
 
@@ -117,18 +117,28 @@ luck, not process.
 Pre-registered primary endpoint: **A0 vs A2** — the only comparison where both
 arms receive the **byte-identical** file (verified by sha256 on every run).
 
+**n = 17 sessions**, all four arms complete.
+
 | arm | micro WER | 95% CI | macro WER |
 | --- | ---: | --- | ---: |
-| A0 AssemblyAI @ 64k mono mp3 | 27.46% | [25.68, 30.28] | 28.49% |
-| A1 AssemblyAI @ original AAC *(production today)* | 27.71% | [25.92, 30.64] | 28.76% |
-| **A2 azure-llm @ 64k mono mp3** | **26.98%** | [25.36, 29.60] | 27.97% |
-| A3 azure-llm @ 128k mono mp3 | 27.00% | [25.39, 29.57] | 28.02% |
+| A0 AssemblyAI @ 64k mono mp3 | 27.55% | [25.80, 29.78] | 28.42% |
+| A1 AssemblyAI @ original AAC *(production today)* | 27.72% | [25.88, 30.06] | 28.66% |
+| **A2 azure-llm @ 64k mono mp3** | **26.74%** | [25.22, 28.77] | 27.77% |
+| A3 azure-llm @ 128k mono mp3 | 26.72% | [25.16, 28.77] | 27.80% |
 
-| comparison | Δ micro | 95% CI (macro) | wins | verdict |
-| --- | ---: | --- | ---: | --- |
-| **A0 vs A2 — PRIMARY** | **+0.48** | [+0.16, +1.00] | 2/15 | **azure-llm better, significantly but slightly** |
-| A1 vs A2 (production as it stands) | +0.73 | [+0.47, +1.24] | 0/15 | azure-llm better |
-| A2 vs A3 | −0.02 | [−0.26, +0.16] | 8/15 | tied |
+| comparison | Δ micro | Δ macro | 95% CI (macro) | wins | verdict |
+| --- | ---: | ---: | --- | ---: | --- |
+| **A0 vs A2 — PRIMARY** | **+0.81** | **+0.64** | [+0.27, +1.09] | 2/17 | **azure-llm better** |
+| A1 vs A2 (production as it stands) | +0.98 | +0.88 | [+0.54, +1.30] | 0/17 | azure-llm better |
+| A2 vs A3 | +0.02 | −0.03 | [−0.22, +0.16] | 9/17 | tied |
+
+**Comparability with §14/§15, stated carefully.** Those sections reported a
+*macro* delta of −1.0 (§14.1) and −1.3 (§15.1). The like-for-like figure here is
+**−0.88 macro** on the same production configs — so the direction and rough
+magnitude of §14.1 **are confirmed**, and §15.1's 1.3 was somewhat larger than
+reproduces. About 0.24 of the gap is the codec asymmetry (below). What was badly
+wrong was not the delta but the **absolute level**: 27–28% here against §14's
+43.5%, a 16-point difference that is entirely the scorer and normalizer fixes.
 
 Micro-average is the headline: the corpus spans 92 → 17,700 reference words, and
 an unweighted session mean would give a 92-word procedural clip the same vote as

@@ -1,7 +1,8 @@
 # Recommendation
 
 > **VERDICT — DO NOT SWITCH ON QUALITY GROUNDS; FIX THE PAYER INSTEAD.**
-> azure-llm-speech wins WER by 0.48 points (CI [+0.16,+1.00]) and loses on cost
+> azure-llm-speech wins WER by 0.64–0.98 points (matched input: +0.64 macro,
+> CI [+0.27,+1.09]) and loses on cost
 > (1.46× dearer, $0.306 vs $0.21/audio-hour), speed (67× vs 101× realtime),
 > proven reliability (n=44 vs n=8,662), acronym recall (66% vs 69%), entity
 > biasing (none that works vs four working fields) and model governance (unnamed
@@ -9,8 +10,9 @@
 > choice touches ~11% of what is wrong. Meanwhile the out-of-pocket arrangement
 > caused **15 production failures in July** — more than either vendor — at
 > **$1,500–3,000/yr and doubling**. Three of the four §14/§15 arguments for
-> switching did not survive re-testing, and the instrument that produced them was
-> defective.
+> switching did not survive re-testing (cost inverted, the diarization defect did
+> not reproduce, the CIs were computed off a degenerate RNG) — though the WER
+> advantage itself **did** hold up. The instrument that produced them was defective.
 
 Three options were on the table: keep paying AssemblyAI personally, procure it
 properly, or move English to `azure-llm-speech` because Azure is already
@@ -20,7 +22,7 @@ contracted. Here is what the evidence supports, with the trade-offs.
 
 | | AssemblyAI U-3.5 Pro | azure-llm-speech |
 | --- | --- | --- |
-| WER, byte-identical input | 27.46% | **26.98%** (−0.48, CI [+0.16,+1.00]) |
+| WER, byte-identical input (n=17) | 27.55% micro / 28.42% macro | **26.74% / 27.77%** (azure better by 0.81 micro, 0.64 macro, CI [+0.27,+1.09]) |
 | **errors shared with the other arm** | &nbsp; | **86.3% of ALL errors are identical between the two** |
 | entity slots correct | 4/11 | 3/11 |
 | acronym recall | **69%** | 66% |
@@ -63,8 +65,10 @@ comparison, and picking the "wrong" one costs less than $1,400/yr.
 
 ### B. Move English to `azure-llm-speech`
 
-- **For:** zero procurement, bill lands on an existing subscription, quality is
-  within half a WER point, and it is GA so inside the 99.9% SLA.
+- **For:** zero procurement, bill lands on an existing subscription, **it is the
+  more accurate engine** (0.64–0.98 WER points, consistently — it wins 15 of 17
+  sessions and 17 of 17 against production-as-configured), and it is GA so inside
+  the 99.9% SLA.
 - **Against:** costs the UN ~1.46× more per hour; the model is **unnamed and
   unpinnable** and Microsoft has already swapped it once, which is a real problem
   for an official record; there is **no working entity biasing**; reliability is
