@@ -12,7 +12,7 @@ found. Prior claims that did **not** survive re-testing are marked ⚠️.
 | Multilingual floor | ✗ | — | out of scope (floor stays Melia) |
 | Heavily accented / non-native English | ✅ | V4 Nebenzia clip: "appalling"/"polling", Starobelsk, patronymic | *battery* |
 | Noisy / disfluent segments, applause | ✅ | V4, and the disfluency handling seen throughout the qualitative reads | AssemblyAI *preserves* disfluencies with em-dash restarts; Azure smooths them. Neither hallucinates over noise on `en`. |
-| **Long meetings, many short turns** (lumping + diarization miscount) | ✅ | 6 sessions of 60–120 min, both arms | ⚠️ **§14.3 does not reproduce** — see below |
+| **Long meetings, many short turns** (lumping + diarization miscount) | ✅ | 13 files over an hour, both arms | **§14.3 reproduces on 1 of 13** — real, catastrophic, rare, not predicted by duration |
 | **Dense proper nouns / numbers / resolution symbols** | ✅ | entity sweep + 10 qualitative reads | Both weak. Document-symbol recall ~50% for both. Entity accuracy 4/11 vs 3/11 — a wash. |
 
 ## §14 — the English decision
@@ -21,7 +21,7 @@ found. Prior claims that did **not** survive re-testing are marked ⚠️.
 | --- | --- |
 | §14.1 azure-llm better by 1.0 paired WER, CI [−2.0, −0.2] | ⚠️ **CI invalid.** The bootstrap LCG has period 10,466 while drawing 180,000 values — it cycles ~17× with non-uniform resampling. And the underlying WER was computed by a scorer that inflates localized errors by up to 50 points on 14 of 21 sessions, over a reference from which 15.7% of real speech had been deleted. Re-measured here. |
 | §14.2 hallucination gate — all six arms pass, nobody hallucinates on `en` | ⚠️ **Contradicted by the qualitative reads.** Ten meetings turned up AssemblyAI producing "President Barroso", "Mr. Ban Ki-moon", `UNRWA` for `UNDOF`, and "the High Representative" for the SRSG. The §14.2 gate tested exactly one substitution (Kanem) on one clip; it is far too narrow to license "nobody hallucinates". Re-run on the original clip in the battery. |
-| §14.3 the incumbent stops diarizing on long meetings | ⚠️ **Does not reproduce.** 0 of 10 eligible sessions degenerate, both arms; median 14 spk / 42 turns for AssemblyAI on 60–120 min vs 15 / 34 for Azure. |
+| §14.3 the incumbent stops diarizing on long meetings | **Real, but rare and not length-predicted.** 0 of 12 scored sessions degenerate (to 2h33m), yet the original 171-min clip reproduces it exactly — 1 speaker, 1 utterance, 147k chars. Mitigation is detection at the pipeline boundary, not avoiding long files. |
 | §14.4 accented English — Speechmatics fails, others pass | not re-tested for the eliminated arms; the two live arms are re-tested in the battery |
 | §14.5 "azure-llm ~$0 marginal, already procured"; AssemblyAI $0.23/h | ⚠️ **Wrong on both.** Azure bills **$0.306/audio-hour** on our own invoice ($0.36 list, 15% discount confirmed on two independent meters); AssemblyAI is **$0.21/h**. Azure is **1.46× dearer**. |
 | §14.5 "reliability, not accuracy, is its open question" | **Upheld, and now answered from production**: AssemblyAI 0.046% vendor-attributable over n=8,662; Azure 6.8% over n=44, all on its first production day. |

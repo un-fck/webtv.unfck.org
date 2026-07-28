@@ -15,7 +15,7 @@ Of the three pillars that supported "move English to `azure-llm-speech`" in
 | --- | --- |
 | azure-llm better by 1.0–1.3 WER points (macro) | **confirmed, similar magnitude**: 0.88 macro on production configs, 0.64 once AssemblyAI gets the same mono audio. The *absolute* level was badly wrong though — 27% not 43.5% |
 | azure-llm is "~$0 marginal, already procured" | azure-llm costs **$0.306/audio-hour** against AssemblyAI's **$0.21** — it is **1.46× dearer**, verified against our own invoice |
-| the incumbent stops diarizing on long meetings | **does not reproduce** — 0 of 12 sessions degenerate, both arms. On the two sessions over 2 h, AssemblyAI returns **19 speakers / 70 turns** against Azure's 21 / 50 — it is *finer*-grained at turn level, not collapsed |
+| the incumbent stops diarizing on long meetings | **real, but rare and not predicted by length.** 0 of 12 scored sessions degenerate (up to 2h33m), and on the two over 2 h AssemblyAI is *finer*-grained than Azure. But on the **exact 171-min clip §14.3 used** it collapses completely — 1 speaker, 1 utterance, 147k characters |
 
 And the measurement instrument that produced those conclusions was defective in
 two independent ways (§2 below).
@@ -170,6 +170,29 @@ n = 17 sessions per arm.
 overhead amortizes: AssemblyAI 76× on files under 20 min and **148×** on files
 over an hour; Azure 47× and 89×. So there is no long-file latency cliff on either
 side.
+
+### Correction to my own earlier claim about §14.3
+
+I reported §14.3's long-file diarization collapse as "does not reproduce", on 12
+sessions up to 2h33m with zero degenerate results. Then the battery ran the
+**exact clip §14.3 was based on** (`UN80-Apr06-keita`, 171 min) and AssemblyAI
+returned **1 speaker and 1 utterance across 147,309 characters** — the defect
+exactly as originally described.
+
+The correct statement is therefore neither "refuted" nor "confirmed as a
+long-file property":
+
+- it is **real** — reproduced on the original file, and it is catastrophic when it
+  happens (no speaker signal at all for the downstream GPT-5.4 stage);
+- it is **not a function of duration** — a 2h33m session in the scored corpus
+  diarizes fine, with 19 speakers and 70 turns;
+- it is **rare** — 1 occurrence in 13 files over an hour.
+
+Something about this particular recording triggers it. Duration is not the
+predictor, so "avoid AssemblyAI on long meetings" is the wrong mitigation; the
+right one is to **detect** a degenerate speaker signal at the pipeline boundary
+and re-run or fall back when it occurs. That check does not exist today and is
+cheap: one speaker on more than ten minutes of audio is always wrong.
 
 Azure's upload sits inside a single synchronous POST and cannot be timed
 directly. The pooled regression disagreed with itself across vendors (23.9 vs
