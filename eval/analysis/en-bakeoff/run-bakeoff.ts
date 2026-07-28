@@ -23,7 +23,7 @@ import "../../../lib/load-env";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import { HEADLINE, DIAGNOSTIC, type Session } from "./sessions";
+import { HEADLINE, DIAGNOSTIC, BATTERY, type Session } from "./sessions";
 
 const OUT = "/Volumes/SSDAStorage/un-en-bakeoff";
 const RAW = path.join(OUT, "raw");
@@ -421,7 +421,11 @@ async function runAzure(arm: Arm, s: Session, pass: number): Promise<RunRecord> 
   const armIds = (args.find((a) => a.startsWith("--arms="))?.split("=")[1] || "A1,A2").split(",") as ArmId[];
   const pass = Number(args.find((a) => a.startsWith("--pass="))?.split("=")[1] || 1);
   const setName = args.find((a) => a.startsWith("--set="))?.split("=")[1] || "headline";
-  const sessions: Session[] = setName === "diagnostic" ? DIAGNOSTIC : setName === "all" ? [...HEADLINE, ...DIAGNOSTIC] : HEADLINE;
+  const sessions: Session[] =
+    setName === "diagnostic" ? DIAGNOSTIC
+    : setName === "battery" ? BATTERY
+    : setName === "all" ? [...HEADLINE, ...DIAGNOSTIC, ...BATTERY]
+    : HEADLINE;
 
   fs.mkdirSync(RAW, { recursive: true });
 

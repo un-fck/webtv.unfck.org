@@ -55,7 +55,20 @@ export const DIAGNOSTIC: Session[] = [
   { symbol: "S/PV.9614", dir: "S_PV.9614", audioSeconds: 2136.56093, gtWords: 21100, wpm: 593 },
 ];
 
-export const ALL = [...HEADLINE, ...DIAGNOSTIC];
+
+/**
+ * The §9 anecdotal battery — no PV, so never scored by WER. These carry
+ * pre-registered traps that WER cannot see: the Kanem hallucination gate
+ * (§14.2), the UN80 entity trap (§15.5a), and the accented-English probes
+ * (§14.4). Run separately via --set=battery.
+ */
+export const BATTERY: Session[] = [
+  { symbol: "UN80-Apr06-keita", dir: "UN80-Apr06-keita", audioSeconds: 10273.668934, gtWords: 0, wpm: 0 },
+  { symbol: "UN80-Apr29-timestamps", dir: "UN80-Apr29-timestamps", audioSeconds: 10264.055873, gtWords: 0, wpm: 0 },
+  { symbol: "Nebenzia-Starobelsk", dir: "Nebenzia-Starobelsk", audioSeconds: 2399.294694, gtWords: 0, wpm: 0 },
+];
+
+export const ALL = [...HEADLINE, ...DIAGNOSTIC, ...BATTERY];
 
 /**
  * S/PV.10153 has audio and a ground-truth directory but NO `en.txt` — it is the
