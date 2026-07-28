@@ -62,3 +62,65 @@ describe("normalizeGroundTruth — vote roll-call blocks", () => {
     expect(words(clean)).toBeGreaterThan(50);
   });
 });
+
+/**
+ * The §14.0 bug class, second occurrence.
+ *
+ * The speaker-label patterns used `[^:]*`, and a character class MATCHES
+ * NEWLINES. PV text is PDF-hard-wrapped, so a line routinely *begins*
+ * mid-sentence with "Mrs. Izumi Nakamitsu," — the pattern then ran from there to
+ * the next colon anywhere in the document and deleted everything between.
+ *
+ * Corpus-wide this removed 15.7% of the reference words, and 28.2% of the worst
+ * single session, all of it real speech charged to providers as insertions.
+ *
+ * The existing tests above did NOT catch it: every speaker label in their
+ * fixture is a well-formed single line. This fixture is the one that fails
+ * against `[^:]*` and passes against `[^:\n]*`, so the guard now has a negative
+ * control rather than being a comment.
+ */
+describe("speaker labels must not swallow across line breaks", () => {
+  const hardWrapped = [
+    "The President: I now give the floor to Mr. Ebo.",
+    "",
+    "Mr. Ebo: I am delivering this briefing on behalf of",
+    "Mrs. Izumi Nakamitsu, who is currently away from",
+    "the office.",
+    "Since the previous consideration of this matter by",
+    "the Council, the Office for Disarmament Affairs has",
+    "been in regular contact with its counterparts.",
+    "",
+    // A LATER label that is not "The President" is essential: the President
+    // patterns run first, so if this were "The President:" there would be no
+    // colon left for the runaway `[^:]*` to reach and the bug would not fire.
+    // This fixture is only a guard because it reproduces.
+    "Mr. Bendjama (Algeria): I thank the briefer for his presentation.",
+  ].join("\n");
+
+  const clean = normalizeGroundTruth(hardWrapped, "en");
+
+  it("keeps speech on a line that BEGINS with a courtesy title mid-sentence", () => {
+    // "Mrs. Izumi Nakamitsu, who is currently away from" starts a line but is
+    // not a speaker label — it is the middle of Mr. Ebo's sentence.
+    expect(clean).toMatch(/who is currently away from/);
+    expect(clean).toMatch(/the office/);
+  });
+
+  it("keeps everything after it, up to the next real speaker label", () => {
+    expect(clean).toMatch(/Since the previous consideration/);
+    expect(clean).toMatch(/Office for Disarmament Affairs/);
+    expect(clean).toMatch(/regular contact with its counterparts/);
+  });
+
+  it("still strips the genuine labels", () => {
+    expect(clean).not.toMatch(/The President:/);
+    expect(clean).not.toMatch(/Mr\. Ebo:/);
+  });
+
+  it("retains nearly all the spoken words", () => {
+    const words = (s: string) => s.split(/\s+/).filter(Boolean).length;
+    // Against the buggy `[^:]*` this collapsed to ~12 words. The fixture has 60
+    // words of which only the two labels (~5 words) should go.
+    expect(words(clean)).toBeGreaterThan(45);
+  });
+});
