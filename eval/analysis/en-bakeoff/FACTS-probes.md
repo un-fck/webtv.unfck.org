@@ -121,3 +121,41 @@ vendor and not the other.
   local file**, which is what makes a matched comparison possible.
 - On the 81 s clip: upload 660 ms + job 4 829 ms at 1 s polling. Azure did the same clip in
   ~3 s total including upload.
+
+## Appendix — the $0.306/h rate, verified per-day
+
+A rate derived by dividing one invoice total by one usage total is vulnerable to
+the denominator being the wrong thing. It is not, here: Cost Management at
+**daily** granularity shows the unit price on **every individual line item**, and
+it is the same every time.
+
+```
+20260710  Fast Transcription Speech To Text    7.9142 h   $ 2.4217   $0.30600/h
+20260711  Fast Transcription Speech To Text    7.3828 h   $ 2.2591   $0.30600/h
+20260713  Fast Transcription Speech To Text   60.2536 h   $18.4376   $0.30600/h
+20260714  Fast Transcription Speech To Text   77.3742 h   $23.6765   $0.30600/h
+20260715  Fast Transcription Speech To Text    6.5900 h   $ 2.0165   $0.30600/h
+20260717  Fast Transcription Speech To Text    6.3017 h   $ 1.9283   $0.30600/h
+20260720  Fast Transcription Speech To Text    3.4778 h   $ 1.0642   $0.30600/h
+20260721  Fast Transcription Speech To Text    7.9781 h   $ 2.4413   $0.30600/h
+20260722  Fast Transcription Speech To Text   19.9397 h   $ 6.1016   $0.30600/h
+20260723  Fast Transcription Speech To Text   18.5875 h   $ 5.6878   $0.30600/h
+20260724  Fast Transcription Speech To Text    6.8942 h   $ 2.1096   $0.30600/h
+20260727  Fast Transcription Speech To Text    2.5308 h   $ 0.7744   $0.30600/h
+20260728  Fast Transcription Speech To Text    2.6900 h   $ 0.8231   $0.30600/h
+```
+
+So **$0.306/audio-hour is the meter's unit price**, not an average over a mixed
+basket, and the composition of the hours cannot change it. Whether some of those
+hours were classic fast transcription rather than enhanced mode is irrelevant to
+the rate — the API's own `csp-billing-usage` header shows enhanced mode
+(`LLMSpeechTranscribe`) and classic (`BatchSpeechtoTextSync`) both landing on this
+single **Fast Transcription Speech To Text** billing meter, and only two meters
+exist on the resource at all.
+
+Two independent corroborations: it is exactly 0.85 × the $0.36 list price for
+this SKU, and the `S1 Speech Translation` meter on the same resource is $2.13
+against a $2.50 list — the same 0.85 factor.
+
+The 2026-07-13/14 spike (60 h and 77 h) is the §15 six-language sweep, which is
+what those dates should contain.
