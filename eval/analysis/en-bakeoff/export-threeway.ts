@@ -25,8 +25,16 @@ const PACKETS = path.join(OUT, "threeway");
 
 fs.mkdirSync(PACKETS, { recursive: true });
 
+/**
+ * Word count EXCLUDING the "[spk X]" turn markers this file adds for the reader.
+ * Counting them inflated the AssemblyAI/Azure figures in the packet header by
+ * exactly 2 per speaker turn, which is what the reading agents then used as the
+ * denominator for their surplus reconciliations. The PV side has no markers and
+ * was never affected, so the PV-denominated conservation checks stand; only the
+ * B/C surplus arithmetic was off. Caught by adversarial review of the packets.
+ */
 function words(s: string) {
-  return s.split(/\s+/).filter(Boolean).length;
+  return s.replace(/\[spk [^\]]+\]/g, " ").split(/\s+/).filter(Boolean).length;
 }
 
 function textFromRaw(armFile: string, vendor: "assemblyai" | "azure"): string | null {

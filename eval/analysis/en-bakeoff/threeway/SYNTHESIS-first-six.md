@@ -1,81 +1,123 @@
 # Three-way qualitative comparison — synthesis of the first six sessions
 
-Six independent reading agents each read one packet end to end (PV ground truth,
-AssemblyAI output, azure-llm output) and enumerated every difference. No diff
-tooling: a diff cannot tell that "UNAT" is a real UN body being substituted for a
-different one, and that judgement is the whole reason for reading.
+> **REVISED after adversarial verification.** An independent agent was tasked with
+> refuting this synthesis. It confirmed all 14 factual string claims but
+> **materially corrected the conclusion**, and found errors in my own tooling.
+> The corrections are folded in below and listed explicitly in the last section.
+> The original over-claim is preserved there rather than quietly deleted.
 
-**Coverage:** 6 meetings, 3,262 PV reference words, **~400 enumerated difference
-rows**. Every agent reported a conservation check against the PV word count
-stated in its packet header (not its own recount).
+Six reading agents each read one packet end to end (PV ground truth, AssemblyAI
+output, azure-llm output) and enumerated every difference. No diff tooling: a
+diff cannot judge that "UNAT" is a real UN body substituted for a different one.
 
-| session | audio | PV words | rows | conservation |
-| --- | ---: | ---: | ---: | --- |
-| S/PV.9675 | 1.4 m | 92 | 10 | 92/92, 0 unaccounted |
-| S/PV.10100 | 4.6 m | 378 | 58 | 0 unaccounted (1-token tokenizer gap flagged) |
-| S/PV.10054 | 5.8 m | 594 | 57 | 0 unaccounted; 1-word residue in the B–C reconciliation, reported not rounded |
-| S/PV.10069 | 7.9 m | 619 | 76 | 0 unaccounted; ~4–6 word residues on B/C surplus, reported |
-| S/PV.10156 | 9.2 m | 921 | 63 | ~14-word residue (~1.4%), reported not explained away |
-| S/PV.9826 | 10.0 m | 658 | 94 | 0 unaccounted |
+**Coverage:** 6 meetings, 3,262 PV reference words, **358 enumerated difference
+rows** (an earlier draft said "~400"; the per-session figures sum to 358 — the
+round-up went in the flattering direction and is corrected here).
 
-## The central finding: the two vendors fail in different *shapes*
+| session | audio | PV words | rows |
+| --- | ---: | ---: | ---: |
+| S/PV.9675 | 1.4 m | 92 | 10 |
+| S/PV.10100 | 4.6 m | 378 | 58 |
+| S/PV.10054 | 5.8 m | 594 | 57 |
+| S/PV.10069 | 7.9 m | 619 | 76 |
+| S/PV.10156 | 9.2 m | 921 | 63 |
+| S/PV.9826 | 10.0 m | 658 | 94 |
 
-Error **counts** are close. Error **detectability** is not.
+## What the total census actually shows
 
-### AssemblyAI — fluent, plausible, undetectable
+The adversarial pass enumerated **every** substitution rather than the ones the
+reading agents chose to highlight. That changes the picture:
 
-Every one of these is grammatical, institution-shaped, and gives a reader no cue
-that anything is wrong:
+| | AssemblyAI | azure-llm |
+| --- | ---: | ---: |
+| substitutions vs the PV | 101 | 104 |
+| **identical substitution made by BOTH arms** | **71 (70%)** | **71 (68%)** |
+| arm-unique substitutions | 30 | 33 |
+| visible garble / non-words / masks | **6** | **7** |
 
-| session | AssemblyAI output | truth | why it matters |
+**Seventy per cent of the two arms' errors are the same error.** The entire
+difference between these vendors rests on ~63 arm-unique substitutions across
+3,262 words. On S/PV.10156 the two arms differ in **two rows**.
+
+## What survives: one narrow, real asymmetry
+
+Across the 11 entity slots in the six meetings:
+
+| | AssemblyAI | azure-llm |
+| --- | ---: | ---: |
+| entity slots correct | 4 / 11 | 3 / 11 |
+| failures that are a **real-but-wrong** entity | **3** | **1** |
+| failures that are non-words or masks | 2 of 7 | 6 of 8 |
+
+**Accuracy at entity slots is a wash.** The asymmetry is in the *failure mode*:
+when the acoustics are unclear at an entity, AssemblyAI tends to snap to a real
+in-vocabulary entity, Azure tends to emit a non-word.
+
+The three AssemblyAI cases:
+
+| session | AssemblyAI | truth | why it matters |
 | --- | --- | --- | --- |
-| 10100 | "and to **ESKAT**, the Secretariat of the Council" | no such body | invented UN-shaped acronym (cf. ESCAP, ESCWA) in a list of bodies formally thanked |
-| 10069 | "Thank you, **President Barroso**." | no such person in the meeting | a **fabricated named person** attached to the office of Council President |
-| 9826 | "no military forces … other than those of **UNRWA**" | UNDOF | a *real but different* UN agency, politically charged, inside the **operative quotation** of a mandate-renewal meeting |
-| 10069 | "the **High Representative** for Children and Armed Conflict" | Special Representative of the Secretary-General | swaps one real UN office for another; "High Representative" is a real UN rank |
-| 10054 | "invite the representative of Egypt to participate **Any further discussion** in this meeting?" | — | fabricates a procedural step that did not occur, inside a rule-37 invitation |
-| 10054, 9826 | standalone "**Aye.**" during a show-of-hands vote | — | invents vocal assent; implies the wrong voting modality |
-| 10100 | "the report **to** the Secretary-General" (×2) | "report **of**" | misattributes authorship of S/2026/8 and S/2026/9; a different document class |
-| 9826 | "**UNDORF**" | UNDOF | acronym-shaped, would pass a skim |
-| 9826 | "Major General Anita **Asma**" | Asmah | a serving officer's name; does not resolve in search |
+| 9826 | "other than those of **UNRWA**" | UNDOF | a real, different, politically charged UN agency, inside the operative quotation of a mandate-renewal meeting |
+| 10069 | "the **High Representative** for Children and Armed Conflict" | Special Representative of the Secretary-General | one real UN office for another |
+| 10069 | "Thank you, **President Barroso**" | no such person present | a fabricated surname (though the duplicated "Thank you, President" immediately before does cue a reader) |
 
-### Azure — wrong, but visibly wrong
+Plus, in a different class but the same spirit: "the report **to** the
+Secretary-General" (×2, S/PV.10100), which reverses document authorship, and
+"Thank you, Mr. **Ban Ki-moon**" inserted mid-sentence in S/PV.9642.
 
-| session | Azure output | truth | detectability |
-| --- | --- | --- | --- |
-| 9826 | **INDOF / Ndoff / ANDOF / omitted** — 0 of 4 correct | UNDOF | none is a real body; announces its own unreliability. But the meeting exists to renew UNDOF's mandate, so retrieval fails completely |
-| 10069 | "the effective implementation of **the sanctuary**" | "the sanctions regime" | obvious garble; reader loses the phrase, believes nothing false |
-| 10069 | "the **panel of expert regional partners**" | "the Panel of Experts, regional partners" | fuses two categories into a non-existent body |
-| 10069 | "open briefing to **member state delegation** exchanged views" | "for Member States. Delegations exchanged views" | lost sentence boundary changes who attended |
-| 10156, 10100 | "**\*\*\*\***" | SCAD (Security Council Affairs Division) | **configuration defect** — see below |
-| 10100 | invents a second speaker turn: "Against." / "Yes." | one voice on the record | fabricated speaker in a show-of-hands vote — Azure's one *plausible*-class failure |
+The one Azure case: **"the panel of expert regional partners"** (10069) for "the
+Panel of Experts, regional partners" — grammatical, plausible, and it silently
+erases a distinct actor. *This is Azure's most invisible error and my first draft
+misfiled it as "visibly wrong".*
 
-### Shared failures — neither vendor protects the reader
+**This is 3 versus 1 on six meetings**, and two of the three AssemblyAI cases are
+the same acoustic token in one session. Directionally real; nowhere near
+"systematic".
 
-Worth stating plainly, because they bound how much either choice buys:
+## Shared failures — neither vendor protects the reader
+
+The most decision-relevant category, because it bounds what *either* choice buys.
+Eleven verified, six volunteered by the reading agents and five found by the
+adversarial pass:
 
 - **10100:** both turn "the parties, **who have** confirmed" into "**We have**
   confirmed" — reversing who asserts the parties' positions.
-- **10100:** both flatten "their well-known **positions**" (plural, two parties,
-  two irreconcilable positions) to the singular.
+- **10100:** both flatten "their well-known **positions**" (two parties, two
+  irreconcilable positions) to the singular.
 - **10100:** both turn "we **rallied to** consensus" into "we **relied on**
   consensus" — inverting the presidency's claim about its own month.
-- **10069:** both misname the briefer — PV "Amar **Bendjama**"; AssemblyAI
-  "Ammar Benjama" then "Banjama"; Azure "Amar Benjama" then "Banjama". Both
-  contradict themselves between opening and closing.
+- **10100:** both write "I **now** speak on behalf of the Council" for "I **know
+  I** speak".
+- **10100:** both write "**this** mission of good offices" for "**his** mission".
+- **10100:** both write "I **shall** like to inform the Council" (ungrammatical).
+- **10054:** both write "around **this** world" for "around **the** world".
+- **10156:** both drop "**landscape**" from "the international peace and security
+  landscape in which the Council works".
+- **10069:** both misname the briefer — PV "Amar **Bendjama**"; both render
+  "Benjama" then "Banjama", contradicting themselves within one meeting.
 - **10069:** both write "Office **of** the Coordination of Humanitarian Affairs"
   (correct: **for**).
-- Both drop the year qualifiers in UN citation form — `resolution 2766 (2024)`
-  becomes "2766 of 2024" or bare "2766".
+- Both drop year qualifiers from UN citations — `resolution 2766 (2024)` becomes
+  "2766 of 2024" or bare "2766".
 
-## The production bug this surfaced
+The "I know I speak" case is the decisive methodological one: the **same stock
+sentence** appears in S/PV.10054 and S/PV.10100. Both arms get it right in one
+and wrong in the other. Two independent systems converging on the same wrong
+reading proves that *"B and C agree, therefore the PV is the edited party"* is a
+useful prior, **not evidence** — the correct statement is "the PV is edited **or**
+both share an acoustic confusion", and those are not separable from text alone.
+
+## The production bug (independently reproduced — this one stands)
 
 Azure mishears **SCAD** (Security Council Affairs Division) as **"SCAT"**, which
-is on Microsoft's profanity list. The service's **default** filter mode is
-`Masked`, and `lib/providers/azure-llm-speech.ts` never sets the option — so
-production output reads *"I would like to thank the \*\*\*\* for the
-contributions they made."* Reproduced deterministically in both bitrate arms, in
-2 of the 9 sessions scored at the time.
+is on Microsoft's profanity list, and the service's **default** filter mode is
+`Masked`. `lib/providers/azure-llm-speech.ts` never sets the option, so real
+output reads *"I would like to thank the \*\*\*\* for the contributions they
+made."* Two occurrences in the six sessions, deterministic across both bitrate
+arms. AssemblyAI never masks.
+
+The mode table below is **directly observed** — I ran all four modes against the
+live API on S/PV.10156 (`probe-profanity.ts`), not inferred from the packets:
 
 | `profanityFilterMode` | output | assessment |
 | --- | --- | --- |
@@ -84,32 +126,60 @@ contributions they made."* Reproduced deterministically in both bitrate arms, in
 | `None` | `the SCAT for the contributions` | wrong but visible and recoverable |
 | `Tags` | `<profanity>SCAT</profanity>` | wrong but explicitly flagged |
 
-One-line fix. AssemblyAI transcribed the same audio as "SCAD" and never masks.
+## Corrections forced by adversarial review
 
-## Verdicts as returned
+Recorded rather than quietly fixed, because the pattern of error is instructive.
 
-Four of six preferred Azure, two preferred AssemblyAI — but every agent called
-the margin thin, and several reversed themselves conditionally.
+1. **"ESKAT" was NOT an invented entity.** I claimed AssemblyAI invented a
+   UN-shaped acronym. It is a mis-transcription of the *real* acronym SCAD —
+   proved by Azure masking the identical slot, by the PV's own apposition "the
+   Secretariat of the Council", and by S/PV.10156 where AssemblyAI renders SCAD
+   correctly. My synthesis asserted both things about the same audio in two
+   different sections and did not notice.
+2. **"Any further discussion" is not fluent.** I filed it under "grammatical,
+   gives a reader no cue". It is conspicuously broken English.
+3. **"UNDORF" and "Ndoff" were scored by two different standards** — one as
+   "would pass a skim", the other as "announces its own unreliability". Same
+   acoustic slot, same session, both non-words.
+4. **"panel of expert regional partners" was misfiled** as visibly wrong. It is
+   Azure's most invisible error; moving it materially shrinks the asymmetry.
+5. **Azure's "Against."/"Yes." is a mis-attribution, not an invention** — almost
+   certainly the President's own vote-call assigned to a phantom speaker. It is
+   the mirror image of AssemblyAI's "Aye.", and I charged the same phenomenon to
+   both arms as evidence for opposite conclusions.
+6. **"Anita Asma" vs "Asmah"** is a one-character transliteration variant, not a
+   fabrication.
+7. **"~400 rows" should be 358.**
+8. **My export script counted `[spk A]` markers as words**, inflating the
+   AssemblyAI/Azure figures in every packet header by exactly 2 per speaker turn
+   — and those headers were the denominators the reading agents used for their
+   surplus reconciliations. Fixed. The PV side has no markers, so the
+   PV-denominated conservation checks are unaffected.
+9. **"0 unaccounted PV words" is weaker than it sounds.** It is blind by
+   construction to insertions: an invented word adds *zero* unaccounted PV words.
+   17.7% of AssemblyAI's output and 17.3% of Azure's lies in difference spans,
+   and on S/PV.9675 fully 29% of AssemblyAI's tokens have no PV counterpart while
+   the check still reads 92/92. It certifies "I read the whole PV", not "I found
+   the errors". No agent stated this limit.
+10. **PV extraction artifacts were charged to both arms** — `"Secretary -General"`,
+    `"wh ich"`, `"thre ats"`, `"non -Council"`, `"its peace peacekeepers"` are
+    PDF defects in the ground truth appearing as difference rows, unflagged. The
+    PV is also simply wrong in at least three places where both transcribers are
+    right (S/PV.9722), which bounds how far it can serve as an oracle.
 
-| session | verdict | stated reason |
-| --- | --- | --- |
-| S/PV.9675 | Azure, tiebreaker only | 128 of ~130 tokens identical; agent explicitly said "not a procurement signal" |
-| S/PV.10054 | Azure | AssemblyAI's 2 fabrications beat Azure's 7 visible mis-hearings on harm |
-| S/PV.10100 | Azure, *conditional on fixing the profanity mask* | ESKAT + "report to the SG" are quotable and wrong |
-| S/PV.9826 | Azure, narrowly | "wrong in a way you can see is safer than wrong in a way you cannot" |
-| S/PV.10156 | **AssemblyAI** | the `****` masking destroyed a UN body's name; Azure lowercased institutional titles |
-| S/PV.10069 | **AssemblyAI**, *conditional* | AssemblyAI's prose survives quotation; agent said it would **reverse** if names/titles aren't checked against a roster |
+## Where that leaves the qualitative evidence
 
-## What the agents flagged about the metric itself
-
-Independently of the vendor question, several noted that a large share of all
-differences are rows where **both transcribers agree against the PV and are
-right** — the PV is a lightly *edited* record (filler removed, third person
-substituted, formal titles expanded, house style imposed). On S/PV.10100 that
-was 20 of 58 rows; on S/PV.9826, 44 of 94.
-
-Scoring either arm against this PV by WER therefore charges them a large,
-roughly equal penalty for being *more faithful to the audio than the ground
-truth is*. That is a property of the metric, not a quality signal — and it is
-the quantitative reason the WER gap between these two vendors is small and
-fragile.
+- The two transcripts are **far more alike than different** — 70% of errors
+  shared, near-identical entity accuracy, near-identical visible-garble counts.
+- The one real asymmetry is **narrow and directional**: at ambiguous entity
+  slots, AssemblyAI is more likely to produce a plausible wrong institution,
+  Azure a visible non-word. 3-vs-1 across six meetings. Worth acting on; not
+  strong enough to decide a procurement on its own.
+- **Neither is usable unreviewed.** The shared failures — reversed actors,
+  singular/plural flips on "positions", a misnamed Permanent Representative in
+  every mention — are the errors most likely to mislead, and both arms make them.
+- The cheapest real mitigation is the same for both and is **external to the
+  vendor**: a UN entity glossary and a document-symbol/resolution-number
+  validator. One reading agent's estimate: that alone removes 8 of 15
+  reader-harming errors in its session. A validator you can build beats a
+  hallucination you cannot detect.
