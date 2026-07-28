@@ -238,13 +238,27 @@ an adversarial agent tried to refute the result, and **materially corrected it**
 
 | | AssemblyAI | azure-llm |
 | --- | ---: | ---: |
-| substitutions vs PV | 101 | 104 |
-| **identical substitution in BOTH arms** | **71 (70%)** | **71 (68%)** |
+| substitutions vs PV (hand census, 6 meetings) | 101 | 104 |
+| identical substitution in BOTH arms | 71 (70%) | 71 (68%) |
 | visible garble / non-words | 6 | 7 |
 | entity slots correct | 4/11 | 3/11 |
 
-**Seventy per cent of the two vendors' errors are the same error.** On one session
-they differ in two rows. Accuracy at entity slots is a wash.
+The hand census was then **measured in code over the whole corpus** (73,251
+reference words, 15 sessions, all three error types rather than substitutions
+only — insertions matter because that is where fabrications live):
+
+| error overlap, A1 vs A2 | share |
+| --- | ---: |
+| substitutions + deletions at the same reference position | **89.2%** |
+| insertions at the same point | **81.1%** |
+| **all error types combined** | **86.3%** |
+| AssemblyAI-only | 6.7% |
+| azure-llm-only | 4.1% |
+
+**Eighty-six per cent of the two vendors' errors are the same error** — and the
+figure is 90.4% on byte-identical input, so it is not a codec artifact. Accuracy
+at entity slots is a wash. **No vendor swap can address the overwhelming majority
+of the errors in these transcripts.**
 
 **The one real asymmetry** is failure *mode*, not rate: at ambiguous entity slots
 AssemblyAI snaps to a real in-vocabulary entity, Azure emits a non-word.

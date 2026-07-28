@@ -9,7 +9,7 @@ contracted. Here is what the evidence supports, with the trade-offs.
 | | AssemblyAI U-3.5 Pro | azure-llm-speech |
 | --- | --- | --- |
 | WER, byte-identical input | 27.46% | **26.98%** (−0.48, CI [+0.16,+1.00]) |
-| errors shared with the other arm | &nbsp; | **70% of both arms' substitutions are identical** |
+| **errors shared with the other arm** | &nbsp; | **86.3% of ALL errors are identical between the two** |
 | entity slots correct | 4/11 | 3/11 |
 | acronym recall | **69%** | 66% |
 | failure mode at entity slots | plausible wrong entity ×3 | visible non-word ×1 |
@@ -75,7 +75,7 @@ These are worth more than the vendor decision and are cheap:
    it removes **8 of 15** reader-harming errors in its session, *on both arms*.
    Every UN document symbol has a checkable form; every officeholder is on a
    published roster. A validator you can build beats a hallucination you cannot
-   detect — and this is the only measure that helps with the **70% of errors both
+   detect — and this is the only measure that helps with the **86% of errors both
    vendors share**, which no vendor swap can touch.
 2. **Feed AssemblyAI mono audio.** Measured at −0.27 WER points, free, and it
    closes a third of Azure's remaining lead.
