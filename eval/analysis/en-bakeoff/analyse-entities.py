@@ -77,8 +77,13 @@ def main():
     arms = sorted({a for d in sessions for a in hyps[d]})
 
     print("=" * 112)
-    print("UN DOCUMENT SYMBOLS — recall against the symbols the PV actually contains")
-    print("Exact surface match. Denominator is the PV's symbol count, not the provider's.")
+    print("UN DOCUMENT SYMBOLS — recall against the symbols the PV contains")
+    print("*** READ THE CAVEAT: this number is NOT a quality measure on long sessions. ***")
+    print("Most symbols in a long debate PV are EDITORIAL CITATIONS the record inserts")
+    print("-- '(see S/2024/128)', '(resolution 2766 (2024))' -- which nobody said aloud.")
+    print("Charging a transcriber for not transcribing them measures the PV's citation")
+    print("apparatus, not the provider. The number is meaningful ONLY on sessions where")
+    print("symbols are spoken (the short procedural meetings), where both arms score well.")
     print("=" * 112)
     print(f"{'session':<14} {'PV symbols':>11} " + " ".join(f"{ARM[a]:>18}" for a in arms))
     tot = Counter()
@@ -103,6 +108,7 @@ def main():
             cells.append(f"{f'{got}/{nref}':>18}")
         print(f"{d:<14} {nref:>11} " + " ".join(cells))
     print(f"{'TOTAL':<14} {totref:>11} " + " ".join(f"{f'{tot[a]}/{totref} ({100*tot[a]/totref:.0f}%)':>18}" for a in arms))
+    print("  ^ confounded by editorial citations -- see caveat above; do not quote as recall.")
 
     print()
     print("=" * 112)
@@ -130,8 +136,10 @@ def main():
 
     print()
     print("=" * 112)
-    print("WRONG-BUT-REAL SUBSTITUTIONS — acronyms an arm emits that the PV never contains")
-    print("This is the §15.5a class: a plausible, real institution put in front of a reader.")
+    print("ACRONYMS THE ARM EMITS THAT THE PV DOES NOT CONTAIN")
+    print("*** This does NOT isolate the §15.5a hallucination class. *** Inspection shows")
+    print("the bulk are LEGITIMATE: DPRK, ASG, USG, ICJ, CWC, SAF, UAE are real and correct,")
+    print("and the PV simply spells them out. Use the qualitative reads for hallucination.")
     print("=" * 112)
     for a in arms:
         inv = Counter()
