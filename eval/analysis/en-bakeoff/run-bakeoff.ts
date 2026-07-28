@@ -23,7 +23,7 @@ import "../../../lib/load-env";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import { HEADLINE, DIAGNOSTIC, BATTERY, type Session } from "./sessions";
+import { HEADLINE, DIAGNOSTIC, BATTERY, SHORT, type Session } from "./sessions";
 
 const OUT = "/Volumes/SSDAStorage/un-en-bakeoff";
 const RAW = path.join(OUT, "raw");
@@ -424,6 +424,7 @@ async function runAzure(arm: Arm, s: Session, pass: number): Promise<RunRecord> 
   const sessions: Session[] =
     setName === "diagnostic" ? DIAGNOSTIC
     : setName === "battery" ? BATTERY
+    : setName === "short" ? SHORT
     : setName === "all" ? [...HEADLINE, ...DIAGNOSTIC, ...BATTERY]
     : HEADLINE;
 

@@ -68,6 +68,16 @@ export const BATTERY: Session[] = [
   { symbol: "Nebenzia-Starobelsk", dir: "Nebenzia-Starobelsk", audioSeconds: 2399.294694, gtWords: 0, wpm: 0 },
 ];
 
+/**
+ * The repeat passes exist only to separate MEASUREMENT NOISE (same session, run
+ * again) from the ACROSS-SESSION spread a user actually experiences. Latency is
+ * a function of duration and bytes, not of content, so repeating the 2.5-hour
+ * sessions buys the same variance estimate at 15x the cost. Repeats therefore
+ * run on the sessions under 20 minutes only, and that choice is recorded here
+ * rather than left implicit in a command line.
+ */
+export const SHORT: Session[] = HEADLINE.filter((s) => s.audioSeconds < 1200);
+
 export const ALL = [...HEADLINE, ...DIAGNOSTIC, ...BATTERY];
 
 /**
