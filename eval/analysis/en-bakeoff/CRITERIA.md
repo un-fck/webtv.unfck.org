@@ -24,7 +24,7 @@ found. Prior claims that did **not** survive re-testing are marked ⚠️.
 | §14.3 the incumbent stops diarizing on long meetings | **Real, but rare and not length-predicted.** 0 of 12 scored sessions degenerate (to 2h33m), yet the original 171-min clip reproduces it exactly — 1 speaker, 1 utterance, 147k chars. Mitigation is detection at the pipeline boundary, not avoiding long files. |
 | §14.4 accented English — Speechmatics fails, others pass | not re-tested for the eliminated arms; the two live arms are re-tested in the battery |
 | §14.5 "azure-llm ~$0 marginal, already procured"; AssemblyAI $0.23/h | ⚠️ **Wrong on both.** Azure bills **$0.306/audio-hour** on our own invoice ($0.36 list, 15% discount confirmed on two independent meters); AssemblyAI is **$0.21/h**. Azure is **1.46× dearer**. |
-| §14.5 "reliability, not accuracy, is its open question" | **Upheld, and now answered from production**: AssemblyAI 0.046% vendor-attributable over n=8,662; Azure 6.8% over n=44, all on its first production day. |
+| §14.5 "reliability, not accuracy, is its open question" | **Upheld, and answered from production — after correcting my own denominator.** AssemblyAI **0.284%** vendor-attributable over **n=704** (my first figure, 0.046% over n=8,662, counted `transcribe_poll` log rows as attempts); Azure 6.8% over n=44, all on its first production day. Over the matched window the *raw* rates are tied: 6.77% vs 6.82%. |
 
 ## §15 — the seven reference-free checks, for `en`
 
