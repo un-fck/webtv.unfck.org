@@ -1,184 +1,190 @@
 # AssemblyAI Universal-3.5 Pro vs `azure-llm-speech` — the English track
 
-**Run date:** 2026-07-28. **Scope:** English only. **Corpus:** 17 UN meetings with
-matched PV ground truth, 15.2 h of audio, plus 4 diagnostic sessions.
-
-> **Read §0 first.** The measurement instrument that produced the existing
-> recommendation was defective, so several numbers in `SYNTHESIS.md` §14–§15
-> should not be relied on. That is the most important thing on this page.
+**Run:** 2026-07-28. **Scope:** English only. **Corpus:** 17 UN meetings with matched
+PV ground truth (15.2 h), 4 diagnostic sessions, 3 battery clips.
+**Arms:** 4 — both vendors on matched audio, plus codec controls.
 
 ---
 
-## 0. Three corrections to the existing record
+## The short version
 
-### 0.1 Azure is not free, and it is not cheaper — it is 1.46× the price
+Of the three pillars that supported "move English to `azure-llm-speech`" in
+`SYNTHESIS.md` §14–§15, **one shrank, one inverted, and one did not reproduce.**
 
-`SYNTHESIS.md` §14.5 records `azure-llm-speech` as *"~gpt-4o class … **~$0 marginal**
-… already procured"* and AssemblyAI at $0.23/h. Both are wrong.
+| §14/§15 said | this run finds |
+| --- | --- |
+| azure-llm better by 1.0–1.3 WER points | better by **0.48** on matched input — real, but a third to a half the size, on a much lower base (27% vs 43.5%) |
+| azure-llm is "~$0 marginal, already procured" | azure-llm costs **$0.306/audio-hour** against AssemblyAI's **$0.21** — it is **1.46× dearer**, verified against our own invoice |
+| the incumbent stops diarizing on long meetings | **does not reproduce** — 0 of 10 sessions degenerate, both arms; 14 vs 15 speakers on 60–120 min |
 
-| | source of the number | rate per audio-hour |
+And the measurement instrument that produced those conclusions was defective in
+two independent ways (§2 below).
+
+**None of this makes AssemblyAI the answer either.** The strongest finding in the
+whole exercise is not about transcription quality: **the out-of-pocket
+arrangement is itself the least reliable component in the pipeline.** It caused
+15 production failures in July, more than either vendor did, and the personal
+burden is ~$1,500–3,000/yr and roughly doubling.
+
+---
+
+## 1. Cost — the §14.5 procurement math was wrong
+
+| | source | rate / audio-hour |
 | --- | --- | ---: |
-| Azure LLM Speech — list | Azure Retail Prices API, `Azure Speech`, northeurope | $0.36 |
-| Azure LLM Speech — **what we are actually billed** | Cost Management, subscription `EOSG-DEV` | **$0.306** |
+| Azure LLM Speech, list | Azure Retail Prices API, northeurope | $0.36 |
+| Azure LLM Speech, **our actual rate** | Cost Management, subscription `EOSG-DEV` | **$0.306** |
 | AssemblyAI Universal-3.5 Pro | assemblyai.com/pricing | **$0.21** |
 
-The effective rate is derived from our own invoice, not a price list:
+Derived from the invoice, not a price list:
 
 ```
-Fast Transcription Speech To Text   227.914444 h   $69.741820   -> $0.30600/h
-S1 Speech Translation                 0.680278 h   $ 1.448992   -> $2.13000/h
+Fast Transcription Speech To Text   227.914444 h   $69.741820  ->  $0.30600/h
+S1 Speech Translation                 0.680278 h   $ 1.448992  ->  $2.13000/h
 ```
 
-Both meters land at exactly **0.85× list** — a uniform 15% agreement discount.
-Two independent meters agreeing to four decimal places is what makes this a
-measurement rather than an inference.
+Both meters land at exactly **0.85 × list** — a uniform 15% agreement discount.
+Two independent meters agreeing to four decimals is what makes this a
+measurement. Billing is per **second of audio**, rounded up, and is returned in
+the `csp-billing-usage` response header, so it is exactly predictable.
 
-**Consequences.** "Already procured" means *the bill moves from a personal credit
-card to the UN's Azure subscription* — which may well be the decisive benefit —
-but it is **not** a saving. On the 1,811 h English backlog: AssemblyAI $380,
-Azure $554. Azure costs **$174 more** on the backlog and ~1.46× more per hour
-thereafter. $69.74 of Azure Speech has already been spent on eval sweeps.
+**What it costs at the real run-rate.** AssemblyAI serves English only in
+production, so its usage table *is* the English volume:
 
-Billing is per **second of audio**, rounded up, and is exposed per request in the
-`csp-billing-usage` response header — so it is exactly predictable in advance and
-uses the same unit as AssemblyAI's.
+| | h/yr | AssemblyAI | azure-llm | difference |
+| --- | ---: | ---: | ---: | ---: |
+| June rate | 7,016 | **$1,473** | $2,147 | +$674 |
+| July rate (projected) | 14,064 | **$2,953** | $4,304 | +$1,350 |
 
-### 0.2 The scorer that produced the §14/§15 verdict was broken, in two ways
+*(July may include backfill as well as new meetings, so treat the upper figure as
+an upper bound on the organic rate.)*
 
-Both were found by adversarial audit, both reproduce, both are fixed here.
+"Already procured" therefore means **the bill moves from a personal card to the
+UN's Azure subscription** — which may well be the decisive benefit — but it is
+**not** a saving. It is ~1.46× the cost, paid by someone else.
 
-**(a) The ground-truth normalizer was deleting real speech.** The speaker-label
+## 2. The instrument was broken — read this before trusting any §14/§15 number
+
+Found by adversarial audit; both reproduce; both fixed here.
+
+**(a) The ground-truth normalizer was deleting real speech.** Speaker-label
 patterns used `[^:]*`, which matches newlines. PV text is PDF-hard-wrapped, so
-lines routinely *begin* mid-sentence with `Mrs. Izumi Nakamitsu,` — and the match
-then ran to the next colon anywhere in the document. This is the same bug class
-as §14.0, sitting in the block whose comment says it was fixed.
+lines routinely begin mid-sentence with `Mrs. Izumi Nakamitsu,` and the match ran
+to the next colon anywhere in the document — the same bug class as §14.0, in the
+block whose comment says it was fixed.
 
-| | corpus words deleted as "non-spoken" | worst single session |
+| | corpus words deleted as "non-spoken" | worst session |
 | --- | ---: | ---: |
-| before | **15.73%** | 28.2% (S/PV.9718) |
-| after `[^:\n]*` | **1.62%** | 12.7% (S/PV.10100) |
+| before | **15.73%** | 28.2% |
+| after `[^:\n]*` | **1.62%** | 12.7% |
 
-Every deleted word was being charged to providers as a phantom insertion. After
-the fix, kept words-per-minute is uniformly plausible (100–130) on every session
-except the two independently known to be broken.
+Every deleted word was charged to providers as a phantom insertion. After the
+fix, kept words-per-minute is plausible (100–130) on every session except the two
+independently known to be broken.
 
 **(b) `wer.ts` does not compute WER on long inputs.** `chunkedEditDistance` cuts
-reference and hypothesis into *proportional index slices* above 3,000 words — 14
-of 21 English references — and sums per-chunk distances. Uniformly scattered
-errors score correctly; **localized** errors are inflated enormously:
+both texts into *proportional index slices* above 3,000 words — 14 of 21
+sessions — and sums per-chunk distances. Scattered errors score correctly;
+localized errors are inflated enormously:
 
-| control on a 16.6k-word session | true | shipped scorer |
+| control, 16.6k-word session | true | shipped scorer |
 | --- | ---: | ---: |
 | uniform random deletion of 30% | 30.0% | 30.5% ✅ |
 | **contiguous deletion of 30%** | **30.0%** | **80.2%** ❌ |
 | **first 10% missing** | **10.0%** | **57.1%** ❌ |
 | **200 words prepended** | **1.20%** | **7.29%** ❌ |
 
-This is not neutral between the two arms: AssemblyAI's documented defect is
-whole-block behaviour on long files, Azure's is scattered substitution. The
-scorer amplifies one and not the other, by far more than the 1.3-point effect
-that decided §14/§15.
+This is not neutral between the arms — AssemblyAI's alleged defect was whole-block
+behaviour, Azure's is scattered substitution.
 
-Replaced for this run by a full-alignment scorer (Python + rapidfuzz),
-deliberately a **different implementation in a different language** so that
-"scored twice" means two instruments rather than two agents running one.
+Replaced with a full-alignment scorer (Python + rapidfuzz), deliberately a
+**different implementation in a different language** so "scored twice" means two
+instruments. **22 negative controls, 22 pass; the shipped scorer fails 5 of 16**,
+every failure on the long session and in the localized-damage class.
 
-**The negative controls are the point.** 22 controls including the contiguous and
-prepend cases the previous design lacked. New scorer **22/22 pass**; shipped
-scorer **fails 5 of 16**, every failure on the long session and every one in the
-localized-damage class.
+**(c) The bootstrap RNG is degenerate.** `paired-wer.ts` uses an LCG of period
+**10,466** while drawing 180,000 values — it cycles ~17× over 15,824 distinct
+values with non-uniform resampling. Every CI in §14.1/§15.1 is computed off a
+degenerate distribution: reproducible, and wrong.
 
-**(c) Bonus: the bootstrap RNG is degenerate.** `paired-wer.ts` uses an LCG whose
-period is **10,466** while `bootstrapCI` draws 10,000 × n = 180,000 values — it
-cycles ~17 times, over 15,824 distinct values, with non-uniform resampling
-(max/min bucket ratio 1.24). Every CI in §14.1 and §15.1 is computed off a
-degenerate empirical distribution. Reproducible, and wrong.
+**(d) The drift guard had never been run.** §15.6 built it precisely because the
+model is unpinnable, and nothing schedules it. Run today: **0.2% drift, no model
+swap** — so this comparison is against the same model §14/§15 measured. That was
+luck, not process.
 
-### 0.3 The drift guard had never been run
+## 3. Accuracy
 
-§15.6 built `regression-azure-llm.ts` precisely because the default enhanced-mode
-model is unnamed and unpinnable, and told us to schedule it. `grep` over
-`docker/crontab.template`, `.github/` and `package.json` finds no scheduled
-invocation, and the committed baseline was captured 2026-07-14 — 14 days before
-this run.
+Pre-registered primary endpoint: **A0 vs A2** — the only comparison where both
+arms receive the **byte-identical** file (verified by sha256 on every run).
 
-**Run today: 0.2% drift. No model swap.** So this comparison is against the same
-model §14/§15 measured. But that was luck, not process: had Microsoft swapped the
-model, every number in §14/§15 would have described something that no longer
-exists and nothing would have noticed.
+| arm | micro WER | 95% CI | macro WER |
+| --- | ---: | --- | ---: |
+| A0 AssemblyAI @ 64k mono mp3 | 27.46% | [25.68, 30.28] | 28.49% |
+| A1 AssemblyAI @ original AAC *(production today)* | 27.71% | [25.92, 30.64] | 28.76% |
+| **A2 azure-llm @ 64k mono mp3** | **26.98%** | [25.36, 29.60] | 27.97% |
+| A3 azure-llm @ 128k mono mp3 | 27.00% | [25.39, 29.57] | 28.02% |
 
----
+| comparison | Δ micro | 95% CI (macro) | wins | verdict |
+| --- | ---: | --- | ---: | --- |
+| **A0 vs A2 — PRIMARY** | **+0.48** | [+0.16, +1.00] | 2/15 | **azure-llm better, significantly but slightly** |
+| A1 vs A2 (production as it stands) | +0.73 | [+0.47, +1.24] | 0/15 | azure-llm better |
+| A2 vs A3 | −0.02 | [−0.26, +0.16] | 8/15 | tied |
 
-## 1. What `azure-llm-speech` actually is (measured, not read)
+Micro-average is the headline: the corpus spans 92 → 17,700 reference words, and
+an unweighted session mean would give a 92-word procedural clip the same vote as
+a 2h33m debate.
 
-- **Unnamed and unpinnable.** `enhancedMode.model` accepts only
-  `mai-transcribe-1.5` / `mai-transcribe-1`; `"default"`, `"latest"`,
-  `"speech-llm"` are all rejected — *"Requested MAI transcription model 'X' is
-  not supported."* There is no version identifier anywhere in the response.
-- **Only two api-versions answer**: `2025-10-15` and `2024-11-15`. Both 200; the
-  preview-looking versions 404. And the two live versions **do not agree** — on
-  the same 81 s file they returned 8 and 9 phrases respectively, identical text.
-  So pinning the api-version pins the contract, not the weights.
-- **GA, not preview** (Build 2026, 2026-06-04) — so it *is* covered by Azure's
-  99.9% SLA. Our notes implied otherwise; this is a point in Azure's favour.
-- The model was swapped once ("renewed speech-LLM model", Build 2026) — that was
-  **announced**, but shipped with no api-version change and no version string, so
-  it was silent *to the API*. The governance risk is real; "silent" was imprecise.
-- **`confidence` is `0` on every phrase.** Confirmed on live output. No
-  per-segment quality signal exists, permanently and by design.
-- **`maxSpeakers` caps at 35**, not 20 — production is capping itself below the
-  ceiling on large open debates for no reason. One-line fix.
-- **Region**: `x-ms-region: North Europe`, matching the resource. No evidence of
-  out-of-region processing.
-- Our resource is kind **AIServices** (Foundry), which is the likely reason
-  enhanced mode answers only on the `services.ai.azure.com` hostname while
-  Microsoft's docs show `cognitiveservices.azure.com`. Our note is right for our
-  resource kind; it is not a universal vendor fact.
+**The codec confound resolved, and it ran the opposite way to my assumption.**
+Azure 64k vs 128k is equivalent (Δ −0.05, CI inside the pre-registered ±0.5
+margin) — the transcode costs Azure nothing. But AssemblyAI is *significantly
+better* on the 64 kbps **mono** MP3 than on its own original 190 kbps stereo AAC
+(Δ −0.27, CI [−0.46, −0.11]). §14/§15 handicapped the **incumbent**. Feeding
+AssemblyAI mono audio is a free improvement worth about a third of the gap.
 
-### The entity-biasing blocker is confirmed, and worse than documented
+**Absolute WER is ~27%, not §14's 43.5%.** The 16-point drop is the scorer and
+normalizer fixes, not a change in either provider.
 
-§15.5a's "UN80" → "the UNAT initiative" defect would be fixed by keyterm biasing.
-There is none available:
+## 4. Speed — measured for the first time
 
-| attempt | result |
-| --- | --- |
-| `enhancedMode.phraseList` | HTTP 200, output **byte-identical** to no phrase list — accepted and ignored |
-| top-level `phraseList` | **HTTP 400** `"Definition": ["Invalid JSON format."]` |
-| `enhancedMode.prompt` (Microsoft's *documented* substitute) | **HTTP 400** `"Definition": ["Invalid JSON format."]` |
+§14/§15 contain no latency number at all.
 
-Microsoft's own recommended workaround for the missing phrase list on enhanced
-mode is the `prompt` field, and the live API at `2025-10-15` rejects it as a
-schema violation. **There is currently no working way to tell this model that
-"UN80" is a word.** AssemblyAI exposes `keyterms_prompt`, `word_boost`,
-`boost_param` and `custom_spelling` as first-class fields.
+| arm | median RTF | basis |
+| --- | ---: | --- |
+| AssemblyAI | **101× realtime** | job leg, *directly observed* |
+| azure-llm | **67× realtime** | upload removed via a paired estimator |
 
----
+Azure's upload sits inside a single synchronous POST and cannot be timed
+directly. The pooled regression disagreed with itself across vendors (23.9 vs
+71.1 Mbit/s on the same uplink), so instead the **64k↔128k pair** — same audio,
+2× the bytes — isolates the upload slope with duration held exactly constant:
+**0.163 s/MB (49 Mbit/s)**, median over 15 sessions.
 
-## 2. Reliability — from production, not from this eval
+**AssemblyAI is ~1.5× faster, and it does not matter.** On a two-hour meeting
+that is ~48 s versus ~73 s. Both are far faster than realtime, both scale
+linearly, neither degrades on long files.
 
-An eval of ~50 attempts per arm with zero failures bounds the failure rate at
-~6.6%; the prior anecdote was 2/26 ≈ 7.7%. It cannot tell those apart. So
-reliability is taken from `webtv.processing_usage_events`, which has a real
-denominator — and failures are classified, because Kaltura 404s and our own
-over-length submissions are not vendor failures.
+## 5. Reliability — from production, not from this eval
+
+54 eval attempts with zero failures bounds the rate at ~6.6% and cannot
+distinguish "fine" from the 2-in-26 the §15 sweep saw. Production has a real
+denominator, and failures are classified because Kaltura 404s are not vendor
+failures.
 
 | vendor | attempts | all failures | **vendor-attributable** | rate | 95% Wilson |
 | --- | ---: | ---: | ---: | ---: | --- |
 | assemblyai | 8,711 | 53 | **4** | **0.046%** | [0.018%, 0.119%] |
 | azure-speech¹ | 44 | 3 | **3** | **6.818%** | [2.346%, 18.225%] |
 
-¹ `azure-speech` is the vendor token `azure-llm-speech` logs under; it entered
-production 2026-07-14 for fr/es/ar/ru, so every row is the challenger.
+¹ the vendor token `azure-llm-speech` logs under; in production for fr/es/ar/ru
+since 2026-07-14, so every row is the challenger.
 
-The intervals do not overlap. But read Azure's honestly: **n = 44, and all three
-failures landed on its first production day** (2026-07-14, "connection
-terminated"), with 33 consecutive successes since. That is "unproven, with a bad
-first day", not "6.8% forever". What can be said is that AssemblyAI has a
-0.046% record over 8,662 attempts and Azure has nothing comparable.
+The intervals do not overlap — but read Azure's honestly: **n = 44, and all three
+failures landed on its first production day**, with 33 consecutive successes
+since. That is "unproven, with a bad first day", not "6.8% forever".
 
-### The out-of-pocket arrangement has already cost transcripts
+### The most reliable finding in this report is about the payer
 
-Of AssemblyAI's 53 production failures:
+AssemblyAI's 53 production failures, by cause:
 
 | cause | n | period |
 | --- | ---: | --- |
@@ -187,13 +193,93 @@ Of AssemblyAI's 53 production failures:
 | audio longer than the plan allows (our limit) | 8 | Jul 08 – Jul 22 |
 | connection terminated (vendor) | 4 | Feb 13 – Jun 05 |
 
-**15 production transcriptions failed because the personal card funding the
-account ran out.** That is not a vendor-quality problem, it is a
-funding-arrangement problem — and it is the strongest concrete argument in this
-whole document for changing *something*, whether that is procuring AssemblyAI
-properly or moving the workload to the Azure subscription.
+**The funding arrangement caused more production failures than either vendor.**
+
+## 6. What `azure-llm-speech` is, measured
+
+- **Unnamed and unpinnable.** `enhancedMode.model` accepts only
+  `mai-transcribe-1.5`/`-1`; `"default"`, `"latest"`, `"speech-llm"` are rejected.
+  No version identifier anywhere in the response.
+- **Only two api-versions answer** (`2025-10-15`, `2024-11-15`) and they
+  **disagree** — 8 vs 9 phrases on the same 81 s file, identical text. Pinning the
+  api-version pins the contract, not the weights.
+- **GA since Build 2026**, therefore *inside* Azure's 99.9% SLA. Our notes implied
+  preview; this is a point in Azure's favour.
+- `confidence` is **0** on every phrase — no per-segment quality signal, by design.
+- `maxSpeakers` caps at **35**; production sends 20, capping itself for no reason.
+- Region `North Europe`, matching the resource. No out-of-region processing.
+
+**Entity biasing — the fix for the known entity weakness — does not exist here:**
+
+| attempt | result |
+| --- | --- |
+| `enhancedMode.phraseList` | HTTP 200, output **byte-identical** — accepted and ignored |
+| top-level `phraseList` | **400** `"Invalid JSON format."` |
+| `enhancedMode.prompt` — Microsoft's *documented* substitute | **400** `"Invalid JSON format."` |
+
+AssemblyAI exposes `keyterms_prompt`, `word_boost`, `boost_param`,
+`custom_spelling` as first-class fields.
+
+**A live production bug found by the qualitative read.** Azure mishears **SCAD**
+(Security Council Affairs Division) as **"SCAT"**, which is on Microsoft's
+profanity list, and the service's **default** filter is `Masked`. Our provider
+never sets the option, so real output reads *"I would like to thank the \*\*\*\*
+for the contributions they made."* Two occurrences in nine sessions,
+deterministic. `Removed` is **worse** (silent deletion); `None` or `Tags` fixes
+it. One line.
+
+## 7. The three-way qualitative comparison
+
+Ten meetings read end to end by independent agents — PV, AssemblyAI, Azure — every
+difference enumerated, with a conservation check against the PV word count. Then
+an adversarial agent tried to refute the result, and **materially corrected it**.
+
+**What a total census shows** (every substitution, not the highlighted ones):
+
+| | AssemblyAI | azure-llm |
+| --- | ---: | ---: |
+| substitutions vs PV | 101 | 104 |
+| **identical substitution in BOTH arms** | **71 (70%)** | **71 (68%)** |
+| visible garble / non-words | 6 | 7 |
+| entity slots correct | 4/11 | 3/11 |
+
+**Seventy per cent of the two vendors' errors are the same error.** On one session
+they differ in two rows. Accuracy at entity slots is a wash.
+
+**The one real asymmetry** is failure *mode*, not rate: at ambiguous entity slots
+AssemblyAI snaps to a real in-vocabulary entity, Azure emits a non-word.
+
+- AssemblyAI: `UNRWA` for `UNDOF` inside an operative quotation; "the **High
+  Representative**" for the SRSG; "Thank you, **President Barroso**"; "Thank you,
+  Mr. **Ban Ki-moon**"; "report **to** the Secretary-General" ×2; and on S/PV.9649
+  a dropped governing phrase that has Algeria's vote *"uphold the legitimacy of
+  Daesh and al-Qaeda"*.
+- Azure: `INDOF`/`Ndoff`/`ANDOF` for UNDOF (0 of 4); "the **sanctuary**" for "the
+  sanctions regime"; but also **"the panel of expert regional partners"**, which is
+  fluent and invisible — so the pattern is not clean.
+
+**This is 3-vs-1 across ten meetings, two of them the same acoustic token.**
+Directionally real, worth acting on, **not** strong enough to decide a procurement.
+
+**Neither is usable unreviewed.** The shared failures are the ones most likely to
+mislead: both reverse who confirmed the parties' positions, both flatten
+"positions" to the singular, both misname a Permanent Representative in every
+mention and contradict themselves within one meeting.
+
+## 8. What would actually fix the quality problem
+
+Not a vendor change. The cheapest, largest win is **external to both**:
+
+1. **A UN entity glossary + document-symbol/resolution-number validator.** One
+   reading agent's estimate: it removes **8 of 15** reader-harming errors in its
+   session, on both arms. Every symbol has a checkable form; every officeholder is
+   on a published roster. *A validator you can build beats a hallucination you
+   cannot detect.*
+2. **Feed AssemblyAI mono audio** — measured worth −0.27 WER points, free.
+3. **Set `profanityFilterMode`** if Azure is used at all — it is currently
+   destroying UN body names.
+4. **Schedule the drift regression.** It exists, it costs 10 s, nobody runs it.
 
 ---
 
-*(Sections 3–7 — accuracy, speed, diarization, the three-way qualitative diff,
-and the recommendation — follow once the full run completes.)*
+*Sections 9 (battery / hallucination gate) and 10 (recommendation) follow.*
