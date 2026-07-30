@@ -545,7 +545,7 @@ async function main() {
 
   // Print summary table
   if (allResults.length > 0) {
-    console.log("\n" + "=".repeat(80));
+    console.log("\n" + "=".repeat(92));
     console.log("SUMMARY");
     console.log("=".repeat(92));
     console.log(
@@ -597,7 +597,7 @@ async function main() {
       byProvider.set(r.provider, cur);
     }
     if (byProvider.size > 0) {
-      console.log("\n" + "=".repeat(80));
+      console.log("\n" + "=".repeat(92));
       console.log(
         "OMISSION (speech in the audio with no transcript word over it)",
       );
