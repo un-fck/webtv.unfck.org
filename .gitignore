@@ -61,3 +61,11 @@ next-env.d.ts
 
 # Private security findings tracker — do not commit
 SECURITY.md
+
+# Derived eval caches — audio/PV/pivot artefacts that the harnesses re-create on
+# demand (e.g. eval/live/run-matrix.ts:preparePcm re-fetches from Kaltura and
+# re-transcodes when the file is absent). These were tracked by accident and put
+# 212 MB of raw PCM into git history; purged 2026-07-30, see the note in
+# eval/live/README.md. The glob is deliberately broad so the next eval
+# subsystem's cache/ is covered without another incident.
+eval/**/cache/
