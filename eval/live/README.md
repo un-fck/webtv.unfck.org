@@ -146,3 +146,22 @@ Adapters live in `providers/`. Gaps found during the vendor survey
 
 `missingKey()` lets a system be implemented but skipped until a key exists, so
 NEEDS-KEY vendors can be added now and run the day credentials arrive.
+
+## The audio cache is not in git (and must not go back in)
+
+`eval/live/cache/` holds derived artefacts — 16 kHz mono PCM of the floor track,
+plus cached PV text and pivot JSON. `preparePcm()` in `run-matrix.ts` re-fetches
+from Kaltura and re-transcodes whenever a file is absent, so nothing here needs to
+be durable.
+
+It **was** tracked, by accident, and put **212 MB of raw PCM into git history**
+(three files; raw 16-bit audio only gzips to ~78%, so it never packed down). It was
+purged from all history on 2026-07-30 and `eval/**/cache/` is now gitignored.
+
+If you need the exact bytes the published latency figures were measured against —
+regenerating is *functionally* equivalent but not bit-identical, because WebTV
+re-cuts recordings — the pre-purge copies are archived outside git at:
+
+    /Volumes/SSDAStorage/transcripts-prerewrite-20260730/eval-live-cache/
+
+Otherwise just run the harness and let it rebuild the cache.
