@@ -28,8 +28,11 @@ For each session × language × provider:
 2. Fetches the PV document PDF from documents.un.org in the same language
 3. Runs the transcription provider on the audio
 4. Computes WER and CER against the verbatim record
+5. Computes **omission** against the *audio* — seconds of speech energy with no transcript word over it
 
 **Expected WER**: 15–40% even for excellent transcription, because verbatim records are professionally edited (fillers removed, grammar cleaned). This is documented in results.
+
+**Omission is a mandatory criterion and not interchangeable with WER.** An omitted sentence and a misrecognised one score the same WER, but only the omission is invisible to a reader — and on a UN verbatim record an invisible deletion reads as deliberate removal. English was moved off AssemblyAI on 2026-07-30 for exactly this (see `analysis/SYNTHESIS.md` §16). Because it is scored from the audio it needs no PV, so it works on any session in any language. No provider may be selected on WER alone.
 
 ## Corpus: Two Splits
 
@@ -141,7 +144,8 @@ eval/
   config.ts                 # Language codes, constants
 
   ground-truth/             # PV document fetch + parse + normalize
-  metrics/                  # WER / CER computation, text normalization
+  metrics/                  # WER / CER computation, text normalization,
+                            #   omission.ts (+ negative controls in omission.test.ts)
   dashboard/                # Standalone Vite + React app (npm)
     src/App.tsx
     src/components/Leaderboard.tsx

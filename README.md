@@ -15,7 +15,7 @@ This app scrapes [UN Web TV](https://webtv.un.org/en/schedule) (which has no pub
 - **Full-text search inside transcripts** — find meetings by what was _said_, not just by title. Each hit shows the speaker, a snippet, and links to the exact moment. Document symbols (`L.73`, `S/2026/243`) match as fragments, so they survive compound tokenization and garbled speech recognition
 - **Timestamp deeplinks** — `?t={seconds}` on any meeting page seeks the video there and highlights the statement; every statement has a copy-link button, so a speech can be cited down to the sentence
 - **Embedded video pages** with Kaltura player
-- **Automatic transcription** with per-language speech-to-text routing (AssemblyAI / Azure AI Speech / Alibaba / Speechmatics), diarization, and paragraph breaks
+- **Automatic transcription** with per-language speech-to-text routing (Azure AI Speech / Alibaba / Speechmatics), diarization, and paragraph breaks
 - **Speaker identification** via Azure OpenAI (maps speaker labels to named delegates)
 - **Scheduled transcription** for upcoming events (cron job picks them up when audio becomes available)
 - **JSON API** for programmatic access to video data
@@ -88,7 +88,7 @@ See `.env.example` for all variables. Core ones:
 - **UI**: shadcn/ui, Lucide icons, Radix UI primitives
 - **Table**: TanStack Table v8
 - **Database**: PostgreSQL via `pg` connection pool
-- **Transcription**: per-language STT routing (AssemblyAI Universal-3.5 Pro, Azure LLM Speech, Alibaba Fun-ASR, Speechmatics Melia) — see `lib/providers/config.ts`
+- **Transcription**: per-language STT routing (Azure LLM Speech for en/fr/es/ar/ru, Alibaba Fun-ASR for zh, Speechmatics Melia for the floor) — see `lib/providers/config.ts`
 - **Speaker ID**: Azure OpenAI (structured output via Zod)
 - **Video hosting**: Kaltura (partner ID: 2503451)
 - **Deployment**: Vercel — three cron jobs: `process-scheduled` every 5 min, `sync-videos` every 15 min, `check-pv` every 6 hours

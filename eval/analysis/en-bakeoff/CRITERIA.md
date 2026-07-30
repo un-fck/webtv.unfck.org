@@ -50,3 +50,34 @@ Things that were not on the list and should be.
 | **Model pinnability** | Cannot be fixed by code; only detected | Azure's default enhanced model is unnamed and unpinnable; only two api-versions answer and they disagree on segmentation. The one nameable alternative (`mai-transcribe-1.5`) has no diarization and no word timestamps, and is preview (outside SLA). |
 | **Who pays, and whether the payer can fail** | The out-of-pocket arrangement is itself a reliability component | 15 production transcriptions failed in July with "account balance is negative" — more failures than either vendor caused. |
 | **Ground-truth quality** | The oracle is not infallible | The PV is itself wrong in ≥3 places where both transcribers are right (S/PV.9722), carries PDF-extraction artifacts charged to both arms, and is an *edited* record — on S/PV.9826, 44 of 94 differences are the PV's editing, not transcription error. |
+
+## ⚠️ The criterion this run MISSED — omission (added 2026-07-30)
+
+**This bake-off never scored how much speech a provider silently leaves out, and that
+turned out to decide the question.** Added retrospectively here so it is never optional
+again; it is now mandatory for any provider comparison (`docs/eval.md`), implemented as
+`eval/metrics/omission.ts`, and printed as a leaderboard by `eval/run.ts`.
+
+| criterion | why it earned a place | finding |
+| --- | --- | --- |
+| **Omission — speech with no words over it** | An omitted sentence and a misrecognised one can score the **same WER**, yet only one is invisible to the reader. On a verbatim UN record an invisible deletion reads as censorship — which is exactly how it was reported to us. | Re-scored from **this run's own cached transcripts** (no new API calls): AssemblyAI omits **0.580%** of 27.5 h vs Azure's **0.082%** (7×); **879 words** missing that Azure captured vs **370** the other way (2.38×); single omissions up to **71 words**; `S_PV.9816` alone loses **373 words**. Decided the English switch. |
+| **Run-to-run stability of *content*** | §14/§15 and this run all assumed one pass per arm is representative of the arm | AssemblyAI diverges **215 words across 12 regions** between passes of the *same* arm on the *same* audio (incl. 41- and 43-word passages on 8–13 min files); Azure **0**. One pass is not representative. |
+
+**Why the existing criteria could not catch it.** Three near-misses, all of which pointed
+at the right area and stopped short:
+
+- §2's negative controls **did** find the shipped scorer reporting a 30% contiguous
+  deletion as 80.2% WER — the damage class was known to be *mis-measured* before it was
+  known to be *occurring*. Fixing the scorer was treated as sufficient; measuring the
+  phenomenon directly was not considered.
+- §7's three-way reads noted "a dropped governing phrase" on Algeria's vote — a single
+  instance, recorded as an anecdote rather than a class to quantify.
+- §9's "long meetings" criterion tested **diarization collapse**, not content loss, and
+  concluded the failure was "rare, not predicted by duration". Omission on the same files
+  was systematic and never looked for.
+
+**The transferable lesson:** every criterion here compares what the two arms *produce*.
+None asked whether either arm produces *nothing* where there is audio. Reference-based
+metrics cannot ask that question, because a reference tells you what should have been said,
+not which parts of the recording were never attempted. Any future comparison must include
+at least one measure computed **against the audio** rather than against a text reference.

@@ -61,11 +61,33 @@ Each language has a defined set of filler words (um, uh, euh, etc.) that are str
 
 ## Metrics
 
-Four metrics are computed for each (session, language, provider) combination:
+Metrics are computed for each (session, language, provider) combination:
 
 - **WER** (Word Error Rate): Levenshtein edit distance on word arrays, divided by reference word count. `(substitutions + insertions + deletions) / reference_words`
 - **CER** (Character Error Rate): Same formula but on character arrays (whitespace stripped). More meaningful for Chinese.
 - **Normalized WER/CER**: Same computation after applying text normalization to both sides — lowercasing, removing punctuation, stripping filler words, and collapsing whitespace.
+- **Omission** (`droppedSpeechSeconds`, `droppedSpeechRatio`, `worstOmissionSeconds`, `omissionHoles`): seconds of **speech energy in the audio with no transcript word over it**. Scored from the audio, not from the reference, so it needs no PV and works on any session in any language.
+
+### Omission — why it is a separate criterion, and mandatory
+
+**A provider that omits a sentence and one that misrecognises it can score the same WER.** They are not the same failure. A wrong word is visible to a reader, who can hear the audio and see the error; a missing sentence is invisible, and on a UN record it reads as deliberate removal.
+
+This was learned the hard way. On 2026-07-30 a member state reported that `A/80/PV.106` omitted words from a statement as delivered. It did: AssemblyAI had silently dropped ~3 s mid-sentence, ~30 s more from the same statement, and a 56-word passage from another delegation's — with no error and no marker. Two instruments that existed at the time both failed to see it:
+
+- the **pipeline's** coverage guard (`lib/transcription.ts`) compares only the *last* paragraph's end against audio duration, so it detects truncation at the end and is structurally blind to interior holes;
+- **WER against a PV** partly absorbs contiguous deletion, because the PV is itself an edited record — and the en bake-off's §2 had already shown the then-shipped scorer reporting a 30% contiguous deletion as 80.2% WER, i.e. mis-measuring precisely this class.
+
+So omission is now scored directly and **must be reported in any provider comparison**, alongside WER. A provider may not be selected on WER alone.
+
+Implementation is `eval/metrics/omission.ts`. Three design points that are load-bearing:
+
+1. **Coverage comes from word *start* spacing**, not `[start, end]` spans — AssemblyAI clamps many `end` values to `start + 80 ms`, and trusting them invents holes.
+2. **The speech threshold is derived from the audio only** (Otsu on the log-RMS histogram). A threshold calibrated on word-covered frames moves when the transcript is damaged, which is exactly when it must hold still.
+3. **A gap alone never counts** — UN audio is full of legitimate multi-second silence (gavels, voting, recesses; one real intra-utterance gap in this corpus was an 11-minute recess). Speech *energy* inside the gap is what distinguishes a dropped span from a quiet room.
+
+`eval/metrics/omission.test.ts` ships 14 controls, and each has been shown to fail against a deliberately broken implementation (detector disabled, clamped `end` trusted, threshold unreachable, threshold calibrated from the transcript, trailing omission ignored). An absent measurement is recorded as absent, never as `0` — `0` means "measured, none found".
+
+Runs print a per-provider omission leaderboard (total dropped seconds, % of audio, worst single hole) after the WER table, and write a `raw/{symbol}/{provider}_{lang}.omission.json` sidecar so the measurement survives for sessions that have no ground truth and therefore no summary row.
 
 For large inputs, the system uses chunked computation (max 3,000 words or 10,000 characters per chunk) to keep the O(n×m) dynamic programming tractable. Both raw and normalized scores are stored, allowing comparison at different strictness levels.
 
@@ -106,7 +128,7 @@ eval/results/
   raw/{symbol}/{provider}_{lang}.txt   # Human-readable text
 ```
 
-Each row in `summary.json` records: symbol, asset ID, language, provider, WER, normalized WER, CER, normalized CER, substitution/insertion/deletion counts, reference/hypothesis lengths, audio duration, and timestamp.
+Each row in `summary.json` records: symbol, asset ID, language, provider, WER, normalized WER, CER, normalized CER, substitution/insertion/deletion counts, reference/hypothesis lengths, audio duration, timestamp, and the omission fields (`droppedSpeechSeconds`, `droppedSpeechRatio`, `worstOmissionSeconds`, `omissionHoles`). The omission fields are **optional**: absent means "not measured" (no audio, or ffmpeg unavailable), which is deliberately distinct from `0`.
 
 ## Dashboard
 

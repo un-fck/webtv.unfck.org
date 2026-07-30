@@ -1,6 +1,33 @@
 # Recommendation
 
-> **VERDICT — KEEP ENGLISH ON ASSEMBLYAI, AND TURN ON `keyterms_prompt`. Solve the
+> # ⚠️ SUPERSEDED 2026-07-30 — ENGLISH MOVED TO `azure-llm-speech`
+>
+> This document's verdict was overturned by a criterion it never scored:
+> **omission** — speech the provider returns *no words* for, silently.
+>
+> A member state reported that `A/80/PV.106` omitted words from a statement as
+> delivered. It did, in four separate places, and 10 of 10 re-runs reproduced the
+> core drop. Re-scoring this bake-off's own cached transcripts — same corpus, same
+> audio, no new API calls — AssemblyAI omits **0.580% of 27.5 h of audio against
+> Azure's 0.082%** (7×), is missing **879 words Azure captured against 370** the
+> other way, and diverges **215 words pass-to-pass where Azure diverges by 0**.
+>
+> Everything below about entity rendering, `keyterms_prompt`, cost and reliability
+> **still holds and is still the honest trade-off being accepted**. The judgement
+> that changed is the ranking: a mangled institution name is a visible error a
+> reader can catch against the audio, while a missing sentence is invisible and, on
+> a UN verbatim record, reads as deliberate removal. So omission now outranks
+> entity accuracy, and we pay the 1.46× and lose `keyterms_prompt`.
+>
+> The uncomfortable part: the data needed to see this was **already on disk when
+> this recommendation was written**. The corpus, the cached provider JSON with word
+> timings, and the audio were all here. What was missing was the question. See
+> `eval/analysis/SYNTHESIS.md` §16 and `eval/metrics/omission.ts`; omission is now a
+> mandatory criterion for any provider comparison (`docs/eval.md`).
+>
+> ---
+>
+> **ORIGINAL VERDICT (2026-07-28, superseded) — KEEP ENGLISH ON ASSEMBLYAI, AND TURN ON `keyterms_prompt`. Solve the
 > payment problem institutionally, not by switching engine.**
 >
 > One experiment decided this. AssemblyAI's keyterm biasing takes "UN80" — the

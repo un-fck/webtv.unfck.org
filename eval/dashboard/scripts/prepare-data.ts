@@ -28,6 +28,17 @@ interface Result {
   hypLength: number;
   durationMs: number;
   timestamp: string;
+  /**
+   * Omission (see eval/metrics/omission.ts): seconds of speech energy in the
+   * audio with no transcript word over it. Optional — absent means NOT MEASURED,
+   * which is distinct from 0. Rows scored before 2026-07-30 have no value, so
+   * any aggregate must filter on presence rather than default to 0, and this is
+   * why omission is not yet a MetricKey chip in the leaderboard.
+   */
+  droppedSpeechSeconds?: number;
+  droppedSpeechRatio?: number;
+  worstOmissionSeconds?: number;
+  omissionHoles?: number;
 }
 
 function main() {

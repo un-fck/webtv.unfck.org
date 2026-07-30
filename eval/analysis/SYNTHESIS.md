@@ -190,6 +190,18 @@ A 4-provider stack, each role justified by the evidence above:
 > **Update (2026-07-10):** `en` now runs on **assemblyai-universal-3-5-pro** (see §11 —
 > best measured en WER, 15.5). All other slots unchanged; the floor re-test in §11.3
 > re-confirms Gemini for the floor.
+>
+> **Update (2026-07-14):** `fr/es/ar/ru` moved from `azure-openai` to **azure-llm-speech**
+> (see §15).
+>
+> **Update (2026-07-10 / later):** `floor` moved from Gemini to **speechmatics-melia-1** (§13).
+>
+> **⚠️ Update (2026-07-30) — supersedes the `en` row above:** `en` now runs on
+> **azure-llm-speech**. Not a WER decision — AssemblyAI keeps its WER edge — but an
+> **omission** decision: it silently drops speech on long audio (0.580% of the bake-off
+> corpus vs Azure's 0.082%; 879 words missing vs 370). Triggered by a member-state
+> complaint on `A/80/PV.106`. See **§16**. The live table is always
+> `STT_ROUTING` in `lib/providers/config.ts`; this section is history.
 
 **Gemini version — use `gemini-3-flash-preview`, not 3.5-flash.** Accuracy is a wash and mixed
 (3-flash better en/fr, 3.5 marginally better ar/zh/ru, all within noise); **name hallucination is
@@ -224,6 +236,13 @@ cross-check for named officials.
 - **Noisy/disfluent segments, embedded clips, applause** → LLM hallucination-over-noise _(V4)_.
 - **Long meetings, many short turns** → lumping + diarization miscount _(V1/V3)_.
 - **Dense proper nouns / numbers / resolution symbols** → spelling/ITN drift, misheard figures.
+- **Silent omission — speech the provider returns no words for** → AssemblyAI drops spans on
+  long audio _(§16)_. **Mandatory in every provider comparison**, scored by
+  `eval/metrics/omission.ts`, and it must be measured **against the audio**: a text reference
+  tells you what should have been said, never which parts of the recording were never
+  attempted. WER cannot express it — an omitted sentence and a misrecognised one score the
+  same — and the failure is invisible to readers, which on a verbatim record reads as
+  deliberate removal. **No provider may be selected on WER alone.**
 
 ## 10. Watchlist — MAI-Transcribe-1.5 (assessed 2026-06, not yet evaluated)
 
@@ -1021,6 +1040,186 @@ correspondingly wider, though both show **10/10 clean sweeps**, so the direction
 Nothing was re-transcribed to produce these numbers — `eval/analysis/rescore-cached.ts` rebuilds
 `summary.json` from cached transcripts offline (`run.ts --cached-only` would still hit the
 network for the unfinished sessions).
+
+## 16. OMISSION — English leaves AssemblyAI (investigated + decided 2026-07-30)
+
+**Outcome: `en` → `azure-llm-speech`.** This reverses §14/§15's "keep AssemblyAI"
+(`en-bakeoff/RECOMMENDATION.md`) on a criterion that bake-off never scored: how much
+**speech the provider silently omits**. Not misrecognises — omits, returning no words for
+a span of audio, with no error and no marker.
+
+### 16.1 How it surfaced
+
+A member state reported that `A/80/PV.106` (GA plenary, 24 Jul 2026) was missing words from
+a statement as delivered. It was. Published text read:
+
+> "…there will be consequences. The United States will immediately reassess our engagement,
+> Given the gravity of the moment…"
+
+A comma, then a capitalised new sentence. In the word stream, `engagement,` ends at
+5 047 820 ms and the next word `Given` starts at 5 050 790 ms — a **2.97 s hole**, with RMS
+1250–4070 inside it against ~30 for real silence. Speech was there and was not transcribed.
+
+The omission was already present in `raw_paragraphs`, i.e. verbatim provider output —
+`toRawParagraphs()` is a 1:1 field copy — so nothing downstream (speaker ID, resegmentation,
+off-record filtering) was involved, and AssemblyAI does not go through our chunking layer.
+Re-submitting a 3-minute clip of the *same* audio to the *same* model returned the full
+phrase: "…reassess our engagement, **participation, and funding.** Given the gravity…"
+
+The same meeting had worse, which is the decisive point against any "targeted removal"
+reading: **~30 s more of the same US statement** (67 words including "Pushing this through
+right now denies member states their basic right to deliberate…"), **two drops in Peru's
+statement** (~26 s and ~28 s, leaving the nonsense fragment "…his or her priorities. Must be
+engaged in while taking account of the consensus of the membership."), one in Ecuador's, and
+**56 words / ~24 s of Mexico's**, which an 80-second clip through the same model recovers in
+full.
+
+### 16.2 The instrument
+
+`eval/metrics/omission.ts`. Claim under test: every stretch of speech energy in the audio is
+covered by at least one transcript word. Scored from **audio**, so no PV is needed and it
+works in any language. Three non-obvious choices, each of which replaced a first attempt
+that failed:
+
+- **Coverage from word *start* spacing**, not `[start,end]`. A large share of AssemblyAI's
+  `end` values are clamped to `start+80 ms`; trusting them invents holes everywhere.
+- **Threshold from the audio only** (Otsu on log-RMS). Calibrating on word-covered frames —
+  the first version — makes the threshold move exactly when the transcript is damaged.
+- **A gap alone never counts.** UN audio is full of legitimate multi-second silence; one real
+  intra-utterance gap in this corpus is an 11-minute recess. Energy inside the gap is the
+  discriminator.
+
+14 controls in `omission.test.ts`, every one shown to fail against a deliberately broken
+implementation (detector disabled / clamped `end` trusted / threshold unreachable / threshold
+calibrated from the transcript / trailing omission ignored). On real audio the controls also
+pass per-session: deleting 30 s of words from dense speech is detected (+17.6 s, +20.8 s on
+two sessions), deleting words over the quietest 30 s adds 0.0 s, and a deliberately wrong
+offset roughly doubles the score.
+
+### 16.3 Persistence and variance on `A/80/PV.106` (10× AssemblyAI, 2× Azure, same audio)
+
+| | holes | dropped speech | worst hole |
+| --- | ---: | ---: | ---: |
+| AssemblyAI, 10 runs | 31–33 | **43.4–61.7 s** (mean 52.2, spread 18.2) | 4.2 s or 15.7 s |
+| Azure, 2 runs | 2 | 1.7 s | 0.9 s |
+
+- **The core drop is deterministic, not random**: `and funding.` is missing in **10/10** runs;
+  Azure has the full phrase 2/2. Production had additionally lost `participation,` — so the
+  defect reproduces every time and only its *extent* varies.
+- **120 s of audio is dropped by all 10 runs**; 30 s by 5/10 (one ~16 s span behaves like a
+  coin flip, which is what splits the runs into 44 s and 61 s modes); only ~6 s is run-unique.
+- Verified span-by-span against Azure as an independent witness: real speech every time. The
+  dominant pattern is **UN document symbols and the clauses attached to them** — `A/80/L.100`
+  becomes `A/AD/L100` or vanishes, taking neighbouring words with it.
+- Hole *counts* are not comparable across vendors (timestamp/segmentation conventions differ);
+  that is what §16.4's M2/M3 text measures exist for.
+
+### 16.4 Corpus-wide (the bake-off's own 24 sessions, 27.5 h, scored from cache — no new spend)
+
+**M1 — energy coverage:**
+
+| arm | sessions | dropped | of audio |
+| --- | ---: | ---: | ---: |
+| AssemblyAI @128k | 24 | 573.2 s | **0.580%** |
+| AssemblyAI @64k | 17 | 246.9 s | 0.452% |
+| Azure @64k | 24 | 80.6 s | **0.082%** |
+| Azure @128k | 17 | 40.2 s | 0.074% |
+
+**M2 — pass-to-pass within one vendor** (content one pass has and another lacks is an omission
+by construction; only short sessions carry repeats, 1.43 h): AssemblyAI **12 divergent regions,
+215 words** — including 41- and 43-word passages, on 8- and 13-minute files. Azure **0 and 0**.
+So AssemblyAI is non-deterministic even on short audio; short files are immune to *persistent*
+loss, not to *variance*.
+
+**M3 — cross-vendor at matched bitrate** (17 sessions, ≥4-word runs): AssemblyAI missing
+**879 words** Azure captured; Azure missing **370** AssemblyAI captured — **2.38×**. Largest
+single AssemblyAI omissions run 46–71 words and cluster: `S_PV.9816` alone loses 373 words
+across several passages, `A_78_PV.101` 140, `S_PV.9532` 131. Azure is not clean either — it
+loses 107 words on `S_PV.9578`.
+
+**Length:** 0.364% under 10 min, 0.216% at 10–30 min, 0.598% at 30–90 min, 0.604% over 90 min.
+No clean monotonic trend, but **456 s of the 573 s total comes from the nine sessions over
+90 minutes** — length concentrates the damage rather than causing it.
+
+### 16.5 Chunking is not the fix (3 passes × 5 levels, 15 s overlap, `-c:a copy`)
+
+| level | units | dropped_s mean | spread | seam loss |
+| --- | ---: | ---: | ---: | ---: |
+| full (uploaded) | 1 | 46.0 | 2.8 | – |
+| **60 min** | 3 | **33.9** | 0.9 | 0.0 |
+| 30 min | 6 | 69.3 | 33.2 | 0.0 |
+| 15 min | 11 | 70.4 | 16.3 | 0.0 |
+| 5 min | 34 | 72.0 | 14.4 | 6.4 |
+| *full, via URL (n=10)* | 1 | *52.2* | *18.2* | – |
+
+Only 60-minute windows beat the whole file; below that it is ~2× worse and plateaus. Three
+controls rule out the harness: **stitch cost 0.0 s** at every level (0.5 s at 5 min, measured
+by scoring the raw union of all chunk words against the midpoint-stitched timeline);
+seam-adjacent loss 0.0 s except 6.4 s at 5 min; and loss is spread across all ten deciles of
+each chunk, so it is not cold-start context loss either.
+
+Chunking **reshuffles** rather than removes: `participation, and funding` is recovered 3/3 at
+15-minute chunks and 0/3 at every other level *including 5-minute*, while 15-minute uniquely
+loses Mexico's "institutional stability of the office" 0/3 that every other level gets 3/3.
+The earlier inference from a single 3-minute clip — that the defect was length-driven and
+chunking would fix it — **does not survive repeats.**
+
+Loose end worth testing: full-by-upload (46.0 s, spread 2.8) vs full-by-URL (52.2 s, spread
+18.2). All 3 uploaded runs landed in the low mode where the 10 URL runs split bimodally;
+p≈0.125 under chance, so suggestive only. If real, sending bytes rather than a URL is free.
+
+### 16.6 Azure is *not* deterministic
+
+Two full runs on identical audio: 19 436 vs 19 437 words, 122 493 vs 122 499 chars, **22
+differing word-level regions, 99.86% agreement**. Mostly orthography (`Under Secretary-General`
+/ `Under-Secretary-General`, `Member States`/`member states`, `favour`/`favor`,
+`co-sponsor`/`cosponsor`) but two substantive: `A/80/L.100,` → `A/80/L/100,` and
+`conclude` → `include`. Both runs agreed on every content probe and on hole counts, and M2
+found 0 divergent ≥4-word regions across 1.43 h — so content-level behaviour is stable and the
+variation sits at the formatting/slip level. Two runs can disprove determinism but cannot
+measure the rate of substantive divergence; that needs more passes.
+
+This matters because §15's warning stands doubled: the model behind "enhanced mode" is
+**unnamed and unpinnable**, Microsoft has swapped it once already, and it is now serving ~96%
+of production audio. `eval/analysis/regression-azure-llm.ts` must actually be scheduled.
+
+### 16.7 Decision and accepted trade-offs
+
+`en: "azure-llm-speech"`. Knowingly accepted, all from the bake-off and unchanged by this work:
+
+- **Cost**: $0.306 vs $0.21 per audio-hour, ~1.46× dearer (invoice-verified).
+- **Entities / document symbols**: Azure is worse, and `keyterms_prompt` — the fix — exists
+  only on AssemblyAI. Spanish already corrupts symbols (`S-2026/426`).
+- **Model governance**: unnamed, unpinnable, preview.
+
+The judgement: a wrong word is a visible error a reader can catch against the audio; a missing
+sentence is invisible and, on a UN verbatim record, reads as deliberate removal. Omission
+therefore outranks entity rendering. Re-transcription on AssemblyAI was rejected (10/10 runs
+reproduce the defect) and so was chunking (§16.5).
+
+### 16.8 Method lessons
+
+- **This was sitting in the bake-off data the whole time.** The corpus, the cached provider
+  JSON with word timings, and the audio were all already on disk; §16.4 required no new API
+  calls. What was missing was the *question*. A criterion nobody scores is a criterion nobody
+  meets.
+- **WER cannot express omission** — an omitted sentence and a misrecognised one can score the
+  same — and against an edited PV reference a contiguous deletion is partly absorbed. §2 of
+  `en-bakeoff/REPORT.md` had already found the then-shipped scorer reporting a 30% contiguous
+  deletion as 80.2% WER, so the class was known to be mis-measured before it was known to be
+  happening.
+- **The production guard measured something adjacent to what it was for.** `lib/transcription.ts`
+  compares the last paragraph's end against audio duration: it catches truncation at the end and
+  is structurally blind to interior holes. It reported nothing on a transcript missing four
+  passages.
+- **Every instrument here had to be damaged before it could be believed.** The first energy
+  check calibrated its threshold on word-covered frames and moved when the transcript moved;
+  the first text screen fired on 62 gaps per transcript at ~7% precision; the first
+  clamped-`end` control passed against a deliberately broken implementation and had to be
+  rewritten to bite.
+
+Reproduction: `eval/metrics/omission.ts` + `omission.test.ts` (controls), and the per-provider
+omission leaderboard printed by `eval/run.ts`.
 
 ## Implementation notes
 
