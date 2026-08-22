@@ -1,0 +1,21 @@
+Qualitative sample — S/PV.10161 → fr
+First ~320 characters of each system's output. Aggregate scores hide the
+failure MODE; this shows it.
+
+── C-soniox-rt-v5 ──────────────────────────────────────────────
+Je déclare que la 10161e réunion du conseil de sécurité commence maintenant. L'ordre du jour provisoire de cette réunion est : le rapport du secrétaire général sur le Soudan et le Soudan du Sud, l'ordre du jour est adopté. Conformément à l'article 37 des règles de procédure du Conseil de sécurité, j'invite les représen
+
+── D-openai-realtime-s2s ───────────────────────────────────────
+La 1161 1ᵉʳ séance du Conseil de sécurité est maintenant ouverte. l'Ordre du jour provisoire de la. Le rapport du Secrétaire général sur le Soudan et le Soudan du Sud. l'Ordre du jour est adopté conformément à l'article huit. Le représentant du Sud-Soudan a participé à la présente séance. Il en est ainsi décidé. Le Con
+
+── C-openai-realtime-text ──────────────────────────────────────
+Je déclare.La mille cent soixante et unième séance du Conseil de sécurité commence maintenant.L’ordre du jour provisoire de cette séance est : le rapport du Secrétaire général sur le Soudan et le Soudan du Sud.L’ordre du jour est adopté.Conformément à l’Article 37 du règlement provisoire du Conseil de sécurité.J’invite
+
+── C-caption-deepgram-multi-gtranslate ─────────────────────────
+Je ne Le message secret est... La première capacité d'observation est de cent, ce qui correspond à une autonomie complète. Cependant, la vue d'ensemble est Les différentes parties de l'auto-rassemblement ne forment qu'une seule entité complète. C'est toi qui peux parler et parler encore, et c'est toi qui peux parler. U
+
+── C-azure-speech-translation-en ───────────────────────────────
+Shambu Anchuan Li Shuhui était-elle en argent ? J’y vais. Tu ne peux pas, Congo. Et la seule façon de changer est plus grande que le titre. Julian Jedi. Angeles. Quelque part au four. Seule question, c’est tout. Changer la Belgique. Sanchez. A financé Shinjuku. Alors. Joe Pyo, Sancho. Journée de plaisir de Ling Piao. L
+
+── C-caption-deepgram-en-gtranslate ────────────────────────────
+Merci. Les États-Unis saluent ce renouveau du régime de sanctions contre le Soudan du Sud, y compris la prolongation du panel mandat des experts et le renouvellement de l'embargo sur les armes interdiction de voyager et des mesures de gel des avoirs pour une durée supplémentaire de douze mois. Nous nous félicitons égal

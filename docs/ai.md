@@ -8,10 +8,22 @@ Transcription is routed **per language** (`STT_ROUTING` in `lib/providers/config
 
 | Track | Provider | Model |
 | --- | --- | --- |
-| English | AssemblyAI | `universal-3-5-pro` |
-| French / Spanish / Arabic / Russian | Azure AI Speech | LLM Speech enhanced mode (`locales` pinned per track) |
+| English / French / Spanish / Arabic / Russian | Azure AI Speech | LLM Speech enhanced mode (`locales` pinned per track) |
 | Chinese | Alibaba | `fun-asr` |
 | Floor (multilingual original) | Speechmatics Melia | `melia-1` (`language: multi` + six-language `language_hints`) |
+
+English moved from AssemblyAI `universal-3-5-pro` to Azure LLM Speech on **2026-07-30**
+because AssemblyAI **silently omits speech** on long recordings — spans of audio it
+returns no words for, with no error and no marker. Over the 24-session English
+bake-off corpus (27.5 h) it dropped 0.580% of the audio against Azure's 0.082%, and
+879 words that Azure captured against 370 the other way. The defect surfaced through a
+member-state complaint about `A/80/PV.106`, where a sentence was cut mid-clause
+("…reassess our engagement, [participation, and funding.]") along with ~30 s more of
+the same statement and a 56-word passage from another. Re-running does not help (10 of
+10 runs reproduced it) and neither does chunking (only 60-minute windows beat the whole
+file; 30/15/5-minute windows were about twice as bad). Accepted in exchange: Azure is
+~1.46× dearer and renders document symbols and names less well. See
+`eval/analysis/SYNTHESIS.md` §16 and `eval/metrics/omission.ts`.
 
 | Other AI | Model | Used for |
 | --- | --- | --- |

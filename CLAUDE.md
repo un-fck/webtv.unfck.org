@@ -181,9 +181,9 @@ Copy `.env.example` → `.env.local` and fill in values.
 - `DATABASE_URL` — PostgreSQL connection string (Azure Database for PostgreSQL, direct on port 5432; we used to go through Azure's built-in PgBouncer on 6432 but dropped it — with a few long-lived Azure app instances the fan-in benefit was unused while PgBouncer's invisible idle-socket reaping was generating "Connection terminated unexpectedly" errors). All tables live in the `webtv` schema and every query is explicitly schema-qualified (`webtv.<table>`); there is no `search_path` setup, so this works regardless of the connection's default schema.
 - `GEMINI_API_KEY` — PV document alignment + routing fallback (Gemini; no longer the floor transcriber)
 - `SPEECHMATICS_API_KEY` — transcription of the multilingual "floor" track (Speechmatics Melia, since 2026-07-10; see eval/analysis/SYNTHESIS.md §13)
-- `ASSEMBLYAI_API_KEY` — English transcription (AssemblyAI Universal-3.5 Pro)
+- `ASSEMBLYAI_API_KEY` — **no longer used in production** (English moved to Azure LLM Speech on 2026-07-30, see `eval/analysis/SYNTHESIS.md` §16). Still required by the eval system, which benchmarks AssemblyAI as a comparison arm.
 - `DASHSCOPE_API_KEY` — Chinese transcription (Alibaba Fun-ASR)
-- `AZURE_SPEECH_KEY` / `AZURE_SPEECH_ENDPOINT` — **fr/es/ar/ru transcription** (Azure AI Speech, LLM Speech enhanced mode, since 2026-07-14; see eval/analysis/SYNTHESIS.md §15). Note this is Azure **AI Speech**, a different service and rate card from Azure OpenAI below. Enhanced mode only answers on the `<resource>.services.ai.azure.com` hostname — the `cognitiveservices.azure.com` hostname of the *same* resource returns a misleading 400 — and only in certain regions (northeurope / southeastasia among our tenant-allowed ones).
+- `AZURE_SPEECH_KEY` / `AZURE_SPEECH_ENDPOINT` — **en/fr/es/ar/ru transcription** (Azure AI Speech, LLM Speech enhanced mode; fr/es/ar/ru since 2026-07-14 per SYNTHESIS §15, **English added 2026-07-30 per §16** — so this now carries ~96% of production audio and is the single most load-bearing STT credential). Note this is Azure **AI Speech**, a different service and rate card from Azure OpenAI below. Enhanced mode only answers on the `<resource>.services.ai.azure.com` hostname — the `cognitiveservices.azure.com` hostname of the *same* resource returns a misleading 400 — and only in certain regions (northeurope / southeastasia among our tenant-allowed ones).
 - `AZURE_OPENAI_ENDPOINT` — speaker identification, resegmentation, topics, propositions (no longer transcription)
 - `AZURE_OPENAI_API_KEY` — as above
 - `AZURE_OPENAI_API_VERSION` — defaults in `.env.example` (e.g. `2025-03-01-preview`)
@@ -203,7 +203,7 @@ Copy `.env.example` → `.env.local` and fill in values.
 - `STT_ANALYSIS_MODEL_MINI` — Azure OpenAI model for cross-chunk normalization (default: `gpt-5.4-mini`)
 - `STT_ANALYSIS_MODEL_NANO` — Azure OpenAI model for sentence tagging (default: `gpt-5.4-nano`)
 
-**Eval system only:** `ELEVENLABS_API_KEY`, `GROQ_API_KEY`, `DEEPGRAM_API_KEY`, `MISTRAL_API_KEY`, `SONIOX_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`. (`AZURE_SPEECH_KEY` / `AZURE_SPEECH_ENDPOINT` moved to **required** on 2026-07-14 — they now serve fr/es/ar/ru in production. `ASSEMBLYAI_API_KEY` and `DASHSCOPE_API_KEY` are likewise required, for en and zh.)
+**Eval system only:** `ELEVENLABS_API_KEY`, `GROQ_API_KEY`, `DEEPGRAM_API_KEY`, `MISTRAL_API_KEY`, `SONIOX_API_KEY`, `HF_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_BUCKET`, `ASSEMBLYAI_API_KEY`. (`AZURE_SPEECH_KEY` / `AZURE_SPEECH_ENDPOINT` moved to **required** on 2026-07-14 for fr/es/ar/ru and now also serve **en**. `DASHSCOPE_API_KEY` is required for zh. `ASSEMBLYAI_API_KEY` moved back to eval-only on 2026-07-30 when English left AssemblyAI.)
 
 ## Documentation
 
@@ -236,7 +236,9 @@ See `docs/ai.md` for the full pipeline with model details and design decisions.
 
 Triggered from the video page UI (`POST /api/transcripts`) or via the scheduled-processing cron (`/api/cron/process-scheduled`):
 
-1. **Transcribe** — provider selected **per language** via `lib/providers/config.ts` (`STT_ROUTING`: English→AssemblyAI Universal-3.5 Pro, fr/es/ar/ru→Azure LLM Speech, Chinese→Alibaba Fun-ASR, floor→Speechmatics Melia). Audio is downloaded from Kaltura and transcribed with numeric speaker diarization (no names — see step 2). Providers chunk long audio internally as needed.
+1. **Transcribe** — provider selected **per language** via `lib/providers/config.ts` (`STT_ROUTING`: en/fr/es/ar/ru→Azure LLM Speech, Chinese→Alibaba Fun-ASR, floor→Speechmatics Melia). Audio is downloaded from Kaltura and transcribed with numeric speaker diarization (no names — see step 2). Providers chunk long audio internally as needed.
+
+   > **Do not route a language to AssemblyAI without scoring omission first.** English ran on AssemblyAI Universal-3.5 Pro until 2026-07-30 and was moved after a member-state complaint traced to *silently dropped speech* — spans of audio the model simply does not transcribe, with no error and no marker. Measured over the bake-off corpus it omitted 0.580% of audio vs Azure's 0.082%. Neither WER nor the pipeline's coverage guard could see it (the guard only compares the last paragraph's end to audio duration, so it is blind to interior holes). The metric that does see it is `eval/metrics/omission.ts`. Full story: `eval/analysis/SYNTHESIS.md` §16.
 2. **Speaker identification + resegmentation** — `lib/pipeline/index.ts:identifySpeakers()` runs per-paragraph speaker resolution and multi-speaker resegmentation (Azure OpenAI / GPT-5.4) and persists the speaker mapping. (Pipeline stages live in `lib/pipeline/`.)
 3. **Topic definition** — identifies 5–10 substantive policy topics across the meeting (GPT-5.4).
 4. **Sentence tagging** — tags each non-chair sentence with 0–3 topic keys (GPT-5.4-nano, batched; rate-limited via Bottleneck — 20 concurrent / 10 per sec).

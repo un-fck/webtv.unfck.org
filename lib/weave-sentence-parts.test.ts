@@ -23,7 +23,7 @@ const rebuilt = (parts: ReturnType<typeof weaveSentenceParts>) =>
   parts.map((p) => p.text).join("");
 
 describe("weaveSentenceParts — empty / no-words case", () => {
-  it("returns a single plain part when words is undefined (Azure gpt-4o-transcribe, fr/es/ar/ru)", () => {
+  it("returns a single plain part when words is undefined (provider emitted no word timings)", () => {
     const parts = weaveSentenceParts("Bonjour le monde.");
     expect(parts).toEqual([{ text: "Bonjour le monde." }]);
   });
@@ -89,6 +89,85 @@ describe("weaveSentenceParts — AssemblyAI Universal-3 Pro (English)", () => {
 
     expect(rebuilt(parts)).toBe(text);
     expect(wordIdxs(parts)).toEqual([0, 2, 3]);
+  });
+});
+
+describe("weaveSentenceParts — Azure LLM Speech (en/fr/es/ar/ru)", () => {
+  // Azure's enhanced mode differs from AssemblyAI in a way that matters here:
+  // punctuation is included INSIDE word.text ("afternoon.", "engagement,"), and
+  // words are Title/sentence-cased as the formatter sees fit. Both are absorbed
+  // by the normalized matcher, but until English moved to this provider
+  // (2026-07-30) no test pinned the shape — the file claimed to cover every
+  // provider in STT_ROUTING while actually covering the retired
+  // azure-gpt-4o-transcribe, which returned no words at all.
+  // Word shapes below are reproduced from real enhanced-mode output.
+  it("matches words whose text carries attached punctuation", () => {
+    const text =
+      "Good afternoon. The 106th Plenary Meeting is called to order.";
+    const words = [
+      w("Good"),
+      w("afternoon."),
+      w("The"),
+      w("106th"),
+      w("Plenary"),
+      w("Meeting"),
+      w("is"),
+      w("called"),
+      w("to"),
+      w("order."),
+    ];
+    const parts = weaveSentenceParts(text, words);
+
+    expect(rebuilt(parts)).toBe(text);
+    expect(wordIdxs(parts)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    // The period travelled in word.text but must still render outside the span,
+    // so the clickable region is the word and not the punctuation.
+    expect(parts[parts.length - 1]).toEqual({ text: "." });
+  });
+
+  it("keeps document symbols clickable as single tokens", () => {
+    // Azure renders symbols like A/80/L.100 as one token; the matcher strips
+    // the slashes and dots when comparing, so this must not split or drop.
+    const text =
+      "We shall now consider draft decision A/80/L.100, as presented.";
+    const words = [
+      w("We"),
+      w("shall"),
+      w("now"),
+      w("consider"),
+      w("draft"),
+      w("decision"),
+      w("A/80/L.100,"),
+      w("as"),
+      w("presented."),
+    ];
+    const parts = weaveSentenceParts(text, words);
+
+    expect(rebuilt(parts)).toBe(text);
+    expect(wordIdxs(parts)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  });
+
+  it("handles a comma-terminated word followed by a capitalized word", () => {
+    // The exact shape at the centre of the A/80/PV.106 omission report: a
+    // sentence that continues across a comma. Nothing may be dropped here.
+    const text =
+      "The United States will reassess our engagement, participation, and funding.";
+    const words = [
+      w("The"),
+      w("United"),
+      w("States"),
+      w("will"),
+      w("reassess"),
+      w("our"),
+      w("engagement,"),
+      w("participation,"),
+      w("and"),
+      w("funding."),
+    ];
+    const parts = weaveSentenceParts(text, words);
+
+    expect(rebuilt(parts)).toBe(text);
+    expect(wordIdxs(parts)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
   });
 });
 

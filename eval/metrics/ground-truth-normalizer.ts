@@ -15,22 +15,22 @@
 const SPEAKER_LABEL_PATTERNS: Record<string, RegExp[]> = {
   en: [
     // "The President:", "The President (spoke in Arabic):"
-    /^The President\b[^:]*:/gm,
+    /^The President\b[^:\n]*:/gm,
     // "Mr. Bendjama:", "Mr. Bendjama (Algeria):", "Ms. Foo (United States of America):"
-    /^(?:Mr|Ms|Mrs|Sir|Dame|Lord)\b\.?[^:]*:/gm,
+    /^(?:Mr|Ms|Mrs|Sir|Dame|Lord)\b\.?[^:\n]*:/gm,
   ],
-  fr: [/^(?:Le Président|La Présidente)\b[^:]*:/gm, /^(?:M|Mme)\b\.?[^:]*:/gm],
+  fr: [/^(?:Le Président|La Présidente)\b[^:\n]*:/gm, /^(?:M|Mme)\b\.?[^:\n]*:/gm],
   es: [
-    /^(?:El Presidente|La Presidenta)\b[^:]*:/gm,
-    /^(?:El Sr|La Sra)\b\.?[^:]*:/gm,
+    /^(?:El Presidente|La Presidenta)\b[^:\n]*:/gm,
+    /^(?:El Sr|La Sra)\b\.?[^:\n]*:/gm,
   ],
   ar: [
     // Arabic speaker labels: الرئيس (President), السيد (Mr.), السيدة (Mrs.)
-    /^(?:الرئيس|الرئيسة)[^:]*:/gm,
-    /^(?:السيد|السيدة)[^:]*:/gm,
+    /^(?:الرئيس|الرئيسة)[^:\n]*:/gm,
+    /^(?:السيد|السيدة)[^:\n]*:/gm,
   ],
-  ru: [/^Председатель\b[^:]*:/gm, /^(?:Г-н|Г-жа)\b[^:]*:/gm],
-  zh: [/^主席[^：:]*[：:]/gm, /^(?:先生|女士|夫人)[^：:]*[：:]/gm],
+  ru: [/^Председатель\b[^:\n]*:/gm, /^(?:Г-н|Г-жа)\b[^:\n]*:/gm],
+  zh: [/^主席[^：:\n]*[：:]/gm, /^(?:先生|女士|夫人)[^：:\n]*[：:]/gm],
 };
 
 /** Page header/footer: "30/01/2026 The situation in Cyprus S/PV.10100" or "3/3 26-01225" */
@@ -39,6 +39,8 @@ const PAGE_HEADER_PATTERNS = [
   /^\d{1,2}\/\d{2}\/\d{4}\s+.+\s+[SA]\/PV\.\d+$/gm,
   // Page number + document ID: "3/3 26-01225" or "14/22 24-01072"
   /^\d{1,3}\/\d{1,3}\s+\d{2}-\d{4,6}$/gm,
+  // Odd pages put the document code first: "24-25675 3/14"
+  /^\d{2}-\d{4,6}\s+\d{1,3}\/\d{1,3}$/gm,
 ];
 
 /** Vote roll call blocks (English) — from "A vote was taken" through the country lists */

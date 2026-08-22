@@ -1,0 +1,1494 @@
+{
+ "provider": "C-caption-deepgram-en-gtranslate",
+ "targetLanguage": "en",
+ "events": [
+  {
+   "text": "Thank you.",
+   "audioTimeMs": 157260,
+   "emitMs": 158037,
+   "isFinal": true
+  },
+  {
+   "text": "United States welcomes the renewal",
+   "audioTimeMs": 160450,
+   "emitMs": 161037,
+   "isFinal": true
+  },
+  {
+   "text": "of the South Sudan sanctions regime, including the extension of the panel",
+   "audioTimeMs": 164820,
+   "emitMs": 166054,
+   "isFinal": true
+  },
+  {
+   "text": "experts mandate",
+   "audioTimeMs": 165930.01,
+   "emitMs": 166521,
+   "isFinal": true
+  },
+  {
+   "text": "and the renewal of the arms embargo",
+   "audioTimeMs": 167989.99000000002,
+   "emitMs": 168534,
+   "isFinal": true
+  },
+  {
+   "text": "travel ban",
+   "audioTimeMs": 168890,
+   "emitMs": 169647,
+   "isFinal": true
+  },
+  {
+   "text": "and asset freeze measures for an additional twelve months.",
+   "audioTimeMs": 172070,
+   "emitMs": 172759,
+   "isFinal": true
+  },
+  {
+   "text": "We also welcome the opportunity",
+   "audioTimeMs": 174680.01,
+   "emitMs": 175357,
+   "isFinal": true
+  },
+  {
+   "text": "to revise the benchmarks",
+   "audioTimeMs": 176220,
+   "emitMs": 176843,
+   "isFinal": true
+  },
+  {
+   "text": "to reflect current realities",
+   "audioTimeMs": 177850,
+   "emitMs": 178641,
+   "isFinal": true
+  },
+  {
+   "text": "and look forward to recommendations",
+   "audioTimeMs": 179989.99000000002,
+   "emitMs": 180842,
+   "isFinal": true
+  },
+  {
+   "text": "on how best to do so",
+   "audioTimeMs": 181790,
+   "emitMs": 182446,
+   "isFinal": true
+  },
+  {
+   "text": "from the secretary general in consultation",
+   "audioTimeMs": 184440,
+   "emitMs": 185238,
+   "isFinal": true
+  },
+  {
+   "text": "with the UN mission in South Sudan and the panel of experts.",
+   "audioTimeMs": 188400,
+   "emitMs": 189443,
+   "isFinal": true
+  },
+  {
+   "text": "We are disheartened, however,",
+   "audioTimeMs": 190730,
+   "emitMs": 191341,
+   "isFinal": true
+  },
+  {
+   "text": "by the lack of progress",
+   "audioTimeMs": 192099.99,
+   "emitMs": 192847,
+   "isFinal": true
+  },
+  {
+   "text": "on the benchmarks",
+   "audioTimeMs": 193190,
+   "emitMs": 193828,
+   "isFinal": true
+  },
+  {
+   "text": "and the continuing deterioration",
+   "audioTimeMs": 195600,
+   "emitMs": 196323,
+   "isFinal": true
+  },
+  {
+   "text": "of the political",
+   "audioTimeMs": 196790.01,
+   "emitMs": 197305,
+   "isFinal": true
+  },
+  {
+   "text": "and security situation",
+   "audioTimeMs": 198530,
+   "emitMs": 199211,
+   "isFinal": true
+  },
+  {
+   "text": "South Sudan.",
+   "audioTimeMs": 199640,
+   "emitMs": 200136,
+   "isFinal": true
+  },
+  {
+   "text": "Let's be clear.",
+   "audioTimeMs": 201290.01,
+   "emitMs": 201721,
+   "isFinal": true
+  },
+  {
+   "text": "This lack of progress is due to a lack of political wealth",
+   "audioTimeMs": 205080,
+   "emitMs": 205511,
+   "isFinal": true
+  },
+  {
+   "text": "by president Keir,",
+   "audioTimeMs": 206370,
+   "emitMs": 206923,
+   "isFinal": true
+  },
+  {
+   "text": "as well as other",
+   "audioTimeMs": 207640,
+   "emitMs": 208224,
+   "isFinal": true
+  },
+  {
+   "text": "South Sudanese leaders.",
+   "audioTimeMs": 209230,
+   "emitMs": 209832,
+   "isFinal": true
+  },
+  {
+   "text": "South Sudan's leaders must return to direct dialogue",
+   "audioTimeMs": 213960,
+   "emitMs": 214517,
+   "isFinal": true
+  },
+  {
+   "text": "to deescalate",
+   "audioTimeMs": 215319.99,
+   "emitMs": 215838,
+   "isFinal": true
+  },
+  {
+   "text": "the current violence.",
+   "audioTimeMs": 216599.99,
+   "emitMs": 217617,
+   "isFinal": true
+  },
+  {
+   "text": "It is farcical",
+   "audioTimeMs": 218360,
+   "emitMs": 218824,
+   "isFinal": true
+  },
+  {
+   "text": "to suggest that such dialogue is occurring when one of the signatories to the 2018 peace agreement",
+   "audioTimeMs": 224780,
+   "emitMs": 225521,
+   "isFinal": true
+  },
+  {
+   "text": "is under house arrest",
+   "audioTimeMs": 226510,
+   "emitMs": 227062,
+   "isFinal": true
+  },
+  {
+   "text": "and on trial.",
+   "audioTimeMs": 227590.01,
+   "emitMs": 228389,
+   "isFinal": true
+  },
+  {
+   "text": "The council cannot accept obstruction of the peace process",
+   "audioTimeMs": 232080,
+   "emitMs": 232582,
+   "isFinal": true
+  },
+  {
+   "text": "or actions that threaten",
+   "audioTimeMs": 233690,
+   "emitMs": 234051,
+   "isFinal": true
+  },
+  {
+   "text": "transitional agreements or undermine the political process in South Sudan.",
+   "audioTimeMs": 237940,
+   "emitMs": 238295,
+   "isFinal": true
+  },
+  {
+   "text": "We therefore urge the transitional government to deliver all steps necessary to restore peace",
+   "audioTimeMs": 244610,
+   "emitMs": 245066,
+   "isFinal": true
+  },
+  {
+   "text": "including declaring a national ceasefire,",
+   "audioTimeMs": 247630,
+   "emitMs": 248077,
+   "isFinal": true
+  },
+  {
+   "text": "releasing detainees",
+   "audioTimeMs": 249420,
+   "emitMs": 249871,
+   "isFinal": true
+  },
+  {
+   "text": "renouncing the use of violence for political purposes,",
+   "audioTimeMs": 252460,
+   "emitMs": 254873,
+   "isFinal": true
+  },
+  {
+   "text": "and starting to use public revenue appropriately",
+   "audioTimeMs": 255760.00999999998,
+   "emitMs": 256476,
+   "isFinal": true
+  },
+  {
+   "text": "to support the citizens of South Sudan.",
+   "audioTimeMs": 258399.99999999997,
+   "emitMs": 258769,
+   "isFinal": true
+  },
+  {
+   "text": "For years prior to South Sudan's independence,",
+   "audioTimeMs": 262470,
+   "emitMs": 262885,
+   "isFinal": true
+  },
+  {
+   "text": "the Sudan People's Liberation Movement claimed to seek the end of marginalization",
+   "audioTimeMs": 266940,
+   "emitMs": 267787,
+   "isFinal": true
+  },
+  {
+   "text": "of the southern Sudanese by leaders in Khartoum.",
+   "audioTimeMs": 270199.98,
+   "emitMs": 270470,
+   "isFinal": true
+  },
+  {
+   "text": "Through bad governance and misuse of revenue,",
+   "audioTimeMs": 273259.98,
+   "emitMs": 273685,
+   "isFinal": true
+  },
+  {
+   "text": "that marginalization continues.",
+   "audioTimeMs": 275470,
+   "emitMs": 275968,
+   "isFinal": true
+  },
+  {
+   "text": "Imposed by South Sudan's own leaders.",
+   "audioTimeMs": 278310,
+   "emitMs": 278776,
+   "isFinal": true
+  },
+  {
+   "text": "Thank you.",
+   "audioTimeMs": 279560,
+   "emitMs": 280120,
+   "isFinal": true
+  },
+  {
+   "text": "That",
+   "audioTimeMs": 320550,
+   "emitMs": 320695,
+   "isFinal": true
+  },
+  {
+   "text": "comp principal, which is prefer fast.",
+   "audioTimeMs": 326440,
+   "emitMs": 326932,
+   "isFinal": true
+  },
+  {
+   "text": "The",
+   "audioTimeMs": 362970,
+   "emitMs": 365408,
+   "isFinal": true
+  },
+  {
+   "text": "offended Sudanir offended",
+   "audioTimeMs": 426340,
+   "emitMs": 428909,
+   "isFinal": true
+  },
+  {
+   "text": "Thank you very much, mister president.",
+   "audioTimeMs": 707339.97,
+   "emitMs": 707913,
+   "isFinal": true
+  },
+  {
+   "text": "The text of the resolution on the sanctions regime in South Sudan is a technical rollover from last year.",
+   "audioTimeMs": 713700,
+   "emitMs": 714120,
+   "isFinal": true
+  },
+  {
+   "text": "Pakistan had abstained on the resolution last year.",
+   "audioTimeMs": 717230,
+   "emitMs": 717719,
+   "isFinal": true
+  },
+  {
+   "text": "Our extension today is consistent with that position.",
+   "audioTimeMs": 720910,
+   "emitMs": 721528,
+   "isFinal": true
+  },
+  {
+   "text": "Pakistan remains committed to lasting peace and stability in South Sudan.",
+   "audioTimeMs": 725930,
+   "emitMs": 726321,
+   "isFinal": true
+  },
+  {
+   "text": "We continue to support the revitalized agreement",
+   "audioTimeMs": 729120,
+   "emitMs": 729722,
+   "isFinal": true
+  },
+  {
+   "text": "as the only viable and consensual framework for peace.",
+   "audioTimeMs": 732200,
+   "emitMs": 732613,
+   "isFinal": true
+  },
+  {
+   "text": "We believe",
+   "audioTimeMs": 733270,
+   "emitMs": 733818,
+   "isFinal": true
+  },
+  {
+   "text": "that sanctions are an important tool at the disposal of the Security Council.",
+   "audioTimeMs": 737430.05,
+   "emitMs": 737931,
+   "isFinal": true
+  },
+  {
+   "text": "But they should be used judiciously",
+   "audioTimeMs": 740040.0399999999,
+   "emitMs": 740530,
+   "isFinal": true
+  },
+  {
+   "text": "reviewed periodically,",
+   "audioTimeMs": 741660,
+   "emitMs": 742225,
+   "isFinal": true
+  },
+  {
+   "text": "and should not become open ended",
+   "audioTimeMs": 743790.0399999999,
+   "emitMs": 744185,
+   "isFinal": true
+  },
+  {
+   "text": "or punitive in nature.",
+   "audioTimeMs": 745029.9700000001,
+   "emitMs": 745586,
+   "isFinal": true
+  },
+  {
+   "text": "Their purpose should be to support political solutions and stabilization efforts.",
+   "audioTimeMs": 749990,
+   "emitMs": 750607,
+   "isFinal": true
+  },
+  {
+   "text": "We also note the African Union's position against",
+   "audioTimeMs": 753190,
+   "emitMs": 755589,
+   "isFinal": true
+  },
+  {
+   "text": "continued sanctions on South Sudan.",
+   "audioTimeMs": 755250,
+   "emitMs": 755894,
+   "isFinal": true
+  },
+  {
+   "text": "The deteriorating political and security situation on the ground",
+   "audioTimeMs": 759380,
+   "emitMs": 759782,
+   "isFinal": true
+  },
+  {
+   "text": "raises important questions regarding the effectiveness of the current sanctions regime.",
+   "audioTimeMs": 763730,
+   "emitMs": 764199,
+   "isFinal": true
+  },
+  {
+   "text": "Despite years of restrictions,",
+   "audioTimeMs": 765740.05,
+   "emitMs": 766398,
+   "isFinal": true
+  },
+  {
+   "text": "instability persists, and implementation of",
+   "audioTimeMs": 769090,
+   "emitMs": 771393,
+   "isFinal": true
+  },
+  {
+   "text": "key transitional arrangements remain incomplete.",
+   "audioTimeMs": 771710,
+   "emitMs": 772388,
+   "isFinal": true
+  },
+  {
+   "text": "Lasting piece in South Sudan will be advanced",
+   "audioTimeMs": 774839.97,
+   "emitMs": 775291,
+   "isFinal": true
+  },
+  {
+   "text": "through sustained political engagement,",
+   "audioTimeMs": 777030,
+   "emitMs": 777592,
+   "isFinal": true
+  },
+  {
+   "text": "implementation of the revitalized agreement,",
+   "audioTimeMs": 779790.0399999999,
+   "emitMs": 780301,
+   "isFinal": true
+  },
+  {
+   "text": "and supporting regional efforts led by the African Union,",
+   "audioTimeMs": 783360,
+   "emitMs": 783803,
+   "isFinal": true
+  },
+  {
+   "text": "and EGAD.",
+   "audioTimeMs": 784350,
+   "emitMs": 784988,
+   "isFinal": true
+  },
+  {
+   "text": "We will continue to engage constructively with all partners",
+   "audioTimeMs": 787759.95,
+   "emitMs": 788305,
+   "isFinal": true
+  },
+  {
+   "text": "in support of durable peace",
+   "audioTimeMs": 790060,
+   "emitMs": 790594,
+   "isFinal": true
+  },
+  {
+   "text": "and stability",
+   "audioTimeMs": 791170,
+   "emitMs": 791778,
+   "isFinal": true
+  },
+  {
+   "text": "in South Sudan.",
+   "audioTimeMs": 792290,
+   "emitMs": 792888,
+   "isFinal": true
+  },
+  {
+   "text": "Lastly, mister president,",
+   "audioTimeMs": 794100,
+   "emitMs": 794991,
+   "isFinal": true
+  },
+  {
+   "text": "allow me to conclude by congratulating you on a very successful and smooth conduct",
+   "audioTimeMs": 798990,
+   "emitMs": 799999,
+   "isFinal": true
+  },
+  {
+   "text": "of the presidency by China this month.",
+   "audioTimeMs": 800970.0299999999,
+   "emitMs": 801596,
+   "isFinal": true
+  },
+  {
+   "text": "And wishing all the very best",
+   "audioTimeMs": 802890,
+   "emitMs": 803501,
+   "isFinal": true
+  },
+  {
+   "text": "to our Colombian colleagues",
+   "audioTimeMs": 804640,
+   "emitMs": 805201,
+   "isFinal": true
+  },
+  {
+   "text": "as they take up this role.",
+   "audioTimeMs": 806010,
+   "emitMs": 806601,
+   "isFinal": true
+  },
+  {
+   "text": "Starting on Monday.",
+   "audioTimeMs": 807170.0399999999,
+   "emitMs": 807690,
+   "isFinal": true
+  },
+  {
+   "text": "Wishing everyone a very happy and uneventful weekend.",
+   "audioTimeMs": 810870,
+   "emitMs": 811415,
+   "isFinal": true
+  },
+  {
+   "text": "Thank you.",
+   "audioTimeMs": 811769.96,
+   "emitMs": 813594,
+   "isFinal": true
+  },
+  {
+   "text": "Sudan, Fiadhir, Jal Sallium, comma,",
+   "audioTimeMs": 865399.96,
+   "emitMs": 867417,
+   "isFinal": true
+  },
+  {
+   "text": "Another",
+   "audioTimeMs": 936910.03,
+   "emitMs": 937472,
+   "isFinal": true
+  },
+  {
+   "text": "Mister Mister President,",
+   "audioTimeMs": 1112400,
+   "emitMs": 1113080,
+   "isFinal": true
+  },
+  {
+   "text": "I",
+   "audioTimeMs": 1113550,
+   "emitMs": 1114079,
+   "isFinal": true
+  },
+  {
+   "text": "thank you, and I congratulate you also for ending this",
+   "audioTimeMs": 1116840,
+   "emitMs": 1117443,
+   "isFinal": true
+  },
+  {
+   "text": "tenure",
+   "audioTimeMs": 1118110.1,
+   "emitMs": 1118442,
+   "isFinal": true
+  },
+  {
+   "text": "with us as it started.",
+   "audioTimeMs": 1119740,
+   "emitMs": 1120446,
+   "isFinal": true
+  },
+  {
+   "text": "My delegation wishes to, express",
+   "audioTimeMs": 1123740,
+   "emitMs": 1124130,
+   "isFinal": true
+  },
+  {
+   "text": "it is appreciation",
+   "audioTimeMs": 1125640,
+   "emitMs": 1126034,
+   "isFinal": true
+  },
+  {
+   "text": "despite,",
+   "audioTimeMs": 1126700,
+   "emitMs": 1127634,
+   "isFinal": true
+  },
+  {
+   "text": "the obvious con",
+   "audioTimeMs": 1128580.0999999999,
+   "emitMs": 1129119,
+   "isFinal": true
+  },
+  {
+   "text": "obvious",
+   "audioTimeMs": 1129490,
+   "emitMs": 1130326,
+   "isFinal": true
+  },
+  {
+   "text": "lack of consultation,",
+   "audioTimeMs": 1132260,
+   "emitMs": 1132639,
+   "isFinal": true
+  },
+  {
+   "text": "we still wish to",
+   "audioTimeMs": 1133950,
+   "emitMs": 1134423,
+   "isFinal": true
+  },
+  {
+   "text": "appreciate",
+   "audioTimeMs": 1134780,
+   "emitMs": 1135018,
+   "isFinal": true
+  },
+  {
+   "text": "our",
+   "audioTimeMs": 1135279.9,
+   "emitMs": 1135609,
+   "isFinal": true
+  },
+  {
+   "text": "appreciation",
+   "audioTimeMs": 1137429.9000000001,
+   "emitMs": 1137810,
+   "isFinal": true
+  },
+  {
+   "text": "to",
+   "audioTimeMs": 1138190.1,
+   "emitMs": 1138516,
+   "isFinal": true
+  },
+  {
+   "text": "the penholder for it is",
+   "audioTimeMs": 1140390,
+   "emitMs": 1140628,
+   "isFinal": true
+  },
+  {
+   "text": "effort",
+   "audioTimeMs": 1141460,
+   "emitMs": 1141823,
+   "isFinal": true
+  },
+  {
+   "text": "throughout the negotiation.",
+   "audioTimeMs": 1143270,
+   "emitMs": 1143616,
+   "isFinal": true
+  },
+  {
+   "text": "And",
+   "audioTimeMs": 1144220,
+   "emitMs": 1144607,
+   "isFinal": true
+  },
+  {
+   "text": "for the time and engagement invested",
+   "audioTimeMs": 1146429.9000000001,
+   "emitMs": 1146828,
+   "isFinal": true
+  },
+  {
+   "text": "in facilitating discussions among council members.",
+   "audioTimeMs": 1149840,
+   "emitMs": 1150241,
+   "isFinal": true
+  },
+  {
+   "text": "We also thank the all delegations",
+   "audioTimeMs": 1153539.9,
+   "emitMs": 1153836,
+   "isFinal": true
+  },
+  {
+   "text": "that that participated constructively in the process",
+   "audioTimeMs": 1158090,
+   "emitMs": 1158430,
+   "isFinal": true
+  },
+  {
+   "text": "and",
+   "audioTimeMs": 1158630,
+   "emitMs": 1159020,
+   "isFinal": true
+  },
+  {
+   "text": "remain committed",
+   "audioTimeMs": 1160190,
+   "emitMs": 1160513,
+   "isFinal": true
+  },
+  {
+   "text": "to dialogue and con",
+   "audioTimeMs": 1161770,
+   "emitMs": 1162030,
+   "isFinal": true
+  },
+  {
+   "text": "consensus building.",
+   "audioTimeMs": 1163299.9,
+   "emitMs": 1163611,
+   "isFinal": true
+  },
+  {
+   "text": "While we acknowledge that,",
+   "audioTimeMs": 1165610,
+   "emitMs": 1166024,
+   "isFinal": true
+  },
+  {
+   "text": "my delegation regrets",
+   "audioTimeMs": 1168480.1,
+   "emitMs": 1168731,
+   "isFinal": true
+  },
+  {
+   "text": "to",
+   "audioTimeMs": 1168900,
+   "emitMs": 1169512,
+   "isFinal": true
+  },
+  {
+   "text": "the adoption",
+   "audioTimeMs": 1170340,
+   "emitMs": 1170624,
+   "isFinal": true
+  },
+  {
+   "text": "of the resolution renewing the sanctions regime",
+   "audioTimeMs": 1173000,
+   "emitMs": 1173430,
+   "isFinal": true
+  },
+  {
+   "text": "and embargo",
+   "audioTimeMs": 1174640,
+   "emitMs": 1174915,
+   "isFinal": true
+  },
+  {
+   "text": "on the Republic Of South Sudan.",
+   "audioTimeMs": 1176650,
+   "emitMs": 1177015,
+   "isFinal": true
+  },
+  {
+   "text": "It is our view that",
+   "audioTimeMs": 1179350,
+   "emitMs": 1179897,
+   "isFinal": true
+  },
+  {
+   "text": "the continued maintenance",
+   "audioTimeMs": 1182210.1,
+   "emitMs": 1182707,
+   "isFinal": true
+  },
+  {
+   "text": "of the arm",
+   "audioTimeMs": 1183360,
+   "emitMs": 1183802,
+   "isFinal": true
+  },
+  {
+   "text": "arms embargo",
+   "audioTimeMs": 1184480,
+   "emitMs": 1184902,
+   "isFinal": true
+  },
+  {
+   "text": "is increasingly",
+   "audioTimeMs": 1186370,
+   "emitMs": 1187017,
+   "isFinal": true
+  },
+  {
+   "text": "inconsistent with",
+   "audioTimeMs": 1188059.9,
+   "emitMs": 1188597,
+   "isFinal": true
+  },
+  {
+   "text": "the realities",
+   "audioTimeMs": 1189400,
+   "emitMs": 1189896,
+   "isFinal": true
+  },
+  {
+   "text": "and challenge facing",
+   "audioTimeMs": 1192060,
+   "emitMs": 1192603,
+   "isFinal": true
+  },
+  {
+   "text": "the country today.",
+   "audioTimeMs": 1193210,
+   "emitMs": 1193605,
+   "isFinal": true
+  },
+  {
+   "text": "Rather than supporting",
+   "audioTimeMs": 1196180,
+   "emitMs": 1196703,
+   "isFinal": true
+  },
+  {
+   "text": "and strengthening the state,",
+   "audioTimeMs": 1198840,
+   "emitMs": 1199788,
+   "isFinal": true
+  },
+  {
+   "text": "institutions,",
+   "audioTimeMs": 1200769.9,
+   "emitMs": 1201391,
+   "isFinal": true
+  },
+  {
+   "text": "It limits",
+   "audioTimeMs": 1203100,
+   "emitMs": 1203600,
+   "isFinal": true
+  },
+  {
+   "text": "the legitimate capacity",
+   "audioTimeMs": 1204630,
+   "emitMs": 1205193,
+   "isFinal": true
+  },
+  {
+   "text": "of the government to protect its",
+   "audioTimeMs": 1207760,
+   "emitMs": 1208302,
+   "isFinal": true
+  },
+  {
+   "text": "civilians",
+   "audioTimeMs": 1209760,
+   "emitMs": 1210297,
+   "isFinal": true
+  },
+  {
+   "text": "secure its borders,",
+   "audioTimeMs": 1211330.0999999999,
+   "emitMs": 1211814,
+   "isFinal": true
+  },
+  {
+   "text": "and respond effectively.",
+   "audioTimeMs": 1213560,
+   "emitMs": 1214092,
+   "isFinal": true
+  },
+  {
+   "text": "To threats",
+   "audioTimeMs": 1215049.9,
+   "emitMs": 1215592,
+   "isFinal": true
+  },
+  {
+   "text": "posed by",
+   "audioTimeMs": 1216170,
+   "emitMs": 1216592,
+   "isFinal": true
+  },
+  {
+   "text": "armed groups.",
+   "audioTimeMs": 1217500,
+   "emitMs": 1218098,
+   "isFinal": true
+  },
+  {
+   "text": "And other non state actors.",
+   "audioTimeMs": 1220010,
+   "emitMs": 1220609,
+   "isFinal": true
+  },
+  {
+   "text": "As we meet today,",
+   "audioTimeMs": 1222720,
+   "emitMs": 1223299,
+   "isFinal": true
+  },
+  {
+   "text": "families across South Sudan are mourning.",
+   "audioTimeMs": 1227100,
+   "emitMs": 1227599,
+   "isFinal": true
+  },
+  {
+   "text": "The tragic loss of five civil engineers who were killed",
+   "audioTimeMs": 1232260,
+   "emitMs": 1232906,
+   "isFinal": true
+  },
+  {
+   "text": "while",
+   "audioTimeMs": 1233360,
+   "emitMs": 1234095,
+   "isFinal": true
+  },
+  {
+   "text": "undertaking road construction work",
+   "audioTimeMs": 1236120,
+   "emitMs": 1236602,
+   "isFinal": true
+  },
+  {
+   "text": "in Morocco County, Sintra Equatorial Estate.",
+   "audioTimeMs": 1240470,
+   "emitMs": 1240997,
+   "isFinal": true
+  },
+  {
+   "text": "These individuals",
+   "audioTimeMs": 1242480,
+   "emitMs": 1243189,
+   "isFinal": true
+  },
+  {
+   "text": "were contributing",
+   "audioTimeMs": 1244610.1,
+   "emitMs": 1245289,
+   "isFinal": true
+  },
+  {
+   "text": "to national development",
+   "audioTimeMs": 1246500,
+   "emitMs": 1246985,
+   "isFinal": true
+  },
+  {
+   "text": "connectivity,",
+   "audioTimeMs": 1247750,
+   "emitMs": 1248128,
+   "isFinal": true
+  },
+  {
+   "text": "and economic recovery.",
+   "audioTimeMs": 1249330.0999999999,
+   "emitMs": 1249629,
+   "isFinal": true
+  },
+  {
+   "text": "Their death",
+   "audioTimeMs": 1251669.9000000001,
+   "emitMs": 1252125,
+   "isFinal": true
+  },
+  {
+   "text": "serve us",
+   "audioTimeMs": 1252970,
+   "emitMs": 1253517,
+   "isFinal": true
+  },
+  {
+   "text": "as sovereign",
+   "audioTimeMs": 1254230.1,
+   "emitMs": 1254620,
+   "isFinal": true
+  },
+  {
+   "text": "reminder of",
+   "audioTimeMs": 1255779.9,
+   "emitMs": 1256129,
+   "isFinal": true
+  },
+  {
+   "text": "the security challenge that remains",
+   "audioTimeMs": 1258250,
+   "emitMs": 1258629,
+   "isFinal": true
+  },
+  {
+   "text": "under the importance of ensuring",
+   "audioTimeMs": 1260420,
+   "emitMs": 1260834,
+   "isFinal": true
+  },
+  {
+   "text": "that",
+   "audioTimeMs": 1261390,
+   "emitMs": 1261724,
+   "isFinal": true
+  },
+  {
+   "text": "national",
+   "audioTimeMs": 1262320,
+   "emitMs": 1262723,
+   "isFinal": true
+  },
+  {
+   "text": "institutions",
+   "audioTimeMs": 1263550,
+   "emitMs": 1264024,
+   "isFinal": true
+  },
+  {
+   "text": "are adequately equipped",
+   "audioTimeMs": 1265430,
+   "emitMs": 1265732,
+   "isFinal": true
+  },
+  {
+   "text": "to protect civilians",
+   "audioTimeMs": 1267350.1,
+   "emitMs": 1267725,
+   "isFinal": true
+  },
+  {
+   "text": "and support",
+   "audioTimeMs": 1268330,
+   "emitMs": 1268533,
+   "isFinal": true
+  },
+  {
+   "text": "development.",
+   "audioTimeMs": 1269210,
+   "emitMs": 1269422,
+   "isFinal": true
+  },
+  {
+   "text": "Efforts.",
+   "audioTimeMs": 1270080,
+   "emitMs": 1270417,
+   "isFinal": true
+  },
+  {
+   "text": "Mister president,",
+   "audioTimeMs": 1271820,
+   "emitMs": 1272378,
+   "isFinal": true
+  },
+  {
+   "text": "South Sudan firmly believes that",
+   "audioTimeMs": 1275030,
+   "emitMs": 1275361,
+   "isFinal": true
+  },
+  {
+   "text": "sustainable peace",
+   "audioTimeMs": 1276740,
+   "emitMs": 1277164,
+   "isFinal": true
+  },
+  {
+   "text": "is best advanced",
+   "audioTimeMs": 1278470,
+   "emitMs": 1278861,
+   "isFinal": true
+  },
+  {
+   "text": "through strong national institutions,",
+   "audioTimeMs": 1281250,
+   "emitMs": 1281869,
+   "isFinal": true
+  },
+  {
+   "text": "effective security arrangements,",
+   "audioTimeMs": 1284019.9,
+   "emitMs": 1284477,
+   "isFinal": true
+  },
+  {
+   "text": "and genuine",
+   "audioTimeMs": 1286060,
+   "emitMs": 1286467,
+   "isFinal": true
+  },
+  {
+   "text": "national ownership.",
+   "audioTimeMs": 1287820,
+   "emitMs": 1288055,
+   "isFinal": true
+  },
+  {
+   "text": "Of the peace process.",
+   "audioTimeMs": 1289179.9000000001,
+   "emitMs": 1289570,
+   "isFinal": true
+  },
+  {
+   "text": "Measures that",
+   "audioTimeMs": 1291440,
+   "emitMs": 1291774,
+   "isFinal": true
+  },
+  {
+   "text": "inadvertently",
+   "audioTimeMs": 1292560,
+   "emitMs": 1292975,
+   "isFinal": true
+  },
+  {
+   "text": "weaken the state capacity",
+   "audioTimeMs": 1295100,
+   "emitMs": 1295467,
+   "isFinal": true
+  },
+  {
+   "text": "while failing to deter",
+   "audioTimeMs": 1297409.9000000001,
+   "emitMs": 1297762,
+   "isFinal": true
+  },
+  {
+   "text": "the spoilers",
+   "audioTimeMs": 1299110,
+   "emitMs": 1299464,
+   "isFinal": true
+  },
+  {
+   "text": "warrant",
+   "audioTimeMs": 1299930,
+   "emitMs": 1300268,
+   "isFinal": true
+  },
+  {
+   "text": "careful reconsiderations.",
+   "audioTimeMs": 1302510,
+   "emitMs": 1302978,
+   "isFinal": true
+  },
+  {
+   "text": "In this regard,",
+   "audioTimeMs": 1305370.1,
+   "emitMs": 1306700,
+   "isFinal": true
+  },
+  {
+   "text": "we respectfully",
+   "audioTimeMs": 1307669.9000000001,
+   "emitMs": 1308380,
+   "isFinal": true
+  },
+  {
+   "text": "reiterate",
+   "audioTimeMs": 1309040,
+   "emitMs": 1309585,
+   "isFinal": true
+  },
+  {
+   "text": "our call for the Security Council to give",
+   "audioTimeMs": 1312990.1,
+   "emitMs": 1313490,
+   "isFinal": true
+  },
+  {
+   "text": "the due consideration",
+   "audioTimeMs": 1315030,
+   "emitMs": 1315584,
+   "isFinal": true
+  },
+  {
+   "text": "to the consistent position of the African Union EGAT and other regional stakeholders, we have",
+   "audioTimeMs": 1323460.1,
+   "emitMs": 1324001,
+   "isFinal": true
+  },
+  {
+   "text": "repeatedly",
+   "audioTimeMs": 1325020,
+   "emitMs": 1325598,
+   "isFinal": true
+  },
+  {
+   "text": "advocated for the lifting",
+   "audioTimeMs": 1327530,
+   "emitMs": 1328087,
+   "isFinal": true
+  },
+  {
+   "text": "of the sanction regime",
+   "audioTimeMs": 1329320.0999999999,
+   "emitMs": 1329802,
+   "isFinal": true
+  },
+  {
+   "text": "and arms embargo",
+   "audioTimeMs": 1330870,
+   "emitMs": 1331297,
+   "isFinal": true
+  },
+  {
+   "text": "on South Sudan.",
+   "audioTimeMs": 1332340.0999999999,
+   "emitMs": 1332805,
+   "isFinal": true
+  },
+  {
+   "text": "The perspective of those closest",
+   "audioTimeMs": 1335950,
+   "emitMs": 1336605,
+   "isFinal": true
+  },
+  {
+   "text": "to the situation on the ground remain valuable",
+   "audioTimeMs": 1340620,
+   "emitMs": 1341205,
+   "isFinal": true
+  },
+  {
+   "text": "in informing the council's",
+   "audioTimeMs": 1343640,
+   "emitMs": 1343987,
+   "isFinal": true
+  },
+  {
+   "text": "deliberation.",
+   "audioTimeMs": 1344670,
+   "emitMs": 1345189,
+   "isFinal": true
+  },
+  {
+   "text": "Mister president,",
+   "audioTimeMs": 1346340,
+   "emitMs": 1346885,
+   "isFinal": true
+  },
+  {
+   "text": "South Sudan remains fully",
+   "audioTimeMs": 1348500,
+   "emitMs": 1348896,
+   "isFinal": true
+  },
+  {
+   "text": "committed",
+   "audioTimeMs": 1349409.9000000001,
+   "emitMs": 1349889,
+   "isFinal": true
+  },
+  {
+   "text": "to",
+   "audioTimeMs": 1350470.1,
+   "emitMs": 1350990,
+   "isFinal": true
+  },
+  {
+   "text": "constructive cooperation with the United Nations, the African Union,",
+   "audioTimeMs": 1354630,
+   "emitMs": 1355119,
+   "isFinal": true
+  },
+  {
+   "text": "EGAT, and",
+   "audioTimeMs": 1356890,
+   "emitMs": 1357389,
+   "isFinal": true
+  },
+  {
+   "text": "all international partners in advancing peace.",
+   "audioTimeMs": 1359940.1,
+   "emitMs": 1360497,
+   "isFinal": true
+  },
+  {
+   "text": "Reconciliation,",
+   "audioTimeMs": 1361460,
+   "emitMs": 1362095,
+   "isFinal": true
+  },
+  {
+   "text": "institution building,",
+   "audioTimeMs": 1363450,
+   "emitMs": 1364000,
+   "isFinal": true
+  },
+  {
+   "text": "and sustainable development.",
+   "audioTimeMs": 1365549.9,
+   "emitMs": 1366004,
+   "isFinal": true
+  },
+  {
+   "text": "We remain encouraged by the continued",
+   "audioTimeMs": 1369660,
+   "emitMs": 1370100,
+   "isFinal": true
+  },
+  {
+   "text": "support of the international community",
+   "audioTimeMs": 1371880,
+   "emitMs": 1372480,
+   "isFinal": true
+  },
+  {
+   "text": "and confidence that",
+   "audioTimeMs": 1373460,
+   "emitMs": 1373889,
+   "isFinal": true
+  },
+  {
+   "text": "working together",
+   "audioTimeMs": 1374960.1,
+   "emitMs": 1375580,
+   "isFinal": true
+  },
+  {
+   "text": "we can overcome the remaining",
+   "audioTimeMs": 1378130,
+   "emitMs": 1378598,
+   "isFinal": true
+  },
+  {
+   "text": "challenge and create",
+   "audioTimeMs": 1379960,
+   "emitMs": 1380494,
+   "isFinal": true
+  },
+  {
+   "text": "conditions necessary for",
+   "audioTimeMs": 1382140,
+   "emitMs": 1382693,
+   "isFinal": true
+  },
+  {
+   "text": "a peaceful",
+   "audioTimeMs": 1383280,
+   "emitMs": 1383618,
+   "isFinal": true
+  },
+  {
+   "text": "stable, and",
+   "audioTimeMs": 1384760,
+   "emitMs": 1385130,
+   "isFinal": true
+  },
+  {
+   "text": "prosperous",
+   "audioTimeMs": 1385810,
+   "emitMs": 1386130,
+   "isFinal": true
+  },
+  {
+   "text": "future.",
+   "audioTimeMs": 1386570.0999999999,
+   "emitMs": 1386928,
+   "isFinal": true
+  },
+  {
+   "text": "For all South Sudanese.",
+   "audioTimeMs": 1388740,
+   "emitMs": 1389041,
+   "isFinal": true
+  },
+  {
+   "text": "In in closing,",
+   "audioTimeMs": 1391890,
+   "emitMs": 1392345,
+   "isFinal": true
+  },
+  {
+   "text": "my delegation extends it is sincere appreciation",
+   "audioTimeMs": 1395399.9,
+   "emitMs": 1397241,
+   "isFinal": true
+  },
+  {
+   "text": "to those members of the Security Council who continue",
+   "audioTimeMs": 1398750,
+   "emitMs": 1399241,
+   "isFinal": true
+  },
+  {
+   "text": "to support",
+   "audioTimeMs": 1399980,
+   "emitMs": 1400436,
+   "isFinal": true
+  },
+  {
+   "text": "balanced",
+   "audioTimeMs": 1401030,
+   "emitMs": 1401460,
+   "isFinal": true
+  },
+  {
+   "text": "constructive",
+   "audioTimeMs": 1402289.9,
+   "emitMs": 1402628,
+   "isFinal": true
+  },
+  {
+   "text": "and forward looking",
+   "audioTimeMs": 1403870,
+   "emitMs": 1404212,
+   "isFinal": true
+  },
+  {
+   "text": "approach towards South Sudan.",
+   "audioTimeMs": 1406080,
+   "emitMs": 1406237,
+   "isFinal": true
+  },
+  {
+   "text": "We value",
+   "audioTimeMs": 1407710,
+   "emitMs": 1408223,
+   "isFinal": true
+  },
+  {
+   "text": "their partnership",
+   "audioTimeMs": 1409330,
+   "emitMs": 1409818,
+   "isFinal": true
+  },
+  {
+   "text": "and remain",
+   "audioTimeMs": 1410419.9000000001,
+   "emitMs": 1410818,
+   "isFinal": true
+  },
+  {
+   "text": "committed",
+   "audioTimeMs": 1411270,
+   "emitMs": 1411661,
+   "isFinal": true
+  },
+  {
+   "text": "to working collaboratively",
+   "audioTimeMs": 1412820,
+   "emitMs": 1413360,
+   "isFinal": true
+  },
+  {
+   "text": "with all members.",
+   "audioTimeMs": 1414500,
+   "emitMs": 1414983,
+   "isFinal": true
+  },
+  {
+   "text": "Of this council in pursuit of",
+   "audioTimeMs": 1417230,
+   "emitMs": 1417784,
+   "isFinal": true
+  },
+  {
+   "text": "our shared objective",
+   "audioTimeMs": 1419590,
+   "emitMs": 1420084,
+   "isFinal": true
+  },
+  {
+   "text": "of a peaceful, secure,",
+   "audioTimeMs": 1422000,
+   "emitMs": 1422588,
+   "isFinal": true
+  },
+  {
+   "text": "and stable South Sudan.",
+   "audioTimeMs": 1424210,
+   "emitMs": 1424579,
+   "isFinal": true
+  },
+  {
+   "text": "Present.",
+   "audioTimeMs": 1439910,
+   "emitMs": 1440172,
+   "isFinal": true
+  }
+ ]
+}

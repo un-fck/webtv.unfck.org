@@ -11,6 +11,12 @@ import { fetchPVDocument } from "./ground-truth/documents-api";
 import { parsePVDocument } from "./ground-truth/pdf-parser";
 import { computeMetrics, computePairwiseMetrics } from "./metrics";
 import {
+  speechEnvelope,
+  scoreOmission,
+  wordsFromUtterances,
+  type OmissionResult,
+} from "./metrics/omission";
+import {
   getProvider,
   getAllProviders,
   getProviderNames,
@@ -45,6 +51,18 @@ interface SessionResult {
   hypLength: number;
   durationMs: number;
   timestamp: string;
+  /**
+   * Omission: seconds of speech energy in the audio with no transcript word
+   * over it, and that as a fraction of the recording. Scored from the audio, so
+   * it is available for every session including those with no PV ground truth.
+   * Optional because ffmpeg or the audio may be unavailable — absent means
+   * "not measured", which is deliberately distinct from 0 ("measured, none").
+   * See eval/metrics/omission.ts for why WER cannot stand in for this.
+   */
+  droppedSpeechSeconds?: number;
+  droppedSpeechRatio?: number;
+  worstOmissionSeconds?: number;
+  omissionHoles?: number;
 }
 
 const RESULTS_DIR = path.join(__dirname, "results");
@@ -216,6 +234,57 @@ async function evalSession(
     );
     fs.mkdirSync(rawDir, { recursive: true });
 
+    // Speech envelope for the omission metric. Computed ONCE per session+language
+    // and shared across providers: it is an ffmpeg pass over the whole file, and
+    // it must be identical for every arm or the arms are not comparable. A
+    // failure here degrades omission to "not measured" rather than failing the
+    // run — WER still has value without it.
+    let envelope: number[] | null = null;
+    if (audioFilePath) {
+      try {
+        const tEnv = Date.now();
+        envelope = await speechEnvelope(audioFilePath);
+        console.log(
+          `  Speech envelope: ${envelope.length} frames ` +
+            `(${((Date.now() - tEnv) / 1000).toFixed(1)}s)`,
+        );
+      } catch (err) {
+        console.warn(
+          `  Speech envelope failed, omission not measured: ` +
+            `${err instanceof Error ? err.message : err}`,
+        );
+      }
+    }
+
+    /**
+     * Score omission for one provider's transcript and persist a sidecar, so the
+     * measurement survives even for sessions with no ground truth (which produce
+     * no summary row). Returns null when not measurable.
+     */
+    const omissionFor = (
+      providerName: string,
+      transcript: import("./providers/types").NormalizedTranscript,
+    ): OmissionResult | null => {
+      if (!envelope) return null;
+      const words = wordsFromUtterances(transcript.utterances);
+      if (words.length === 0) return null;
+      const result = scoreOmission(envelope, words);
+      try {
+        fs.writeFileSync(
+          path.join(rawDir, `${providerName}_${lang}.omission.json`),
+          JSON.stringify(result, null, 2),
+        );
+      } catch {}
+      return result;
+    };
+
+    const fmtOmission = (o: OmissionResult | null) =>
+      o
+        ? ` | dropped ${o.droppedSpeechSeconds.toFixed(1)}s ` +
+          `(${(o.droppedSpeechRatio * 100).toFixed(3)}%, ` +
+          `worst ${o.worstHoleSeconds.toFixed(1)}s)`
+        : "";
+
     const tLang = Date.now();
 
     // Build tasks for each provider
@@ -241,6 +310,7 @@ async function evalSession(
             fs.readFileSync(rawFilePath, "utf-8"),
           ) as import("./providers/types").NormalizedTranscript;
           providerOutputs[providerName] = transcript.fullText;
+          const omission = omissionFor(providerName, transcript);
           if (groundTruthText) {
             const metrics = computeMetrics(
               groundTruthText,
@@ -263,12 +333,24 @@ async function evalSession(
               hypLength: metrics.normalizedWer.hypLength,
               durationMs: transcript.durationMs,
               timestamp: new Date().toISOString(),
+              ...(omission
+                ? {
+                    droppedSpeechSeconds: omission.droppedSpeechSeconds,
+                    droppedSpeechRatio: omission.droppedSpeechRatio,
+                    worstOmissionSeconds: omission.worstHoleSeconds,
+                    omissionHoles: omission.holes.length,
+                  }
+                : {}),
             };
             console.log(
-              `    ${providerName}: WER ${(r.wer * 100).toFixed(1)}% | Norm ${(r.normalizedWer * 100).toFixed(1)}%`,
+              `    ${providerName}: WER ${(r.wer * 100).toFixed(1)}% | Norm ${(r.normalizedWer * 100).toFixed(1)}%` +
+                fmtOmission(omission),
             );
             return r;
           }
+          console.log(
+            `    ${providerName}: no ground truth${fmtOmission(omission)}`,
+          );
         } catch (err) {
           console.warn(`    ${providerName}: cache load failed, re-running`);
           fs.unlinkSync(rawFilePath);
@@ -307,6 +389,8 @@ async function evalSession(
             : transcript.fullText,
         );
 
+        const omission = omissionFor(providerName, transcript);
+
         if (groundTruthText) {
           const metrics = computeMetrics(
             groundTruthText,
@@ -329,14 +413,24 @@ async function evalSession(
             hypLength: metrics.normalizedWer.hypLength,
             durationMs: transcript.durationMs,
             timestamp: new Date().toISOString(),
+            ...(omission
+              ? {
+                  droppedSpeechSeconds: omission.droppedSpeechSeconds,
+                  droppedSpeechRatio: omission.droppedSpeechRatio,
+                  worstOmissionSeconds: omission.worstHoleSeconds,
+                  omissionHoles: omission.holes.length,
+                }
+              : {}),
           };
           console.log(
-            `    ${providerName}: ${elapsed}s → WER ${(r.wer * 100).toFixed(1)}% | Norm ${(r.normalizedWer * 100).toFixed(1)}%`,
+            `    ${providerName}: ${elapsed}s → WER ${(r.wer * 100).toFixed(1)}% | Norm ${(r.normalizedWer * 100).toFixed(1)}%` +
+              fmtOmission(omission),
           );
           return r;
         } else {
           console.log(
-            `    ${providerName}: ${elapsed}s → ${transcript.fullText.length} chars (no ground truth)`,
+            `    ${providerName}: ${elapsed}s → ${transcript.fullText.length} chars (no ground truth)` +
+              fmtOmission(omission),
           );
         }
       } catch (err) {
@@ -451,27 +545,88 @@ async function main() {
 
   // Print summary table
   if (allResults.length > 0) {
-    console.log("\n" + "=".repeat(80));
+    console.log("\n" + "=".repeat(92));
     console.log("SUMMARY");
-    console.log("=".repeat(80));
+    console.log("=".repeat(92));
     console.log(
-      "Provider".padEnd(20) +
+      "Provider".padEnd(30) +
         "Lang".padEnd(6) +
         "WER".padEnd(10) +
         "Norm WER".padEnd(10) +
         "CER".padEnd(10) +
+        "Dropped".padEnd(11) +
         "Symbol",
     );
-    console.log("-".repeat(80));
+    console.log("-".repeat(92));
     for (const r of allResults) {
+      // "-" means not measured, which is not the same as 0.0s measured.
+      const dropped =
+        r.droppedSpeechSeconds == null
+          ? "-"
+          : `${r.droppedSpeechSeconds.toFixed(1)}s/${((r.droppedSpeechRatio ?? 0) * 100).toFixed(2)}%`;
       console.log(
-        r.provider.padEnd(20) +
+        r.provider.padEnd(30) +
           r.language.padEnd(6) +
           `${(r.wer * 100).toFixed(1)}%`.padEnd(10) +
           `${(r.normalizedWer * 100).toFixed(1)}%`.padEnd(10) +
           `${(r.cer * 100).toFixed(1)}%`.padEnd(10) +
+          dropped.padEnd(11) +
           r.symbol,
       );
+    }
+
+    // Omission leaderboard: the criterion that WER cannot express. Aggregated
+    // per provider because a single session's total says little — the defect is
+    // rare per minute but systematic across a corpus.
+    const byProvider = new Map<
+      string,
+      { dropped: number; audio: number; n: number; worst: number }
+    >();
+    for (const r of allResults) {
+      if (r.droppedSpeechSeconds == null) continue;
+      const cur = byProvider.get(r.provider) ?? {
+        dropped: 0,
+        audio: 0,
+        n: 0,
+        worst: 0,
+      };
+      cur.dropped += r.droppedSpeechSeconds;
+      cur.audio += r.durationMs / 1000;
+      cur.n += 1;
+      cur.worst = Math.max(cur.worst, r.worstOmissionSeconds ?? 0);
+      byProvider.set(r.provider, cur);
+    }
+    if (byProvider.size > 0) {
+      console.log("\n" + "=".repeat(92));
+      console.log(
+        "OMISSION (speech in the audio with no transcript word over it)",
+      );
+      console.log("=".repeat(92));
+      console.log(
+        "Provider".padEnd(30) +
+          "Sessions".padEnd(10) +
+          "Audio h".padEnd(10) +
+          "Dropped s".padEnd(12) +
+          "% of audio".padEnd(12) +
+          "Worst hole",
+      );
+      console.log("-".repeat(92));
+      for (const [name, v] of [...byProvider.entries()].sort(
+        (a, b) =>
+          b[1].dropped / Math.max(1, b[1].audio) -
+          a[1].dropped / Math.max(1, a[1].audio),
+      )) {
+        console.log(
+          name.padEnd(30) +
+            String(v.n).padEnd(10) +
+            (v.audio / 3600).toFixed(2).padEnd(10) +
+            v.dropped.toFixed(1).padEnd(12) +
+            `${((100 * v.dropped) / Math.max(1, v.audio)).toFixed(3)}%`.padEnd(
+              12,
+            ) +
+            `${v.worst.toFixed(1)}s`,
+        );
+      }
     }
   }
 }

@@ -1,0 +1,1494 @@
+{
+ "provider": "C-caption-deepgram-en-gtranslate",
+ "targetLanguage": "zh",
+ "events": [
+  {
+   "text": "谢谢。",
+   "audioTimeMs": 157260,
+   "emitMs": 158115,
+   "isFinal": true
+  },
+  {
+   "text": "美国欢迎这一续约",
+   "audioTimeMs": 160450,
+   "emitMs": 161122,
+   "isFinal": true
+  },
+  {
+   "text": "南苏丹制裁制度，包括延长小组期限",
+   "audioTimeMs": 164820,
+   "emitMs": 166135,
+   "isFinal": true
+  },
+  {
+   "text": "专家授权",
+   "audioTimeMs": 165930.01,
+   "emitMs": 166603,
+   "isFinal": true
+  },
+  {
+   "text": "以及武器禁运的延期",
+   "audioTimeMs": 167989.99000000002,
+   "emitMs": 168624,
+   "isFinal": true
+  },
+  {
+   "text": "旅行禁令",
+   "audioTimeMs": 168890,
+   "emitMs": 169721,
+   "isFinal": true
+  },
+  {
+   "text": "并采取资产冻结措施，再延长十二个月。",
+   "audioTimeMs": 172070,
+   "emitMs": 172843,
+   "isFinal": true
+  },
+  {
+   "text": "我们也欢迎这个机会。",
+   "audioTimeMs": 174680.01,
+   "emitMs": 175428,
+   "isFinal": true
+  },
+  {
+   "text": "修订基准",
+   "audioTimeMs": 176220,
+   "emitMs": 176926,
+   "isFinal": true
+  },
+  {
+   "text": "反映当前实际情况",
+   "audioTimeMs": 177850,
+   "emitMs": 178711,
+   "isFinal": true
+  },
+  {
+   "text": "期待您的建议",
+   "audioTimeMs": 179989.99000000002,
+   "emitMs": 180924,
+   "isFinal": true
+  },
+  {
+   "text": "如何才能最好地做到这一点",
+   "audioTimeMs": 181790,
+   "emitMs": 182527,
+   "isFinal": true
+  },
+  {
+   "text": "经与秘书长协商",
+   "audioTimeMs": 184440,
+   "emitMs": 185329,
+   "isFinal": true
+  },
+  {
+   "text": "与联合国南苏丹特派团和专家小组。",
+   "audioTimeMs": 188400,
+   "emitMs": 189519,
+   "isFinal": true
+  },
+  {
+   "text": "然而，我们感到很沮丧。",
+   "audioTimeMs": 190730,
+   "emitMs": 191449,
+   "isFinal": true
+  },
+  {
+   "text": "由于缺乏进展",
+   "audioTimeMs": 192099.99,
+   "emitMs": 192926,
+   "isFinal": true
+  },
+  {
+   "text": "基准测试",
+   "audioTimeMs": 193190,
+   "emitMs": 193890,
+   "isFinal": true
+  },
+  {
+   "text": "以及持续恶化",
+   "audioTimeMs": 195600,
+   "emitMs": 196397,
+   "isFinal": true
+  },
+  {
+   "text": "政治",
+   "audioTimeMs": 196790.01,
+   "emitMs": 197401,
+   "isFinal": true
+  },
+  {
+   "text": "以及安全形势",
+   "audioTimeMs": 198530,
+   "emitMs": 199297,
+   "isFinal": true
+  },
+  {
+   "text": "南苏丹。",
+   "audioTimeMs": 199640,
+   "emitMs": 200192,
+   "isFinal": true
+  },
+  {
+   "text": "让我们把话说清楚。",
+   "audioTimeMs": 201290.01,
+   "emitMs": 201784,
+   "isFinal": true
+  },
+  {
+   "text": "这种进展缓慢是由于缺乏政治财富造成的。",
+   "audioTimeMs": 205080,
+   "emitMs": 205600,
+   "isFinal": true
+  },
+  {
+   "text": "由基尔总统领导",
+   "audioTimeMs": 206370,
+   "emitMs": 207004,
+   "isFinal": true
+  },
+  {
+   "text": "以及其他",
+   "audioTimeMs": 207640,
+   "emitMs": 208321,
+   "isFinal": true
+  },
+  {
+   "text": "南苏丹领导人。",
+   "audioTimeMs": 209230,
+   "emitMs": 209906,
+   "isFinal": true
+  },
+  {
+   "text": "南苏丹领导人必须重返直接对话",
+   "audioTimeMs": 213960,
+   "emitMs": 214601,
+   "isFinal": true
+  },
+  {
+   "text": "缓和局势",
+   "audioTimeMs": 215319.99,
+   "emitMs": 215904,
+   "isFinal": true
+  },
+  {
+   "text": "当前的暴力事件。",
+   "audioTimeMs": 216599.99,
+   "emitMs": 217711,
+   "isFinal": true
+  },
+  {
+   "text": "这简直荒谬至极",
+   "audioTimeMs": 218360,
+   "emitMs": 218900,
+   "isFinal": true
+  },
+  {
+   "text": "暗示此类对话正在进行，是因为2018年和平协议的签署方之一……",
+   "audioTimeMs": 224780,
+   "emitMs": 225592,
+   "isFinal": true
+  },
+  {
+   "text": "被软禁",
+   "audioTimeMs": 226510,
+   "emitMs": 227099,
+   "isFinal": true
+  },
+  {
+   "text": "正在接受审判。",
+   "audioTimeMs": 227590.01,
+   "emitMs": 228757,
+   "isFinal": true
+  },
+  {
+   "text": "委员会不能容忍任何阻碍和平进程的行为。",
+   "audioTimeMs": 232080,
+   "emitMs": 232771,
+   "isFinal": true
+  },
+  {
+   "text": "或构成威胁的行为",
+   "audioTimeMs": 233690,
+   "emitMs": 234276,
+   "isFinal": true
+  },
+  {
+   "text": "过渡协议或破坏南苏丹的政治进程。",
+   "audioTimeMs": 237940,
+   "emitMs": 238479,
+   "isFinal": true
+  },
+  {
+   "text": "因此，我们敦促过渡政府采取一切必要措施恢复和平。",
+   "audioTimeMs": 244610,
+   "emitMs": 245287,
+   "isFinal": true
+  },
+  {
+   "text": "包括宣布全国停火，",
+   "audioTimeMs": 247630,
+   "emitMs": 248276,
+   "isFinal": true
+  },
+  {
+   "text": "释放被拘留者",
+   "audioTimeMs": 249420,
+   "emitMs": 250073,
+   "isFinal": true
+  },
+  {
+   "text": "放弃将暴力用于政治目的，",
+   "audioTimeMs": 252460,
+   "emitMs": 255095,
+   "isFinal": true
+  },
+  {
+   "text": "并开始合理利用公共收入。",
+   "audioTimeMs": 255760.00999999998,
+   "emitMs": 256676,
+   "isFinal": true
+  },
+  {
+   "text": "支持南苏丹公民。",
+   "audioTimeMs": 258399.99999999997,
+   "emitMs": 258985,
+   "isFinal": true
+  },
+  {
+   "text": "在南苏丹独立前的数年里，",
+   "audioTimeMs": 262470,
+   "emitMs": 263090,
+   "isFinal": true
+  },
+  {
+   "text": "苏丹人民解放运动声称其目标是结束边缘化。",
+   "audioTimeMs": 266940,
+   "emitMs": 267974,
+   "isFinal": true
+  },
+  {
+   "text": "喀土穆的领导人对苏丹南部人民下台。",
+   "audioTimeMs": 270199.98,
+   "emitMs": 270683,
+   "isFinal": true
+  },
+  {
+   "text": "由于治理不善和滥用财政收入，",
+   "audioTimeMs": 273259.98,
+   "emitMs": 273897,
+   "isFinal": true
+  },
+  {
+   "text": "这种边缘化现象仍在继续。",
+   "audioTimeMs": 275470,
+   "emitMs": 276169,
+   "isFinal": true
+  },
+  {
+   "text": "由南苏丹领导人强加。",
+   "audioTimeMs": 278310,
+   "emitMs": 278984,
+   "isFinal": true
+  },
+  {
+   "text": "谢谢。",
+   "audioTimeMs": 279560,
+   "emitMs": 280225,
+   "isFinal": true
+  },
+  {
+   "text": "那",
+   "audioTimeMs": 320550,
+   "emitMs": 320799,
+   "isFinal": true
+  },
+  {
+   "text": "比较主要因素，即速度。",
+   "audioTimeMs": 326440,
+   "emitMs": 327038,
+   "isFinal": true
+  },
+  {
+   "text": "这",
+   "audioTimeMs": 362970,
+   "emitMs": 365495,
+   "isFinal": true
+  },
+  {
+   "text": "苏丹尼尔感到被冒犯了",
+   "audioTimeMs": 426340,
+   "emitMs": 429004,
+   "isFinal": true
+  },
+  {
+   "text": "非常感谢总统先生。",
+   "audioTimeMs": 707339.97,
+   "emitMs": 708020,
+   "isFinal": true
+  },
+  {
+   "text": "关于南苏丹制裁制度的决议文本与去年的决议在技术上并无二致。",
+   "audioTimeMs": 713700,
+   "emitMs": 714232,
+   "isFinal": true
+  },
+  {
+   "text": "巴基斯坦去年对该决议投了弃权票。",
+   "audioTimeMs": 717230,
+   "emitMs": 717835,
+   "isFinal": true
+  },
+  {
+   "text": "我们今天的延期与这一立场一致。",
+   "audioTimeMs": 720910,
+   "emitMs": 721628,
+   "isFinal": true
+  },
+  {
+   "text": "巴基斯坦仍然致力于南苏丹的持久和平与稳定。",
+   "audioTimeMs": 725930,
+   "emitMs": 726413,
+   "isFinal": true
+  },
+  {
+   "text": "我们继续支持这项经修订的协议。",
+   "audioTimeMs": 729120,
+   "emitMs": 729829,
+   "isFinal": true
+  },
+  {
+   "text": "作为唯一可行且各方都能接受的和平框架。",
+   "audioTimeMs": 732200,
+   "emitMs": 732732,
+   "isFinal": true
+  },
+  {
+   "text": "我们相信",
+   "audioTimeMs": 733270,
+   "emitMs": 733920,
+   "isFinal": true
+  },
+  {
+   "text": "制裁是安全理事会可利用的重要工具。",
+   "audioTimeMs": 737430.05,
+   "emitMs": 738038,
+   "isFinal": true
+  },
+  {
+   "text": "但应该谨慎使用。",
+   "audioTimeMs": 740040.0399999999,
+   "emitMs": 740616,
+   "isFinal": true
+  },
+  {
+   "text": "定期审查",
+   "audioTimeMs": 741660,
+   "emitMs": 742334,
+   "isFinal": true
+  },
+  {
+   "text": "不应成为开放式问题",
+   "audioTimeMs": 743790.0399999999,
+   "emitMs": 744299,
+   "isFinal": true
+  },
+  {
+   "text": "或具有惩罚性质。",
+   "audioTimeMs": 745029.9700000001,
+   "emitMs": 745705,
+   "isFinal": true
+  },
+  {
+   "text": "他们的目的应该是支持政治解决方案和稳定工作。",
+   "audioTimeMs": 749990,
+   "emitMs": 750722,
+   "isFinal": true
+  },
+  {
+   "text": "我们还注意到非洲联盟的反对立场",
+   "audioTimeMs": 753190,
+   "emitMs": 755716,
+   "isFinal": true
+  },
+  {
+   "text": "对南苏丹继续实施制裁。",
+   "audioTimeMs": 755250,
+   "emitMs": 756014,
+   "isFinal": true
+  },
+  {
+   "text": "当地政治和安全局势日益恶化",
+   "audioTimeMs": 759380,
+   "emitMs": 759896,
+   "isFinal": true
+  },
+  {
+   "text": "这引发了关于当前制裁制度有效性的重要问题。",
+   "audioTimeMs": 763730,
+   "emitMs": 764311,
+   "isFinal": true
+  },
+  {
+   "text": "尽管多年来一直受到限制，",
+   "audioTimeMs": 765740.05,
+   "emitMs": 766513,
+   "isFinal": true
+  },
+  {
+   "text": "不稳定状况持续存在，且实施",
+   "audioTimeMs": 769090,
+   "emitMs": 771499,
+   "isFinal": true
+  },
+  {
+   "text": "关键的过渡安排仍未完成。",
+   "audioTimeMs": 771710,
+   "emitMs": 772490,
+   "isFinal": true
+  },
+  {
+   "text": "南苏丹的持久和平将向前推进",
+   "audioTimeMs": 774839.97,
+   "emitMs": 775400,
+   "isFinal": true
+  },
+  {
+   "text": "通过持续的政治参与，",
+   "audioTimeMs": 777030,
+   "emitMs": 777709,
+   "isFinal": true
+  },
+  {
+   "text": "执行修订后的协议，",
+   "audioTimeMs": 779790.0399999999,
+   "emitMs": 780404,
+   "isFinal": true
+  },
+  {
+   "text": "并支持由非洲联盟领导的区域努力，",
+   "audioTimeMs": 783360,
+   "emitMs": 783911,
+   "isFinal": true
+  },
+  {
+   "text": "以及 EGAD。",
+   "audioTimeMs": 784350,
+   "emitMs": 785107,
+   "isFinal": true
+  },
+  {
+   "text": "我们将继续与所有合作伙伴进行建设性沟通。",
+   "audioTimeMs": 787759.95,
+   "emitMs": 788405,
+   "isFinal": true
+  },
+  {
+   "text": "支持持久和平",
+   "audioTimeMs": 790060,
+   "emitMs": 790701,
+   "isFinal": true
+  },
+  {
+   "text": "稳定性",
+   "audioTimeMs": 791170,
+   "emitMs": 791892,
+   "isFinal": true
+  },
+  {
+   "text": "在南苏丹。",
+   "audioTimeMs": 792290,
+   "emitMs": 793010,
+   "isFinal": true
+  },
+  {
+   "text": "最后，总统先生，",
+   "audioTimeMs": 794100,
+   "emitMs": 795109,
+   "isFinal": true
+  },
+  {
+   "text": "最后，请允许我祝贺您此次活动进行得非常成功且顺利。",
+   "audioTimeMs": 798990,
+   "emitMs": 800108,
+   "isFinal": true
+  },
+  {
+   "text": "中国本月赢得了世界主席国的职位。",
+   "audioTimeMs": 800970.0299999999,
+   "emitMs": 801705,
+   "isFinal": true
+  },
+  {
+   "text": "祝一切顺利",
+   "audioTimeMs": 802890,
+   "emitMs": 803620,
+   "isFinal": true
+  },
+  {
+   "text": "致我们的哥伦比亚同事",
+   "audioTimeMs": 804640,
+   "emitMs": 805320,
+   "isFinal": true
+  },
+  {
+   "text": "当他们承担起这个角色时。",
+   "audioTimeMs": 806010,
+   "emitMs": 806697,
+   "isFinal": true
+  },
+  {
+   "text": "从周一开始。",
+   "audioTimeMs": 807170.0399999999,
+   "emitMs": 807812,
+   "isFinal": true
+  },
+  {
+   "text": "祝大家周末愉快，一切平安。",
+   "audioTimeMs": 810870,
+   "emitMs": 811530,
+   "isFinal": true
+  },
+  {
+   "text": "谢谢。",
+   "audioTimeMs": 811769.96,
+   "emitMs": 813717,
+   "isFinal": true
+  },
+  {
+   "text": "苏丹、Fiadhir、Jal Salium、逗号、",
+   "audioTimeMs": 865399.96,
+   "emitMs": 867544,
+   "isFinal": true
+  },
+  {
+   "text": "其他",
+   "audioTimeMs": 936910.03,
+   "emitMs": 937598,
+   "isFinal": true
+  },
+  {
+   "text": "总统先生，",
+   "audioTimeMs": 1112400,
+   "emitMs": 1113199,
+   "isFinal": true
+  },
+  {
+   "text": "我",
+   "audioTimeMs": 1113550,
+   "emitMs": 1114186,
+   "isFinal": true
+  },
+  {
+   "text": "谢谢，也祝贺你结束了这一切。",
+   "audioTimeMs": 1116840,
+   "emitMs": 1117504,
+   "isFinal": true
+  },
+  {
+   "text": "任期",
+   "audioTimeMs": 1118110.1,
+   "emitMs": 1118489,
+   "isFinal": true
+  },
+  {
+   "text": "和我们一起，从一开始。",
+   "audioTimeMs": 1119740,
+   "emitMs": 1120506,
+   "isFinal": true
+  },
+  {
+   "text": "我的代表团谨此表达",
+   "audioTimeMs": 1123740,
+   "emitMs": 1124199,
+   "isFinal": true
+  },
+  {
+   "text": "这是欣赏",
+   "audioTimeMs": 1125640,
+   "emitMs": 1126080,
+   "isFinal": true
+  },
+  {
+   "text": "尽管，",
+   "audioTimeMs": 1126700,
+   "emitMs": 1127686,
+   "isFinal": true
+  },
+  {
+   "text": "显而易见的骗局",
+   "audioTimeMs": 1128580.0999999999,
+   "emitMs": 1129191,
+   "isFinal": true
+  },
+  {
+   "text": "明显的",
+   "audioTimeMs": 1129490,
+   "emitMs": 1130388,
+   "isFinal": true
+  },
+  {
+   "text": "缺乏协商，",
+   "audioTimeMs": 1132260,
+   "emitMs": 1132704,
+   "isFinal": true
+  },
+  {
+   "text": "我们仍然希望",
+   "audioTimeMs": 1133950,
+   "emitMs": 1134487,
+   "isFinal": true
+  },
+  {
+   "text": "欣赏",
+   "audioTimeMs": 1134780,
+   "emitMs": 1135080,
+   "isFinal": true
+  },
+  {
+   "text": "我们的",
+   "audioTimeMs": 1135279.9,
+   "emitMs": 1135693,
+   "isFinal": true
+  },
+  {
+   "text": "欣赏",
+   "audioTimeMs": 1137429.9000000001,
+   "emitMs": 1137882,
+   "isFinal": true
+  },
+  {
+   "text": "到",
+   "audioTimeMs": 1138190.1,
+   "emitMs": 1138589,
+   "isFinal": true
+  },
+  {
+   "text": "它的笔筒是",
+   "audioTimeMs": 1140390,
+   "emitMs": 1140683,
+   "isFinal": true
+  },
+  {
+   "text": "努力",
+   "audioTimeMs": 1141460,
+   "emitMs": 1141886,
+   "isFinal": true
+  },
+  {
+   "text": "整个谈判过程。",
+   "audioTimeMs": 1143270,
+   "emitMs": 1143668,
+   "isFinal": true
+  },
+  {
+   "text": "和",
+   "audioTimeMs": 1144220,
+   "emitMs": 1144664,
+   "isFinal": true
+  },
+  {
+   "text": "投入的时间和精力",
+   "audioTimeMs": 1146429.9000000001,
+   "emitMs": 1146883,
+   "isFinal": true
+  },
+  {
+   "text": "促进理事会成员之间的讨论。",
+   "audioTimeMs": 1149840,
+   "emitMs": 1150284,
+   "isFinal": true
+  },
+  {
+   "text": "我们也感谢所有代表团。",
+   "audioTimeMs": 1153539.9,
+   "emitMs": 1153896,
+   "isFinal": true
+  },
+  {
+   "text": "积极参与这一过程的人",
+   "audioTimeMs": 1158090,
+   "emitMs": 1158483,
+   "isFinal": true
+  },
+  {
+   "text": "和",
+   "audioTimeMs": 1158630,
+   "emitMs": 1159066,
+   "isFinal": true
+  },
+  {
+   "text": "保持承诺",
+   "audioTimeMs": 1160190,
+   "emitMs": 1160577,
+   "isFinal": true
+  },
+  {
+   "text": "对话与交流",
+   "audioTimeMs": 1161770,
+   "emitMs": 1162087,
+   "isFinal": true
+  },
+  {
+   "text": "达成共识。",
+   "audioTimeMs": 1163299.9,
+   "emitMs": 1163682,
+   "isFinal": true
+  },
+  {
+   "text": "虽然我们承认这一点，",
+   "audioTimeMs": 1165610,
+   "emitMs": 1166085,
+   "isFinal": true
+  },
+  {
+   "text": "我的代表团对此表示遗憾。",
+   "audioTimeMs": 1168480.1,
+   "emitMs": 1168787,
+   "isFinal": true
+  },
+  {
+   "text": "到",
+   "audioTimeMs": 1168900,
+   "emitMs": 1169588,
+   "isFinal": true
+  },
+  {
+   "text": "收养",
+   "audioTimeMs": 1170340,
+   "emitMs": 1170681,
+   "isFinal": true
+  },
+  {
+   "text": "延长制裁制度的决议",
+   "audioTimeMs": 1173000,
+   "emitMs": 1173489,
+   "isFinal": true
+  },
+  {
+   "text": "和禁运",
+   "audioTimeMs": 1174640,
+   "emitMs": 1174985,
+   "isFinal": true
+  },
+  {
+   "text": "关于南苏丹共和国。",
+   "audioTimeMs": 1176650,
+   "emitMs": 1177048,
+   "isFinal": true
+  },
+  {
+   "text": "我们认为，",
+   "audioTimeMs": 1179350,
+   "emitMs": 1179927,
+   "isFinal": true
+  },
+  {
+   "text": "持续维护",
+   "audioTimeMs": 1182210.1,
+   "emitMs": 1182725,
+   "isFinal": true
+  },
+  {
+   "text": "手臂",
+   "audioTimeMs": 1183360,
+   "emitMs": 1183829,
+   "isFinal": true
+  },
+  {
+   "text": "武器禁运",
+   "audioTimeMs": 1184480,
+   "emitMs": 1184910,
+   "isFinal": true
+  },
+  {
+   "text": "日益增长",
+   "audioTimeMs": 1186370,
+   "emitMs": 1187019,
+   "isFinal": true
+  },
+  {
+   "text": "与……不一致",
+   "audioTimeMs": 1188059.9,
+   "emitMs": 1188614,
+   "isFinal": true
+  },
+  {
+   "text": "现实情况",
+   "audioTimeMs": 1189400,
+   "emitMs": 1189913,
+   "isFinal": true
+  },
+  {
+   "text": "以及面临的挑战",
+   "audioTimeMs": 1192060,
+   "emitMs": 1192609,
+   "isFinal": true
+  },
+  {
+   "text": "当今国家。",
+   "audioTimeMs": 1193210,
+   "emitMs": 1193630,
+   "isFinal": true
+  },
+  {
+   "text": "而不是支持",
+   "audioTimeMs": 1196180,
+   "emitMs": 1196729,
+   "isFinal": true
+  },
+  {
+   "text": "并加强国家实力，",
+   "audioTimeMs": 1198840,
+   "emitMs": 1199831,
+   "isFinal": true
+  },
+  {
+   "text": "机构，",
+   "audioTimeMs": 1200769.9,
+   "emitMs": 1201427,
+   "isFinal": true
+  },
+  {
+   "text": "它限制了",
+   "audioTimeMs": 1203100,
+   "emitMs": 1203620,
+   "isFinal": true
+  },
+  {
+   "text": "合法能力",
+   "audioTimeMs": 1204630,
+   "emitMs": 1205223,
+   "isFinal": true
+  },
+  {
+   "text": "政府保护其",
+   "audioTimeMs": 1207760,
+   "emitMs": 1208329,
+   "isFinal": true
+  },
+  {
+   "text": "平民",
+   "audioTimeMs": 1209760,
+   "emitMs": 1210375,
+   "isFinal": true
+  },
+  {
+   "text": "确保边境安全，",
+   "audioTimeMs": 1211330.0999999999,
+   "emitMs": 1211893,
+   "isFinal": true
+  },
+  {
+   "text": "并做出有效应对。",
+   "audioTimeMs": 1213560,
+   "emitMs": 1214195,
+   "isFinal": true
+  },
+  {
+   "text": "威胁",
+   "audioTimeMs": 1215049.9,
+   "emitMs": 1215685,
+   "isFinal": true
+  },
+  {
+   "text": "由……提出",
+   "audioTimeMs": 1216170,
+   "emitMs": 1216681,
+   "isFinal": true
+  },
+  {
+   "text": "武装团体。",
+   "audioTimeMs": 1217500,
+   "emitMs": 1218186,
+   "isFinal": true
+  },
+  {
+   "text": "以及其他非国家行为体。",
+   "audioTimeMs": 1220010,
+   "emitMs": 1220682,
+   "isFinal": true
+  },
+  {
+   "text": "我们今天相聚之际，",
+   "audioTimeMs": 1222720,
+   "emitMs": 1223384,
+   "isFinal": true
+  },
+  {
+   "text": "南苏丹各地家庭都在哀悼。",
+   "audioTimeMs": 1227100,
+   "emitMs": 1227704,
+   "isFinal": true
+  },
+  {
+   "text": "五名土木工程师不幸遇难，令人痛惜。",
+   "audioTimeMs": 1232260,
+   "emitMs": 1232972,
+   "isFinal": true
+  },
+  {
+   "text": "尽管",
+   "audioTimeMs": 1233360,
+   "emitMs": 1234180,
+   "isFinal": true
+  },
+  {
+   "text": "进行道路施工",
+   "audioTimeMs": 1236120,
+   "emitMs": 1236681,
+   "isFinal": true
+  },
+  {
+   "text": "位于摩洛哥辛特拉赤道庄园。",
+   "audioTimeMs": 1240470,
+   "emitMs": 1241092,
+   "isFinal": true
+  },
+  {
+   "text": "这些人",
+   "audioTimeMs": 1242480,
+   "emitMs": 1243276,
+   "isFinal": true
+  },
+  {
+   "text": "正在做出贡献",
+   "audioTimeMs": 1244610.1,
+   "emitMs": 1245369,
+   "isFinal": true
+  },
+  {
+   "text": "促进国家发展",
+   "audioTimeMs": 1246500,
+   "emitMs": 1247078,
+   "isFinal": true
+  },
+  {
+   "text": "连接性，",
+   "audioTimeMs": 1247750,
+   "emitMs": 1248373,
+   "isFinal": true
+  },
+  {
+   "text": "以及经济复苏。",
+   "audioTimeMs": 1249330.0999999999,
+   "emitMs": 1249874,
+   "isFinal": true
+  },
+  {
+   "text": "他们的死亡",
+   "audioTimeMs": 1251669.9000000001,
+   "emitMs": 1252374,
+   "isFinal": true
+  },
+  {
+   "text": "为我们服务",
+   "audioTimeMs": 1252970,
+   "emitMs": 1253756,
+   "isFinal": true
+  },
+  {
+   "text": "作为主权者",
+   "audioTimeMs": 1254230.1,
+   "emitMs": 1254865,
+   "isFinal": true
+  },
+  {
+   "text": "提醒",
+   "audioTimeMs": 1255779.9,
+   "emitMs": 1256364,
+   "isFinal": true
+  },
+  {
+   "text": "仍然存在的安全挑战",
+   "audioTimeMs": 1258250,
+   "emitMs": 1258859,
+   "isFinal": true
+  },
+  {
+   "text": "在确保的重要性下",
+   "audioTimeMs": 1260420,
+   "emitMs": 1261064,
+   "isFinal": true
+  },
+  {
+   "text": "那",
+   "audioTimeMs": 1261390,
+   "emitMs": 1261972,
+   "isFinal": true
+  },
+  {
+   "text": "国家的",
+   "audioTimeMs": 1262320,
+   "emitMs": 1262971,
+   "isFinal": true
+  },
+  {
+   "text": "机构",
+   "audioTimeMs": 1263550,
+   "emitMs": 1264259,
+   "isFinal": true
+  },
+  {
+   "text": "配备齐全",
+   "audioTimeMs": 1265430,
+   "emitMs": 1265973,
+   "isFinal": true
+  },
+  {
+   "text": "保护平民",
+   "audioTimeMs": 1267350.1,
+   "emitMs": 1267974,
+   "isFinal": true
+  },
+  {
+   "text": "和支持",
+   "audioTimeMs": 1268330,
+   "emitMs": 1268771,
+   "isFinal": true
+  },
+  {
+   "text": "发展。",
+   "audioTimeMs": 1269210,
+   "emitMs": 1269687,
+   "isFinal": true
+  },
+  {
+   "text": "努力。",
+   "audioTimeMs": 1270080,
+   "emitMs": 1270684,
+   "isFinal": true
+  },
+  {
+   "text": "总统先生，",
+   "audioTimeMs": 1271820,
+   "emitMs": 1272655,
+   "isFinal": true
+  },
+  {
+   "text": "南苏丹坚信",
+   "audioTimeMs": 1275030,
+   "emitMs": 1275638,
+   "isFinal": true
+  },
+  {
+   "text": "可持续和平",
+   "audioTimeMs": 1276740,
+   "emitMs": 1277438,
+   "isFinal": true
+  },
+  {
+   "text": "最佳进阶",
+   "audioTimeMs": 1278470,
+   "emitMs": 1279150,
+   "isFinal": true
+  },
+  {
+   "text": "通过强大的国家机构，",
+   "audioTimeMs": 1281250,
+   "emitMs": 1282141,
+   "isFinal": true
+  },
+  {
+   "text": "有效的安全安排，",
+   "audioTimeMs": 1284019.9,
+   "emitMs": 1284754,
+   "isFinal": true
+  },
+  {
+   "text": "真诚的",
+   "audioTimeMs": 1286060,
+   "emitMs": 1286750,
+   "isFinal": true
+  },
+  {
+   "text": "国有企业。",
+   "audioTimeMs": 1287820,
+   "emitMs": 1288347,
+   "isFinal": true
+  },
+  {
+   "text": "和平进程。",
+   "audioTimeMs": 1289179.9000000001,
+   "emitMs": 1289852,
+   "isFinal": true
+  },
+  {
+   "text": "措施",
+   "audioTimeMs": 1291440,
+   "emitMs": 1292040,
+   "isFinal": true
+  },
+  {
+   "text": "无意中",
+   "audioTimeMs": 1292560,
+   "emitMs": 1293244,
+   "isFinal": true
+  },
+  {
+   "text": "削弱国家能力",
+   "audioTimeMs": 1295100,
+   "emitMs": 1295745,
+   "isFinal": true
+  },
+  {
+   "text": "尽管未能起到威慑作用",
+   "audioTimeMs": 1297409.9000000001,
+   "emitMs": 1298051,
+   "isFinal": true
+  },
+  {
+   "text": "剧透",
+   "audioTimeMs": 1299110,
+   "emitMs": 1299751,
+   "isFinal": true
+  },
+  {
+   "text": "保证",
+   "audioTimeMs": 1299930,
+   "emitMs": 1300546,
+   "isFinal": true
+  },
+  {
+   "text": "仔细重新考虑。",
+   "audioTimeMs": 1302510,
+   "emitMs": 1303260,
+   "isFinal": true
+  },
+  {
+   "text": "在这方面，",
+   "audioTimeMs": 1305370.1,
+   "emitMs": 1306606,
+   "isFinal": true
+  },
+  {
+   "text": "我们恭敬地",
+   "audioTimeMs": 1307669.9000000001,
+   "emitMs": 1308309,
+   "isFinal": true
+  },
+  {
+   "text": "重申",
+   "audioTimeMs": 1309040,
+   "emitMs": 1309508,
+   "isFinal": true
+  },
+  {
+   "text": "我们呼吁安全理事会给予",
+   "audioTimeMs": 1312990.1,
+   "emitMs": 1313419,
+   "isFinal": true
+  },
+  {
+   "text": "适当考虑",
+   "audioTimeMs": 1315030,
+   "emitMs": 1315507,
+   "isFinal": true
+  },
+  {
+   "text": "为了贯彻非洲联盟埃及电力总局（EGAT）和其他区域利益攸关方的既定立场，我们已",
+   "audioTimeMs": 1323460.1,
+   "emitMs": 1323931,
+   "isFinal": true
+  },
+  {
+   "text": "反复",
+   "audioTimeMs": 1325020,
+   "emitMs": 1325510,
+   "isFinal": true
+  },
+  {
+   "text": "主张解除",
+   "audioTimeMs": 1327530,
+   "emitMs": 1328020,
+   "isFinal": true
+  },
+  {
+   "text": "制裁制度",
+   "audioTimeMs": 1329320.0999999999,
+   "emitMs": 1329717,
+   "isFinal": true
+  },
+  {
+   "text": "和武器禁运",
+   "audioTimeMs": 1330870,
+   "emitMs": 1331228,
+   "isFinal": true
+  },
+  {
+   "text": "关于南苏丹。",
+   "audioTimeMs": 1332340.0999999999,
+   "emitMs": 1332726,
+   "isFinal": true
+  },
+  {
+   "text": "来自最亲近之人的视角",
+   "audioTimeMs": 1335950,
+   "emitMs": 1336532,
+   "isFinal": true
+  },
+  {
+   "text": "对当地局势的了解仍然很有价值。",
+   "audioTimeMs": 1340620,
+   "emitMs": 1341133,
+   "isFinal": true
+  },
+  {
+   "text": "在向理事会通报",
+   "audioTimeMs": 1343640,
+   "emitMs": 1343925,
+   "isFinal": true
+  },
+  {
+   "text": "审议。",
+   "audioTimeMs": 1344670,
+   "emitMs": 1345116,
+   "isFinal": true
+  },
+  {
+   "text": "总统先生，",
+   "audioTimeMs": 1346340,
+   "emitMs": 1346815,
+   "isFinal": true
+  },
+  {
+   "text": "南苏丹仍然完全",
+   "audioTimeMs": 1348500,
+   "emitMs": 1349040,
+   "isFinal": true
+  },
+  {
+   "text": "坚定的",
+   "audioTimeMs": 1349409.9000000001,
+   "emitMs": 1350030,
+   "isFinal": true
+  },
+  {
+   "text": "到",
+   "audioTimeMs": 1350470.1,
+   "emitMs": 1351133,
+   "isFinal": true
+  },
+  {
+   "text": "与联合国、非洲联盟开展建设性合作，",
+   "audioTimeMs": 1354630,
+   "emitMs": 1355242,
+   "isFinal": true
+  },
+  {
+   "text": "EGAT，以及",
+   "audioTimeMs": 1356890,
+   "emitMs": 1357552,
+   "isFinal": true
+  },
+  {
+   "text": "所有致力于促进和平的国际伙伴。",
+   "audioTimeMs": 1359940.1,
+   "emitMs": 1360656,
+   "isFinal": true
+  },
+  {
+   "text": "和解，",
+   "audioTimeMs": 1361460,
+   "emitMs": 1362243,
+   "isFinal": true
+  },
+  {
+   "text": "机构建设，",
+   "audioTimeMs": 1363450,
+   "emitMs": 1364150,
+   "isFinal": true
+  },
+  {
+   "text": "以及可持续发展。",
+   "audioTimeMs": 1365549.9,
+   "emitMs": 1366149,
+   "isFinal": true
+  },
+  {
+   "text": "我们对持续的进展感到鼓舞。",
+   "audioTimeMs": 1369660,
+   "emitMs": 1370251,
+   "isFinal": true
+  },
+  {
+   "text": "国际社会的支持",
+   "audioTimeMs": 1371880,
+   "emitMs": 1372629,
+   "isFinal": true
+  },
+  {
+   "text": "并且确信",
+   "audioTimeMs": 1373460,
+   "emitMs": 1374044,
+   "isFinal": true
+  },
+  {
+   "text": "共同努力",
+   "audioTimeMs": 1374960.1,
+   "emitMs": 1375746,
+   "isFinal": true
+  },
+  {
+   "text": "我们可以克服剩余的困难。",
+   "audioTimeMs": 1378130,
+   "emitMs": 1378747,
+   "isFinal": true
+  },
+  {
+   "text": "挑战与创造",
+   "audioTimeMs": 1379960,
+   "emitMs": 1380648,
+   "isFinal": true
+  },
+  {
+   "text": "必要条件",
+   "audioTimeMs": 1382140,
+   "emitMs": 1382850,
+   "isFinal": true
+  },
+  {
+   "text": "和平",
+   "audioTimeMs": 1383280,
+   "emitMs": 1383900,
+   "isFinal": true
+  },
+  {
+   "text": "稳定且",
+   "audioTimeMs": 1384760,
+   "emitMs": 1385403,
+   "isFinal": true
+  },
+  {
+   "text": "繁荣",
+   "audioTimeMs": 1385810,
+   "emitMs": 1386381,
+   "isFinal": true
+  },
+  {
+   "text": "未来。",
+   "audioTimeMs": 1386570.0999999999,
+   "emitMs": 1387207,
+   "isFinal": true
+  },
+  {
+   "text": "致所有南苏丹人民。",
+   "audioTimeMs": 1388740,
+   "emitMs": 1389318,
+   "isFinal": true
+  },
+  {
+   "text": "最后，",
+   "audioTimeMs": 1391890,
+   "emitMs": 1392618,
+   "isFinal": true
+  },
+  {
+   "text": "我方代表谨致以诚挚的谢意",
+   "audioTimeMs": 1395399.9,
+   "emitMs": 1397508,
+   "isFinal": true
+  },
+  {
+   "text": "致那些继续履行安理会职责的成员国",
+   "audioTimeMs": 1398750,
+   "emitMs": 1399521,
+   "isFinal": true
+  },
+  {
+   "text": "支持",
+   "audioTimeMs": 1399980,
+   "emitMs": 1400697,
+   "isFinal": true
+  },
+  {
+   "text": "均衡",
+   "audioTimeMs": 1400950.1,
+   "emitMs": 1401685,
+   "isFinal": true
+  },
+  {
+   "text": "建设性的",
+   "audioTimeMs": 1402289.9,
+   "emitMs": 1402905,
+   "isFinal": true
+  },
+  {
+   "text": "并具有前瞻性",
+   "audioTimeMs": 1403870,
+   "emitMs": 1404498,
+   "isFinal": true
+  },
+  {
+   "text": "对南苏丹的态度。",
+   "audioTimeMs": 1406080,
+   "emitMs": 1406510,
+   "isFinal": true
+  },
+  {
+   "text": "我们重视",
+   "audioTimeMs": 1407710,
+   "emitMs": 1408493,
+   "isFinal": true
+  },
+  {
+   "text": "他们的合作关系",
+   "audioTimeMs": 1409330,
+   "emitMs": 1410100,
+   "isFinal": true
+  },
+  {
+   "text": "并保持",
+   "audioTimeMs": 1410419.9000000001,
+   "emitMs": 1411107,
+   "isFinal": true
+  },
+  {
+   "text": "坚定的",
+   "audioTimeMs": 1411270,
+   "emitMs": 1411722,
+   "isFinal": true
+  },
+  {
+   "text": "协作",
+   "audioTimeMs": 1412820,
+   "emitMs": 1413425,
+   "isFinal": true
+  },
+  {
+   "text": "与所有成员一起。",
+   "audioTimeMs": 1414500,
+   "emitMs": 1415049,
+   "isFinal": true
+  },
+  {
+   "text": "该委员会正在努力",
+   "audioTimeMs": 1417230,
+   "emitMs": 1417850,
+   "isFinal": true
+  },
+  {
+   "text": "我们的共同目标",
+   "audioTimeMs": 1419590,
+   "emitMs": 1420140,
+   "isFinal": true
+  },
+  {
+   "text": "一个和平、安全、",
+   "audioTimeMs": 1422000,
+   "emitMs": 1422650,
+   "isFinal": true
+  },
+  {
+   "text": "以及稳定的南苏丹。",
+   "audioTimeMs": 1424210,
+   "emitMs": 1424647,
+   "isFinal": true
+  },
+  {
+   "text": "展示。",
+   "audioTimeMs": 1439910,
+   "emitMs": 1440251,
+   "isFinal": true
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-07-21T07:02:22.490Z",
+  "rows": [
+    {
+      "symbol": "S/PV.10156",
+      "provider": "soniox-rt-v5",
+      "language": "fr",
+      "qualityRate": 0.5658578856152513,
+      "metric": "WER",
+      "medianLagS": 6.037765636232929,
+      "p90LagS": 15.255048885693745,
+      "atdS": 5.317748941535362,
+      "laalS": 4.419130454754236,
+      "alS": 4.419130454754236,
+      "nEvents": 2177,
+      "costUsd": 0.018396395833333332
+    }
+  ]
+}
