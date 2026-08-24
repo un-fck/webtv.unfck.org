@@ -179,7 +179,12 @@ export async function pollTranscription(
   transcriptId: string,
 ): Promise<PollResult> {
   const transcript = await getTranscriptById(transcriptId);
-  if (!transcript) throw new Error("Transcript not found");
+  // Polling is a public serving path. Suppressed rows remain queryable through
+  // internal DB helpers for audit/recovery, but their content must not be
+  // recoverable by guessing or retaining a transcript ID.
+  if (!transcript || transcript.suppressed_at) {
+    throw new Error("Transcript not found");
+  }
 
   // Realignment offset (WebTV re-cut the audio after transcription) is applied
   // here at the serving boundary; downstream consumers see aligned timestamps.

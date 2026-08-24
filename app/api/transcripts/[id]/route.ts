@@ -57,6 +57,9 @@ export async function GET(
     );
   } catch (error) {
     console.error("Poll error:", error);
+    if (error instanceof Error && error.message === "Transcript not found") {
+      return apiError(404, "not_found", "Transcript not found");
+    }
     return apiError(
       500,
       "internal_error",

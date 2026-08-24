@@ -80,6 +80,7 @@ async function selectCandidates(): Promise<Row[]> {
          FROM webtv.transcripts t
          JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
         WHERE t.transcription_status = 'completed'
+          AND t.suppressed_at IS NULL
           AND t.start_time IS NULL
           AND t.content ? 'statements'
           AND jsonb_array_length(t.content->'statements') > 0

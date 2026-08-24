@@ -29,7 +29,7 @@ export async function POST(
     }
 
     const transcript = await getTranscriptById(transcriptId);
-    if (!transcript) {
+    if (!transcript || transcript.suppressed_at) {
       return apiError(404, "not_found", "Transcript not found");
     }
 

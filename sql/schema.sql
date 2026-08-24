@@ -153,6 +153,12 @@ CREATE TABLE IF NOT EXISTS transcripts (
     -- never auto-retried regardless of this counter.
     retry_count INT NOT NULL DEFAULT 0,
     error_message TEXT,
+    -- Soft suppression keeps legacy/unsafe transcript data for audit while
+    -- removing it from every user-facing read path (migration 027).
+    suppressed_at TIMESTAMPTZ,
+    suppression_reason TEXT,
+    CONSTRAINT transcripts_suppression_fields_check
+      CHECK ((suppressed_at IS NULL) = (suppression_reason IS NULL)),
     -- Audio length we transcribed, frozen at transcription time (migration 008).
     -- Baseline for detecting WebTV re-cuts; videos.duration is overwritten on sync.
     source_duration_ms INTEGER,
@@ -177,6 +183,9 @@ CREATE INDEX IF NOT EXISTS idx_transcripts_kaltura_lang ON transcripts(kaltura_i
 CREATE INDEX IF NOT EXISTS idx_transcripts_status_entry ON transcripts(transcription_status, entry_id);
 CREATE INDEX IF NOT EXISTS idx_transcripts_status_kaltura ON transcripts(transcription_status, kaltura_id);
 CREATE INDEX IF NOT EXISTS transcripts_created_by_idx ON transcripts(created_by);
+CREATE INDEX IF NOT EXISTS idx_transcripts_suppressed_at
+  ON transcripts(suppressed_at)
+  WHERE suppressed_at IS NOT NULL;
 -- Partial index for per-worker scans: SIGTERM-time cleanup and the
 -- periodic heartbeat tick (migration 020).
 CREATE INDEX IF NOT EXISTS idx_transcripts_worker_id ON transcripts(worker_id) WHERE worker_id IS NOT NULL;

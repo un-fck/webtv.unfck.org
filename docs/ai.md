@@ -67,7 +67,7 @@ Separately, PV document alignment can run independently when an official verbati
 
 The transcript has **two status columns** (since migration 003). `transcription_status` transitions
 `scheduled → transcribing → identifying_speakers → analyzing_topics → completed | error`.
-Proposition analysis is **never** part of this pipeline — it is always on-demand and tracked by a separate `analysis_status` column (`none | analyzing | completed | error`), which never moves the transcript off `completed`. A transcript is viewable as soon as its content (`statements`) exists, independent of either status, so running analysis doesn't hide it from other viewers.
+Proposition analysis is **never** part of this pipeline — it is always on-demand and tracked by a separate `analysis_status` column (`none | analyzing | completed | error`), which never moves the transcript off `completed`. A transcript is viewable as soon as its content (`statements`) exists, independent of either status, provided `suppressed_at` is null. Suppression is a separate, reversible serving flag: it preserves the transcript and usage history while allowing a new transcription to be requested.
 
 ---
 

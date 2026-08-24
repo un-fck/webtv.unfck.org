@@ -62,6 +62,7 @@ export async function runRealign(): Promise<RealignResult> {
            FROM webtv.transcripts t
            JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
           WHERE t.transcription_status = 'completed'
+            AND t.suppressed_at IS NULL
             AND t.start_time IS NULL
             AND t.source_duration_ms IS NOT NULL
             AND v.date >= CURRENT_DATE - ($1)::int
