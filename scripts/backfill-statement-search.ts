@@ -13,6 +13,7 @@ async function main() {
     `SELECT transcript_id
        FROM webtv.transcripts
       WHERE transcription_status = 'completed'
+        AND suppressed_at IS NULL
       ORDER BY created_at`,
   );
   const total = res.rows.length;

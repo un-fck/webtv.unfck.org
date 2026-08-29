@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { VideoTable } from "@/components/transcript-table";
 import type { Video } from "@/lib/un-api";
@@ -108,5 +108,66 @@ describe("VideoTable (real fixture rows)", () => {
     const { container } = renderTable();
     const links = container.querySelectorAll('a[href^="/"]');
     expect(links.length).toBeGreaterThan(0);
+  });
+
+  it("merges rows with the same displayed day when DB dates are non-contiguous", () => {
+    const base = videos[0];
+    const crossingRows: Video[] = [
+      {
+        ...base,
+        id: "monday-later",
+        slug: "asset/monday-later",
+        cleanTitle: "Monday later",
+        date: "2026-08-17",
+        scheduledTime: "2026-08-17T05:15:00.000Z",
+      },
+      {
+        ...base,
+        id: "sunday",
+        slug: "asset/sunday",
+        cleanTitle: "Sunday meeting",
+        date: "2026-08-16",
+        scheduledTime: "2026-08-16T12:00:00.000Z",
+      },
+      {
+        ...base,
+        id: "monday-midnight",
+        slug: "asset/monday-midnight",
+        cleanTitle: "Monday midnight",
+        // This is the production edge case: the scraper's date bucket and
+        // the user-visible day derived from scheduledTime disagree.
+        date: "2026-08-16",
+        scheduledTime: "2026-08-17T04:30:00.000Z",
+      },
+    ];
+
+    render(
+      <NextIntlClientProvider
+        locale="en"
+        messages={messages}
+        timeZone="UTC"
+        now={new Date("2026-08-21T12:00:00Z")}
+      >
+        <VideoTable
+          videos={crossingRows}
+          totalCount={crossingRows.length}
+          totalCountIncludingOther={crossingRows.length}
+          serverParams={{ page: 1, pageSize: 50 }}
+          availableDates={["2026-08-17", "2026-08-16"]}
+          filterOptions={{ categories: [base.category], categoryCounts: {} }}
+        />
+      </NextIntlClientProvider>,
+    );
+
+    const mondayHeadings = screen.getAllByRole("heading", {
+      name: /Monday, 17 August/,
+    });
+    expect(mondayHeadings).toHaveLength(1);
+
+    const mondaySection = mondayHeadings[0].parentElement!;
+    const mondayLinks = within(mondaySection)
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    expect(mondayLinks).toEqual(["Monday midnight", "Monday later"]);
   });
 });

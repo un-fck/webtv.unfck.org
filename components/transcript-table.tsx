@@ -536,7 +536,7 @@ export function VideoTable({
   // Active UI locale; appended to /api/videos so server-side
   // record→video conversion returns localized titles/categories.
   const locale = useLocale();
-  const { formatMeetingDate, formatMeetingTime, isFutureDay } =
+  const { formatMeetingDate, formatMeetingTime, isFutureDay, meetingIsoDay } =
     useMeetingFormat();
 
   // Search input state — what the user has typed. Synced both ways with the
@@ -874,54 +874,81 @@ export function VideoTable({
     (serverParams.text?.length ?? 0) > 0;
   const showEmptyState = rows.length === 0;
 
-  // Rows keep the server's order (date DESC, scheduled_time ASC within a day),
-  // which is the time-based sort users expect — both browse and search land
-  // here. `showDay` marks the first row of a day so the parent can split the
-  // feed into per-day tables. Categories are no longer used to re-bucket rows —
-  // they render as a per-row pill in the rightmost column.
+  // Group by the day users actually see (`scheduledTime` in their selected
+  // timezone), not by adjacency in the DB feed. `videos.date` occasionally
+  // differs from that display day around midnight; the feed is ordered by the
+  // former, so an adjacency-based split could produce the same day twice.
+  // Besides looking wrong, those duplicate React keys made old unfiltered day
+  // sections survive client-side filter navigations.
   const displayRows = useMemo<
     {
       video: Video;
+      dayKey: string;
       dateLabel: string;
       category: string;
-      showDay: boolean;
     }[]
-  >(() => {
-    let prevDay: string | null = null;
-    return rows.map((video) => {
-      const dateLabel = formatMeetingDate(video.scheduledTime ?? video.date, {
-        relative: "prefix",
-      });
-      const showDay = dateLabel !== prevDay;
-      prevDay = dateLabel;
-      return {
-        video,
-        dateLabel,
-        category: video.category ?? "",
-        showDay,
-      };
-    });
-  }, [rows, formatMeetingDate]);
+  >(
+    () =>
+      rows.map((video) => {
+        const timestamp = video.scheduledTime ?? video.date;
+        return {
+          video,
+          dayKey: meetingIsoDay(timestamp),
+          dateLabel: formatMeetingDate(timestamp, {
+            relative: "prefix",
+          }),
+          category: video.category ?? "",
+        };
+      }),
+    [rows, formatMeetingDate, meetingIsoDay],
+  );
 
   type DisplayRow = (typeof displayRows)[number];
-  // Split the rows into per-day groups (one rendered table each).
+  // Merge all rows with the same display-day key, even when another DB `date`
+  // bucket occurs between them. Sort meetings inside the merged group by their
+  // actual scheduled timestamp so midnight-crossing rows land in the right
+  // position rather than being appended at the end.
   const dayGroups = useMemo<
-    { day: string; rows: DisplayRow[]; isFuture: boolean }[]
+    { dayKey: string; day: string; rows: DisplayRow[]; isFuture: boolean }[]
   >(() => {
-    const groups: { day: string; rows: DisplayRow[]; isFuture: boolean }[] = [];
-    for (const r of displayRows) {
-      if (r.showDay || groups.length === 0) {
-        const ts = r.video.scheduledTime ?? r.video.date;
-        groups.push({
-          day: r.dateLabel,
+    const byDay = new Map<
+      string,
+      { dayKey: string; day: string; rows: DisplayRow[]; isFuture: boolean }
+    >();
+
+    for (const row of displayRows) {
+      let group = byDay.get(row.dayKey);
+      if (!group) {
+        const timestamp = row.video.scheduledTime ?? row.video.date;
+        group = {
+          dayKey: row.dayKey,
+          day: row.dateLabel,
           rows: [],
-          isFuture: isFutureDay(ts),
-        });
+          isFuture: isFutureDay(timestamp),
+        };
+        byDay.set(row.dayKey, group);
       }
-      groups[groups.length - 1].rows.push(r);
+      group.rows.push(row);
+    }
+
+    const groups = [...byDay.values()];
+    const ascending = serverParams.sort === "date_asc";
+    groups.sort((a, b) =>
+      ascending
+        ? a.dayKey.localeCompare(b.dayKey)
+        : b.dayKey.localeCompare(a.dayKey),
+    );
+    for (const group of groups) {
+      group.rows.sort((a, b) => {
+        const aTime = a.video.scheduledTime ?? `${a.video.date}T12:00:00`;
+        const bTime = b.video.scheduledTime ?? `${b.video.date}T12:00:00`;
+        return (
+          aTime.localeCompare(bTime) || a.video.id.localeCompare(b.video.id)
+        );
+      });
     }
     return groups;
-  }, [displayRows, isFutureDay]);
+  }, [displayRows, isFutureDay, serverParams.sort]);
 
   const futureDayGroups = dayGroups.filter((g) => g.isFuture);
   const pastDayGroups = dayGroups.filter((g) => !g.isFuture);
@@ -1030,8 +1057,12 @@ export function VideoTable({
 
   // Day section: large heading + a per-day table of meeting rows. Used for
   // both past and (when expanded) future day groups.
-  const renderDayGroup = (group: { day: string; rows: DisplayRow[] }) => (
-    <div key={group.day}>
+  const renderDayGroup = (group: {
+    dayKey: string;
+    day: string;
+    rows: DisplayRow[];
+  }) => (
+    <div key={group.dayKey}>
       <h2 className="mb-3 text-xl font-bold tracking-tight text-foreground">
         {group.day}
       </h2>

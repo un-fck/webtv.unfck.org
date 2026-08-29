@@ -206,6 +206,10 @@ export interface Transcript {
   // Times the picker has resumed this row after an interruption.
   retry_count: number;
   error_message: string | null;
+  /** Soft-hidden from every user-facing read path; content remains in the DB. */
+  suppressed_at: Date | null;
+  /** Auditable machine-readable reason paired with suppressed_at. */
+  suppression_reason: string | null;
   source_duration_ms: number | null;
   time_offset_ms: number | null;
   aligned_duration_ms: number | null;
@@ -326,6 +330,8 @@ function mapTranscriptRow(row: Record<string, unknown>): Transcript {
     worker_id: (row.worker_id as string | null) ?? null,
     retry_count: Number(row.retry_count ?? 0),
     error_message: row.error_message as string | null,
+    suppressed_at: (row.suppressed_at as Date | null) ?? null,
+    suppression_reason: (row.suppression_reason as string | null) ?? null,
     source_duration_ms: (row.source_duration_ms as number | null) ?? null,
     time_offset_ms: (row.time_offset_ms as number | null) ?? null,
     aligned_duration_ms: (row.aligned_duration_ms as number | null) ?? null,
@@ -371,10 +377,11 @@ export async function getTranscriptLanguagesByKalturaId(
     q(
       `SELECT DISTINCT ON (language_code)
               language_code, transcription_status, transcript_id
-         FROM webtv.transcripts
-        WHERE kaltura_id = ?
-        ORDER BY language_code,
-                 (transcription_status = 'completed') DESC,
+        FROM webtv.transcripts
+       WHERE kaltura_id = ?
+         AND suppressed_at IS NULL
+       ORDER BY language_code,
+                (transcription_status = 'completed') DESC,
                  updated_at DESC`,
       [kalturaId],
     ),
@@ -408,9 +415,11 @@ export async function getTranscriptByIdForDisplay(
   transcriptId: string,
 ): Promise<Transcript | null> {
   const result = await pool.query(
-    q("SELECT * FROM webtv.transcripts WHERE transcript_id = ?", [
-      transcriptId,
-    ]),
+    q(
+      `SELECT * FROM webtv.transcripts
+        WHERE transcript_id = ? AND suppressed_at IS NULL`,
+      [transcriptId],
+    ),
   );
   if (result.rows.length === 0) return null;
   return mapTranscriptRowForDisplay(result.rows[0]);
@@ -748,6 +757,7 @@ export async function getRunnableTranscripts(): Promise<RunnableTranscript[]> {
        FROM webtv.transcripts t
        JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
       WHERE t.transcription_status IN ('scheduled', 'interrupted')
+        AND t.suppressed_at IS NULL
         AND v.removed_at IS NULL
       ORDER BY t.created_at ASC`,
   );
@@ -787,6 +797,7 @@ export async function getRunnableAnalyses(): Promise<RunnableAnalysis[]> {
     `SELECT transcript_id, retry_count, error_message
        FROM webtv.transcripts
       WHERE analysis_status = 'interrupted'
+        AND suppressed_at IS NULL
       ORDER BY updated_at ASC`,
   );
   return result.rows.map((row) => ({
@@ -1279,7 +1290,7 @@ export async function getTranscriptByKalturaId(
   languageCode?: string,
   completedOnly = true,
 ): Promise<Transcript | null> {
-  const conditions: string[] = ["kaltura_id = ?"];
+  const conditions: string[] = ["kaltura_id = ?", "suppressed_at IS NULL"];
   const args: unknown[] = [kalturaId];
   if (completedOnly) conditions.push("transcription_status = 'completed'");
   if (languageCode) {
@@ -1360,6 +1371,7 @@ export async function getActiveTranscriptByKalturaId(
   const conditions: string[] = [
     "kaltura_id = ?",
     "transcription_status <> 'error'",
+    "suppressed_at IS NULL",
   ];
   const args: unknown[] = [kalturaId];
   if (languageCode) {
@@ -1402,6 +1414,7 @@ export async function getPendingTranscriptByKalturaId(
     q(
       `SELECT * FROM webtv.transcripts
         WHERE kaltura_id = ? AND language_code = ?
+          AND suppressed_at IS NULL
           AND transcription_status NOT IN ('completed', 'error', 'no_content')
         ORDER BY created_at DESC LIMIT 1`,
       [kalturaId, languageCode],
@@ -1420,6 +1433,7 @@ export async function getAllTranscriptedEntries(): Promise<string[]> {
        FROM webtv.videos v
        JOIN webtv.transcripts t ON v.kaltura_id = t.kaltura_id
       WHERE t.transcription_status = 'completed'
+        AND t.suppressed_at IS NULL
         AND v.entry_id IS NOT NULL`,
   );
   return result.rows.map((row) => row.entry_id as string);
@@ -1443,6 +1457,7 @@ export async function getTranscriptedEntriesByLanguage(
          FROM webtv.videos v
          JOIN webtv.transcripts t ON v.kaltura_id = t.kaltura_id
         WHERE t.transcription_status = 'completed'
+          AND t.suppressed_at IS NULL
           AND t.language_code = ?
           AND v.entry_id IS NOT NULL`,
       [language],
@@ -1731,6 +1746,7 @@ export async function getSitemapMeetingLanguages(
          FROM webtv.videos v
          JOIN webtv.transcripts t ON t.kaltura_id = v.kaltura_id
         WHERE t.transcription_status = 'completed'
+          AND t.suppressed_at IS NULL
           AND v.removed_at IS NULL
           AND t.language_code = ANY(?::text[])
         ORDER BY v.date DESC`,
@@ -2275,6 +2291,7 @@ async function runContentSearchQuery(args: {
         LEFT JOIN webtv.speaker_mappings sm ON sm.transcript_id = s.transcript_id
        WHERE t.language_code = ?
          AND t.transcription_status = 'completed'
+         AND t.suppressed_at IS NULL
          AND ${stmtConditions.join(" AND ")}
     ),
     ranked AS (
@@ -2487,7 +2504,8 @@ async function applySentenceStarts(
             ) AS sentences
        FROM webtv.transcripts t
        JOIN unnest($1::text[], $2::int[]) AS p(tid, idx)
-         ON p.tid = t.transcript_id`,
+         ON p.tid = t.transcript_id
+      WHERE t.suppressed_at IS NULL`,
     [tids, idxs],
   );
 
@@ -2564,6 +2582,7 @@ export async function getStatementMatches(
                   JOIN webtv.videos v ON v.kaltura_id = t2.kaltura_id
                  WHERE v.asset_id = ? AND t2.language_code = ?
                    AND t2.transcription_status = 'completed'
+                   AND t2.suppressed_at IS NULL
                  ORDER BY t2.created_at DESC
                  LIMIT 1
               )
@@ -2793,6 +2812,7 @@ export async function getSpeakerMappingsWithMeta(): Promise<
        JOIN webtv.transcripts t ON t.transcript_id = sm.transcript_id
        LEFT JOIN webtv.videos v ON v.kaltura_id = t.kaltura_id
       WHERE t.transcription_status <> 'error'
+        AND t.suppressed_at IS NULL
       ORDER BY t.entry_id,
                (t.transcription_status = 'completed') DESC,
                (t.language_code = 'en') DESC,
@@ -2861,7 +2881,8 @@ export async function getStatementsForRefs(
             ) AS text
        FROM webtv.transcripts t
        JOIN unnest($1::text[], $2::int[]) AS p(tid, idx)
-         ON p.tid = t.transcript_id`,
+         ON p.tid = t.transcript_id
+      WHERE t.suppressed_at IS NULL`,
     [tids, idxs],
   );
   for (const row of result.rows) {
@@ -2922,7 +2943,8 @@ export async function getStatementDurationsForTranscripts(
        FROM webtv.transcripts t,
             jsonb_array_elements(t.content->'statements')
               WITH ORDINALITY AS s(stmt, ord)
-      WHERE t.transcript_id = ANY($1::text[])`,
+      WHERE t.transcript_id = ANY($1::text[])
+        AND t.suppressed_at IS NULL`,
     [transcriptIds],
   );
   for (const row of result.rows) {
@@ -3132,6 +3154,7 @@ export async function getRecentlyCompletedTranscripts(
       `SELECT transcript_id, kaltura_id, entry_id, language_code
          FROM webtv.transcripts
         WHERE transcription_status = 'completed'
+          AND suppressed_at IS NULL
           AND updated_at > NOW() - (? || ' hours')::interval
           AND jsonb_exists(content, 'statements')`,
       [String(sinceHours)],
