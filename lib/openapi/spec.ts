@@ -5,6 +5,7 @@ import {
   LanguagesResponseSchema,
   PvResponseSchema,
   HealthResponseSchema,
+  TranscriptAvailabilityResponseSchema,
   DataApiErrorSchema,
   ApiErrorSchema,
 } from "./schemas";
@@ -108,6 +109,7 @@ const COMPONENT_SCHEMAS: Record<string, z.ZodType> = {
   LanguagesResponse: LanguagesResponseSchema,
   PvResponse: PvResponseSchema,
   HealthResponse: HealthResponseSchema,
+  TranscriptAvailabilityResponse: TranscriptAvailabilityResponseSchema,
   DataApiError: DataApiErrorSchema,
   ApiError: ApiErrorSchema,
 };
@@ -326,6 +328,28 @@ export function buildSpec(): Record<string, unknown> {
           },
         },
       },
+      "/{locale}/kaltura/{kalturaId}.json": {
+        get: {
+          tags: ["meetings"],
+          summary: "Get meeting transcript data by Kaltura player ID",
+          description:
+            "Returns the same response as the asset/citation `.json` route, " +
+            "looked up by the stable Kaltura player ID (`videos.kaltura_id`). " +
+            "The response still advertises the canonical citation or asset URL.",
+          operationId: "getMeetingByKalturaId",
+          parameters: [localeParam, kalturaIdPathParam],
+          responses: {
+            "200": {
+              description: "The meeting and (if available) its transcript.",
+              content: jsonContent("MeetingResponse"),
+            },
+            "404": {
+              description: "Malformed/unknown player ID or removed video.",
+              content: jsonContent("DataApiError"),
+            },
+          },
+        },
+      },
       "/{locale}/{slug}.txt": {
         get: {
           tags: ["meetings"],
@@ -371,6 +395,54 @@ export function buildSpec(): Record<string, unknown> {
             },
             "400": {
               description: "Missing kalturaId.",
+              content: jsonContent("ApiError"),
+            },
+          },
+        },
+      },
+      "/api/transcripts/availability": {
+        get: {
+          tags: ["discovery"],
+          summary: "Resolve a recording and its transcript availability",
+          description:
+            "Lightweight, public CORS endpoint. Pass exactly one identifier. " +
+            "Asset and player IDs are unique; canonical entry IDs may return " +
+            "multiple matches because several WebTV assets can redirect to " +
+            "the same Kaltura media. Valid unknown identifiers return an " +
+            "empty matches array and a safe Transcripts landing-page " +
+            "generationUrl.",
+          operationId: "getTranscriptAvailability",
+          parameters: [
+            qp("assetId", "UN Web TV asset ID, including any slash.", {
+              type: "string",
+            }),
+            qp("webtvUrl", "Full https://webtv.un.org/.../asset/... URL.", {
+              type: "string",
+              format: "uri",
+            }),
+            qp("kalturaId", "Stable Kaltura player ID (1_...).", {
+              type: "string",
+              pattern: "^1_[A-Za-z0-9]+$",
+            }),
+            qp(
+              "entryId",
+              "Canonical Kaltura entry ID fallback; may return multiple matches.",
+              { type: "string", pattern: "^1_[A-Za-z0-9]+$" },
+            ),
+            qp("locale", "Locale used to build page and generation URLs.", {
+              type: "string",
+              enum: ["ar", "zh", "en", "fr", "ru", "es"],
+              default: "en",
+            }),
+          ],
+          responses: {
+            "200": {
+              description: "Resolution result, including zero or more matches.",
+              content: jsonContent("TranscriptAvailabilityResponse"),
+            },
+            "400": {
+              description:
+                "Missing, multiple, or malformed identifiers/locale.",
               content: jsonContent("ApiError"),
             },
           },
@@ -475,4 +547,12 @@ const slugParam = {
     ecosoc: { value: "ecosoc/2024/30", summary: "ECOSOC" },
     assetPermalink: { value: "asset/k1a2b3c4", summary: "Asset permalink" },
   },
+};
+
+const kalturaIdPathParam = {
+  name: "kalturaId",
+  in: "path" as const,
+  required: true,
+  description: "Stable Kaltura player ID stored as videos.kaltura_id.",
+  schema: { type: "string", pattern: "^1_[A-Za-z0-9]+$" },
 };
