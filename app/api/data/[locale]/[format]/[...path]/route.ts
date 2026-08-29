@@ -11,6 +11,7 @@ import {
   getTranscriptByKalturaId,
   getVideoByAssetId,
   getVideoByCitation,
+  getVideoByKalturaId,
   isTranscriptFlagged,
   queryVideos,
   type VideoRecord,
@@ -36,6 +37,7 @@ import { PUBLIC_CORS_HEADERS } from "@/lib/security-headers";
 import { getVideoMetadata, recordToVideo } from "@/lib/un-api";
 import { safeDecodePathSegmentsArray } from "@/lib/utils";
 import { videoUrl } from "@/lib/video-url";
+import { parseTranscriptIdentifier } from "@/lib/transcript-availability";
 import { NextRequest, NextResponse } from "next/server";
 
 // Unified data-API handler. The proxy (proxy.ts) rewrites
@@ -159,6 +161,27 @@ async function handleRequest(
     if (segs[0] === "asset" && segs.length >= 2) {
       const assetId = segs.slice(1).join("/");
       const record = await getVideoByAssetId(assetId);
+      if (!record || record.removed_at) {
+        return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      }
+      return handleMeeting(request, locale, record, format);
+    }
+
+    // Stable Kaltura player ID: /{locale}/kaltura/{id}.{json|txt}. This is a
+    // second entry point into the SAME meeting response builder as asset and
+    // citation URLs; the response's canonical URL remains the human-facing
+    // citation/asset permalink.
+    if (segs[0] === "kaltura" && segs.length === 2) {
+      let kalturaId: string;
+      try {
+        kalturaId = parseTranscriptIdentifier({ kalturaId: segs[1] }).value;
+      } catch {
+        return NextResponse.json(
+          { error: "Invalid Kaltura ID" },
+          { status: 404 },
+        );
+      }
+      const record = await getVideoByKalturaId(kalturaId);
       if (!record || record.removed_at) {
         return NextResponse.json({ error: "Video not found" }, { status: 404 });
       }

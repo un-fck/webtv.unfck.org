@@ -337,6 +337,67 @@
         }
       }
     },
+    "/{locale}/kaltura/{kalturaId}.json": {
+      "get": {
+        "tags": [
+          "meetings"
+        ],
+        "summary": "Get meeting transcript data by Kaltura player ID",
+        "description": "Returns the same response as the asset/citation `.json` route, looked up by the stable Kaltura player ID (`videos.kaltura_id`). The response still advertises the canonical citation or asset URL.",
+        "operationId": "getMeetingByKalturaId",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "path",
+            "required": true,
+            "description": "One of the six official UN languages.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "zh",
+                "en",
+                "fr",
+                "ru",
+                "es"
+              ]
+            }
+          },
+          {
+            "name": "kalturaId",
+            "in": "path",
+            "required": true,
+            "description": "Stable Kaltura player ID stored as videos.kaltura_id.",
+            "schema": {
+              "type": "string",
+              "pattern": "^1_[A-Za-z0-9]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The meeting and (if available) its transcript.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Malformed/unknown player ID or removed video.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/{locale}/{slug}.txt": {
       "get": {
         "tags": [
@@ -455,6 +516,97 @@
           },
           "400": {
             "description": "Missing kalturaId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transcripts/availability": {
+      "get": {
+        "tags": [
+          "discovery"
+        ],
+        "summary": "Resolve a recording and its transcript availability",
+        "description": "Lightweight, public CORS endpoint. Pass exactly one identifier. Asset and player IDs are unique; canonical entry IDs may return multiple matches because several WebTV assets can redirect to the same Kaltura media. Valid unknown identifiers return an empty matches array and a safe Transcripts landing-page generationUrl.",
+        "operationId": "getTranscriptAvailability",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "required": false,
+            "description": "UN Web TV asset ID, including any slash.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webtvUrl",
+            "in": "query",
+            "required": false,
+            "description": "Full https://webtv.un.org/.../asset/... URL.",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          {
+            "name": "kalturaId",
+            "in": "query",
+            "required": false,
+            "description": "Stable Kaltura player ID (1_...).",
+            "schema": {
+              "type": "string",
+              "pattern": "^1_[A-Za-z0-9]+$"
+            }
+          },
+          {
+            "name": "entryId",
+            "in": "query",
+            "required": false,
+            "description": "Canonical Kaltura entry ID fallback; may return multiple matches.",
+            "schema": {
+              "type": "string",
+              "pattern": "^1_[A-Za-z0-9]+$"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "description": "Locale used to build page and generation URLs.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "zh",
+                "en",
+                "fr",
+                "ru",
+                "es"
+              ],
+              "default": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resolution result, including zero or more matches.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptAvailabilityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing, multiple, or malformed identifiers/locale.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1708,6 +1860,138 @@
         },
         "required": [
           "status"
+        ],
+        "additionalProperties": false
+      },
+      "TranscriptAvailabilityResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "assetId",
+                  "kalturaId",
+                  "entryId"
+                ]
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "generationUrl": {
+            "type": "string",
+            "description": "Exact meeting page for one match; locale landing page when unresolved or ambiguous."
+          },
+          "matches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "assetId": {
+                  "type": "string"
+                },
+                "kalturaId": {
+                  "type": "string"
+                },
+                "entryId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "removed": {
+                  "type": "boolean"
+                },
+                "pvSymbol": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "pvPart": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                },
+                "pageUrl": {
+                  "type": "string"
+                },
+                "jsonUrl": {
+                  "type": "string"
+                },
+                "generationUrl": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "available",
+                    "processing",
+                    "unavailable",
+                    "removed"
+                  ]
+                },
+                "languages": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "language": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "scheduled",
+                          "transcribing",
+                          "identifying_speakers",
+                          "analyzing_topics",
+                          "completed",
+                          "no_content",
+                          "error",
+                          "interrupted"
+                        ]
+                      },
+                      "transcriptId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "language",
+                      "status",
+                      "transcriptId"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "assetId",
+                "kalturaId",
+                "entryId",
+                "removed",
+                "pvSymbol",
+                "pvPart",
+                "pageUrl",
+                "jsonUrl",
+                "generationUrl",
+                "status",
+                "languages"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "query",
+          "generationUrl",
+          "matches"
         ],
         "additionalProperties": false
       },

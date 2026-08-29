@@ -336,6 +336,57 @@ export const LanguagesResponseSchema = z.object({
   ),
 });
 
+export const TranscriptAvailabilityStatusSchema = z.enum([
+  "available",
+  "processing",
+  "unavailable",
+  "removed",
+]);
+
+export const TranscriptPipelineStatusSchema = z.enum([
+  "scheduled",
+  "transcribing",
+  "identifying_speakers",
+  "analyzing_topics",
+  "completed",
+  "no_content",
+  "error",
+  "interrupted",
+]);
+
+export const TranscriptAvailabilityResponseSchema = z.object({
+  query: z.object({
+    type: z.enum(["assetId", "kalturaId", "entryId"]),
+    value: z.string(),
+  }),
+  generationUrl: z
+    .string()
+    .describe(
+      "Exact meeting page for one match; locale landing page when unresolved or ambiguous.",
+    ),
+  matches: z.array(
+    z.object({
+      assetId: z.string(),
+      kalturaId: z.string(),
+      entryId: z.string().nullable(),
+      removed: z.boolean(),
+      pvSymbol: z.string().nullable(),
+      pvPart: z.number().int().nullable(),
+      pageUrl: z.string(),
+      jsonUrl: z.string(),
+      generationUrl: z.string(),
+      status: TranscriptAvailabilityStatusSchema,
+      languages: z.array(
+        z.object({
+          language: z.string(),
+          status: TranscriptPipelineStatusSchema,
+          transcriptId: z.string(),
+        }),
+      ),
+    }),
+  ),
+});
+
 const PvTurnSchema = z.object({
   speaker: z.string(),
   affiliation: z.string().optional(),

@@ -360,10 +360,10 @@ export interface TranscriptLanguageInfo {
 // migration 015 every transcript row has a kaltura_id, so this is reliable.
 //
 // Returns at most one row per `language_code`: when retries / forced reruns
-// leave multiple rows for the same (kaltura_id, language) — typically an
-// error'd row plus a completed retry — pick the most recently updated, so
-// the picker shows the user-meaningful state instead of an undefined
-// ordering between same-language rows.
+// leave multiple rows for the same (kaltura_id, language), preserve a
+// completed/viewable row until its replacement completes. This matches the
+// display getter and prevents an in-progress soft replacement from making an
+// available transcript appear unavailable.
 export async function getTranscriptLanguagesByKalturaId(
   kalturaId: string,
 ): Promise<TranscriptLanguageInfo[]> {
@@ -373,7 +373,9 @@ export async function getTranscriptLanguagesByKalturaId(
               language_code, transcription_status, transcript_id
          FROM webtv.transcripts
         WHERE kaltura_id = ?
-        ORDER BY language_code, updated_at DESC`,
+        ORDER BY language_code,
+                 (transcription_status = 'completed') DESC,
+                 updated_at DESC`,
       [kalturaId],
     ),
   );
@@ -2882,6 +2884,23 @@ export async function getVideoByKalturaId(
   );
   if (result.rows.length === 0) return null;
   return mapVideoRow(result.rows[0]);
+}
+
+// Canonical Kaltura entry IDs are intentionally not unique: multiple stable
+// player IDs / WebTV assets can redirect to the same underlying media. This is
+// only a compatibility resolver; cross-table joins continue to use kaltura_id.
+export async function getVideosByEntryId(
+  entryId: string,
+): Promise<VideoRecord[]> {
+  const result = await pool.query(
+    q(
+      `SELECT * FROM webtv.videos
+        WHERE entry_id = ?
+        ORDER BY pv_part ASC NULLS LAST, asset_id ASC`,
+      [entryId],
+    ),
+  );
+  return result.rows.map(mapVideoRow);
 }
 
 /**

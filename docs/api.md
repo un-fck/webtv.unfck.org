@@ -2,7 +2,7 @@
 
 All endpoints are public with no authentication required.
 
-All data endpoints (`.json`/`.txt`, `/llms.txt`, `/llms-full.txt`, `/openapi.json`) are CORS-enabled (`Access-Control-Allow-Origin: *`), so browser code on any origin — e.g. a static site — can `fetch()` them directly without a proxy server.
+All data endpoints (`.json`/`.txt`, `/api/transcripts/availability`, `/llms.txt`, `/llms-full.txt`, `/openapi.json`) are CORS-enabled (`Access-Control-Allow-Origin: *`), so browser code on any origin — e.g. a static site — can `fetch()` them directly without a proxy server.
 
 ## URL Scheme
 
@@ -16,7 +16,7 @@ Every meeting page URL has matching data URLs — just append `.json` or `.txt`:
 
 The locale prefix selects the transcript language (`en`, `fr`, `es`, `ar`, `zh`, `ru`). Override with `?language=XX` if you want a language different from the URL locale.
 
-Internally the rewrite is handled by `proxy.ts`, which maps `/{locale}/{...path}.{json|txt}` to `app/api/data/[locale]/[format]/[...path]/route.ts`, encoding the format as a **path segment** (`json`/`text`) rather than a query param — `NextResponse.rewrite` doesn't reliably surface added search params to the destination handler's `request.nextUrl`, but path segments survive via the route's params. The catch-all handler dispatches on the first path segment (`meetings` → list, `asset` → permalink, anything else → citation slug).
+Internally the rewrite is handled by `proxy.ts`, which maps `/{locale}/{...path}.{json|txt}` to `app/api/data/[locale]/[format]/[...path]/route.ts`, encoding the format as a **path segment** (`json`/`text`) rather than a query param — `NextResponse.rewrite` doesn't reliably surface added search params to the destination handler's `request.nextUrl`, but path segments survive via the route's params. The catch-all handler dispatches on the first path segment (`meetings` → list, `asset` → permalink, `kaltura` → stable player ID, anything else → citation slug).
 
 ### Citation slugs
 
@@ -42,6 +42,61 @@ GA committees use `PV` (verbatim) only for the 1st Committee; the 2nd–6th Comm
 Mirrors UN Web TV's URL grammar exactly — swap the host `webtv.un.org` → `transcripts.un.org` to find the corresponding transcript page.
 
 Slug logic lives in `lib/meeting-slug.ts`; the page-URL builder is `videoUrl()` in `lib/video-url.ts`.
+
+### Resolve transcript availability
+
+Clients that only need to decide whether to show transcript content should use
+the lightweight resolver rather than download the full meeting JSON:
+
+```http
+GET /api/transcripts/availability?kalturaId=1_hrmtg9f4&locale=en
+```
+
+Pass **exactly one** of `assetId`, `webtvUrl`, `kalturaId`, or `entryId`.
+`locale` defaults to `en`. A WebTV URL is normalized to its full asset ID.
+Asset IDs and stable player IDs resolve uniquely. A canonical `entryId` is only
+a compatibility fallback and can return multiple matches because several
+stable player IDs may redirect to the same underlying Kaltura media.
+
+```json
+{
+  "query": { "type": "kalturaId", "value": "1_hrmtg9f4" },
+  "generationUrl": "https://transcripts.un.org/en/sc/10001",
+  "matches": [
+    {
+      "assetId": "k1h/k1hrmtg9f4",
+      "kalturaId": "1_hrmtg9f4",
+      "entryId": "1_yuo0w3j6",
+      "removed": false,
+      "pvSymbol": "S/PV.10001",
+      "pvPart": 1,
+      "pageUrl": "https://transcripts.un.org/en/sc/10001",
+      "jsonUrl": "https://transcripts.un.org/en/sc/10001.json",
+      "generationUrl": "https://transcripts.un.org/en/sc/10001",
+      "status": "available",
+      "languages": [
+        {
+          "language": "en",
+          "status": "completed",
+          "transcriptId": "..."
+        }
+      ]
+    }
+  ]
+}
+```
+
+Overall `status` is `available`, `processing`, `unavailable`, or `removed`.
+Language rows expose the pipeline status (`scheduled`, `transcribing`,
+`identifying_speakers`, `analyzing_topics`, `completed`, `no_content`, `error`,
+or `interrupted`). A syntactically valid unknown identifier returns `200` with
+an empty `matches` array and a locale landing-page `generationUrl`; malformed,
+missing, or multiple identifiers return `400`.
+
+The top-level `generationUrl` is the exact meeting page for one match. For an
+unresolved or ambiguous identifier it safely falls back to the Transcripts
+locale landing page. Each match always carries its exact meeting page as
+`generationUrl`, where a signed-in user can generate a missing transcript.
 
 ### Timestamp deeplinks (`?t=`)
 
@@ -183,6 +238,7 @@ Examples:
 - `GET /fr/ga/79/21.json` (French transcript)
 - `GET /en/sc/10175/2.json` (part 2)
 - `GET /en/asset/k1o/k1o43lgs4z.json` (permalink form)
+- `GET /en/kaltura/1_o43lgs4z.json` (stable Kaltura player ID)
 
 Returns the video object with full transcript data including statements, speaker mappings, and topics.
 
