@@ -528,6 +528,8 @@ export async function submitTranscription(
      * counter-based, not ownership-based). null/omitted for script runs.
      */
     createdBy?: string | null;
+    /** Explicit user request to replace an existing transcript. */
+    isRetranscription?: boolean;
   } = {},
 ): Promise<{
   entryId: string;
@@ -581,6 +583,12 @@ export async function submitTranscription(
       client,
       options.createdBy ?? null,
     );
+    if (options.isRetranscription && options.createdBy) {
+      await client.query(
+        "UPDATE webtv.transcripts SET is_retranscription = TRUE WHERE transcript_id = $1",
+        [transcriptId],
+      );
+    }
     // Claim ownership in the same advisory-locked transaction so the row
     // never sits in `transcribing` without a worker_id — closes the window
     // where a SIGTERM right after insert would leave the row invisible to

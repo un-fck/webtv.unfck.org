@@ -1144,11 +1144,9 @@ export async function withJobLock<T>(
 // `processing_usage_events`, and `sent_transcript_notifications` — a single
 // DELETE on `transcripts` is atomic on its own, no transaction wrapper needed.
 
-// Used by the `pnpm retranscribe` (force: true) path to wipe existing rows
-// before re-running the pipeline. Keyed on `kaltura_id` rather than
-// `entry_id` so the DELETE can't miss rows whose stored entry_id drifted
-// from the current Kaltura redirect resolution (see CLAUDE.md "Joining
-// transcripts ↔ videos" + the languages-route fix that motivated this).
+// Destructive maintenance helper (currently no callers). Normal and forced
+// retranscription preserve old rows and their notification history. Keyed on
+// kaltura_id so deletion cannot miss rows after Kaltura redirect changes.
 export async function deleteTranscriptsForKalturaId(
   kalturaId: string,
   languageCode?: string,
@@ -2401,8 +2399,7 @@ async function runContentSearchQuery(args: {
   );
 
   const countRow = countLocalized.rows[0] as
-    | { total?: string; stmt_total?: string }
-    | undefined;
+    { total?: string; stmt_total?: string } | undefined;
   const total = Number(countRow?.total ?? 0);
   return {
     records,
@@ -3222,23 +3219,59 @@ export async function getFeedSubscribers(
   }));
 }
 
-// Atomically claim the right to send (user, transcript). Returns true if this
-// caller wrote the ledger row, false if another caller had already claimed it.
-// Claim BEFORE sending so two concurrent replicas can't both pass the check
-// and double-send. The trade: an SMTP failure after a successful claim leaves
-// the ledger row in place and the user never gets the email — acceptable
-// because (a) SMTP failures are logged + reported to Sentry, and (b) duplicate
-// emails are a worse user-visible failure than a rare missed notification.
+/** The explicit replacement requester is eligible even without a subscription. */
+export async function getRetranscriptionRequester(
+  transcriptId: string,
+): Promise<Recipient | null> {
+  const result = await pool.query(
+    `SELECT u.id AS user_id, u.email
+       FROM webtv.transcripts t JOIN webtv.users u ON u.id = t.created_by
+      WHERE t.transcript_id = $1 AND t.is_retranscription`,
+    [transcriptId],
+  );
+  return result.rows[0] ?? null;
+}
+
+// Serialize across transcript versions, as well as instant/cron workers. A
+// separate statement after acquiring the lock sees the previous holder's commit
+// under READ COMMITTED. Historical ledger rows count without any backfill.
+// Keep claiming before delivery: delivery failures are reported to Sentry, but
+// retain the claim to avoid duplicate mail after ambiguous transport failures.
 export async function claimTranscriptNotification(
   userId: string,
   transcriptId: string,
 ): Promise<boolean> {
-  const result = await pool.query(
-    q(
+  return withTransaction(async (client) => {
+    const target = await client.query(
+      `SELECT kaltura_id, language_code FROM webtv.transcripts
+        WHERE transcript_id = $1`,
+      [transcriptId],
+    );
+    if (!target.rows.length) return false;
+    const { kaltura_id, language_code } = target.rows[0];
+    await client.query("SELECT pg_advisory_xact_lock($1, hashtext($2)::int)", [
+      4, // Notification namespace (distinct from video/job/PV locks).
+      JSON.stringify([userId, kaltura_id, language_code]),
+    ]);
+    const result = await client.query(
       `INSERT INTO webtv.sent_transcript_notifications (user_id, transcript_id)
-       VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING user_id`,
+       SELECT $1, t.transcript_id FROM webtv.transcripts t
+        WHERE t.transcript_id = $2
+          AND t.transcription_status = 'completed'
+          AND t.suppressed_at IS NULL
+          AND (
+            (t.is_retranscription AND t.created_by = $1::uuid)
+            OR NOT EXISTS (
+              SELECT 1 FROM webtv.sent_transcript_notifications n
+              JOIN webtv.transcripts prior ON prior.transcript_id = n.transcript_id
+              WHERE n.user_id = $1::uuid
+                AND prior.kaltura_id = t.kaltura_id
+                AND prior.language_code = t.language_code
+            )
+          )
+       ON CONFLICT DO NOTHING RETURNING user_id`,
       [userId, transcriptId],
-    ),
-  );
-  return (result.rowCount ?? 0) > 0;
+    );
+    return (result.rowCount ?? 0) > 0;
+  });
 }

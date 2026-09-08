@@ -173,6 +173,8 @@ CREATE TABLE IF NOT EXISTS transcripts (
     -- User who initiated this transcript (migration 012). Tracking only; daily
     -- limits are counter-based. NULL for script-initiated runs (pnpm retranscribe).
     created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    -- Allows completion mail to the explicit requester of a replacement.
+    is_retranscription BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

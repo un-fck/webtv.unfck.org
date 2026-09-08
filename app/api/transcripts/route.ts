@@ -165,6 +165,7 @@ export async function POST(request: NextRequest) {
         schedule: after,
         createdBy: auth.user.id,
         force: true,
+        isRetranscription: true,
       });
       return NextResponse.json({ transcriptId, stage });
     }

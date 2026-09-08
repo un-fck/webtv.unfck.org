@@ -3,6 +3,7 @@ import {
   getVideoByKalturaId,
   getVideoSubscribers,
   getFeedSubscribers,
+  getRetranscriptionRequester,
   getAllFeeds,
   getTranscriptById,
   claimTranscriptNotification,
@@ -36,13 +37,13 @@ export interface NotifyResult {
  *
  * Correctness across both triggers rests on `claimTranscriptNotification`: it
  * atomically claims each `(user, transcript)` in the `sent_transcript_notifications`
- * ledger BEFORE sending, so whichever trigger loses the race simply skips — no
- * duplicate emails even if the instant path and the cron fire concurrently.
+ * ledger BEFORE sending. Claims are serialized per user/meeting/language and
+ * check earlier transcript versions too. Only an explicit replacement requester
+ * may be notified again, once for that replacement.
  *
  * Never throws. Per-recipient send failures and any top-level error are logged
- * + reported to Sentry and returned in `errors`; the caller (a pipeline
- * completion path) must not be broken by a notification hiccup, and the cron
- * backstop will retry within its lookback window.
+ * + reported to Sentry and returned in `errors`. Pre-claim failures can be
+ * retried by the cron; delivery failures retain their claim to avoid duplicates.
  *
  * @param allFeeds Pass the already-fetched feed list to avoid a per-transcript
  *   `getAllFeeds()` round-trip when notifying many transcripts (the cron does
@@ -71,17 +72,19 @@ export async function notifyTranscriptSubscribers(
 
     const feeds = allFeeds ?? (await getAllFeeds());
 
-    // Recipients = per-video subscribers ∪ subscribers of any matching feed.
+    // Recipients = per-video subscribers ∪ matching feed subscribers ∪ requester.
     // Both filtered by the completing transcript's language — subscriptions
     // are per-(video, language) and per-(feed, language).
     const feedKeys = matchFeeds(video, feeds);
-    const [videoSubs, feedSubs] = await Promise.all([
+    const [videoSubs, feedSubs, requester] = await Promise.all([
       getVideoSubscribers(t.kaltura_id, language),
       getFeedSubscribers(feedKeys, language),
+      getRetranscriptionRequester(t.transcript_id),
     ]);
 
     const byUser = new Map<string, Recipient>();
     for (const r of [...videoSubs, ...feedSubs]) byUser.set(r.user_id, r);
+    if (requester) byUser.set(requester.user_id, requester);
     if (byUser.size === 0) return { sent, errors };
 
     for (const recipient of byUser.values()) {
@@ -95,7 +98,13 @@ export async function notifyTranscriptSubscribers(
       );
       if (!claimed) continue;
       try {
-        await sendTranscriptReady(recipient.email, video);
+        await sendTranscriptReady(
+          recipient.email,
+          video,
+          requester?.user_id === recipient.user_id
+            ? "retranscription"
+            : "subscription",
+        );
         sent++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);

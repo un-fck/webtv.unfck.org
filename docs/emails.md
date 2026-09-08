@@ -271,6 +271,35 @@ Both public send functions call `deliver()` — nothing else sends mail:
 `SITE_TITLE` is exported from `lib/email/transport.ts`; the SMTP transporter and
 `mailFrom` are private to that module.
 
+### Transcript completion notifications
+
+Ordinary feed and individual-video subscribers receive at most one notification
+per user, meeting (`kaltura_id`), and language, even when multiple transcript
+versions complete. The existing `sent_transcript_notifications` history is
+consulted under a transaction-scoped advisory lock, so concurrent completion and
+cron workers cannot both claim different versions for the same recipient.
+
+An explicit user-requested replacement is marked `is_retranscription`; its
+`created_by` user receives one completion notification for that replacement,
+even without a feed/video subscription and even if previously notified about the
+meeting. The same recipient appearing in both groups still gets one email. The
+requester email explains that it follows their fresh-transcription request.
+Automated or script-created replacements do not get this requester exception.
+
+Apply `sql/migrations/028_retranscription_notifications.sql` before deploying this
+behavior. Existing rows retain the default false marker, avoiding retrospective
+requester emails. Notification history requires no backfill. Claims are recorded
+before delivery; a delivery failure retains its claim to avoid duplicate mail
+when a transport failure has an ambiguous outcome.
+
+To exercise the real SQL and competing workers against a disposable local
+PostgreSQL instance (the test creates and drops its own database):
+
+```bash
+TEST_NOTIFICATION_DB_URL=postgresql://user@127.0.0.1:5432/postgres \
+  pnpm exec vitest run lib/db.notifications.test.ts
+```
+
 ### Environment variables
 
 | Var                  | Purpose                                                                 |
