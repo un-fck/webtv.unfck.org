@@ -617,13 +617,11 @@ export function TranscriptionPanel({
   };
 
   const pollForCompletion = async (tid: string, signal: AbortSignal) => {
-    let pollCount = 0;
-    const maxTranscriptionPolls = 200;
+    // Job lifetime belongs to the server; elapsed browser time is not failure.
 
     while (true) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       if (signal.aborted) return;
-      pollCount++;
 
       let pollResponse: Response;
       try {
@@ -668,11 +666,6 @@ export function TranscriptionPanel({
       if (data.stage === "no_content") break;
       if (data.stage === "error")
         throw new Error(data.error_message || "Pipeline failed");
-      if (data.stage === "transcribing" && pollCount >= maxTranscriptionPolls) {
-        throw new Error(
-          "Transcription timeout - audio processing took too long",
-        );
-      }
     }
   };
 
@@ -692,7 +685,7 @@ export function TranscriptionPanel({
   // swallowed by the caller, and left the banner on "in progress" forever.
   // Hence the rules here: network-level failures RETRY (the pipeline runs
   // server-side and is unaffected), only explicit outcomes — completed, error
-  // stage, HTTP error, deadline — end the wait, and a visibilitychange nudge
+  // stage, HTTP error — end the wait, and a visibilitychange nudge
   // re-syncs immediately when the user returns to a timer-throttled
   // background tab.
   const retranscribePendingId = meta?.pendingRetranscribeId ?? null;
@@ -702,10 +695,6 @@ export function TranscriptionPanel({
     const ctrl = new AbortController();
     const signal = ctrl.signal;
     const POLL_MS = 3000;
-    // Wall-clock budget, not a poll count: throttled background-tab timers
-    // stretch the interval, and a 3h meeting's pipeline can run past an hour.
-    const DEADLINE_MS = 3 * 60 * 60 * 1000;
-    const startedAt = Date.now();
     let timer: ReturnType<typeof setTimeout> | null = null;
     let inFlight = false;
 
@@ -770,10 +759,6 @@ export function TranscriptionPanel({
             ...(m ?? EMPTY_META),
             pendingRetranscribeStage: data.stage,
           }));
-        }
-        if (Date.now() - startedAt > DEADLINE_MS) {
-          setRetranscribeError("Fresh transcription timeout");
-          clearPending();
         }
       } finally {
         inFlight = false;
