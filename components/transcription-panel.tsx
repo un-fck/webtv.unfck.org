@@ -103,6 +103,7 @@ interface TranscriptionPanelProps {
   kalturaId: string;
   video: Video;
   isLoggedIn: boolean;
+  experimentalAccess: boolean;
   pvSymbol?: string;
   /**
    * Pre-loaded transcript data the meeting page can pass when it was already
@@ -196,6 +197,7 @@ export function TranscriptionPanel({
   kalturaId,
   video,
   isLoggedIn,
+  experimentalAccess,
   pvSymbol,
   initialTranscript,
 }: TranscriptionPanelProps) {
@@ -249,22 +251,30 @@ export function TranscriptionPanel({
   // Deep-linkable view: `?view=pv` / `?view=analysis` (transcript is the
   // default and carries no param). Gate the initial read against what actually
   // exists for this viewer — a `pv` link needs a PV symbol, an `analysis` link
-  // needs a signed-in user (the analysis tab isn't rendered otherwise) — so a
+  // needs experimental access (the analysis tab isn't rendered otherwise) — so a
   // stale/forged param falls back to the transcript rather than an empty tab.
   const searchParams = useSearchParams();
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+  const [requestedViewMode, setViewMode] = useState<ViewMode>(() => {
     const v = searchParams.get("view");
     if (v === "pv" && pvSymbol) return "pv";
-    if (v === "analysis" && isLoggedIn) return "analysis";
+    if (v === "analysis" && experimentalAccess) return "analysis";
     return "transcript";
   });
+  const viewMode =
+    requestedViewMode === "analysis" && !experimentalAccess
+      ? "transcript"
+      : requestedViewMode;
   // Wrap the setter so a tab switch reflects into `?view=`, dropping the param
   // for the transcript default. Pure client state — replaceState only, no
   // navigation (see lib/url-params.ts).
-  const changeViewMode = useCallback((mode: ViewMode) => {
-    setViewMode(mode);
-    setUrlParam("view", mode === "transcript" ? undefined : mode);
-  }, []);
+  const changeViewMode = useCallback(
+    (mode: ViewMode) => {
+      if (mode === "analysis" && !experimentalAccess) return;
+      setViewMode(mode);
+      setUrlParam("view", mode === "transcript" ? undefined : mode);
+    },
+    [experimentalAccess],
+  );
   // One atom for the transcript-row metadata (see TranscriptMeta) — seeded
   // here for the SSR path and via metaFromPayload(data) in checkCache for the
   // fetch path; the shared function is what keeps the two paths identical.
@@ -854,7 +864,7 @@ export function TranscriptionPanel({
   };
 
   const handleRunAnalysis = async () => {
-    if (!transcriptId) return;
+    if (!experimentalAccess || !transcriptId) return;
     const setAnalysisStatus = (s: TranscriptMeta["analysisStatus"]) =>
       setMeta((m) => ({ ...(m ?? EMPTY_META), analysisStatus: s }));
     setAnalysisStatus("analyzing");
@@ -1383,6 +1393,7 @@ export function TranscriptionPanel({
         hasPropositions={propositions.length > 0}
         hasTopics={Object.keys(topics).length > 0}
         isLoggedIn={isLoggedIn}
+        experimentalAccess={experimentalAccess}
         checking={checking}
         stage={stage}
         starting={starting}
@@ -1473,17 +1484,19 @@ export function TranscriptionPanel({
         />
       )}
 
-      {isLoggedIn && viewMode === "analysis" && propositions.length > 0 && (
-        <AnalysisView
-          propositions={propositions}
-          statements={statements}
-          speakerMappings={speakerMappings}
-          countryNames={countryNames}
-          onJumpToTimestamp={(ms) => seekToTimestamp(ms / 1000)}
-        />
-      )}
+      {experimentalAccess &&
+        viewMode === "analysis" &&
+        propositions.length > 0 && (
+          <AnalysisView
+            propositions={propositions}
+            statements={statements}
+            speakerMappings={speakerMappings}
+            countryNames={countryNames}
+            onJumpToTimestamp={(ms) => seekToTimestamp(ms / 1000)}
+          />
+        )}
 
-      {isLoggedIn &&
+      {experimentalAccess &&
         viewMode === "analysis" &&
         propositions.length === 0 &&
         stage === "completed" && (

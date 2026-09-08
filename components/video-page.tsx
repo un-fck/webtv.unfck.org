@@ -200,7 +200,9 @@ export async function renderVideoPage({
   }
 
   const metadata = html ? parseVideoMetadata(html) : createEmptyMetadata();
-  const isLoggedIn = !!(await getCurrentUser());
+  const user = await getCurrentUser();
+  const isLoggedIn = !!user;
+  const experimentalAccess = user?.experimentalAccess ?? false;
 
   const tMeta = await getTranslations({ locale, namespace: "metadata" });
   const dateLabel = formatDateForMetadata(record.date, locale);
@@ -271,6 +273,7 @@ export async function renderVideoPage({
               kalturaId={kalturaId}
               locale={locale}
               isLoggedIn={isLoggedIn}
+              experimentalAccess={experimentalAccess}
               video={video}
               record={record}
             />

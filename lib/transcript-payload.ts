@@ -27,7 +27,7 @@ export interface TranscriptPayload {
   statements: TranscriptContent["statements"];
   speakerMappings: SpeakerMapping;
   topics: NonNullable<TranscriptContent["topics"]>;
-  /** Login-gated: empty for signed-out viewers (private analysis). */
+  /** Experimental: empty for viewers without experimental access. */
   propositions: NonNullable<TranscriptContent["propositions"]>;
   transcriptId: string;
   language: string | null;
@@ -48,10 +48,9 @@ export interface TranscriptPayload {
 
 export async function buildTranscriptPayload(
   transcript: Transcript,
-  { isLoggedIn }: { isLoggedIn: boolean },
+  { experimentalAccess }: { experimentalAccess: boolean },
 ): Promise<TranscriptPayload> {
-  const fullMapping =
-    (await getSpeakerMapping(transcript.transcript_id)) || {};
+  const fullMapping = (await getSpeakerMapping(transcript.transcript_id)) || {};
   // Off-record statements are stored but never served (lib/off-record.ts).
   const { statements: visibleStatements, speakerMappings } = filterOffRecord(
     transcript.content.statements,
@@ -71,7 +70,9 @@ export async function buildTranscriptPayload(
     statements: stripWordsFromStatements(visibleStatements),
     speakerMappings,
     topics: transcript.content.topics || {},
-    propositions: isLoggedIn ? transcript.content.propositions || [] : [],
+    propositions: experimentalAccess
+      ? transcript.content.propositions || []
+      : [],
     transcriptId: transcript.transcript_id,
     language: transcript.language_code,
     analysisStatus: transcript.analysis_status,

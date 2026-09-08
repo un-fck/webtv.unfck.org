@@ -42,7 +42,7 @@ async function respondWithCached(cached: Transcript) {
   }
 
   const speakerMappings = await getSpeakerMapping(cached.transcript_id);
-  // Propositions ("analysis") are private — only return them to signed-in users.
+  // Propositions ("analysis") are private — only return them to users with experimental access.
   const user = await getCurrentUser();
   const flagged = isTranscriptFlagged(cached);
   // Pending retranscribe id (if any): the in-progress row that will eventually
@@ -54,22 +54,27 @@ async function respondWithCached(cached: Transcript) {
           cached.language_code,
         )
       : null;
-  return NextResponse.json({
-    statements: cached.content.statements,
-    language: cached.language_code,
-    cached: true,
-    transcriptId: cached.transcript_id,
-    stage: "completed",
-    analysis_status: cached.analysis_status,
-    topics: cached.content.topics || {},
-    propositions: user ? cached.content.propositions || [] : [],
-    speakerMappings: speakerMappings || {},
-    flagged,
-    sourceDurationMs: cached.source_duration_ms,
-    alignedDurationMs: cached.aligned_duration_ms,
-    pendingRetranscribeId: pending?.transcript_id ?? null,
-    pendingRetranscribeStage: pending?.transcription_status ?? null,
-  });
+  return NextResponse.json(
+    {
+      statements: cached.content.statements,
+      language: cached.language_code,
+      cached: true,
+      transcriptId: cached.transcript_id,
+      stage: "completed",
+      analysis_status: cached.analysis_status,
+      topics: cached.content.topics || {},
+      propositions: user?.experimentalAccess
+        ? cached.content.propositions || []
+        : [],
+      speakerMappings: speakerMappings || {},
+      flagged,
+      sourceDurationMs: cached.source_duration_ms,
+      alignedDurationMs: cached.aligned_duration_ms,
+      pendingRetranscribeId: pending?.transcript_id ?? null,
+      pendingRetranscribeStage: pending?.transcription_status ?? null,
+    },
+    { headers: { "Cache-Control": "private, no-cache", Vary: "Cookie" } },
+  );
 }
 
 export async function POST(request: NextRequest) {

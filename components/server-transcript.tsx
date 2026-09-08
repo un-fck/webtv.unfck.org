@@ -23,12 +23,14 @@ import { TranscriptionPanel } from "@/components/transcription-panel";
 export async function ServerTranscript({
   kalturaId,
   locale,
+  experimentalAccess,
   isLoggedIn,
   video,
   record,
 }: {
   kalturaId: string;
   locale: string;
+  experimentalAccess: boolean;
   isLoggedIn: boolean;
   video: Video;
   record: VideoRecord;
@@ -36,13 +38,14 @@ export async function ServerTranscript({
   const initialTranscript = await loadInitialTranscript({
     kalturaId,
     locale,
-    isLoggedIn,
+    experimentalAccess,
   });
 
   return (
     <TranscriptionPanel
       kalturaId={kalturaId}
       video={video}
+      experimentalAccess={experimentalAccess}
       isLoggedIn={isLoggedIn}
       pvSymbol={
         video.pvAvailable && video.pvSymbol ? video.pvSymbol : undefined
@@ -59,11 +62,11 @@ export async function ServerTranscript({
 async function loadInitialTranscript({
   kalturaId,
   locale,
-  isLoggedIn,
+  experimentalAccess,
 }: {
   kalturaId: string;
   locale: string;
-  isLoggedIn: boolean;
+  experimentalAccess: boolean;
 }): Promise<TranscriptPayload | null> {
   const transcript = await getActiveTranscriptByKalturaId(kalturaId, locale);
   if (
@@ -74,8 +77,8 @@ async function loadInitialTranscript({
     return null;
   }
   // Same builder as /api/transcripts/check — the two delivery paths must
-  // serve the identical package (login-gated propositions, word-stripping,
+  // serve the identical package (experimental-access-gated propositions, word-stripping,
   // flagged/realignment state) or panel state silently diverges between
   // server-rendered and fetched loads.
-  return buildTranscriptPayload(transcript, { isLoggedIn });
+  return buildTranscriptPayload(transcript, { experimentalAccess });
 }

@@ -47,20 +47,24 @@ export async function GET(request: NextRequest) {
     // Timestamps are already realignment-shifted by the display getter above.
     const statements = cached.content.statements;
     if (statements && statements.length > 0) {
-      // Propositions ("analysis") are private — only returned to signed-in
-      // users (gated inside buildTranscriptPayload). Word-level timestamps are
+      // Propositions ("analysis") are private — only returned to users with
+      // experimental access (gated inside buildTranscriptPayload). Word-level timestamps are
       // stripped there too (63% of the raw payload — 3 MB of 4.4 MB on a
       // typical SC meeting); the panel fetches words separately via
       // /api/transcripts/[id]/words once the transcript is on screen.
       const user = await getCurrentUser();
       const payload = await buildTranscriptPayload(cached, {
-        isLoggedIn: !!user,
+        experimentalAccess: user?.experimentalAccess ?? false,
       });
-      return compressedJson(request, {
-        ...payload,
-        cached: true,
-        stage: "completed",
-      });
+      return compressedJson(
+        request,
+        {
+          ...payload,
+          cached: true,
+          stage: "completed",
+        },
+        { headers: { "Cache-Control": "private, no-cache", Vary: "Cookie" } },
+      );
     }
 
     // Completed but no statements → legacy row. We deliberately do NOT auto-run

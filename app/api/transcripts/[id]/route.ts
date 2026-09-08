@@ -5,6 +5,7 @@ import { pollTranscription } from "@/lib/transcription";
 import { getSpeakerMapping } from "@/lib/speakers";
 import { filterOffRecord } from "@/lib/off-record";
 import { apiError } from "@/lib/api-error";
+import { getCurrentUser } from "@/lib/auth/service";
 import { compressedJson } from "@/lib/compressed-json";
 
 export async function GET(
@@ -19,6 +20,9 @@ export async function GET(
     }
 
     const result = await pollTranscription(transcriptId);
+    const user = await getCurrentUser();
+    // Filter before serializing and computing the ETag, including on 304s.
+    if (!user?.experimentalAccess) result.propositions = [];
 
     // If completed or has statements, include speaker mappings — with
     // off-record statements hidden (kept in DB, filtered at the serving
@@ -34,7 +38,7 @@ export async function GET(
     // The client polls this every few seconds while a transcript progresses.
     // The body carries the full `statements` array — large and mostly unchanged
     // between polls. Attach a weak validator (ETag over the body) with
-    // `Cache-Control: no-cache` so the browser revalidates via If-None-Match and
+    // `Cache-Control: private, no-cache` so the browser revalidates via If-None-Match and
     // unchanged polls get a bodiless 304 (no client changes — the browser
     // transparently reuses its cached copy). Saves the repeated re-download.
     // ETag is computed over the raw (un-gzipped) JSON so it stays stable
@@ -46,14 +50,24 @@ export async function GET(
     if (request.headers.get("if-none-match") === etag) {
       return new NextResponse(null, {
         status: 304,
-        headers: { "Cache-Control": "no-cache", ETag: etag },
+        headers: {
+          "Cache-Control": "private, no-cache",
+          Vary: "Cookie",
+          ETag: etag,
+        },
       });
     }
 
     return compressedJson(
       request,
       { ...result, speakerMappings },
-      { headers: { "Cache-Control": "no-cache", ETag: etag } },
+      {
+        headers: {
+          "Cache-Control": "private, no-cache",
+          Vary: "Cookie",
+          ETag: etag,
+        },
+      },
     );
   } catch (error) {
     console.error("Poll error:", error);

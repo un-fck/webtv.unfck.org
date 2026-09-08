@@ -39,6 +39,7 @@ interface TranscriptToolbarProps {
   hasPropositions: boolean;
   hasTopics: boolean;
   isLoggedIn: boolean;
+  experimentalAccess: boolean;
   checking: boolean;
   stage: Stage;
   starting: boolean;
@@ -68,6 +69,7 @@ export function TranscriptToolbar({
   hasPropositions,
   hasTopics,
   isLoggedIn,
+  experimentalAccess,
   checking,
   stage,
   starting,
@@ -139,9 +141,9 @@ export function TranscriptToolbar({
   const showBell = isLoggedIn && !hasContent && !checking && isPending;
 
   // View tabs that will actually render: Transcript (always) + Analysis
-  // (signed-in only) + Verbatim/Summary record (when a PV symbol exists).
+  // (experimental access only) + Verbatim/Summary record (when a PV symbol exists).
   // Hide the toggle entirely when it would offer only a single option.
-  const viewTabCount = 1 + (isLoggedIn ? 1 : 0) + (pvSymbol ? 1 : 0);
+  const viewTabCount = 1 + (experimentalAccess ? 1 : 0) + (pvSymbol ? 1 : 0);
 
   return (
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -234,7 +236,7 @@ export function TranscriptToolbar({
                 <FileText className="h-3 w-3" />
                 {t("transcript")}
               </button>
-              {isLoggedIn && (
+              {experimentalAccess && (
                 <button
                   role="tab"
                   aria-selected={viewMode === "analysis"}
